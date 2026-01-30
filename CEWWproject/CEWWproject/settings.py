@@ -28,9 +28,9 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 LOGIN_URL = '/admin/login/'
-LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'landing'
 STATIC_URL = 'static/'
+LOGIN_REDIRECT_URL = 'role_redirect'
 
 
 # Application definition
