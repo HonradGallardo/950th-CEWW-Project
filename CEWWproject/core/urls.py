@@ -13,8 +13,12 @@ urlpatterns = [
     
     # Sidebar Functional Modules
     path('assets/', views.asset_list, name='asset_list'),
+    path('assets/add/', views.add_asset, name='add_asset'),
+    path('assets/edit/<int:asset_id>/', views.edit_asset, name='edit_asset'),
+    path('assets/delete/<int:asset_id>/', views.delete_asset, name='delete_asset'),
     path('maintenance/', views.maintenance_list, name='maintenance_list'),
     path('incidents/', views.incident_list, name='incident_list'),
+    path('analytics/', views.analytics, name='analytics'),
     path('users/', views.user_list, name='user_list'),
     path('reports/', views.reports, name='reports'),
     

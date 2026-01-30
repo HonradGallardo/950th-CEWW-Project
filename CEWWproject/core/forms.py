@@ -1,6 +1,27 @@
 from django import forms
 from django.contrib.auth.models import User, Group
+from .models import Asset
 
+class AssetForm(forms.ModelForm):
+    # Keep your maintenance field
+    type_of_maintenance = forms.CharField(
+        required=False, 
+        widget=forms.TextInput(attrs={'placeholder': 'Type of Maintenance (Optional)', 'class': 'w-full p-2 border rounded text-sm'})
+    )
+
+    class Meta:
+        model = Asset
+        # Added 'assigned_to' here
+        fields = ['assets_name', 'assets_type', 'location', 'status', 'date_added', 'assigned_to']
+        widgets = {
+            'assets_name': forms.TextInput(attrs={'placeholder': 'Assets name', 'class': 'w-full p-2 border rounded text-sm'}),
+            'assets_type': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
+            'location': forms.TextInput(attrs={'placeholder': 'Location', 'class': 'w-full p-2 border rounded text-sm'}),
+            'date_added': forms.DateInput(attrs={'type': 'date', 'class': 'w-full p-2 border rounded text-sm'}),
+            'assigned_to': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}), # Added widget for cleaner look
+            'status': forms.RadioSelect(),
+        }
+        
 class UserForm(forms.ModelForm):
     # Add a dropdown for Groups/Roles
     role = forms.ModelChoiceField(

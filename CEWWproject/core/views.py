@@ -1,10 +1,11 @@
+from urllib import request
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.contrib import messages
 from .models import Asset, Maintenance, Incident
-from .forms import UserForm
+from .forms import AssetForm, UserForm
 
 # --- LANDING & REDIRECT ---
 def landing(request):
@@ -20,38 +21,50 @@ def role_redirect(request):
 # --- DASHBOARD ---
 @login_required
 def dashboard(request):
-    # Summary Metrics for charts
+    # --- 1. GLOBAL METRICS (For Commander/Admin) ---
     total_assets = Asset.objects.count()
-    assigned_assets = Asset.objects.exclude(assigned_to=None).count()
+    
+    # FIX: 'assigned_to' no longer exists. 
+    # Let's count assets that are not 'Inactive' instead, 
+    # or you can count based on 'location'
+    assigned_assets = Asset.objects.exclude(status='Inactive').count() 
+    
     open_incidents = Incident.objects.filter(status='Open').count()
     critical_threats = Incident.objects.filter(severity='Critical', status='Open').count()
 
+    # Base context
     context = {
         'total_assets': total_assets,
         'assigned_assets': assigned_assets,
         'open_incidents': open_incidents,
         'critical_threats': critical_threats,
-        'asset_counts': Asset.objects.values('asset_type').annotate(total=Count('id')),
+        'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')), # Changed to assets_type
         'severity_counts': Incident.objects.values('severity').annotate(total=Count('id')),
     }
 
-    # 1. COMMANDER ACCESS
-    if request.user.groups.filter(name='Commander').exists():
+    # --- 2. ROLE-BASED LOGIC ---
+    user_groups = request.user.groups.values_list('name', flat=True)
+
+    if 'Commander' in user_groups:
         return render(request, 'core/commander_dashboard.html', context)
     
-    # 2. PERSONNEL ACCESS (The Fix)
-    elif request.user.groups.filter(name='Personnel').exists():
-        # Personnel should only see assets assigned to THEM
-        context['user_assets'] = Asset.objects.filter(assigned_to=request.user)
-        return render(request, 'core/personnel_dashboard.html', context)
+    elif 'Personnel' in user_groups:
+        personnel_context = {
+            'total_assets': total_assets,
+            # FIX: Maintenance logic needs to reference existing fields.
+            # If you no longer have a link between Asset and User, 
+            # we'll just show all pending maintenance for now.
+            'my_maintenance_count': Maintenance.objects.filter(status='In Progress').count(),
+            'reported_incidents_count': Incident.objects.count(), 
+            'recent_incidents': Incident.objects.all().order_by('-date')[:5],
+        }
+        return render(request, 'core/personnel_dashboard.html', personnel_context)
     
-    # 3. ADMIN ACCESS
-    elif request.user.groups.filter(name='Admin').exists():
+    elif 'Admin' in user_groups:
         context['recent_maintenance'] = Maintenance.objects.all().order_by('-date')[:5]
         context['recent_incidents'] = Incident.objects.all().order_by('-date')[:5]
         return render(request, 'core/admin_dashboard.html', context)
 
-    # 4. FALLBACK: If user has no group
     return render(request, 'core/landing.html', {'error': 'Unauthorized access.'})
 
 # --- PERSONNEL CRUD (CLEANED) ---
@@ -61,7 +74,7 @@ def user_list(request):
         return redirect('dashboard')
     
     # We use 'users' as the key to match your HTML {% for person in users %}
-    all_users = User.objects.all().prefetch_related('asset_set')
+    all_users = User.objects.all().prefetch_related('groups')
     return render(request, 'core/user_list.html', {'users': all_users})
 
 @login_required
@@ -129,5 +142,63 @@ def incident_list(request):
     return render(request, 'core/incident_list.html', {'incidents': Incident.objects.all()})
 
 @login_required
+def analytics(request):
+    # Security check: Only Admin and Commander should see the full analytics suite
+    if request.user.groups.filter(name='Personnel').exists():
+        messages.warning(request, "Personnel do not have access to the Analytics module.")
+        return redirect('dashboard')
+
+    context = {
+        'total_assets': Asset.objects.count(),
+        'asset_counts': Asset.objects.values('asset_type').annotate(total=Count('id')),
+        'severity_counts': Incident.objects.values('severity').annotate(total=Count('id')),
+        'status_counts': Incident.objects.values('status').annotate(total=Count('id')),
+    }
+    return render(request, 'core/analytics.html', context)
+
+@login_required
 def reports(request):
     return render(request, 'core/reports.html')
+
+
+##################################################################ASSETS COMMANDS##################################################################
+@login_required
+def add_asset(request):
+    if request.method == "POST":
+        form = AssetForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('asset_list')
+    else:
+        form = AssetForm()
+    return render(request, 'core/add_asset.html', {'form': form})
+
+@login_required
+def edit_asset(request, asset_id):
+    # Use the database 'pk' (ID) to find the specific asset
+    asset = get_object_or_404(Asset, pk=asset_id)
+    
+    if request.method == "POST":
+        # Passing 'instance=asset' is the secret—it tells Django 
+        # to update the existing record instead of creating a new one.
+        form = AssetForm(request.POST, instance=asset)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Asset {asset.assets_id} updated successfully!")
+            return redirect('asset_list')
+    else:
+        form = AssetForm(instance=asset)
+    
+    return render(request, 'core/add_asset.html', {
+        'form': form, 
+        'title': f'Edit Asset: {asset.assets_id}'
+    })
+
+@login_required
+def delete_asset(request, asset_id):
+    asset = get_object_or_404(Asset, pk=asset_id)
+    if request.method == "POST":
+        asset_id_display = asset.assets_id
+        asset.delete()
+        messages.success(request, f"Asset {asset_id_display} has been removed.")
+    return redirect('asset_list')

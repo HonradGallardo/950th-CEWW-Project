@@ -2,125 +2,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commander Dashboard | 950th CEWW</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-[#e9edf3] font-sans">
+<body class="bg-slate-100 font-sans">
 
 <div class="flex min-h-screen">
-
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-[#475569] text-white flex flex-col">
-        <div class="p-6 text-lg font-semibold">
-            Welcome {{ user.username|default:"Username" }}
+    <div class="w-64 bg-[#3d5171] text-white flex flex-col sticky top-0 h-screen">
+        <div class="p-6 border-b border-slate-600/50">
+            <h2 class="text-sm font-bold tracking-tight uppercase">950th CEWW System</h2>
         </div>
 
-        <nav class="flex-1 text-sm">
-            <a class="block px-6 py-3 bg-[#334155] font-semibold">Dashboard</a>
-            <a href="{% url 'asset_list' %}" class="block px-6 py-3 hover:bg-[#334155]">IT Assets</a>
-            <a href="{% url 'maintenance_list' %}" class="block px-6 py-3 hover:bg-[#334155]">Maintenance</a>
-            <a href="{% url 'incident_list' %}" class="block px-6 py-3 hover:bg-[#334155]">Incidents</a>
-            <a href="#" class="block px-6 py-3 hover:bg-[#334155]">Reports</a>
+        <nav class="flex-1 mt-4 px-2 space-y-1">
+            <a href="{% url 'dashboard' %}" class="flex items-center p-3 rounded-lg bg-white/10 text-white font-bold transition">
+                <i class="fas fa-shield-alt mr-3"></i> Dashboard
+            </a>
+
+            <a href="{% url 'asset_list' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
+                <i class="fas fa-laptop mr-3"></i> IT Assets
+            </a>
+
+            <a href="{% url 'maintenance_list' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
+                <i class="fas fa-tools mr-3"></i> Maintenance
+            </a>
+
+            <a href="{% url 'incident_list' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
+                <i class="fas fa-exclamation-triangle mr-3"></i> Incidents
+            </a>
+
+            {% if request.user.groups.all.0.name != 'Personnel' %}
+            <a href="{% url 'analytics' %}" class="flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-chart-line mr-3"></i> Analytics
+            </a>
+            {% endif %}
+
+            <a href="{% url 'reports' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
+                <i class="fas fa-file-contract mr-3"></i> Reports
+            </a>
         </nav>
 
-        <form action="{% url 'logout' %}" method="post" class="p-4">
-            {% csrf_token %}
-            <button class="w-full text-left text-sm hover:text-red-400">Logout</button>
-        </form>
-    </aside>
+        <div class="p-4 border-t border-slate-600/50">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full text-left p-3 text-slate-400 hover:text-white transition">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
 
-    <!-- MAIN -->
-    <div class="flex-1 flex flex-col">
-
-        <!-- HEADER -->
-        <header class="bg-white px-8 py-4 flex justify-between items-center border-b">
-            <input type="text" placeholder="Search"
-                   class="w-96 px-4 py-2 bg-gray-100 rounded-lg text-sm">
-
-            <div class="flex items-center gap-6">
-                <i class="fa-regular fa-bell text-gray-600"></i>
-                <div class="flex items-center gap-2 text-sm">
-                    <span>Admin</span>
-                    <i class="fa-solid fa-chevron-down text-xs"></i>
+    <div class="flex-1 bg-[#eef2f7] flex flex-col">
+        <header class="bg-white px-8 py-4 flex items-center justify-between border-b border-slate-200 sticky top-0 z-40">
+            <i class="fas fa-bars text-slate-600 cursor-pointer"></i>
+            <div class="flex-1 mx-8 text-slate-400 italic text-sm">Command View Mode</div>
+            
+            <div class="flex items-center space-x-6">
+                <i class="fas fa-bell text-slate-600 cursor-pointer hover:text-blue-600"></i>
+                <div class="flex items-center space-x-2 text-slate-700 font-bold">
+                    <span>Commander</span>
+                    <i class="fas fa-user-shield text-blue-600 ml-1"></i>
                 </div>
             </div>
         </header>
 
-        <!-- CONTENT -->
         <main class="p-8">
-
-            <h1 class="text-xl font-bold mb-6">DASHBOARD</h1>
-
-            <!-- STATS -->
-            <div class="grid grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-lg p-6 text-center">
-                    <p class="text-sm">Total IT Assets</p>
-                    <p class="text-2xl font-bold">102</p>
+            <h1 class="text-xl font-black text-slate-800 uppercase mb-8">Strategic Overview</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-bold mb-2">OPERATIONAL ASSETS</p>
+                    <div class="text-3xl font-bold">102</div>
                 </div>
-                <div class="bg-white rounded-lg p-6 text-center">
-                    <p class="text-sm">Assigned Assets</p>
-                    <p class="text-2xl font-bold text-green-500">62</p>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-bold mb-2">ASSET READINESS</p>
+                    <div class="text-3xl font-bold text-green-500">94.2%</div>
                 </div>
-                <div class="bg-white rounded-lg p-6 text-center">
-                    <p class="text-sm">Open Incidents</p>
-                    <p class="text-2xl font-bold text-orange-500">2</p>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-bold mb-2">ACTIVE INCIDENTS</p>
+                    <div class="text-3xl font-bold text-orange-500">2</div>
                 </div>
-                <div class="bg-white rounded-lg p-6 text-center">
-                    <p class="text-sm">High / Critical Threats</p>
-                    <p class="text-2xl font-bold text-red-500">1</p>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <p class="text-slate-500 text-xs font-bold mb-2">CRITICAL THREATS</p>
+                    <div class="text-3xl font-bold text-red-500">1</div>
                 </div>
             </div>
 
-            <!-- CHART ROW 1 -->
-            <div class="grid grid-cols-2 gap-8 mb-8">
-                <div class="bg-white p-6 rounded-lg">
-                    <h3 class="font-semibold mb-4">IT Assets</h3>
-                    <canvas id="assetChart"></canvas>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-sm mb-4">Inventory Composition</h3>
+                    <canvas id="assetChart" height="150"></canvas>
                 </div>
-
-                <div class="bg-white p-6 rounded-lg">
-                    <h3 class="font-semibold mb-4">Incident Severity Distribution</h3>
-                    <canvas id="severityChart"></canvas>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-sm mb-4">Incident Severity Over Time</h3>
+                    <canvas id="severityChart" height="150"></canvas>
                 </div>
             </div>
 
-            <!-- CHART ROW 2 -->
-            <div class="grid grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-lg">
-                    <h3 class="font-semibold mb-4">Cybersecurity Incident Trend</h3>
-                    <canvas id="trendChart"></canvas>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-sm mb-4">Cybersecurity Incident Trend</h3>
+                    <canvas id="trendChart" height="150"></canvas>
                 </div>
-
-                <div class="bg-white p-6 rounded-lg">
-                    <h3 class="font-semibold mb-4">Maintenance Summary</h3>
-                    <canvas id="maintenanceChart"></canvas>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-sm mb-4">Maintenance Readiness</h3>
+                    <canvas id="maintenanceChart" height="150"></canvas>
                 </div>
             </div>
-
         </main>
     </div>
 </div>
 
 <script>
-new Chart(assetChart, {
+// Logic shared with Admin for consistency
+new Chart(document.getElementById('assetChart'), {
     type: 'bar',
     data: {
         labels: ['PC', 'Laptops', 'Servers', 'Routers', 'Printers'],
         datasets: [{
             data: [28, 38, 18, 8, 10],
-            backgroundColor: ['#bfdbfe','#f87171','#bbf7d0','#fde68a','#fdba74']
+            backgroundColor: ['#d1e4ff', '#ff8a8a', '#c2f2d9', '#ffed9e', '#ffd6a5']
         }]
     },
-    options: { plugins: { legend: { display:false } } }
+    options: { plugins: { legend: { display: false } } }
 });
 
-new Chart(severityChart, {
+new Chart(document.getElementById('severityChart'), {
     type: 'bar',
     data: {
         labels: ['29/1','30/1','31/1','01/2','02/2','03/2','04/2'],
@@ -131,32 +141,35 @@ new Chart(severityChart, {
             {label:'Critical', data:[0,0,0,1,0,0,0], backgroundColor:'#f87171'},
         ]
     },
-    options: { scales:{ x:{stacked:true}, y:{stacked:true} } }
+    options: { responsive: true, scales:{ x:{stacked:true}, y:{stacked:true} } }
 });
 
-new Chart(trendChart, {
+new Chart(document.getElementById('trendChart'), {
     type:'line',
     data:{
         labels:['29/1','30/1','31/1','01/2','02/2','03/2','04/2'],
         datasets:[{
+            label: 'Incidents',
             data:[1,4,5,3,9,5,2],
-            borderColor:'#2563eb',
+            borderColor:'#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
             tension:.4
         }]
-    }
+    },
+    options: { plugins: { legend: { display: false } } }
 });
 
-new Chart(maintenanceChart, {
+new Chart(document.getElementById('maintenanceChart'), {
     type:'line',
     data:{
         labels:['29/1','30/1','31/1','01/2','02/2','03/2','04/2'],
         datasets:[
-            {label:'Completed', data:[2,3,2,5,10,3,2], borderColor:'#22c55e'},
-            {label:'Under Maintenance', data:[5,6,6,5,2,12,12], borderColor:'#facc15'}
+            {label:'Completed', data:[2,3,2,5,10,3,2], borderColor:'#22c55e', tension: 0.3},
+            {label:'Pending', data:[5,6,6,5,2,12,12], borderColor:'#facc15', tension: 0.3}
         ]
     }
 });
 </script>
-
 </body>
 </html>
