@@ -1,87 +1,160 @@
 {% extends "core/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-6 shrink-0">
-    <div>
-        <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">User Access Control & RBAC</h1>
-        <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Manage system personnel and permissions</p>
+<div class="flex flex-col h-full space-y-6">
+    <div class="flex justify-between items-center shrink-0 px-2">
+        <div>
+            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">User Access Control & RBAC</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Manage system personnel and permissions</p>
+        </div>
+        <a href="{% url 'add_user' %}" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition flex items-center shadow-md shadow-blue-200">
+            <i class="fas fa-user-plus mr-2"></i> Add New User
+        </a>
     </div>
-    <a href="{% url 'add_user' %}" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition flex items-center shadow-md shadow-blue-200">
-        <i class="fas fa-user-plus mr-2"></i> Add New User
-    </a>
+
+    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
+        
+        <div class="col-span-12 lg:col-span-7 flex flex-col min-h-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_0_0_rgba(226,232,240,1)]">
+                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                <th class="px-6 py-4">Personnel</th>
+                                <th class="px-6 py-4">Assigned Assets</th>
+                                <th class="px-6 py-4 text-center">Actions</th> 
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for person in users %}
+                            <tr class="hover:bg-blue-50/40 transition-colors cursor-pointer group" 
+                                onclick="showUserDetails('{{ person.id }}', '{{ person.username }}', '{{ person.get_full_name|default:person.username }}', '{{ person.email }}', '{{ person.groups.all.0.name|default:"Unassigned" }}')">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-sm text-slate-800">{{ person.get_full_name|default:person.username }}</div>
+                                    <div class="text-[9px] mt-1 uppercase font-black tracking-wider px-2 py-0.5 rounded-md border
+                                        {% if person.groups.all.0.name == 'Admin' %} bg-red-50 text-red-600 border-red-100
+                                        {% elif person.groups.all.0.name == 'Commander' %} bg-purple-50 text-purple-600 border-purple-100
+                                        {% else %} bg-slate-50 text-slate-500 border-slate-200 {% endif %}">
+                                        {{ person.groups.all.0.name|default:"Unassigned" }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-wrap gap-1.5">
+                                        {% for asset in person.asset_set.all %}
+                                            <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100">
+                                                {{ asset.name }}
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-slate-300 italic text-[11px]">None</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center justify-center space-x-1">
+                                        <a href="{% url 'edit_user' person.id %}" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit User">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </a>
+                                        <form action="{% url 'delete_user' person.id %}" method="POST" onsubmit="return confirm('Permanently delete {{ person.username }}?');" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete User">
+                                                <i class="fas fa-trash-alt text-sm"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="px-6 py-20 text-center text-slate-400">
+                                    <i class="fas fa-users text-4xl mb-4 block opacity-10"></i>
+                                    <p class="italic text-sm">No personnel found in the system.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-5 flex flex-col h-full">
+            <div id="detail-panel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+                <div id="empty-message" class="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
+                        <i class="fas fa-id-card text-slate-200 text-2xl"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Select a user to view full profile</p>
+                </div>
+
+                <div id="user-details" class="hidden flex-1 flex flex-col min-h-0">
+                    <div class="flex items-center justify-between mb-8 border-b border-slate-50 pb-4">
+                        <h3 class="font-black uppercase text-xs text-slate-800 tracking-widest">Personnel Profile</h3>
+                        <span id="detail-role" class="text-[10px] font-black px-2 py-1 rounded-md"></span>
+                    </div>
+
+                    <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-100">
+                                <span id="initials"></span>
+                            </div>
+                            <div>
+                                <p id="detail-name" class="text-sm font-black text-slate-800"></p>
+                                <p id="detail-username" class="text-[11px] font-bold text-blue-600"></p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-3">
+                            <div>
+                                <label class="block text-[9px] font-black text-slate-400 uppercase">Email Address</label>
+                                <p id="detail-email" class="text-xs font-bold text-slate-700"></p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">System Access</label>
+                            <div class="flex items-center space-x-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                                <i class="fas fa-check-circle text-emerald-500"></i>
+                                <span class="text-[11px] font-bold text-emerald-700 uppercase">Active Account</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-slate-50 flex gap-3">
+                         <a id="edit-link" href="#" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-black transition shadow-sm text-center">
+                            Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-    <div class="overflow-y-auto custom-scrollbar" style="max-height: calc(100vh - 280px);">
-        <table class="w-full text-left border-collapse">
-            <thead class="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_0_0_rgba(226,232,240,1)]">
-                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    <th class="px-6 py-4">Name</th>
-                    <th class="px-6 py-4">Username / Email</th>
-                    <th class="px-6 py-4">Assigned Assets</th>
-                    <th class="px-6 py-4 text-center">Actions</th> 
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                {% for person in users %}
-                <tr class="hover:bg-slate-50/80 transition-colors">
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-sm text-slate-800">{{ person.get_full_name|default:person.username }}</div>
-                        <div class="text-[9px] mt-1 uppercase font-black tracking-wider px-2 py-0.5 rounded-md inline-block
-                            {% if person.groups.all.0.name == 'Admin' %} bg-red-50 text-red-600 border border-red-100
-                            {% elif person.groups.all.0.name == 'Commander' %} bg-purple-50 text-purple-600 border border-purple-100
-                            {% else %} bg-slate-100 text-slate-500 border border-slate-200 {% endif %}">
-                            {{ person.groups.all.0.name|default:"Unassigned" }}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-xs font-bold text-slate-600">{{ person.username }}</div>
-                        <div class="text-[11px] text-slate-400">{{ person.email }}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-1.5">
-                            {% for asset in person.asset_set.all %}
-                                <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100">
-                                    {{ asset.name }}
-                                </span>
-                            {% empty %}
-                                <span class="text-slate-300 italic text-[11px]">No assets assigned</span>
-                            {% endfor %}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center justify-center space-x-1">
-                            <a href="{% url 'edit_user' person.id %}" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit User">
-                                <i class="fas fa-edit text-sm"></i>
-                            </a>
-                            
-                            <form action="{% url 'delete_user' person.id %}" method="POST" onsubmit="return confirm('Permanently delete {{ person.username }}?');" class="inline">
-                                {% csrf_token %}
-                                <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete User">
-                                    <i class="fas fa-trash-alt text-sm"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="px-6 py-20 text-center text-slate-400">
-                        <i class="fas fa-users text-4xl mb-4 block opacity-10"></i>
-                        <p class="italic text-sm">No personnel found in the system.</p>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+<script>
+function showUserDetails(id, username, fullName, email, role) {
+    document.getElementById('empty-message').classList.add('hidden');
+    document.getElementById('user-details').classList.remove('hidden');
+
+    document.getElementById('detail-username').innerText = '@' + username;
+    document.getElementById('detail-name').innerText = fullName;
+    document.getElementById('detail-email').innerText = email;
+    document.getElementById('detail-role').innerText = role;
+    document.getElementById('initials').innerText = (fullName).substring(0, 2).toUpperCase();
+    
+    // Dynamically update the Edit Profile link using the ID
+    document.getElementById('edit-link').href = "/users/edit/" + id + "/"; 
+
+    const roleBadge = document.getElementById('detail-role');
+    roleBadge.className = 'text-[10px] font-black px-2 py-1 rounded-md';
+    if (role === 'Admin') roleBadge.classList.add('bg-red-50', 'text-red-600');
+    else if (role === 'Commander') roleBadge.classList.add('bg-purple-50', 'text-purple-600');
+    else roleBadge.classList.add('bg-slate-100', 'text-slate-500');
+}
+</script>
 
 <style>
-    /* Clean scrollbar for the table */
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 </style>
 {% endblock %}
