@@ -1,0 +1,133 @@
+{% extends "core/admin_dashboard.html" %}
+
+{% block content %}
+<div class="flex flex-col h-full space-y-6">
+    <div class="flex items-center justify-between shrink-0 px-2">
+        <div>
+            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Service History</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Asset Lifecycle & Maintenance Tracking</p>
+        </div>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-blue-200 transition flex items-center group">
+            <i class="fas fa-tools mr-2 group-hover:rotate-12 transition-transform"></i> Create Service Log
+        </button>
+    </div>
+
+    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
+        
+        <div class="col-span-12 lg:col-span-8 flex flex-col min-h-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center space-x-4 bg-slate-50/50">
+                    <div class="relative flex-1 max-w-xs">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                        <input type="text" placeholder="Search Assets ID or Name..." 
+                               class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 w-full">
+                    </div>
+                    <select class="text-xs px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
+                        <option>All Asset Types</option>
+                        <option>PC</option>
+                        <option>Laptop</option>
+                        <option>Server</option>
+                    </select>
+                </div>
+
+                <div class="flex-1 overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_rgba(226,232,240,1)] z-10">
+                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                <th class="px-6 py-4">Asset ID</th>
+                                <th class="px-6 py-4">Asset Name</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Last Inspected</th>
+                                <th class="px-6 py-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                                <td class="px-6 py-4 text-xs font-bold text-blue-600">AST-01</td>
+                                <td class="px-6 py-4 text-xs font-bold text-slate-700">Workstation PC-01</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[10px] font-black uppercase">In Progress</span>
+                                </td>
+                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">28-01-2026</td>
+                                <td class="px-6 py-4 text-right">
+                                    <i class="fas fa-arrow-right text-slate-300 group-hover:text-blue-500 transition-colors text-[10px]"></i>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                                <td class="px-6 py-4 text-xs font-bold text-blue-600">AST-102</td>
+                                <td class="px-6 py-4 text-xs font-bold text-slate-700">Admin Laptop-12</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md text-[10px] font-black uppercase">Done</span>
+                                </td>
+                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">27-01-2026</td>
+                                <td class="px-6 py-4 text-right">
+                                    <i class="fas fa-arrow-right text-slate-300 group-hover:text-blue-500 transition-colors text-[10px]"></i>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-4 flex flex-col h-full">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+                <div class="flex items-center justify-between mb-6 border-b border-slate-50 pb-4">
+                    <h3 class="font-black uppercase text-xs text-slate-800 tracking-widest">Service Log Details</h3>
+                    <i class="fas fa-file-alt text-slate-300"></i>
+                </div>
+
+                <div class="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Technician</label>
+                            <p class="text-xs font-bold text-slate-700">John Doe</p>
+                        </div>
+                        <div class="space-y-1 text-right">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Date/Time</label>
+                            <p class="text-xs font-bold text-slate-700">28-01-2026 | 12:30 PM</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">Asset Type:</span>
+                            <span class="text-[10px] text-slate-700 font-black">PC</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">Asset Name:</span>
+                            <span class="text-[10px] text-slate-700 font-black">PC 02</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">Status:</span>
+                            <span class="text-[10px] text-blue-600 font-black italic">Maintenance - Software Update</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes / Issues</label>
+                        <div class="bg-white border border-slate-200 rounded-xl p-4 min-h-[120px]">
+                            <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                                Performed quarterly security patch and updated antivirus softwares. System performance verified post-update.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-slate-50">
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-black transition shadow-sm flex items-center justify-center">
+                        <i class="fas fa-edit mr-2"></i> Edit Log Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+</style>
+{% endblock %}
