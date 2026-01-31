@@ -1,0 +1,87 @@
+{% extends "core/admin_dashboard.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto h-full flex flex-col space-y-6">
+    <div class="flex items-center justify-between px-2">
+        <div>
+            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Update Service Log</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1">Editing Record for: {{ maintenance.asset.assets_id }}</p>
+        </div>
+        <a href="{% url 'maintenance_list' %}" class="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase tracking-widest flex items-center">
+            <i class="fas fa-times mr-2"></i> Cancel
+        </a>
+    </div>
+<form method="POST" class="space-y-6">
+    {% csrf_token %}
+    
+    <div>
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Maintenance Type</label>
+        {{ form.maintenance_type }}
+    </div>
+
+    <div>
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Service Status</label>
+        {{ form.status }}
+    </div>
+
+    <div>
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Service Notes & Progress</label>
+        {{ form.notes }}
+    </div>
+
+    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all transform active:scale-[0.98]">
+        Save and Apply Changes
+    </button>
+</form>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-slate-800 rounded-2xl p-6 text-white shadow-xl shadow-slate-200">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Currently Editing</label>
+            <h2 class="text-2xl font-black mt-1">{{ maintenance.asset.assets_name }}</h2>
+            
+            <div class="mt-8 space-y-4">
+                <div class="flex justify-between border-b border-white/10 pb-2">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Asset ID</span>
+                    <span class="text-xs font-bold">{{ maintenance.asset.assets_id }}</span>
+                </div>
+                <div class="flex justify-between border-b border-white/10 pb-2">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Technician</span>
+                    <span class="text-xs font-bold">{{ maintenance.technician.username }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Log Created</span>
+                    <span class="text-xs font-bold">{{ maintenance.date|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Service Status</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition group border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
+                            <input type="radio" name="status" value="Under Repair" {% if maintenance.asset.status == 'Maintenance' %}checked{% endif %} class="hidden">
+                            <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-blue-600">Under Repair</span>
+                        </label>
+                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition group border-slate-100 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50">
+                            <input type="radio" name="status" value="Completed" {% if maintenance.asset.status != 'Maintenance' %}checked{% endif %} class="hidden">
+                            <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-emerald-600">Mark Completed</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Service Notes & Progress</label>
+                    {{ form.notes }}
+                    </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all transform active:scale-[0.98]">
+                    Save and Apply Changes
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

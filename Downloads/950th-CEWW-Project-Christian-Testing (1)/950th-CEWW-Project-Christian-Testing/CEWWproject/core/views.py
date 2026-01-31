@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.contrib import messages
 from .models import Asset, Maintenance, Incident
-from .forms import AssetForm, UserForm
+from .forms import AssetForm, MaintenanceForm, UserForm
 
 # --- LANDING & REDIRECT ---
 def landing(request):
@@ -133,9 +133,82 @@ def delete_user(request, user_id):
 def asset_list(request):
     return render(request, 'core/asset_list.html', {'assets': Asset.objects.all()})
 
+################################################################## --- MAINTENANCE CRUD --- ##################################################################
 @login_required
 def maintenance_list(request):
-    return render(request, 'core/maintenance_list.html', {'maintenances': Maintenance.objects.all()})
+    # Fetch assets currently set to 'Maintenance' status
+    active_maintenance = Asset.objects.filter(status='Maintenance')
+    
+    # Fetch all completed service logs for the history
+    history = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
+
+    return render(request, 'core/maintenance_list.html', {
+        'active_maintenance': active_maintenance,
+        'maintenances': history
+    })
+
+@login_required
+def add_maintenance(request):
+    if request.method == "POST":
+        form = MaintenanceForm(request.POST)
+        if form.is_valid():
+            log = form.save(commit=False)
+            log.technician = request.user
+            log.save()
+
+            # AUTOMATION: Update the Asset status to 'Maintenance' immediately
+            asset = log.asset
+            asset.status = 'Maintenance' 
+            asset.save()
+
+            return redirect('maintenance_list')
+    else:
+        form = MaintenanceForm()
+    return render(request, 'core/add_maintenance.html', {'form': form})
+
+@login_required
+def edit_maintenance(request, pk):
+    # Fetch the specific maintenance record
+    maintenance = get_object_or_404(Maintenance, pk=pk)
+    
+    if request.method == 'POST':
+        # Pass the instance so we update the existing record instead of creating a new one
+        form = MaintenanceForm(request.POST, instance=maintenance)
+        
+        if form.is_valid():
+            # Save the maintenance log details (notes, type, status, etc.)
+            updated_maintenance = form.save()
+            
+            # Logic: Sync the Asset's status with the Maintenance Log's status
+            # If the log is marked 'Completed', set the Asset to 'Active'
+            asset = updated_maintenance.asset
+            log_status = updated_maintenance.status
+            
+            if log_status == 'Completed':
+                asset.status = 'Active' 
+            else:
+                # If still 'In Progress' or 'Pending', keep asset in 'Maintenance'
+                asset.status = 'Maintenance'
+            
+            asset.save()
+            
+            messages.success(request, f"Service log for {asset.assets_id} has been updated.")
+            return redirect('maintenance_list')
+    else:
+        form = MaintenanceForm(instance=maintenance)
+
+    return render(request, 'core/edit_maintenance.html', {
+        'form': form,
+        'maintenance': maintenance,
+    })
+    
+@login_required
+def delete_maintenance(request, pk):
+    maintenance = get_object_or_404(Maintenance, pk=pk)
+    if request.method == "POST":
+        maintenance.delete()
+        messages.success(request, "Service log removed.")
+    return redirect('maintenance_list')
 
 @login_required
 def incident_list(request):
@@ -164,10 +237,13 @@ def reports(request):
 ##################################################################ASSETS COMMANDS##################################################################
 @login_required
 def add_asset(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = AssetForm(request.POST)
         if form.is_valid():
-            form.save()
+            asset = form.save(commit=False)
+            # This captures the person currently logged in
+            asset.assigned_to = request.user 
+            asset.save()
             return redirect('asset_list')
     else:
         form = AssetForm()
@@ -202,3 +278,14 @@ def delete_asset(request, asset_id):
         asset.delete()
         messages.success(request, f"Asset {asset_id_display} has been removed.")
     return redirect('asset_list')
+
+def asset_list(request):
+    assets = Asset.objects.all()
+    
+    context = {
+        'assets': assets,
+        'active_assets_count': assets.filter(status='Active').count(),
+        'inactive_assets_count': assets.filter(status='Inactive').count(),
+        'maintenance_assets_count': assets.filter(status='Maintenance').count(),
+    }
+    return render(request, 'core/asset_list.html', context)
