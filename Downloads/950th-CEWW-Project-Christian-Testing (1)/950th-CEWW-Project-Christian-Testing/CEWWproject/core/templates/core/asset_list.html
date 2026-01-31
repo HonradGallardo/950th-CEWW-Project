@@ -1,0 +1,184 @@
+{% extends 'core/admin_dashboard.html' %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-6 h-full">
+    <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+        
+        <div class="p-6 border-b border-slate-100 flex-none">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">IT Asset Inventory</h2>
+            
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex gap-2">
+                    <input type="text" id="searchInput" placeholder="Search" 
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    
+                    <select id="typeFilter" 
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm outline-none">
+                        <option value="all">All Types</option>
+                        <option value="PC">PC</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Server">Server</option>
+                    </select>
+                </div>
+                <a href="{% url 'add_asset' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition">
+                    + Add new Asset
+                </a>
+            </div>
+        </div>
+
+        <div class="flex-grow overflow-y-auto overflow-x-auto max-h-[calc(100vh-280px)] scrollbar-thin scrollbar-thumb-slate-300">
+            <table class="w-full text-left text-sm border-separate border-spacing-0" id="assetTable">
+                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Assets ID</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Assets name</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Assets Type</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Location</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Status</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Date</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for asset in assets %}
+                    <tr class="hover:bg-slate-50 cursor-pointer asset-row transition-colors" 
+                        data-type="{{ asset.assets_type }}"
+                        onclick="showDetails('{{ asset.assets_id }}', '{{ asset.assets_name }}', '{{ asset.assets_type }}', '{{ asset.location }}', '{{ asset.status }}', '{{ asset.date_added|date:'d-m-Y' }}', '{% if asset.assigned_to %}{{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}{% else %}Unassigned{% endif %}')">
+                        
+                        <td class="p-4 font-medium text-blue-600">{{ asset.assets_id }}</td>
+                        <td class="p-4 font-medium text-slate-700">{{ asset.assets_name }}</td>
+                        <td class="p-4">{{ asset.assets_type }}</td>
+                        <td class="p-4 text-slate-500">{{ asset.location }}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase 
+                                {% if asset.status == 'Active' %}bg-green-100 text-green-700
+                                {% elif asset.status == 'Maintenance' %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ asset.status }}
+                            </span>
+                        </td>
+                        <td class="p-4 text-slate-500">{{ asset.date_added|date:"d-m-Y" }}</td>
+                        
+                        <td class="p-4 text-right">
+                            <div class="flex justify-end items-center gap-3" onclick="event.stopPropagation();">
+                                <a href="{% url 'edit_asset' asset.pk %}" class="text-slate-400 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{% url 'delete_asset' asset.pk %}" method="POST" class="inline m-0 p-0">
+                                    {% csrf_token %}
+                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this asset?')" class="text-slate-400 hover:text-red-600 transition-colors">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="w-full lg:w-80 space-y-6 flex-none">
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden min-h-[300px]">
+            <div class="p-4 border-b border-slate-100 font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-info-circle text-blue-500"></i> Asset Quick View
+            </div>
+            
+            <div id="detail-placeholder" class="p-12 text-center text-slate-400 italic">
+                <i class="fas fa-mouse-pointer block text-2xl mb-2 opacity-20"></i>
+                Click an asset to see full details
+            </div>
+            
+            <div id="detail-card" class="hidden p-6 space-y-5 animate-in fade-in duration-300">
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset ID</label>
+                    <p id="det-id" class="text-xl font-bold text-blue-600"></p>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset Name</label>
+                        <p id="det-name" class="font-semibold text-slate-800"></p>
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Location</label>
+                        <p id="det-loc" class="text-slate-600"></p>
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned To</label>
+                        <p id="det-user" class="text-slate-700 font-medium"></p>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Status</label>
+                    <p id="det-status" class="px-3 py-1 inline-block rounded text-[10px] font-bold uppercase"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h3 class="font-bold text-sm mb-4 text-slate-800">IT Asset Status</h3>
+            <div class="flex items-center">
+                <div class="w-24 h-24 border-4 border-slate-100 rounded-full relative mr-4 flex items-center justify-center">
+                    <div class="absolute inset-0 border-t-4 border-blue-500 rounded-full"></div>
+                    <span class="text-xs font-bold text-slate-400">Stats</span>
+                </div>
+                <div class="text-[11px] space-y-2 font-medium text-slate-600">
+                    <p><span class="inline-block w-2 h-2 bg-blue-500 mr-2 rounded-full"></span> Active</p>
+                    <p><span class="inline-block w-2 h-2 bg-slate-300 mr-2 rounded-full"></span> Inactive</p>
+                    <p><span class="inline-block w-2 h-2 bg-yellow-400 mr-2 rounded-full"></span> Maintenance</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// FILTER LOGIC
+const searchInput = document.getElementById('searchInput');
+const typeFilter = document.getElementById('typeFilter');
+const tableRows = document.querySelectorAll('.asset-row');
+
+function filterTable() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedType = typeFilter.value;
+
+    tableRows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        const rowType = row.getAttribute('data-type');
+        
+        const matchesSearch = text.includes(searchTerm);
+        const matchesType = (selectedType === 'all' || rowType === selectedType);
+
+        row.style.display = (matchesSearch && matchesType) ? "" : "none";
+    });
+}
+
+searchInput.addEventListener('input', filterTable);
+typeFilter.addEventListener('change', filterTable);
+
+// DETAIL LOGIC
+function showDetails(id, name, type, loc, status, date, user) {
+    document.getElementById('detail-placeholder').classList.add('hidden');
+    const card = document.getElementById('detail-card');
+    card.classList.remove('hidden');
+
+    document.getElementById('det-id').innerText = id;
+    document.getElementById('det-name').innerText = name;
+    document.getElementById('det-loc').innerText = loc;
+    document.getElementById('det-user').innerText = user;
+    
+    const statusEl = document.getElementById('det-status');
+    statusEl.innerText = status;
+    statusEl.className = 'px-3 py-1 inline-block rounded text-[10px] font-bold uppercase';
+    
+    if (status === 'Active') {
+        statusEl.classList.add('bg-green-100', 'text-green-700');
+    } else if (status === 'Maintenance') {
+        statusEl.classList.add('bg-yellow-100', 'text-yellow-700');
+    } else {
+        statusEl.classList.add('bg-red-100', 'text-red-700');
+    }
+}
+</script>
+{% endblock %}

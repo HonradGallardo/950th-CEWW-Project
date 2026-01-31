@@ -1,0 +1,145 @@
+{% extends "core/admin_dashboard.html" %}
+
+{% block content %}
+<div class="flex flex-col h-full space-y-6">
+    <div class="flex items-center justify-between shrink-0 px-2">
+        <div>
+            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Cybersecurity Incidents</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Real-time Threat Monitoring & Response</p>
+        </div>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-blue-200 transition flex items-center group">
+            <i class="fas fa-plus-circle mr-2 group-hover:rotate-90 transition-transform"></i> Log New Incident
+        </button>
+    </div>
+
+    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
+        
+        <div class="col-span-12 lg:col-span-8 flex flex-col min-h-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Active Incident Feed</span>
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                        <input type="text" placeholder="Filter ID or Type..." 
+                               class="text-xs pl-8 pr-4 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 w-48">
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_rgba(226,232,240,1)] z-10">
+                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                <th class="px-6 py-4">ID</th>
+                                <th class="px-6 py-4">Type</th>
+                                <th class="px-6 py-4">Severity</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Timestamp</th>
+                                <th class="px-6 py-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                                <td class="px-6 py-4 text-xs font-bold text-slate-600">INC-001</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500 mr-2.5"></span>
+                                        <span class="text-xs font-bold text-slate-700">Malware Detected</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-md text-[10px] font-black uppercase">Medium</span>
+                                </td>
+                                <td class="px-6 py-4 text-xs font-bold text-slate-400">Unresolved</td>
+                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">28-01-2026 12:30 PM</td>
+                                <td class="px-6 py-4 text-right">
+                                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors text-[10px]"></i>
+                                </td>
+                            </tr>
+                            
+                            <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
+                                <td class="px-6 py-4 text-xs font-bold text-slate-600">INC-002</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <span class="w-2 h-2 rounded-full bg-red-500 mr-2.5 pulse-red"></span>
+                                        <span class="text-xs font-bold text-slate-700">Data Breach</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded-md text-[10px] font-black uppercase">Critical</span>
+                                </td>
+                                <td class="px-6 py-4 text-xs font-bold text-blue-600 italic">In Progress</td>
+                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">29-01-2026 05:30 AM</td>
+                                <td class="px-6 py-4 text-right">
+                                    <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors text-[10px]"></i>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-4 flex flex-col h-full">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+                <div class="flex items-center justify-between mb-6 border-b border-slate-50 pb-4">
+                    <h3 class="font-black uppercase text-xs text-slate-800 tracking-widest">Incident Details</h3>
+                    <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">ID: INC-002</span>
+                </div>
+
+                <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <div class="space-y-2.5">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Summary & Analysis</label>
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                                Unauthorized access attempt detected in the Data Center segment. Source IP tracing back to external node <span class="text-blue-600 font-bold">192.x.x.x</span>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Technical Investigation</label>
+                        <textarea rows="4" 
+                                  class="w-full bg-white border border-slate-200 rounded-xl p-4 text-xs text-slate-600 font-medium placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/5 focus:border-blue-500/30 transition-all resize-none" 
+                                  placeholder="Enter detailed analysis here..."></textarea>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Mitigation Actions</label>
+                        <textarea rows="4" 
+                                  class="w-full bg-white border border-slate-200 rounded-xl p-4 text-xs text-slate-600 font-medium placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/5 focus:border-blue-500/30 transition-all resize-none" 
+                                  placeholder="Log actions taken..."></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-slate-50 grid grid-cols-2 gap-3">
+                    <button class="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl text-xs font-bold transition">
+                        Delete Log
+                    </button>
+                    <button class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition shadow-sm">
+                        Update Incident
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Subtle Pulse for Critical Threats */
+    .pulse-red {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        animation: pulse-red 2s infinite;
+    }
+    @keyframes pulse-red {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Custom Scrollbar for Detail Panel */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+</style>
+{% endblock %}

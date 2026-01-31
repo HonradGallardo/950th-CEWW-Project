@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Asset & Cybersecurity System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+
+        .hero-bg {
+            background: linear-gradient(180deg, #f0f4f9 0%, #ffffff 100%);
+        }
+
+        .floating-laptop {
+            filter: drop-shadow(0 20px 30px rgba(59, 130, 246, 0.15));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-white">
+
+    <nav class="flex justify-between items-center px-8 md:px-16 py-6 bg-[#f0f4f9]">
+        <div class="flex items-center space-x-2">
+            <span class="text-slate-800 font-bold text-lg tracking-tight">IT Asset & <span class="text-blue-600">Cybersecurity</span> System</span>
+        </div>
+        <a href="{% url 'login' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition flex items-center shadow-md">
+            <i class="fas fa-user mr-2 text-sm"></i> Login
+        </a>
+    </nav>
+
+    <div class="hero-bg px-8 md:px-24 pt-16 pb-32 flex flex-col md:flex-row items-center gap-16">
+        <div class="md:w-1/2 space-y-8">
+            <h1 class="text-4xl md:text-6xl font-black text-[#2c3e50] leading-tight">
+                Welcome to the IT Asset & <br>
+                <span class="text-blue-600">Cybersecurity</span> Management System
+            </h1>
+            <p class="text-slate-500 text-xl leading-relaxed max-w-xl font-medium">
+                Efficiently manage IT assets, track maintenance, and log cybersecurity incidents in one secure, offline platform.
+            </p>
+            <a href="{% url 'login' %}" class="inline-block bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-200">
+                Login to Get Started
+            </a>
+        </div>
+
+        <div class="md:w-1/2 relative">
+            <img src="static/image_2.png" 
+                 alt="System Infographic" 
+                 class="w-full h-auto floating-laptop rounded-3xl">
+            
+            <div class="absolute -top-10 -left-10 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center space-x-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-blue-600"></i>
+                </div>
+                <div class="pr-4">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Security</p>
+                    <p class="text-xs font-bold text-slate-700">Protected</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="px-8 md:px-16 py-24 bg-white -mt-16 relative z-10">
+        <div class="text-center mb-20">
+            <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">About the System</h2>
+            <p class="text-slate-500 mt-6 max-w-3xl mx-auto text-lg leading-relaxed font-medium">
+                This system is designed to centralize and streamline the management of non-classified IT assets, maintenance records, and cybersecurity incidents. Accessible only within the unit's local network, it ensures secure, offline operation to comply with unit standards.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div class="bg-white p-10 rounded-3xl border border-slate-100 card-hover transition-all text-center flex flex-col items-center">
+                <div class="bg-blue-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8">
+                    <i class="fas fa-server text-blue-600 text-3xl"></i>
+                </div>
+                <h3 class="font-black text-xl text-slate-800 mb-4">Asset Management</h3>
+                <p class="text-slate-500 text-sm leading-relaxed font-medium">Catalog, track, and manage IT assets efficiently within the centralized database.</p>
+            </div>
+
+            <div class="bg-white p-10 rounded-3xl border border-slate-100 card-hover transition-all text-center flex flex-col items-center">
+                <div class="bg-indigo-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8">
+                    <i class="fas fa-tools text-indigo-600 text-3xl"></i>
+                </div>
+                <h3 class="font-black text-xl text-slate-800 mb-4">Maintenance Logs</h3>
+                <p class="text-slate-500 text-sm leading-relaxed font-medium">Record and monitor IT asset maintenance activities to ensure system longevity.</p>
+            </div>
+
+            <div class="bg-white p-10 rounded-3xl border border-slate-100 card-hover transition-all text-center flex flex-col items-center">
+                <div class="bg-red-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>
+                </div>
+                <h3 class="font-black text-xl text-slate-800 mb-4">Incident Reporting</h3>
+                <p class="text-slate-500 text-sm leading-relaxed font-medium">Log and track cybersecurity incidents securely to maintain unit network integrity.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-12 border-t border-slate-100 text-center">
+        <p class="text-slate-400 text-xs font-bold tracking-widest uppercase">
+            &copy; 2026 950TH CEWW - Secure Offline Infrastructure
+        </p>
+    </footer>
+
+</body>
+</html>
