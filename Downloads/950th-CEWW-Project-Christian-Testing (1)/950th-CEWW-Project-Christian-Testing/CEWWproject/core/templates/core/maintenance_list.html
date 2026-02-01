@@ -1,7 +1,8 @@
 {% extends "core/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex flex-col h-full space-y-6">
+<div class="flex flex-col h-[calc(100vh-120px)] overflow-hidden space-y-4">
+    
     <div class="flex items-center justify-between shrink-0 px-2">
         <div>
             <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Service History</h1>
@@ -12,155 +13,134 @@
         </a>
     </div>
 
-    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
+    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 overflow-hidden">
         
-        <div class="col-span-12 lg:col-span-8 flex flex-col min-h-0">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
-                
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div class="flex items-center space-x-4 flex-1">
-                        <div class="relative flex-1 max-w-xs">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                            <input type="text" id="assetSearch" onkeyup="filterTable()" placeholder="Search Assets ID or Name..." 
-                                   class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 w-full">
-                        </div>
-                        <select id="typeFilter" onchange="filterTable()" class="text-xs px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
-                            <option value="">All Asset Types</option>
-                            <option value="PC">PC</option>
-                            <option value="Laptop">Laptop</option>
-                            <option value="Server">Server</option>
-                        </select>
+        <div class="col-span-12 lg:col-span-8 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                <div class="flex items-center space-x-4 flex-1">
+                    <div class="relative flex-1 max-w-xs">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                        <input type="text" id="assetSearch" onkeyup="filterTable()" placeholder="Search ID or Name..." 
+                               class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500/10 w-full outline-none">
                     </div>
-                    
-                    <button onclick="resetFilters()" class="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors flex items-center">
-                        <i class="fas fa-undo-alt mr-1.5"></i> Clear Filters
-                    </button>
+                     <select id="typeFilter" onchange="filterTable()" class="text-xs px-4 py-2 rounded-lg border border-slate-200 bg-white font-bold outline-none text-slate-600">
+                        <option value="">All Asset Types</option>
+                        {% for type in asset_types %}
+                            <option value="{{ type }}">{{ type }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
+            </div>
 
-                <div class="flex-1 overflow-y-auto custom-scrollbar">
-                    <table class="w-full text-left border-collapse" id="maintenanceTable">
-                        <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_rgba(226,232,240,1)] z-10">
-                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                <th class="px-6 py-4">Asset ID</th>
-                                <th class="px-6 py-4">Asset Name</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Last Activity</th>
-                                <th class="px-6 py-4 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            {% for asset in active_maintenance %}
-                            <tr class="asset-row bg-amber-50/30 hover:bg-amber-50 transition-colors cursor-pointer group"
-                                data-type="{{ asset.assets_type }}"
-                                onclick="showDetails({
-                                    id: '{{ asset.assets_id }}',
-                                    name: '{{ asset.assets_name }}',
-                                    status: 'Under Repair',
-                                    type: '{{ asset.assets_type }}',
-                                    tech: 'Pending Assignment',
-                                    notes: 'Currently marked for maintenance. Click to start the service log.',
-                                    date: 'Active Now',
-                                    editUrl: '{% url 'add_maintenance' %}?asset_id={{ asset.assets_id }}'
-                                })">
-                                <td class="px-6 py-4 text-xs font-bold text-amber-700">{{ asset.assets_id }}</td>
-                                <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ asset.assets_name }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-700 border border-amber-200 rounded-md text-[10px] font-black uppercase italic animate-pulse">
-                                        Under Repair
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">Active</td>
-                                <td class="px-6 py-4 text-right">
-                                    <i class="fas fa-plus text-amber-400 text-[10px]"></i>
-                                </td>
-                            </tr>
-                            {% endfor %}
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse" id="maintenanceTable">
+                    <thead class="sticky top-0 bg-white shadow-sm z-10">
+                        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <th class="px-6 py-4">Asset ID</th>
+                            <th class="px-6 py-4">Asset Name</th>
+                            <th class="px-6 py-4">Technician</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for asset in active_maintenance %}
+                        <tr class="asset-row bg-amber-50/20" data-type="{{ asset.assets_type }}" onclick="showDetails({
+                            id: '{{ asset.assets_id }}',
+                            date: '{{ asset.date_added|date:"d-m-Y" }}',
+                            tech: 'Unassigned',
+                            status: 'Awaiting Service',
+                            a_type: '{{ asset.assets_type }}',
+                            // CHANGE THIS LINE TO MATCH THE MODEL FIELD:
+                            notes: '{{ asset.maintenance_reason|default:"No initial reason provided."|escapejs }}',
+                            editUrl: '{% url "add_maintenance" %}?asset_id={{ asset.assets_id }}'
+                        })">
+                            <td class="px-6 py-4 text-xs font-bold text-amber-700">{{ asset.assets_id }}</td>
+                            <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ asset.assets_name }}</td>
+                            <td class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">{{ asset.assets_type }}</td>
+                            <td class="px-6 py-4"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-[10px] font-bold">QUEUED</span></td>
+                        </tr>
+                        {% endfor %}
 
-                            {% for log in maintenances %}
-                                {% if log.asset.status != 'Maintenance' %}
-                                <tr class="asset-row hover:bg-slate-50/80 transition-colors cursor-pointer group"
-                                    data-type="{{ log.asset.assets_type }}"
-                                    onclick="showDetails({
-                                        id: '{{ log.asset.assets_id }}',
-                                        name: '{{ log.asset.assets_name }}',
-                                        status: 'Completed',
-                                        type: '{{ log.asset.assets_type }}',
-                                        tech: '{{ log.technician.username }}',
-                                        notes: '{{ log.notes|escapejs }}',
-                                        date: '{{ log.date|date:"d-m-Y" }}',
-                                        editUrl: '{% url 'edit_maintenance' log.pk %}'
-                                    })">
-                                    <td class="px-6 py-4 text-xs font-bold text-blue-600">{{ log.asset.assets_id }}</td>
-                                    <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ log.asset.assets_name }}</td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md text-[10px] font-black uppercase">Completed</span>
-                                    </td>
-                                    <td class="px-6 py-4 text-xs text-slate-400 font-medium">{{ log.date|date:"d-m-Y" }}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        <i class="fas fa-eye text-slate-300 group-hover:text-blue-500 text-[10px]"></i>
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% for log in maintenances %}
+                        <tr class="asset-row" data-type="{{ log.asset.assets_type }}" onclick="showDetails({
+                            id: '{{ log.asset.assets_id }}',
+                            name: '{{ log.asset.assets_name }}',
+                            status: '{{ log.status }}',
+                            tech: '{{ log.technician.username }}',
+                            notes: '{{ log.notes|escapejs }}',
+                            date: '{{ log.date|date:"d-m-Y" }}',
+                            time: '{{ log.date|time:"H:i A" }}',
+                            editUrl: '{% url "edit_maintenance" log.pk %}'
+                        })">
+                            <td class="px-6 py-4 text-xs font-bold text-blue-600">{{ log.asset.assets_id }}</td>
+                            <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ log.asset.assets_name }}</td>
+                            <td class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">{{ log.asset.assets_type }}</td>
+                            <td class="px-6 py-4">
+                                <span class="{% if log.status == 'Completed' %}bg-emerald-100 text-emerald-700{% else %}bg-blue-100 text-blue-700{% endif %} px-2 py-1 rounded text-[10px] font-bold">
+                                    {{ log.status|upper }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-4 flex flex-col h-full">
-            <div id="detail-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full sticky top-0">
-                
-                <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
-                        <i class="fas fa-mouse-pointer text-slate-300 text-xl"></i>
+        <div class="col-span-12 lg:col-span-4 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden">
+            <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center">
+                <i class="fas fa-file-medical text-slate-200 text-3xl mb-4"></i>
+                <p class="text-slate-400 text-xs font-medium">Select log to view activity</p>
+            </div>
+
+            <div id="detail-content" class="hidden flex-1 flex flex-col min-h-0">
+                <div class="flex justify-between items-center mb-6 border-b pb-4 shrink-0">
+                    <div>
+                        <h3 class="font-black text-xs text-slate-800" id="det-id">---</h3>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter" id="det-asset-type">---</p>
                     </div>
-                    <p class="text-slate-400 text-xs italic font-medium px-4">Select a record to view details.</p>
+                    <div class="text-right">
+                        <span class="block text-[10px] font-black text-slate-700" id="det-date">---</span>
+                        <span class="block text-[9px] text-slate-400" id="det-time">---</span>
+                    </div>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                            <i class="fas fa-user-cog text-xs"></i>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase block">Handled By</label>
+                            <p class="text-xs font-bold text-slate-700" id="det-tech">---</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 rounded-xl space-y-2 text-[10px] border border-slate-100">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400 uppercase font-bold">Status:</span> 
+                            <span id="det-status" class="font-black text-blue-600 italic">---</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400 uppercase font-bold">Category:</span> 
+                            <span id="det-m-type" class="font-bold text-slate-700">---</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase block mb-2">Technical Notes</label>
+                        <div class="bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200">
+                            <p class="text-xs text-slate-600 leading-relaxed italic" id="det-notes">---</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div id="detail-content" class="hidden flex-1 flex flex-col">
-                    <div class="flex items-center justify-between mb-6 border-b pb-4">
-                        <h3 class="font-black uppercase text-xs text-slate-800 tracking-widest" id="det-id">---</h3>
-                        <span class="text-[10px] font-bold text-slate-400" id="det-date">---</span>
-                    </div>
-
-                    <div class="space-y-6 flex-1">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-[9px] font-black text-slate-400 uppercase">Asset Name</label>
-                                <p class="text-xs font-bold text-slate-700" id="det-name">---</p>
-                            </div>
-                            <div>
-                                <label class="text-[9px] font-black text-slate-400 uppercase">Technician</label>
-                                <p class="text-xs font-bold text-slate-700" id="det-tech">---</p>
-                            </div>
-                        </div>
-
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase">Type:</span>
-                                <span class="text-[10px] text-slate-700 font-black" id="det-type">---</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase">Status:</span>
-                                <span class="text-[10px] text-blue-600 font-black" id="det-status">---</span>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-[9px] font-black text-slate-400 uppercase">Notes / Progress</label>
-                            <div class="bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200 min-h-[100px]">
-                                <p class="text-xs text-slate-600 leading-relaxed" id="det-notes">---</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-auto pt-6">
-                        <a id="det-edit-link" href="#" class="w-full bg-slate-800 hover:bg-blue-600 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center group shadow-lg">
-                            <i class="fas fa-edit mr-2 group-hover:scale-110 transition-transform"></i>
-                            Update Service Log
-                        </a>
-                    </div>
+                <div class="mt-4 pt-4 shrink-0 border-t">
+                    <a id="det-edit-link" href="#" class="w-full py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center shadow-lg transition-all">
+                        Update Entry
+                    </a>
                 </div>
             </div>
         </div>
@@ -168,77 +148,50 @@
 </div>
 
 <script>
-/**
- * Updates the side detail card with data from the clicked table row.
- * Handles dynamic URL routing and button styling.
- */
 function showDetails(data) {
     document.getElementById('placeholder-content').classList.add('hidden');
     document.getElementById('detail-content').classList.remove('hidden');
 
     document.getElementById('det-id').innerText = data.id;
-    document.getElementById('det-name').innerText = data.name;
     document.getElementById('det-date').innerText = data.date;
+    document.getElementById('det-time').innerText = data.time || "Pending"; // Show 'Pending' for queued items
     document.getElementById('det-tech').innerText = data.tech;
-    document.getElementById('det-type').innerText = data.type;
     document.getElementById('det-status').innerText = data.status;
     document.getElementById('det-notes').innerText = data.notes;
+    document.getElementById('det-asset-type').innerText = data.a_type;
+    
+    // FIX: If m_type (maintenance category) is missing, show a placeholder
+    document.getElementById('det-m-type').innerText = data.m_type || "Awaiting Classification";
 
-    const editBtn = document.getElementById('det-edit-link');
-
-    if (data.editUrl) {
-        editBtn.href = data.editUrl;
-        editBtn.style.display = 'flex';
-
-        if (data.status === 'Under Repair') {
-            // Style for creating a NEW log
-            editBtn.className = "w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center group shadow-lg shadow-amber-100";
-            editBtn.innerHTML = '<i class="fas fa-tools mr-2 group-hover:rotate-12 transition-transform"></i> Start Service Log';
-        } else {
-            // Style for updating an EXISTING log
-            editBtn.className = "w-full bg-slate-800 hover:bg-blue-600 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center group shadow-lg shadow-slate-100";
-            editBtn.innerHTML = '<i class="fas fa-edit mr-2 group-hover:scale-110 transition-transform"></i> Update Service Log';
-        }
+    const btn = document.getElementById('det-edit-link');
+    btn.href = data.editUrl;
+    
+    // Logic to change button color for new vs existing logs
+    if (data.status === "Awaiting Service") {
+        btn.className = "w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center shadow-lg";
+        btn.innerHTML = 'Start Service Log';
     } else {
-        editBtn.style.display = 'none';
+        btn.className = "w-full bg-slate-800 hover:bg-blue-600 text-white py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center shadow-lg";
+        btn.innerHTML = 'Update Service Log';
     }
 }
 
-/**
- * Filters the table rows based on Search Input and Type Dropdown.
- */
 function filterTable() {
-    let input = document.getElementById("assetSearch").value.toUpperCase();
-    let typeValue = document.getElementById("typeFilter").value.toUpperCase();
+    let searchInput = document.getElementById("assetSearch").value.toUpperCase();
+    let typeInput = document.getElementById("typeFilter").value.toUpperCase(); // Changed from techFilter
     let rows = document.getElementsByClassName("asset-row");
     
     for (let row of rows) {
+        // cells[2] is the Asset Type column in your table
         let idText = row.cells[0].innerText.toUpperCase();
         let nameText = row.cells[1].innerText.toUpperCase();
-        let rowType = row.getAttribute("data-type").toUpperCase();
+        let typeText = row.cells[2].innerText.toUpperCase(); 
         
-        let matchesSearch = idText.includes(input) || nameText.includes(input);
-        let matchesType = typeValue === "" || rowType === typeValue;
+        let matchesSearch = idText.includes(searchInput) || nameText.includes(searchInput);
+        let matchesType = typeInput === "" || typeText === typeInput;
         
         row.style.display = (matchesSearch && matchesType) ? "" : "none";
     }
 }
-
-/**
- * Clears all filters and resets the table view.
- */
-function resetFilters() {
-    document.getElementById("assetSearch").value = "";
-    document.getElementById("typeFilter").value = "";
-    filterTable();
-}
 </script>
-
-<style>
-    /* Scoped custom scrollbar for the table area */
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-</style>
 {% endblock %}

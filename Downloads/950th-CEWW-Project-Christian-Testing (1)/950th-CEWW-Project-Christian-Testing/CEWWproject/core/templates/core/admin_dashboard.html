@@ -16,11 +16,11 @@
             --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Prevent body from scrolling */
         body, html {
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            padding: 0;
+            background-color: #f1f5f9;
         }
 
         #sidebar {
@@ -31,18 +31,19 @@
             top: 0;
             left: 0;
             height: 100vh;
+            background-color: #3d5171;
+            z-index: 50;
         }
         
         #main-content {
             padding-left: var(--sb-width);
             transition: padding-left var(--transition);
             will-change: padding-left;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* State Classes */
         .sidebar-collapsed #sidebar { width: var(--sb-collapsed) !important; }
         .sidebar-collapsed #main-content { padding-left: var(--sb-collapsed) !important; }
 
@@ -56,11 +57,9 @@
             opacity: 0;
         }
 
-        /* Centering Icons Fix */
         .sidebar-collapsed .nav-item {
             justify-content: center !important;
             padding-left: 0 !important;
-            padding-right: 0 !important;
         }
 
         .sidebar-collapsed .nav-item i {
@@ -70,34 +69,45 @@
             font-size: 1.25rem;
         }
 
-        .sidebar-collapsed .show-on-collapsed {
-            display: block !important;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* DASHBOARD FIT-TO-SCREEN LOGIC */
         main {
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Prevent page scroll */
-            padding: 1.5rem; /* Slightly tighter for better fit */
-            gap: 1.5rem;
+            padding: 2rem;
+            gap: 2rem;
         }
 
-        .scrollable-section {
-            overflow-y: auto;
-            flex: 1;
-            min-height: 0;
+        .dashboard-grid {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 2rem;
+            width: 100%;
         }
 
-        /* Ensure charts scale vertically */
-        .chart-box {
+        .table-wrapper {
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+        }
+
+        .scroll-area {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .chart-container {
             position: relative;
-            height: 200px; /* Base height for charts to prevent collapse */
-            flex: 1;
+            height: 300px;
+            width: 100%;
         }
     </style>
 </head>
@@ -110,42 +120,34 @@
         })();
     </script>
 
-<div class="flex h-screen overflow-hidden">
-    <div id="sidebar" class="bg-[#3d5171] text-white flex flex-col z-50 overflow-hidden">
+<div class="flex">
+    <div id="sidebar" class="text-white flex flex-col overflow-hidden">
         <div class="p-6 border-b border-slate-600/50 flex items-center justify-between min-h-[73px]">
-            <h2 class="text-sm font-bold tracking-tight uppercase sidebar-text">950th CEWW System</h2>
-            <i class="fas fa-shield-alt hidden show-on-collapsed text-xl mx-auto"></i>
+            <h2 class="text-sm font-bold tracking-tight uppercase sidebar-text text-white">950th CEWW System</h2>
+            <i class="fas fa-shield-alt hidden sidebar-collapsed:block text-xl mx-auto"></i>
         </div>
 
         <nav class="flex-1 mt-4 px-2 space-y-1">
             <a href="{% url 'dashboard' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'dashboard' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-th-large mr-3 w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
             </a>
-
             <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
             </a>
-
             <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
             </a>
-
             <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
             </a>
-
-            {% if request.user.groups.all.0.name != 'Admin' %}
+            {% if request.user.groups.all.0.name == 'Admin' %}
             <a href="{% url 'analytics' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
             </a>
-            {% endif %}
-
-            {% if request.user.groups.all.0.name == 'Admin' %}
             <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
             </a>
             {% endif %}
-
             <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
             </a>
@@ -165,9 +167,8 @@
         <header class="bg-white px-8 py-4 flex items-center justify-between border-b border-slate-200 shrink-0">
             <div class="flex items-center">
                 <i id="burgerBtn" class="fas fa-bars text-slate-600 cursor-pointer hover:text-blue-600 transition-colors text-lg p-2 rounded-md hover:bg-slate-50"></i>
-            </div>
+                </div>
 
-            
             <div class="flex items-center space-x-6">
                 <i class="fas fa-bell text-slate-600 cursor-pointer hover:text-blue-600"></i>
                 <div class="relative">
@@ -177,7 +178,6 @@
                     </button>
                     <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-xl py-2 border border-slate-200 z-50">
                         <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Profile</a>
-                        <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Settings</a>
                         <hr class="my-2">
                         <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}
@@ -190,86 +190,102 @@
 
         <main>
             {% block content %}
-            <div class="scrollable-section">
+            <div class="dashboard-grid">
                 <h1 class="text-xl font-black text-slate-800 uppercase">Dashboard Overview</h1>
                 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center">
-                        <p class="text-slate-500 text-xs font-bold mb-2">TOTAL ASSETS</p>
-                        <div class="text-3xl font-bold">102</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Total Assets</p>
+                        <div class="text-3xl font-black text-slate-800">{{ total_assets|default:"0" }}</div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center">
-                        <p class="text-slate-500 text-xs font-bold mb-2 text-green-500">ASSIGNED</p>
-                        <div class="text-3xl font-bold text-green-500">62</div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-green-500/70 text-[10px] font-black mb-1 tracking-widest uppercase">Assigned</p>
+                        <div class="text-3xl font-black text-green-600">{{ assigned_assets|default:"0" }}</div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center">
-                        <p class="text-slate-500 text-xs font-bold mb-2">MAINTENANCE</p>
-                        <div class="text-3xl font-bold">4</div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Maintenance</p>
+                        <div class="text-3xl font-black text-slate-800">{{ maintenance_assets_count|default:"0" }}</div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 text-center text-red-500">
-                        <p class="text-slate-500 text-xs font-bold mb-2">OPEN INCIDENTS</p>
-                        <div class="text-3xl font-bold">2</div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-red-400 text-[10px] font-black mb-1 tracking-widest uppercase">Open Incidents</p>
+                        <div class="text-3xl font-black text-red-600">{{ open_incidents_count|default:"02" }}</div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 shrink-0">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col">
-                        <h3 class="font-bold text-sm mb-4">Asset Distribution</h3>
-                        <div class="chart-box"><canvas id="adminAssetChart"></canvas></div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Asset Distribution</h3>
+                        <div class="chart-container"><canvas id="adminAssetChart"></canvas></div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col">
-                        <h3 class="font-bold text-sm mb-4">Incident Severity</h3>
-                        <div class="flex items-center flex-1">
-                            <div class="w-1/2 chart-box"><canvas id="adminIncidentPie"></canvas></div>
-                            <div class="w-1/2 pl-8 space-y-2 text-sm font-medium text-slate-600">
-                                <p><span class="inline-block w-3 h-3 bg-[#e2e8f0] mr-2"></span> Low</p>
-                                <p><span class="inline-block w-3 h-3 bg-[#cbd5e1] mr-2"></span> Medium</p>
-                                <p><span class="inline-block w-3 h-3 bg-[#94a3b8] mr-2"></span> High</p>
-                                <p><span class="inline-block w-3 h-3 bg-[#475569] mr-2"></span> Critical</p>
-                            </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Incident Severity</h3>
+                        <div class="chart-container"><canvas id="adminIncidentPie"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-10">
+                    <div class="table-wrapper">
+                        <div class="px-6 py-4 border-b border-slate-100 font-black text-[10px] text-slate-400 uppercase tracking-widest bg-slate-50/50">Recent Maintenance</div>
+                        <div class="scroll-area custom-scrollbar">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                    <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                        <th class="px-6 py-3">Asset</th>
+                                        <th class="px-6 py-3">Technician</th>
+                                        <th class="px-6 py-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    {% for maintenance in recent_maintenance %}
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-slate-700">{{ maintenance.asset.assets_name }}</td>
+                                        <td class="px-6 py-4 text-slate-500">{{ maintenance.technician.username }}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 {% if maintenance.status == 'Completed' %}bg-emerald-50 text-emerald-600{% else %}bg-amber-50 text-amber-600{% endif %} rounded text-[10px] font-bold uppercase">
+                                                {{ maintenance.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-slate-700">Asus Laptop</td>
+                                        <td class="px-6 py-4 text-slate-500">Admin2</td>
+                                        <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase">Completed</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 shrink-0 pb-4">
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-slate-200">
-                        <div class="p-4 border-b border-slate-100 font-bold text-sm bg-slate-50">Recent Maintenance</div>
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 text-slate-400 uppercase">
-                                <tr>
-                                    <th class="p-4">Asset</th>
-                                    <th class="p-4">Date</th>
-                                    <th class="p-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                {% for maintenance in recent_maintenance %}
-                                <tr>
-                                    <td class="p-4 font-bold">{{ maintenance.asset.name }}</td>
-                                    <td class="p-4">{{ maintenance.date }}</td>
-                                    <td class="p-4"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded">{{ maintenance.status }}</span></td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="3" class="p-10 text-center italic text-slate-400">No pending tasks</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-slate-200">
-                        <div class="p-4 border-b border-slate-100 font-bold text-sm bg-slate-50">Recent Incidents</div>
-                        <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 text-slate-400 uppercase">
-                                <tr>
-                                    <th class="p-4">Incident</th>
-                                    <th class="p-4">Severity</th>
-                                    <th class="p-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                 <tr><td colspan="3" class="p-10 text-center italic text-slate-400">No new reports</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="table-wrapper">
+                        <div class="px-6 py-4 border-b border-slate-100 font-black text-[10px] text-slate-400 uppercase tracking-widest bg-slate-50/50">Open Incidents</div>
+                        <div class="scroll-area custom-scrollbar">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                    <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                        <th class="px-6 py-3">Incident</th>
+                                        <th class="px-6 py-3">Severity</th>
+                                        <th class="px-6 py-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    {% for incident in open_incidents %}
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-slate-700">{{ incident.title }}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="text-[10px] font-black uppercase {% if incident.severity == 'Critical' %}text-red-600{% else %}text-slate-500{% endif %}">
+                                                {{ incident.severity }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-wider">{{ incident.status }}</span></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="3" class="px-6 py-10 text-center italic text-slate-300">No open incidents reported</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -279,6 +295,7 @@
 </div>
 
 <script>
+    // --- UI LOGIC ---
     const burgerBtn = document.getElementById('burgerBtn');
     const body = document.body;
 
@@ -299,37 +316,59 @@
         }
     }
 
+    // --- CHART LOGIC ---
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.color = '#94a3b8';
+
+    // Asset Distribution Bar Chart
     if (document.getElementById('adminAssetChart')) {
         new Chart(document.getElementById('adminAssetChart'), {
             type: 'bar',
             data: {
-                labels: ['PC', 'Laptops', 'Servers', 'Routers', 'Printers'],
+                labels: {{ asset_labels|safe|default:"[]" }},
                 datasets: [{
-                    data: [28, 38, 18, 8, 12],
-                    backgroundColor: ['#d1e4ff', '#ff8a8a', '#c2f2d9', '#ffed9e', '#ffd6a5']
+                    data: {{ asset_totals|safe|default:"[]" }},
+                    backgroundColor: ['#3b82f6', '#818cf8', '#34d399', '#fbbf24', '#f87171'],
+                    borderRadius: 6,
+                    barThickness: 20
                 }]
             },
             options: { 
-                maintainAspectRatio: false, // Required to fit container
-                plugins: { legend: { display: false } } 
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] } },
+                    x: { grid: { display: false } }
+                }
             }
         });
     }
 
+    // Incident Severity Doughnut Chart
     if (document.getElementById('adminIncidentPie')) {
         new Chart(document.getElementById('adminIncidentPie'), {
-            type: 'pie',
+            type: 'doughnut',
             data: {
-                labels: ['Low', 'Medium', 'High', 'Critical'],
+                labels: {{ severity_labels|safe|default:"[]" }},
                 datasets: [{
-                    data: [40, 25, 20, 15],
-                    backgroundColor: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#475569'],
-                    borderWidth: 2
+                    data: {{ severity_totals|safe|default:"[]" }},
+                    backgroundColor: ['#e2e8f0', '#94a3b8', '#475569', '#1e293b'],
+                    borderWidth: 0,
+                    cutout: '70%'
                 }]
             },
             options: { 
-                maintainAspectRatio: false, // Required to fit container
-                plugins: { legend: { display: false } } 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: 'right', 
+                        labels: { 
+                            boxWidth: 12, 
+                            padding: 20,
+                            font: { weight: 'bold', size: 11 } 
+                        } 
+                    } 
+                } 
             }
         });
     }

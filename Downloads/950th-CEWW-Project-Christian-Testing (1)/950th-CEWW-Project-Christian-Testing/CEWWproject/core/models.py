@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 class Asset(models.Model):
-    ASSET_TYPES = [('PC', 'PC'), ('Laptop', 'Laptop'), ('Server', 'Server')]
+    ASSET_TYPES = [('PC', 'PC'), ('Laptop', 'Laptop'), ('Server', 'Server'), ('Router', 'Router')]
     STATUS_CHOICES = [('Active', 'Active'), ('Inactive', 'Inactive'), ('Maintenance', 'Under Maintenance')]
 
     assets_id = models.CharField(max_length=10, unique=True, editable=False)
@@ -13,6 +13,7 @@ class Asset(models.Model):
     assets_type = models.CharField(max_length=20, choices=ASSET_TYPES)
     location = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
+    maintenance_reason = models.TextField(blank=True, null=True)
     
     # AUTOMATIC: auto_now_add captures date AND time on creation
     date_added = models.DateTimeField(default=timezone.now)
@@ -36,22 +37,20 @@ class Asset(models.Model):
         return f"{self.assets_id} - {self.assets_name}"
 
 class Maintenance(models.Model):
-    STATUS_CHOICES = [('Completed', 'Completed'), ('In Progress', 'In Progress')]
+    STATUS_CHOICES = [
+        ('In Progress', 'In Progress'),
+        ('Completed', 'Completed'),
+    ]
 
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='maintenances')
+    asset = models.ForeignKey('Asset', on_delete=models.CASCADE, related_name='maintenance_logs')
+    technician = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     maintenance_type = models.CharField(max_length=100)
-    
-    # AUTOMATIC: Changed to ForeignKey to capture actual User
-    technician = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    notes = models.TextField(blank=True, null=True)
-    
-    # AUTOMATIC: Captures Date and Time automatically
+    notes = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='In Progress')
     date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
 
     def __str__(self):
-        return f"Maintenance for {self.asset.assets_name} by {self.technician}"
+        return f"{self.asset.assets_name} - {self.date.date()}"
 
 class Incident(models.Model):
     SEVERITY_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High'), ('Critical', 'Critical')]
