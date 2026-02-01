@@ -1,0 +1,74 @@
+{% extends "core/admin_dashboard.html" %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-2xl font-extrabold text-slate-800 uppercase">User Access Control & RBAC</h1>
+    <a href="{% url 'add_user' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition flex items-center shadow-lg shadow-blue-200">
+        <i class="fas fa-user-plus mr-2"></i> Add New User
+    </a>
+</div>
+
+<div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+    <table class="w-full text-left border-collapse">
+        <thead class="bg-slate-50 text-slate-400 text-xs uppercase tracking-widest border-b border-slate-100">
+            <tr>
+                <th class="px-6 py-4 font-black">Name</th>
+                <th class="px-6 py-4 font-black">Username / Email</th>
+                <th class="px-6 py-4 font-black">Assigned Assets</th>
+                <th class="px-6 py-4 font-black text-center">Actions</th> 
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for person in users %}
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                    <div class="font-bold text-slate-800">{{ person.get_full_name|default:person.username }}</div>
+                    <div class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full inline-block
+                        {% if person.groups.all.0.name == 'Admin' %} bg-red-100 text-red-600
+                        {% elif person.groups.all.0.name == 'Commander' %} bg-purple-100 text-purple-600
+                        {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                        {{ person.groups.all.0.name|default:"Unassigned" }}
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-slate-600">{{ person.username }}</div>
+                    <div class="text-xs text-slate-400">{{ person.email }}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex flex-wrap gap-2">
+                        {% for asset in person.asset_set.all %}
+                            <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded-md text-[10px] font-bold border border-blue-100">
+                                {{ asset.name }}
+                            </span>
+                        {% empty %}
+                            <span class="text-slate-300 italic text-xs">No assets assigned</span>
+                        {% endfor %}
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex items-center justify-center space-x-3">
+                        <a href="{% url 'edit_user' person.id %}" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit User">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        
+                        <form action="{% url 'delete_user' person.id %}" method="POST" onsubmit="return confirm('Permanently delete {{ person.username }}?');" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="px-6 py-20 text-center text-slate-400">
+                    <i class="fas fa-users text-4xl mb-4 block opacity-20"></i>
+                    <p class="italic">No personnel found in the system.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

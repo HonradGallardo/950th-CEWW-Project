@@ -17,15 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
-
+from core import views
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     # 1. Landing Page (Home)
     path('', TemplateView.as_view(template_name='core/landing.html'), name='home'),
     
     # 2. Login Page
     path('accounts/', include('django.contrib.auth.urls')), 
     
-    # 3. Dashboard
-    path('dashboard/', include('core.urls')),
+    # 3. Include Core URLs
+    path('', include('core.urls')), # This connects the paths you made earlier
+    
+    # 4. User Edit Path
+    path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
 ]

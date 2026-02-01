@@ -5,65 +5,103 @@
     <div class="flex items-center justify-between shrink-0 px-2">
         <div>
             <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Service History</h1>
-            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Asset Lifecycle & Maintenance Tracking</p>
+            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
         </div>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-blue-200 transition flex items-center group">
+        <a href="{% url 'add_maintenance' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-blue-200 transition flex items-center group">
             <i class="fas fa-tools mr-2 group-hover:rotate-12 transition-transform"></i> Create Service Log
-        </button>
+        </a>
     </div>
 
     <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
         
         <div class="col-span-12 lg:col-span-8 flex flex-col min-h-0">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center space-x-4 bg-slate-50/50">
-                    <div class="relative flex-1 max-w-xs">
-                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                        <input type="text" placeholder="Search Assets ID or Name..." 
-                               class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 w-full">
+                
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div class="flex items-center space-x-4 flex-1">
+                        <div class="relative flex-1 max-w-xs">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                            <input type="text" id="assetSearch" onkeyup="filterTable()" placeholder="Search Assets ID or Name..." 
+                                   class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/10 w-full">
+                        </div>
+                        <select id="typeFilter" onchange="filterTable()" class="text-xs px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
+                            <option value="">All Asset Types</option>
+                            <option value="PC">PC</option>
+                            <option value="Laptop">Laptop</option>
+                            <option value="Server">Server</option>
+                        </select>
                     </div>
-                    <select class="text-xs px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
-                        <option>All Asset Types</option>
-                        <option>PC</option>
-                        <option>Laptop</option>
-                        <option>Server</option>
-                    </select>
+                    
+                    <button onclick="resetFilters()" class="text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors flex items-center">
+                        <i class="fas fa-undo-alt mr-1.5"></i> Clear Filters
+                    </button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto">
-                    <table class="w-full text-left border-collapse">
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse" id="maintenanceTable">
                         <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_rgba(226,232,240,1)] z-10">
                             <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                 <th class="px-6 py-4">Asset ID</th>
                                 <th class="px-6 py-4">Asset Name</th>
                                 <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Last Inspected</th>
+                                <th class="px-6 py-4">Last Activity</th>
                                 <th class="px-6 py-4 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-                                <td class="px-6 py-4 text-xs font-bold text-blue-600">AST-01</td>
-                                <td class="px-6 py-4 text-xs font-bold text-slate-700">Workstation PC-01</td>
+                            {% for asset in active_maintenance %}
+                            <tr class="asset-row bg-amber-50/30 hover:bg-amber-50 transition-colors cursor-pointer group"
+                                data-type="{{ asset.assets_type }}"
+                                onclick="showDetails({
+                                    id: '{{ asset.assets_id }}',
+                                    name: '{{ asset.assets_name }}',
+                                    status: 'Under Repair',
+                                    type: '{{ asset.assets_type }}',
+                                    tech: 'Pending Assignment',
+                                    notes: 'Currently marked for maintenance. Click to start the service log.',
+                                    date: 'Active Now',
+                                    editUrl: '{% url 'add_maintenance' %}?asset_id={{ asset.assets_id }}'
+                                })">
+                                <td class="px-6 py-4 text-xs font-bold text-amber-700">{{ asset.assets_id }}</td>
+                                <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ asset.assets_name }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[10px] font-black uppercase">In Progress</span>
+                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-700 border border-amber-200 rounded-md text-[10px] font-black uppercase italic animate-pulse">
+                                        Under Repair
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">28-01-2026</td>
+                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">Active</td>
                                 <td class="px-6 py-4 text-right">
-                                    <i class="fas fa-arrow-right text-slate-300 group-hover:text-blue-500 transition-colors text-[10px]"></i>
+                                    <i class="fas fa-plus text-amber-400 text-[10px]"></i>
                                 </td>
                             </tr>
-                            <tr class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-                                <td class="px-6 py-4 text-xs font-bold text-blue-600">AST-102</td>
-                                <td class="px-6 py-4 text-xs font-bold text-slate-700">Admin Laptop-12</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md text-[10px] font-black uppercase">Done</span>
-                                </td>
-                                <td class="px-6 py-4 text-xs text-slate-400 font-medium">27-01-2026</td>
-                                <td class="px-6 py-4 text-right">
-                                    <i class="fas fa-arrow-right text-slate-300 group-hover:text-blue-500 transition-colors text-[10px]"></i>
-                                </td>
-                            </tr>
+                            {% endfor %}
+
+                            {% for log in maintenances %}
+                                {% if log.asset.status != 'Maintenance' %}
+                                <tr class="asset-row hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                                    data-type="{{ log.asset.assets_type }}"
+                                    onclick="showDetails({
+                                        id: '{{ log.asset.assets_id }}',
+                                        name: '{{ log.asset.assets_name }}',
+                                        status: 'Completed',
+                                        type: '{{ log.asset.assets_type }}',
+                                        tech: '{{ log.technician.username }}',
+                                        notes: '{{ log.notes|escapejs }}',
+                                        date: '{{ log.date|date:"d-m-Y" }}',
+                                        editUrl: '{% url 'edit_maintenance' log.pk %}'
+                                    })">
+                                    <td class="px-6 py-4 text-xs font-bold text-blue-600">{{ log.asset.assets_id }}</td>
+                                    <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ log.asset.assets_name }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md text-[10px] font-black uppercase">Completed</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-xs text-slate-400 font-medium">{{ log.date|date:"d-m-Y" }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <i class="fas fa-eye text-slate-300 group-hover:text-blue-500 text-[10px]"></i>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -71,60 +109,133 @@
         </div>
 
         <div class="col-span-12 lg:col-span-4 flex flex-col h-full">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
-                <div class="flex items-center justify-between mb-6 border-b border-slate-50 pb-4">
-                    <h3 class="font-black uppercase text-xs text-slate-800 tracking-widest">Service Log Details</h3>
-                    <i class="fas fa-file-alt text-slate-300"></i>
+            <div id="detail-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full sticky top-0">
+                
+                <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
+                        <i class="fas fa-mouse-pointer text-slate-300 text-xl"></i>
+                    </div>
+                    <p class="text-slate-400 text-xs italic font-medium px-4">Select a record to view details.</p>
                 </div>
 
-                <div class="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Technician</label>
-                            <p class="text-xs font-bold text-slate-700">John Doe</p>
+                <div id="detail-content" class="hidden flex-1 flex flex-col">
+                    <div class="flex items-center justify-between mb-6 border-b pb-4">
+                        <h3 class="font-black uppercase text-xs text-slate-800 tracking-widest" id="det-id">---</h3>
+                        <span class="text-[10px] font-bold text-slate-400" id="det-date">---</span>
+                    </div>
+
+                    <div class="space-y-6 flex-1">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Asset Name</label>
+                                <p class="text-xs font-bold text-slate-700" id="det-name">---</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 uppercase">Technician</label>
+                                <p class="text-xs font-bold text-slate-700" id="det-tech">---</p>
+                            </div>
                         </div>
-                        <div class="space-y-1 text-right">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Date/Time</label>
-                            <p class="text-xs font-bold text-slate-700">28-01-2026 | 12:30 PM</p>
+
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">Type:</span>
+                                <span class="text-[10px] text-slate-700 font-black" id="det-type">---</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">Status:</span>
+                                <span class="text-[10px] text-blue-600 font-black" id="det-status">---</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-black text-slate-400 uppercase">Notes / Progress</label>
+                            <div class="bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200 min-h-[100px]">
+                                <p class="text-xs text-slate-600 leading-relaxed" id="det-notes">---</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">Asset Type:</span>
-                            <span class="text-[10px] text-slate-700 font-black">PC</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">Asset Name:</span>
-                            <span class="text-[10px] text-slate-700 font-black">PC 02</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">Status:</span>
-                            <span class="text-[10px] text-blue-600 font-black italic">Maintenance - Software Update</span>
-                        </div>
+                    <div class="mt-auto pt-6">
+                        <a id="det-edit-link" href="#" class="w-full bg-slate-800 hover:bg-blue-600 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center group shadow-lg">
+                            <i class="fas fa-edit mr-2 group-hover:scale-110 transition-transform"></i>
+                            Update Service Log
+                        </a>
                     </div>
-
-                    <div class="space-y-2.5">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Notes / Issues</label>
-                        <div class="bg-white border border-slate-200 rounded-xl p-4 min-h-[120px]">
-                            <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                                Performed quarterly security patch and updated antivirus softwares. System performance verified post-update.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-6 pt-6 border-t border-slate-50">
-                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-black transition shadow-sm flex items-center justify-center">
-                        <i class="fas fa-edit mr-2"></i> Edit Log Entry
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<script>
+/**
+ * Updates the side detail card with data from the clicked table row.
+ * Handles dynamic URL routing and button styling.
+ */
+function showDetails(data) {
+    document.getElementById('placeholder-content').classList.add('hidden');
+    document.getElementById('detail-content').classList.remove('hidden');
+
+    document.getElementById('det-id').innerText = data.id;
+    document.getElementById('det-name').innerText = data.name;
+    document.getElementById('det-date').innerText = data.date;
+    document.getElementById('det-tech').innerText = data.tech;
+    document.getElementById('det-type').innerText = data.type;
+    document.getElementById('det-status').innerText = data.status;
+    document.getElementById('det-notes').innerText = data.notes;
+
+    const editBtn = document.getElementById('det-edit-link');
+
+    if (data.editUrl) {
+        editBtn.href = data.editUrl;
+        editBtn.style.display = 'flex';
+
+        if (data.status === 'Under Repair') {
+            // Style for creating a NEW log
+            editBtn.className = "w-full bg-amber-500 hover:bg-amber-600 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center group shadow-lg shadow-amber-100";
+            editBtn.innerHTML = '<i class="fas fa-tools mr-2 group-hover:rotate-12 transition-transform"></i> Start Service Log';
+        } else {
+            // Style for updating an EXISTING log
+            editBtn.className = "w-full bg-slate-800 hover:bg-blue-600 text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center group shadow-lg shadow-slate-100";
+            editBtn.innerHTML = '<i class="fas fa-edit mr-2 group-hover:scale-110 transition-transform"></i> Update Service Log';
+        }
+    } else {
+        editBtn.style.display = 'none';
+    }
+}
+
+/**
+ * Filters the table rows based on Search Input and Type Dropdown.
+ */
+function filterTable() {
+    let input = document.getElementById("assetSearch").value.toUpperCase();
+    let typeValue = document.getElementById("typeFilter").value.toUpperCase();
+    let rows = document.getElementsByClassName("asset-row");
+    
+    for (let row of rows) {
+        let idText = row.cells[0].innerText.toUpperCase();
+        let nameText = row.cells[1].innerText.toUpperCase();
+        let rowType = row.getAttribute("data-type").toUpperCase();
+        
+        let matchesSearch = idText.includes(input) || nameText.includes(input);
+        let matchesType = typeValue === "" || rowType === typeValue;
+        
+        row.style.display = (matchesSearch && matchesType) ? "" : "none";
+    }
+}
+
+/**
+ * Clears all filters and resets the table view.
+ */
+function resetFilters() {
+    document.getElementById("assetSearch").value = "";
+    document.getElementById("typeFilter").value = "";
+    filterTable();
+}
+</script>
+
 <style>
+    /* Scoped custom scrollbar for the table area */
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
