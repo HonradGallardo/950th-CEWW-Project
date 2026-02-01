@@ -122,21 +122,28 @@ def delete_user(request, user_id):
 # --- MAINTENANCE MODULE ---
 @login_required
 def maintenance_list(request):
-    # FIXED: Use 'maintenance_logs' to match your model's related name
-    # This prevents the FieldError and stops duplicates from appearing
+    # 1. HISTORY: Get all logs (In Progress & Completed)
+    maintenances = Maintenance.objects.all().order_by('-date')
+    
+    # 2. ACTIVE WORK: Get asset IDs that are currently in a log marked 'In Progress'
+    # This prevents an asset from being in "Queued" and "History" at the same time
+    assets_under_active_repair = Maintenance.objects.filter(
+        status='In Progress'
+    ).values_list('asset_id', flat=True)
+
+    # 3. QUEUED: Fetch Assets that have status='Maintenance' but no active log yet
     active_maintenance = Asset.objects.filter(
         status='Maintenance'
     ).exclude(
-        maintenance_logs__isnull=False
+        id__in=assets_under_active_repair
     )
 
-    maintenances = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     asset_types = Asset.objects.values_list('assets_type', flat=True).distinct()
 
     return render(request, 'core/maintenance_list.html', {
         'active_maintenance': active_maintenance,
         'maintenances': maintenances,
-        'asset_types': asset_types
+        'asset_types': asset_types,
     })
 
 @login_required
@@ -147,7 +154,6 @@ def add_maintenance(request):
     if asset_id:
         asset = get_object_or_404(Asset, assets_id=asset_id)
         initial_data['asset'] = asset
-        # This matches the field in your models.py
         initial_data['notes'] = asset.maintenance_reason
 
     if request.method == 'POST':
@@ -157,16 +163,18 @@ def add_maintenance(request):
             log.technician = request.user
             log.save()
 
-            # Update Asset Status and CLEAR the reason since it's now in the log
+            # PUSH TO ASSET: Update the Asset status based on this log
             asset = log.asset
             if log.status == 'Completed':
                 asset.status = 'Active'
-                asset.maintenance_reason = "" # Clear it out
+                asset.maintenance_reason = "" # Clear the problem description
             else:
+                # If 'In Progress', ensure the asset is still marked as 'Maintenance'
                 asset.status = 'Maintenance'
+            
             asset.save()
 
-            messages.success(request, "Service log saved!")
+            messages.success(request, f"Service log for {asset.assets_id} saved!")
             return redirect('maintenance_list')
     else:
         form = MaintenanceForm(initial=initial_data)
@@ -192,12 +200,16 @@ def edit_maintenance(request, pk):
 @login_required
 def delete_maintenance(request, pk):
     maintenance = get_object_or_404(Maintenance, pk=pk)
+    asset = maintenance.asset
     if request.method == "POST":
         maintenance.delete()
-        messages.success(request, "Service log removed.")
+        # Optional: Reset asset status so it's not 'stuck'
+        asset.status = 'Active'
+        asset.save()
+        messages.success(request, "Service log removed and asset reset to Active.")
     return redirect('maintenance_list')
 
-# --- ASSET MODULE ---
+############################################################### --- ASSET MODULE ---########################################################
 @login_required
 def asset_list(request):
     assets = Asset.objects.all()
@@ -245,9 +257,64 @@ def delete_asset(request, asset_id):
     return redirect('asset_list')
 
 # --- OTHER ---
+# --- INCIDENT MODULE ---
 @login_required
 def incident_list(request):
-    return render(request, 'core/incident_list.html', {'incidents': Incident.objects.all()})
+    # Optional: Delete logic if called from this page
+    if request.method == 'POST' and request.POST.get('action') == 'delete':
+        incident_id = request.POST.get('incident_id')
+        incident = get_object_or_404(Incident, id=incident_id)
+        incident.delete()
+        messages.success(request, "Incident record removed.")
+        return redirect('incident_list')
+
+    context = {
+        'incidents': Incident.objects.all().order_by('-date'),
+        'assets': Asset.objects.all(),
+    }
+    return render(request, 'core/incident_list.html', context)
+
+@login_required
+def add_incident(request):
+    if request.method == 'POST':
+        # 1. Get the data from the POST request
+        title = request.POST.get('title')
+        severity = request.POST.get('severity')
+        status = request.POST.get('status') # This captures "Investigating"
+        description = request.POST.get('description')
+        affected_area = request.POST.get('affected_area')
+
+        # 2. Save it to the database
+        Incident.objects.create(
+            title=title,
+            severity=severity,
+            status=status,  # This ensures the choice is saved
+            description=f"Area: {affected_area}\n\n{description}",
+            # date is usually auto_now_add in models.py
+        )
+        
+        messages.success(request, "Incident reported successfully!")
+        return redirect('incident_list')
+
+    # If GET, just show the form
+    return render(request, 'core/add_incident.html')
+
+@login_required
+def edit_incident(request, incident_id):  # Make sure this matches the URL keyword
+    incident = get_object_or_404(Incident, id=incident_id)
+    
+    if request.method == 'POST':
+        incident.status = request.POST.get('status')
+        incident.save()
+        return redirect('incident_list')
+        
+    return render(request, 'core/edit_incident.html', {'incident': incident})
+
+@login_required
+def delete_incident(request, incident_id):
+    incident = get_object_or_404(Incident, id=incident_id)
+    incident.delete()
+    return redirect('incident_list')
 
 @login_required
 def analytics(request):

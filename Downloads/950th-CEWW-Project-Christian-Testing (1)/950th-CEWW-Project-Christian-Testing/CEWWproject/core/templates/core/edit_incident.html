@@ -1,0 +1,72 @@
+{% extends "core/admin_dashboard.html" %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-full p-4 bg-slate-50/50">
+    <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        
+        <div class="bg-slate-900 px-8 py-5 border-b border-slate-800">
+            <h2 class="text-lg font-black text-white uppercase tracking-tight text-center">Modify Incident Status</h2>
+        </div>
+
+        <form method="POST" class="p-8 space-y-6">
+            {% csrf_token %}
+
+            <div class="space-y-4 opacity-70">
+                <div class="grid grid-cols-1 md:grid-cols-4 items-center gap-2">
+                    <label class="text-xs font-black text-slate-400 uppercase">Incident:</label>
+                    <div class="md:col-span-3">
+                        <p class="text-xs font-bold text-slate-700 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
+                            INC-{{ incident.id|stringformat:"03d" }}: {{ incident.title }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 items-center gap-2">
+                    <label class="text-xs font-black text-slate-400 uppercase">Severity:</label>
+                    <div class="md:col-span-3">
+                        <span class="px-3 py-1 rounded-lg text-[10px] font-black uppercase border 
+                            {% if incident.severity == 'Critical' %}bg-red-50 text-red-600 border-red-100
+                            {% elif incident.severity == 'High' %}bg-orange-50 text-orange-600 border-orange-100
+                            {% else %}bg-amber-50 text-amber-600 border-amber-100{% endif %}">
+                            {{ incident.severity }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 items-center gap-2">
+                    <label class="text-xs font-black text-blue-600 uppercase">Current Status:</label>
+                    <div class="md:col-span-3">
+                        <select name="status" class="w-full bg-white border-2 border-blue-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition appearance-none cursor-pointer">
+                            <option value="Open" {% if incident.status == 'Open' %}selected{% endif %}> Open</option>
+                            <option value="Investigating" {% if incident.status == 'Investigating' %}selected{% endif %}> Investigating</option>
+                            <option value="Resolved" {% if incident.status == 'Resolved' %}selected{% endif %}> Resolved</option>
+                        </select>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase mt-2 ml-1 tracking-widest">Update this to reflect current progress</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2">
+                    <label class="text-xs font-black text-slate-400 uppercase tracking-widest">Original Report Summary:</label>
+                    <div class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs text-slate-500 italic leading-relaxed max-h-32 overflow-y-auto">
+                        {{ incident.description }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 flex flex-col gap-3">
+                <button type="submit" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-xs tracking-widest py-4 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
+                    Update Incident Status
+                </button>
+                <a href="{% url 'incident_list' %}" class="text-center py-2 text-[10px] font-black text-slate-400 uppercase hover:text-slate-600 transition tracking-widest">
+                    Discard Changes
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
