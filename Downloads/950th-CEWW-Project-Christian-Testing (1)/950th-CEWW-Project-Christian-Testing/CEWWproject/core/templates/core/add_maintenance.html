@@ -11,8 +11,8 @@
             {% csrf_token %}
             
             <div class="text-[11px] font-bold text-slate-500 space-y-1 italic">
-                <p>Technician: <span class="text-blue-600">{{ request.user.username }} (Automatically appended)</span></p>
-                <p>Date / Time: <span class="text-blue-600">{% now "d-m-Y | H:i" %} (Automatically appended)</span></p>
+                <p class="text-slate-600 font-black">Technician:  <span class="text-gray-500 font-bold">{{ request.user.username }}</span></p>
+                <p class="text-slate-800 font-Black">Date / Time: <span class="text-gray-500 font-bold">{% now "d-m-Y | H:i" %}</span></p>
             </div>
 
             <div class="space-y-4">

@@ -21,28 +21,21 @@ def role_redirect(request):
 # --- DASHBOARD ---
 @login_required
 def dashboard(request):
-    # --- 1. GLOBAL METRICS (For Commander/Admin) ---
+    # Global Metrics
     total_assets = Asset.objects.count()
-    
-    # FIX: 'assigned_to' no longer exists. 
-    # Let's count assets that are not 'Inactive' instead, 
-    # or you can count based on 'location'
     assigned_assets = Asset.objects.exclude(status='Inactive').count() 
-    
-    open_incidents = Incident.objects.filter(status='Open').count()
+    open_incidents_count = Incident.objects.filter(status='Open').count()
     critical_threats = Incident.objects.filter(severity='Critical', status='Open').count()
 
-    # Base context
     context = {
         'total_assets': total_assets,
         'assigned_assets': assigned_assets,
-        'open_incidents': open_incidents,
+        'open_incidents_count': open_incidents_count,
         'critical_threats': critical_threats,
-        'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')), # Changed to assets_type
+        'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')),
         'severity_counts': Incident.objects.values('severity').annotate(total=Count('id')),
     }
 
-    # --- 2. ROLE-BASED LOGIC ---
     user_groups = request.user.groups.values_list('name', flat=True)
 
     if 'Commander' in user_groups:
@@ -51,9 +44,6 @@ def dashboard(request):
     elif 'Personnel' in user_groups:
         personnel_context = {
             'total_assets': total_assets,
-            # FIX: Maintenance logic needs to reference existing fields.
-            # If you no longer have a link between Asset and User, 
-            # we'll just show all pending maintenance for now.
             'my_maintenance_count': Maintenance.objects.filter(status='In Progress').count(),
             'reported_incidents_count': Incident.objects.count(), 
             'recent_incidents': Incident.objects.all().order_by('-date')[:5],
@@ -61,19 +51,26 @@ def dashboard(request):
         return render(request, 'core/personnel_dashboard.html', personnel_context)
     
     elif 'Admin' in user_groups:
-        context['recent_maintenance'] = Maintenance.objects.all().order_by('-date')[:5]
-        context['recent_incidents'] = Incident.objects.all().order_by('-date')[:5]
+        asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
+        context['asset_labels'] = [item['assets_type'] for item in asset_qs]
+        context['asset_totals'] = [item['total'] for item in asset_qs]
+
+        severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
+        context['severity_labels'] = [item['severity'] for item in severity_qs]
+        context['severity_totals'] = [item['total'] for item in severity_qs]
+
+        context['recent_maintenance'] = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
+        context['open_incidents'] = Incident.objects.filter(status='Open').order_by('-date')[:5]
+        
         return render(request, 'core/admin_dashboard.html', context)
 
     return render(request, 'core/landing.html', {'error': 'Unauthorized access.'})
 
-# --- PERSONNEL CRUD (CLEANED) ---
+# --- PERSONNEL CRUD ---
 @login_required
 def user_list(request):
     if not request.user.groups.filter(name__in=['Admin', 'Commander']).exists():
         return redirect('dashboard')
-    
-    # We use 'users' as the key to match your HTML {% for person in users %}
     all_users = User.objects.all().prefetch_related('groups')
     return render(request, 'core/user_list.html', {'users': all_users})
 
@@ -84,14 +81,11 @@ def add_user(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
-            user.save() # User must be saved before we can add groups
-            
-            # Now handle the Role/Group
+            user.save()
             selected_group = form.cleaned_data.get('role')
             if selected_group:
                 user.groups.add(selected_group)
-            
-            messages.success(request, f"User {user.username} created with role {selected_group.name}")
+            messages.success(request, f"User {user.username} created.")
             return redirect('user_list')
     else:
         form = UserForm()
@@ -107,13 +101,10 @@ def edit_user(request, user_id):
             if form.cleaned_data['password']:
                 user.set_password(form.cleaned_data['password'])
             user.save()
-            
-            # Update the Role/Group
             selected_group = form.cleaned_data.get('role')
             if selected_group:
-                user.groups.clear() # Remove old roles first!
+                user.groups.clear()
                 user.groups.add(selected_group)
-                
             messages.success(request, "User updated successfully!")
             return redirect('user_list')
     else:
@@ -125,83 +116,79 @@ def delete_user(request, user_id):
     if request.method == 'POST':
         target_user = get_object_or_404(User, id=user_id)
         target_user.delete()
-        messages.success(request, "User deleted successfully.")
+        messages.success(request, "User deleted.")
     return redirect('user_list')
 
-# --- OTHER MODULES ---
-@login_required
-def asset_list(request):
-    return render(request, 'core/asset_list.html', {'assets': Asset.objects.all()})
-
-################################################################## --- MAINTENANCE CRUD --- ##################################################################
+# --- MAINTENANCE MODULE ---
 @login_required
 def maintenance_list(request):
-    # Fetch assets currently set to 'Maintenance' status
-    active_maintenance = Asset.objects.filter(status='Maintenance')
-    
-    # Fetch all completed service logs for the history
-    history = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
+    # FIXED: Use 'maintenance_logs' to match your model's related name
+    # This prevents the FieldError and stops duplicates from appearing
+    active_maintenance = Asset.objects.filter(
+        status='Maintenance'
+    ).exclude(
+        maintenance_logs__isnull=False
+    )
+
+    maintenances = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
+    asset_types = Asset.objects.values_list('assets_type', flat=True).distinct()
 
     return render(request, 'core/maintenance_list.html', {
         'active_maintenance': active_maintenance,
-        'maintenances': history
+        'maintenances': maintenances,
+        'asset_types': asset_types
     })
 
 @login_required
 def add_maintenance(request):
-    if request.method == "POST":
+    asset_id = request.GET.get('asset_id')
+    initial_data = {}
+    
+    if asset_id:
+        asset = get_object_or_404(Asset, assets_id=asset_id)
+        initial_data['asset'] = asset
+        # This matches the field in your models.py
+        initial_data['notes'] = asset.maintenance_reason
+
+    if request.method == 'POST':
         form = MaintenanceForm(request.POST)
         if form.is_valid():
             log = form.save(commit=False)
             log.technician = request.user
             log.save()
 
-            # AUTOMATION: Update the Asset status to 'Maintenance' immediately
+            # Update Asset Status and CLEAR the reason since it's now in the log
             asset = log.asset
-            asset.status = 'Maintenance' 
+            if log.status == 'Completed':
+                asset.status = 'Active'
+                asset.maintenance_reason = "" # Clear it out
+            else:
+                asset.status = 'Maintenance'
             asset.save()
 
+            messages.success(request, "Service log saved!")
             return redirect('maintenance_list')
     else:
-        form = MaintenanceForm()
+        form = MaintenanceForm(initial=initial_data)
+
     return render(request, 'core/add_maintenance.html', {'form': form})
 
 @login_required
 def edit_maintenance(request, pk):
-    # Fetch the specific maintenance record
-    maintenance = get_object_or_404(Maintenance, pk=pk)
-    
+    log = get_object_or_404(Maintenance, pk=pk)
     if request.method == 'POST':
-        # Pass the instance so we update the existing record instead of creating a new one
-        form = MaintenanceForm(request.POST, instance=maintenance)
-        
+        form = MaintenanceForm(request.POST, instance=log)
         if form.is_valid():
-            # Save the maintenance log details (notes, type, status, etc.)
-            updated_maintenance = form.save()
-            
-            # Logic: Sync the Asset's status with the Maintenance Log's status
-            # If the log is marked 'Completed', set the Asset to 'Active'
-            asset = updated_maintenance.asset
-            log_status = updated_maintenance.status
-            
-            if log_status == 'Completed':
-                asset.status = 'Active' 
-            else:
-                # If still 'In Progress' or 'Pending', keep asset in 'Maintenance'
-                asset.status = 'Maintenance'
-            
+            updated_log = form.save()
+            asset = updated_log.asset
+            asset.status = 'Active' if updated_log.status == 'Completed' else 'Maintenance'
             asset.save()
-            
-            messages.success(request, f"Service log for {asset.assets_id} has been updated.")
+            messages.success(request, "Service log updated.")
             return redirect('maintenance_list')
     else:
-        form = MaintenanceForm(instance=maintenance)
+        form = MaintenanceForm(instance=log)
+    return render(request, 'core/add_maintenance.html', {'form': form, 'edit_mode': True})
 
-    return render(request, 'core/edit_maintenance.html', {
-        'form': form,
-        'maintenance': maintenance,
-    })
-    
 @login_required
 def delete_maintenance(request, pk):
     maintenance = get_object_or_404(Maintenance, pk=pk)
@@ -210,20 +197,66 @@ def delete_maintenance(request, pk):
         messages.success(request, "Service log removed.")
     return redirect('maintenance_list')
 
+# --- ASSET MODULE ---
+@login_required
+def asset_list(request):
+    assets = Asset.objects.all()
+    context = {
+        'assets': assets,
+        'active_assets_count': assets.filter(status='Active').count(),
+        'inactive_assets_count': assets.filter(status='Inactive').count(),
+        'maintenance_assets_count': assets.filter(status='Maintenance').count(),
+    }
+    return render(request, 'core/asset_list.html', context)
+
+@login_required
+def add_asset(request):
+    if request.method == 'POST':
+        form = AssetForm(request.POST)
+        if form.is_valid():
+            asset = form.save(commit=False)
+            asset.assigned_to = request.user 
+            asset.save()
+            messages.success(request, "Asset registered successfully.")
+            return redirect('asset_list')
+    else:
+        form = AssetForm()
+    return render(request, 'core/add_asset.html', {'form': form})
+
+@login_required
+def edit_asset(request, asset_id):
+    asset = get_object_or_404(Asset, pk=asset_id)
+    if request.method == "POST":
+        form = AssetForm(request.POST, instance=asset)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Asset updated.")
+            return redirect('asset_list')
+    else:
+        form = AssetForm(instance=asset)
+    return render(request, 'core/add_asset.html', {'form': form, 'title': f'Edit Asset: {asset.assets_id}'})
+
+@login_required
+def delete_asset(request, asset_id):
+    asset = get_object_or_404(Asset, pk=asset_id)
+    if request.method == "POST":
+        asset.delete()
+        messages.success(request, "Asset removed.")
+    return redirect('asset_list')
+
+# --- OTHER ---
 @login_required
 def incident_list(request):
     return render(request, 'core/incident_list.html', {'incidents': Incident.objects.all()})
 
 @login_required
 def analytics(request):
-    # Security check: Only Admin and Commander should see the full analytics suite
     if request.user.groups.filter(name='Personnel').exists():
-        messages.warning(request, "Personnel do not have access to the Analytics module.")
+        messages.warning(request, "Access denied.")
         return redirect('dashboard')
-
     context = {
         'total_assets': Asset.objects.count(),
-        'asset_counts': Asset.objects.values('asset_type').annotate(total=Count('id')),
+        'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')),
         'severity_counts': Incident.objects.values('severity').annotate(total=Count('id')),
         'status_counts': Incident.objects.values('status').annotate(total=Count('id')),
     }
@@ -232,60 +265,3 @@ def analytics(request):
 @login_required
 def reports(request):
     return render(request, 'core/reports.html')
-
-
-##################################################################ASSETS COMMANDS##################################################################
-@login_required
-def add_asset(request):
-    if request.method == 'POST':
-        form = AssetForm(request.POST)
-        if form.is_valid():
-            asset = form.save(commit=False)
-            # This captures the person currently logged in
-            asset.assigned_to = request.user 
-            asset.save()
-            return redirect('asset_list')
-    else:
-        form = AssetForm()
-    return render(request, 'core/add_asset.html', {'form': form})
-
-@login_required
-def edit_asset(request, asset_id):
-    # Use the database 'pk' (ID) to find the specific asset
-    asset = get_object_or_404(Asset, pk=asset_id)
-    
-    if request.method == "POST":
-        # Passing 'instance=asset' is the secret—it tells Django 
-        # to update the existing record instead of creating a new one.
-        form = AssetForm(request.POST, instance=asset)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Asset {asset.assets_id} updated successfully!")
-            return redirect('asset_list')
-    else:
-        form = AssetForm(instance=asset)
-    
-    return render(request, 'core/add_asset.html', {
-        'form': form, 
-        'title': f'Edit Asset: {asset.assets_id}'
-    })
-
-@login_required
-def delete_asset(request, asset_id):
-    asset = get_object_or_404(Asset, pk=asset_id)
-    if request.method == "POST":
-        asset_id_display = asset.assets_id
-        asset.delete()
-        messages.success(request, f"Asset {asset_id_display} has been removed.")
-    return redirect('asset_list')
-
-def asset_list(request):
-    assets = Asset.objects.all()
-    
-    context = {
-        'assets': assets,
-        'active_assets_count': assets.filter(status='Active').count(),
-        'inactive_assets_count': assets.filter(status='Inactive').count(),
-        'maintenance_assets_count': assets.filter(status='Maintenance').count(),
-    }
-    return render(request, 'core/asset_list.html', context)
