@@ -8,168 +8,319 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --sb-width: 256px;
+            --sb-collapsed: 80px;
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body, html {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f5f9;
+        }
+
+        #sidebar {
+            width: var(--sb-width);
+            transition: width var(--transition);
+            will-change: width;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background-color: #3d5171;
+            z-index: 50;
+        }
+        
+        #main-content {
+            padding-left: var(--sb-width);
+            transition: padding-left var(--transition);
+            will-change: padding-left;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-collapsed #sidebar { width: var(--sb-collapsed) !important; }
+        .sidebar-collapsed #main-content { padding-left: var(--sb-collapsed) !important; }
+
+        .sidebar-text {
+            white-space: nowrap;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar-collapsed .sidebar-text {
+            display: none;
+            opacity: 0;
+        }
+
+        .sidebar-collapsed .nav-item {
+            justify-content: center !important;
+            padding-left: 0 !important;
+        }
+
+        .sidebar-collapsed .nav-item i {
+            margin-right: 0 !important;
+            width: 100%;
+            text-align: center;
+            font-size: 1.25rem;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            gap: 2rem;
+        }
+    </style>
 </head>
 <body class="bg-slate-100 font-sans">
+    <script>
+        (function() {
+            if (localStorage.getItem('sidebarState') === 'collapsed') {
+                document.body.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
 
-<div class="flex min-h-screen">
-    <div class="w-64 bg-[#3d5171] text-white flex flex-col sticky top-0 h-screen">
-        <div class="p-6 border-b border-slate-600/50">
-            <h2 class="text-sm font-bold tracking-tight uppercase">950th CEWW System</h2>
+<div class="flex">
+    <div id="sidebar" class="text-white flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-slate-600/50 flex items-center justify-between min-h-[73px]">
+            <h2 class="text-sm font-bold tracking-tight uppercase sidebar-text text-white">950th CEWW System</h2>
+            <i class="fas fa-shield-alt hidden sidebar-collapsed:block text-xl mx-auto"></i>
         </div>
 
         <nav class="flex-1 mt-4 px-2 space-y-1">
-            <a href="{% url 'dashboard' %}" class="flex items-center p-3 rounded-lg bg-white/10 text-white font-bold transition">
-                <i class="fas fa-shield-alt mr-3"></i> Dashboard
+            <a href="{% url 'dashboard' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'dashboard' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-th-large mr-3 w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
+            </a>
+            
+            <a href="{% url 'command_asset' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'command_asset' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
             </a>
 
-            <a href="{% url 'asset_list' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
-                <i class="fas fa-laptop mr-3"></i> IT Assets
+            <a href="{% url 'command_maintenance' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'command_maintenance' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
             </a>
 
-            <a href="{% url 'maintenance_list' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
-                <i class="fas fa-tools mr-3"></i> Maintenance
+            <a href="{% url 'command_incident' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'command_incident' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
             </a>
 
-            <a href="{% url 'incident_list' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
-                <i class="fas fa-exclamation-triangle mr-3"></i> Incidents
+            <a href="{% url 'analytics' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
             </a>
 
-            {% if request.user.groups.all.0.name != 'Personnel' %}
-            <a href="{% url 'analytics' %}" class="flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                <i class="fas fa-chart-line mr-3"></i> Analytics
-            </a>
-            {% endif %}
-
-            <a href="{% url 'reports' %}" class="flex items-center p-3 rounded-lg text-slate-300 hover:bg-white/5 transition">
-                <i class="fas fa-file-contract mr-3"></i> Reports
+            <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
             </a>
         </nav>
 
         <div class="p-4 border-t border-slate-600/50">
             <form action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
-                <button type="submit" class="w-full text-left p-3 text-slate-400 hover:text-white transition">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                <button type="submit" class="nav-item w-full text-left p-3 text-slate-400 hover:text-white transition flex items-center">
+                    <i class="fas fa-sign-out-alt mr-2 w-5 text-center"></i> <span class="sidebar-text">Logout</span>
                 </button>
             </form>
         </div>
     </div>
 
-    <div class="flex-1 bg-[#eef2f7] flex flex-col">
-        <header class="bg-white px-8 py-4 flex items-center justify-between border-b border-slate-200 sticky top-0 z-40">
-            <i class="fas fa-bars text-slate-600 cursor-pointer"></i>
-            <div class="flex-1 mx-8 text-slate-400 italic text-sm">Command View Mode</div>
-            
+    <div id="main-content" class="flex-1 bg-[#eef2f7]">
+        <header class="bg-white px-8 py-4 flex items-center justify-between border-b border-slate-200 shrink-0 sticky top-0 z-40">
+            <div class="flex items-center">
+                <i id="burgerBtn" class="fas fa-bars text-slate-600 cursor-pointer hover:text-blue-600 transition-colors text-lg p-2 rounded-md hover:bg-slate-50"></i>
+                <div class="ml-4 text-slate-400 italic text-sm hidden md:block">Command View Mode</div>
+            </div>
+
             <div class="flex items-center space-x-6">
                 <i class="fas fa-bell text-slate-600 cursor-pointer hover:text-blue-600"></i>
-                <div class="flex items-center space-x-2 text-slate-700 font-bold">
-                    <span>Commander</span>
-                    <i class="fas fa-user-shield text-blue-600 ml-1"></i>
+                <div class="relative">
+                    <button id="userMenuBtn" onclick="toggleDropdown(event)" class="flex items-center space-x-2 text-slate-700 font-bold focus:outline-none hover:text-blue-600 transition">
+                        <span>Commander</span>
+                        <i class="fas fa-user-shield text-blue-600 ml-1"></i>
+                        <i class="fas fa-chevron-down text-xs ml-1"></i>
+                    </button>
+                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-xl py-2 border border-slate-200 z-50">
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Profile</a>
+                        <hr class="my-2">
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <main class="p-8">
+        <main>
+            {% block content %}
             <h1 class="text-xl font-black text-slate-800 uppercase mb-8">Strategic Overview</h1>
             
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-bold mb-2">OPERATIONAL ASSETS</p>
-                    <div class="text-3xl font-bold">102</div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Operational Assets</p>
+                    <div class="text-3xl font-black text-slate-800">{{ total_assets }}</div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-bold mb-2">ASSET READINESS</p>
-                    <div class="text-3xl font-bold text-green-500">94.2%</div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Asset Readiness</p>
+                    <div class="text-3xl font-black text-green-500">{{ readiness_rate|floatformat:1 }}%</div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-bold mb-2">ACTIVE INCIDENTS</p>
-                    <div class="text-3xl font-bold text-orange-500">2</div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Active Incidents</p>
+                    <div class="text-3xl font-black text-orange-500">{{ open_incidents_count }}</div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <p class="text-slate-500 text-xs font-bold mb-2">CRITICAL THREATS</p>
-                    <div class="text-3xl font-bold text-red-500">1</div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Critical Threats</p>
+                    <div class="text-3xl font-black text-red-500">{{ critical_threats }}</div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-sm mb-4">Inventory Composition</h3>
-                    <canvas id="assetChart" height="150"></canvas>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Inventory Composition</h3>
+                    <div class="relative h-[250px]"><canvas id="assetChart"></canvas></div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-sm mb-4">Incident Severity Over Time</h3>
-                    <canvas id="severityChart" height="150"></canvas>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Incident Severity Status</h3>
+                    <div class="relative h-[250px]"><canvas id="severityChart"></canvas></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-sm mb-4">Cybersecurity Incident Trend</h3>
-                    <canvas id="trendChart" height="150"></canvas>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Asset Distribution Trend</h3>
+                    <div class="relative h-[250px]"><canvas id="trendChart"></canvas></div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <h3 class="font-bold text-sm mb-4">Maintenance Readiness</h3>
-                    <canvas id="maintenanceChart" height="150"></canvas>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Maintenance Metrics</h3>
+                    <div class="relative h-[250px]"><canvas id="maintenanceChart"></canvas></div>
                 </div>
             </div>
+            {% endblock %}
         </main>
     </div>
 </div>
 
 <script>
-// Logic shared with Admin for consistency
-new Chart(document.getElementById('assetChart'), {
-    type: 'bar',
-    data: {
-        labels: ['PC', 'Laptops', 'Servers', 'Routers', 'Printers'],
-        datasets: [{
-            data: [28, 38, 18, 8, 10],
-            backgroundColor: ['#d1e4ff', '#ff8a8a', '#c2f2d9', '#ffed9e', '#ffd6a5']
-        }]
-    },
-    options: { plugins: { legend: { display: false } } }
-});
+    // UI LOGIC
+    const burgerBtn = document.getElementById('burgerBtn');
+    const body = document.body;
 
-new Chart(document.getElementById('severityChart'), {
-    type: 'bar',
-    data: {
-        labels: ['29/1','30/1','31/1','01/2','02/2','03/2','04/2'],
-        datasets: [
-            {label:'Low', data:[0,1,0,2,0,0,0], backgroundColor:'#bbf7d0'},
-            {label:'Medium', data:[0,0,1,1,0,0,0], backgroundColor:'#fde68a'},
-            {label:'High', data:[0,0,0,1,1,0,1], backgroundColor:'#fdba74'},
-            {label:'Critical', data:[0,0,0,1,0,0,0], backgroundColor:'#f87171'},
-        ]
-    },
-    options: { responsive: true, scales:{ x:{stacked:true}, y:{stacked:true} } }
-});
+    burgerBtn.addEventListener('click', () => {
+        body.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebarState', body.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded');
+    });
 
-new Chart(document.getElementById('trendChart'), {
-    type:'line',
-    data:{
-        labels:['29/1','30/1','31/1','01/2','02/2','03/2','04/2'],
-        datasets:[{
-            label: 'Incidents',
-            data:[1,4,5,3,9,5,2],
-            borderColor:'#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            fill: true,
-            tension:.4
-        }]
-    },
-    options: { plugins: { legend: { display: false } } }
-});
-
-new Chart(document.getElementById('maintenanceChart'), {
-    type:'line',
-    data:{
-        labels:['29/1','30/1','31/1','01/2','02/2','03/2','04/2'],
-        datasets:[
-            {label:'Completed', data:[2,3,2,5,10,3,2], borderColor:'#22c55e', tension: 0.3},
-            {label:'Pending', data:[5,6,6,5,2,12,12], borderColor:'#facc15', tension: 0.3}
-        ]
+    function toggleDropdown(event) {
+        event.stopPropagation();
+        document.getElementById('userDropdown').classList.toggle('hidden');
     }
-});
+
+    window.onclick = function(event) {
+        const dropdown = document.getElementById('userDropdown');
+        if (dropdown && !event.target.closest('#userMenuBtn') && !dropdown.classList.contains('hidden')) {
+            dropdown.classList.add('hidden');
+        }
+    }
+
+    // CHART LOGIC
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.color = '#94a3b8';
+
+    // 1. INVENTORY COMPOSITION (Dynamic)
+    new Chart(document.getElementById('assetChart'), {
+        type: 'bar',
+        data: {
+            labels: [{% for item in asset_counts %}"{{ item.assets_type }}",{% endfor %}],
+            datasets: [{
+                data: [{% for item in asset_counts %}{{ item.total }},{% endfor %}],
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                borderRadius: 6
+            }]
+        },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // 2. SEVERITY CHART (Dynamic)
+    new Chart(document.getElementById('severityChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Low', 'Medium', 'High', 'Critical'],
+            datasets: [{
+                data: [
+                    {{ severity_counts.Low|default:0 }},
+                    {{ severity_counts.Medium|default:0 }},
+                    {{ severity_counts.High|default:0 }},
+                    {{ severity_counts.Critical|default:0 }}
+                ],
+                backgroundColor: ['#bbf7d0', '#fde68a', '#fdba74', '#f87171'],
+                borderWidth: 0
+            }]
+        },
+        options: { 
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // 3. TREND CHART (Dynamic - Last 7 Days)
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe|default:"['No Data']" }},
+            datasets: [{
+                label: 'New Incidents',
+                data: {{ trend_data|safe|default:"[0]" }},
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: { 
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+
+    // 4. MAINTENANCE CHART (Dynamic - Month-to-Date)
+    new Chart(document.getElementById('maintenanceChart'), {
+        type: 'bar',
+        data: {
+            // Using the dynamic labels from views.py instead of hardcoded ['Jan','Feb','Mar','Apr']
+            labels: {{ m_labels|safe|default:"['No Data']" }}, 
+            datasets: [
+                {
+                    label: 'Completed', 
+                    data: {{ m_completed|safe }}, 
+                    backgroundColor: '#22c55e'
+                },
+                {
+                    label: 'Pending', 
+                    data: {{ m_pending|safe }}, 
+                    backgroundColor: '#facc15'
+                }
+            ]
+        },
+        options: { 
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
 </script>
 </body>
 </html>

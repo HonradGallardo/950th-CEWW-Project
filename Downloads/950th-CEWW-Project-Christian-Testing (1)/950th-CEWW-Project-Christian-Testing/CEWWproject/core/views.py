@@ -1,4 +1,8 @@
 from urllib import request
+import calendar
+from django.db.models.functions import ExtractMonth, ExtractWeekDay
+from django.utils import timezone
+from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -27,19 +31,56 @@ def dashboard(request):
     open_incidents_count = Incident.objects.filter(status='Open').count()
     critical_threats = Incident.objects.filter(severity='Critical', status='Open').count()
 
+    # Calculate Readiness Rate for Commander
+    readiness_rate = (assigned_assets / total_assets * 100) if total_assets > 0 else 0
+
+    # Base Context
     context = {
         'total_assets': total_assets,
         'assigned_assets': assigned_assets,
+        'readiness_rate': readiness_rate,
         'open_incidents_count': open_incidents_count,
         'critical_threats': critical_threats,
         'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')),
-        'severity_counts': Incident.objects.values('severity').annotate(total=Count('id')),
     }
 
     user_groups = request.user.groups.values_list('name', flat=True)
 
     if 'Commander' in user_groups:
+        # 1. Severity Mapping
+        severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
+        context['severity_counts'] = {item['severity']: item['total'] for item in severity_qs}
+        
+        # 2. Maintenance Metrics (Fixing the March/April issue)
+        maint_qs = Maintenance.objects.annotate(month_num=ExtractMonth('date')) \
+            .values('month_num', 'status') \
+            .annotate(total=Count('id')) \
+            .order_by('month_num')
+
+        m_labels, m_completed, m_pending = [], [], []
+        unique_months = sorted(list(set(item['month_num'] for item in maint_qs)))
+        
+        for m in unique_months:
+            m_labels.append(calendar.month_name[m][:3])
+            m_completed.append(next((i['total'] for i in maint_qs if i['month_num'] == m and i['status'] == 'Completed'), 0))
+            m_pending.append(next((i['total'] for i in maint_qs if i['month_num'] == m and i['status'] == 'In Progress'), 0))
+
+        context.update({'m_labels': m_labels, 'm_completed': m_completed, 'm_pending': m_pending})
+
+        # 3. Incident Trend (Last 7 Days)
+        last_7_days = timezone.now() - timedelta(days=6)
+        trend_qs = Incident.objects.filter(date__gte=last_7_days) \
+            .annotate(day=ExtractWeekDay('date')) \
+            .values('day') \
+            .annotate(total=Count('id')) \
+            .order_by('day')
+        
+        days_map = {1:'Sun', 2:'Mon', 3:'Tue', 4:'Wed', 5:'Thu', 6:'Fri', 7:'Sat'}
+        context['trend_labels'] = [days_map[item['day']] for item in trend_qs]
+        context['trend_data'] = [item['total'] for item in trend_qs]
+
         return render(request, 'core/commander_dashboard.html', context)
+    
     
     elif 'Personnel' in user_groups:
         personnel_context = {
@@ -147,6 +188,23 @@ def maintenance_list(request):
     })
 
 @login_required
+def command_maintenance(request):
+    maintenances = Maintenance.objects.all().order_by('-date')
+    
+    # Logic for active/queued stays the same as your snippet
+    assets_under_active_repair = Maintenance.objects.filter(status='In Progress').values_list('asset_id', flat=True)
+    active_maintenance = Asset.objects.filter(status='Maintenance').exclude(id__in=assets_under_active_repair)
+    asset_types = Asset.objects.values_list('assets_type', flat=True).distinct()
+
+    # CRUCIAL: Point to a specific 'command_maintenance.html' 
+    # to avoid mixing it up with the admin 'maintenance_list.html'
+    return render(request, 'core/command_maintenance.html', {
+        'active_maintenance': active_maintenance,
+        'maintenances': maintenances,
+        'asset_types': asset_types,
+    })
+
+@login_required
 def add_maintenance(request):
     asset_id = request.GET.get('asset_id')
     initial_data = {}
@@ -222,6 +280,21 @@ def asset_list(request):
     return render(request, 'core/asset_list.html', context)
 
 @login_required
+def command_asset(request):
+    assets = Asset.objects.all() 
+    
+    # Add these lines to calculate the counts for the Pie Chart
+    context = {
+        'assets': assets,
+        'active_assets_count': assets.filter(status='Active').count(),
+        'inactive_assets_count': assets.filter(status='Inactive').count(),
+        'maintenance_assets_count': assets.filter(status='Maintenance').count(),
+    }
+    
+    return render(request, 'core/command_asset.html', context)
+
+
+@login_required
 def add_asset(request):
     if request.method == 'POST':
         form = AssetForm(request.POST)
@@ -273,6 +346,14 @@ def incident_list(request):
         'assets': Asset.objects.all(),
     }
     return render(request, 'core/incident_list.html', context)
+
+@login_required
+def command_incident(request):
+    # Purely retrieval for the Commander
+    incidents = Incident.objects.all().order_by('-date')
+    return render(request, 'core/command_incident.html', {
+        'incidents': incidents
+    })
 
 @login_required
 def add_incident(request):

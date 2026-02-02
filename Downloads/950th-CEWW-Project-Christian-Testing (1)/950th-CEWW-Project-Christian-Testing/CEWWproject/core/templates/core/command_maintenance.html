@@ -1,0 +1,217 @@
+{% extends "core/commander_dashboard.html" %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-120px)] overflow-hidden space-y-4">
+    
+    <div class="flex items-center justify-between shrink-0 px-2">
+        <div>
+            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Service History</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
+        </div>
+        </div>
+
+    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 overflow-hidden">
+        
+        <div class="col-span-12 lg:col-span-8 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                <div class="flex items-center space-x-3 flex-1">
+                    <div class="relative flex-1 max-w-xs">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                        <input type="text" id="assetSearch" onkeyup="filterTable()" placeholder="Search ID or Name..." 
+                               class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500/10 w-full outline-none">
+                    </div>
+                    
+                    <select id="typeFilter" onchange="filterTable()" class="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white font-bold outline-none text-slate-600">
+                        <option value="">All Types</option>
+                        {% for type in asset_types %}<option value="{{ type }}">{{ type }}</option>{% endfor %}
+                    </select>
+
+                    <select id="statusFilter" onchange="filterTable()" class="text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white font-bold outline-none text-slate-600">
+                        <option value="">All Statuses</option>
+                        <option value="QUEUED">Queued</option>
+                        <option value="IN PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse" id="maintenanceTable">
+                    <thead class="sticky top-0 bg-white shadow-sm z-10">
+                        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <th class="px-6 py-4">Asset ID</th>
+                            <th class="px-6 py-4">Asset Name</th>
+                            <th class="px-6 py-4">Type</th>
+                            <th class="px-6 py-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50" id="tableBody">
+                        {% for asset in active_maintenance %}
+                        <tr class="asset-row bg-amber-50/20 cursor-pointer hover:bg-amber-100/30 transition-colors" data-type="{{ asset.assets_type }}" data-status="QUEUED" onclick="showDetails({
+                            id: '{{ asset.assets_id }}',
+                            name: '{{ asset.assets_name }}',
+                            date: '{{ asset.date_added|date:'d-m-Y' }}',
+                            time: '{{ asset.date_added|time:'H:i A' }}',
+                            modified: '{{ asset.date_added|date:'d-m-Y H:i A' }}',
+                            tech: 'Unassigned',
+                            status: 'In Queue',
+                            a_type: '{{ asset.assets_type }}',
+                            notes: '{{ asset.maintenance_reason|default:'Initial report pending.'|escapejs }}'
+                        })">
+                            <td class="px-6 py-4 text-xs font-bold text-amber-700">{{ asset.assets_id }}</td>
+                            <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ asset.assets_name }}</td>
+                            <td class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">{{ asset.assets_type }}</td>
+                            <td class="px-6 py-4"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-[10px] font-bold status-tag">QUEUED</span></td>
+                        </tr>
+                        {% endfor %}
+
+                        {% for log in maintenances %}
+                        <tr class="asset-row cursor-pointer hover:bg-slate-50 transition-colors" data-type="{{ log.asset.assets_type }}" data-status="{{ log.status|upper }}" onclick="showDetails({
+                            id: '{{ log.asset.assets_id }}',
+                            name: '{{ log.asset.assets_name }}',
+                            status: '{{ log.status }}',
+                            tech: '{{ log.technician.username }}',
+                            notes: '{{ log.notes|escapejs }}',
+                            date: '{{ log.date|date:'d-m-Y' }}',
+                            time: '{{ log.date|time:'H:i A' }}',
+                            modified: '{{ log.last_modified|date:'d-m-Y H:i A' }}',
+                            a_type: '{{ log.asset.assets_type }}'
+                        })">
+                            <td class="px-6 py-4 text-xs font-bold text-blue-600">{{ log.asset.assets_id }}</td>
+                            <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ log.asset.assets_name }}</td>
+                            <td class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">{{ log.asset.assets_type }}</td>
+                            <td class="px-6 py-4">
+                                <span class="status-tag {% if log.status == 'Completed' %}bg-emerald-100 text-emerald-700{% else %}bg-blue-100 text-blue-700{% endif %} px-2 py-1 rounded text-[10px] font-bold">
+                                    {{ log.status|upper }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-4 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden">
+            <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center">
+                <i class="fas fa-file-medical text-slate-200 text-3xl mb-4"></i>
+                <p class="text-slate-400 text-xs font-medium">Select log to view activity</p>
+            </div>
+
+            <div id="detail-content" class="hidden flex-1 flex flex-col min-h-0">
+                <div class="flex justify-between items-start mb-6 border-b pb-4 shrink-0">
+                    <div>
+                        <h3 class="font-black text-xs text-slate-800" id="det-id">---</h3>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter" id="det-asset-type">---</p>
+                    </div>
+                    </div>
+                
+                <div class="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <label class="text-[8px] font-black text-slate-400 uppercase block">Log Created</label>
+                            <p class="text-[11px] font-bold text-slate-700" id="det-date">---</p>
+                            <p class="text-[9px] text-slate-400" id="det-time">---</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <label class="text-[8px] font-black text-slate-400 uppercase block">Last Modified</label>
+                            <p class="text-[11px] font-bold text-slate-600" id="det-modified">---</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                            <i class="fas fa-user-cog text-xs"></i>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase block">Technician</label>
+                            <p class="text-xs font-bold text-slate-700" id="det-tech">---</p>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-slate-900 rounded-xl space-y-2 text-[10px]">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400 uppercase font-bold">Current Status:</span> 
+                            <span id="det-status" class="font-black italic uppercase">---</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase block mb-2">Technical Notes</label>
+                        <div class="bg-slate-50/50 p-4 rounded-xl border border-dashed border-slate-200">
+                            <p class="text-xs text-slate-600 leading-relaxed italic" id="det-notes">---</p>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', sortTableByStatus);
+
+function sortTableByStatus() {
+    const tableBody = document.getElementById("tableBody");
+    const rows = Array.from(tableBody.getElementsByClassName("asset-row"));
+    rows.sort((a, b) => {
+        const statusA = a.getAttribute("data-status").toUpperCase();
+        const statusB = b.getAttribute("data-status").toUpperCase();
+        if (statusA === "COMPLETED" && statusB !== "COMPLETED") return 1;
+        if (statusA !== "COMPLETED" && statusB === "COMPLETED") return -1;
+        return 0;
+    });
+    rows.forEach(row => tableBody.appendChild(row));
+}
+
+function showDetails(data) {
+    document.getElementById('placeholder-content').classList.add('hidden');
+    document.getElementById('detail-content').classList.remove('hidden');
+
+    document.getElementById('det-id').innerText = data.id;
+    document.getElementById('det-date').innerText = data.date;
+    document.getElementById('det-time').innerText = data.time || "Pending"; 
+    document.getElementById('det-modified').innerText = data.modified || data.date; 
+    document.getElementById('det-tech').innerText = data.tech;
+    document.getElementById('det-status').innerText = data.status;
+    document.getElementById('det-notes').innerText = data.notes;
+    document.getElementById('det-asset-type').innerText = data.a_type;
+
+    const statusEl = document.getElementById('det-status');
+    if (data.status === 'Completed') {
+        statusEl.className = "font-black text-emerald-400 italic uppercase";
+    } else if (data.status === 'In Queue') {
+        statusEl.className = "font-black text-amber-400 italic uppercase";
+    } else {
+        statusEl.className = "font-black text-blue-400 italic uppercase";
+    }
+}
+
+function filterTable() {
+    const search = document.getElementById("assetSearch").value.toUpperCase();
+    const type = document.getElementById("typeFilter").value.toUpperCase();
+    const status = document.getElementById("statusFilter").value.toUpperCase();
+    const rows = document.getElementsByClassName("asset-row");
+    
+    for (let row of rows) {
+        const idText = row.cells[0].innerText.toUpperCase();
+        const nameText = row.cells[1].innerText.toUpperCase();
+        const rowType = row.getAttribute("data-type").toUpperCase();
+        const rowStatus = row.getAttribute("data-status").toUpperCase();
+        
+        const matches = (idText.includes(search) || nameText.includes(search)) &&
+                        (type === "" || rowType === type) &&
+                        (status === "" || rowStatus === status);
+        
+        row.style.display = matches ? "" : "none";
+    }
+}
+</script>
+{% endblock %}

@@ -1,13 +1,14 @@
 {% extends "core/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex flex-col h-full space-y-6">
+<div class="flex flex-col h-[calc(100vh-140px)] space-y-6 overflow-hidden">
+    
     <div class="flex justify-between items-center shrink-0 px-2">
         <div>
             <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">User Access Control & RBAC</h1>
             <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Manage system personnel and permissions</p>
         </div>
-        <a href="{% url 'add_user' %}" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition flex items-center shadow-md shadow-blue-200">
+        <a href="{% url 'add_user' %}" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition flex items-center shadow-md shadow-blue-200 shrink-0">
             <i class="fas fa-user-plus mr-2"></i> Add New User
         </a>
     </div>
@@ -15,7 +16,7 @@
     <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
         
         <div class="col-span-12 lg:col-span-7 flex flex-col min-h-0">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full min-h-0 overflow-hidden">
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
                     <table class="w-full text-left border-collapse">
                         <thead class="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_0_0_rgba(226,232,240,1)]">
@@ -77,8 +78,8 @@
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-5 flex flex-col h-full">
-            <div id="detail-panel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+        <div class="col-span-12 lg:col-span-5 flex flex-col min-h-0">
+            <div id="detail-panel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full overflow-hidden">
                 <div id="empty-message" class="flex-1 flex flex-col items-center justify-center text-center space-y-4">
                     <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
                         <i class="fas fa-id-card text-slate-200 text-2xl"></i>
@@ -87,7 +88,7 @@
                 </div>
 
                 <div id="user-details" class="hidden flex-1 flex flex-col min-h-0">
-                    <div class="flex items-center justify-between mb-8 border-b border-slate-50 pb-4">
+                    <div class="flex items-center justify-between mb-8 border-b border-slate-50 pb-4 shrink-0">
                         <h3 class="font-black uppercase text-xs text-slate-800 tracking-widest">Personnel Profile</h3>
                         <span id="detail-role" class="text-[10px] font-black px-2 py-1 rounded-md"></span>
                     </div>
@@ -119,7 +120,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-6 pt-6 border-t border-slate-50 flex gap-3">
+                    <div class="mt-6 pt-6 border-t border-slate-50 flex gap-3 shrink-0">
                          <a id="edit-link" href="#" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-xs font-black transition shadow-sm text-center">
                             Edit Profile
                         </a>
@@ -141,7 +142,6 @@ function showUserDetails(id, username, fullName, email, role) {
     document.getElementById('detail-role').innerText = role;
     document.getElementById('initials').innerText = (fullName).substring(0, 2).toUpperCase();
     
-    // Dynamically update the Edit Profile link using the ID
     document.getElementById('edit-link').href = "/users/edit/" + id + "/"; 
 
     const roleBadge = document.getElementById('detail-role');
@@ -153,6 +153,11 @@ function showUserDetails(id, username, fullName, email, role) {
 </script>
 
 <style>
+    /* Hide scrollbar for the page but keep it for the table */
+    html, body {
+        overflow: hidden;
+        height: 100%;
+    }
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }

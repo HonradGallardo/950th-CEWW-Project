@@ -13,20 +13,28 @@ urlpatterns = [
     
     # Sidebar Functional Modules
     path('assets/', views.asset_list, name='asset_list'),
+    path('command_asset/', views.command_asset, name='command_asset'),
     path('assets/add/', views.add_asset, name='add_asset'),
     path('assets/edit/<int:asset_id>/', views.edit_asset, name='edit_asset'),
     path('assets/delete/<int:asset_id>/', views.delete_asset, name='delete_asset'),
+
+
     path('maintenance/', views.maintenance_list, name='maintenance_list'),
+    path('command_maintenance/', views.command_maintenance, name='command_maintenance'),
     path('maintenance/add/', views.add_maintenance, name='add_maintenance'),
     path('maintenance/edit/<int:pk>/', views.edit_maintenance, name='edit_maintenance'),
     path('maintenance/delete/<int:pk>/', views.delete_maintenance, name='delete_maintenance'),
-    path('maintenance/', views.maintenance_list, name='maintenance_list'),
-    path('maintenance/add/', views.add_maintenance, name='add_maintenance'),
-    path('maintenance/edit/<int:pk>/', views.edit_maintenance, name='edit_maintenance'),
+
+
+
     path('incidents/', views.incident_list, name='incident_list'),
+    path('command_incidents/', views.command_incident, name='command_incident'),
     path('incidents/add/', views.add_incident, name='add_incident'),
     path('incidents/edit/<int:incident_id>/', views.edit_incident, name='edit_incident'),
     path('incidents/delete/<int:incident_id>/', views.delete_incident, name='delete_incident'),
+
+
+
     path('analytics/', views.analytics, name='analytics'),
     path('users/', views.user_list, name='user_list'),
     path('reports/', views.reports, name='reports'),

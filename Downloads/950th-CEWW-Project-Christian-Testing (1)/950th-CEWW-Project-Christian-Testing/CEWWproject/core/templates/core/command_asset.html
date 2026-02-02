@@ -1,0 +1,181 @@
+{% extends 'core/commander_dashboard.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="flex flex-col lg:flex-row gap-6 h-full">
+    <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-slate-100 flex-none">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">IT Asset Inventory</h2>
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex gap-2">
+                    <input type="text" id="searchInput" placeholder="Search assets..." 
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <select id="typeFilter" 
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm outline-none cursor-pointer hover:border-slate-300">
+                        <option value="all">All Types</option>
+                        <option value="PC">PC</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Server">Server</option>
+                        <option value="Router">Router</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-grow overflow-y-auto overflow-x-auto max-h-[calc(100vh-280px)] custom-scrollbar">
+            <table class="w-full text-left text-sm border-separate border-spacing-0" id="assetTable">
+                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Assets ID</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Assets name</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Assets Type</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Location</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Status</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for asset in assets %}
+                    <tr class="hover:bg-blue-50/30 cursor-pointer asset-row transition-colors group" 
+                        data-type="{{ asset.assets_type }}"
+                        onclick="showDetails('{{ asset.assets_id }}', '{{ asset.assets_name }}', '{{ asset.assets_type }}', '{{ asset.location }}', '{{ asset.status }}', '{{ asset.date_added|date:'d-m-Y' }}', '{% if asset.assigned_to %}{{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}{% else %}Unassigned{% endif %}')">
+                        <td class="p-4 font-medium text-blue-600 group-hover:underline">{{ asset.assets_id }}</td>
+                        <td class="p-4 font-medium text-slate-700">{{ asset.assets_name }}</td>
+                        <td class="p-4 text-slate-600">{{ asset.assets_type }}</td>
+                        <td class="p-4 text-slate-500">{{ asset.location }}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase 
+                                {% if asset.status == 'Active' %}bg-green-100 text-green-700
+                                {% elif asset.status == 'Maintenance' %}bg-yellow-100 text-yellow-700
+                                {% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ asset.status }}
+                            </span>
+                        </td>
+                        <td class="p-4 text-slate-500">{{ asset.date_added|date:"d-m-Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-400 italic">No assets found in database.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="w-full lg:w-80 space-y-6 flex-none">
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 border-b border-slate-100 font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-info-circle text-blue-500"></i> Asset Quick View
+            </div>
+            <div id="detail-placeholder" class="p-12 text-center text-slate-400 italic">
+                <i class="fas fa-mouse-pointer block text-2xl mb-2 opacity-20"></i> Select an asset
+            </div>
+            <div id="detail-card" class="hidden p-6 space-y-5">
+                <div>
+                    <label class="text-[10px] uppercase font-black text-slate-400 tracking-wider">Asset ID</label>
+                    <p id="det-id" class="text-xl font-black text-blue-600"></p>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset Name</label>
+                        <p id="det-name" class="font-semibold text-slate-800"></p>
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned To</label>
+                        <p id="det-user" class="text-slate-700 font-medium text-sm"></p>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Status</label>
+                    <p id="det-status" class="px-3 py-1 inline-block rounded text-[10px] font-bold uppercase"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h3 class="font-bold text-sm mb-4 text-slate-800 uppercase tracking-tight">Status Distribution</h3>
+            <div class="relative h-48 w-full">
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="mt-4 text-[11px] space-y-2 font-bold text-slate-600">
+                <div class="flex justify-between items-center border-t border-slate-50 pt-2">
+                    <p>Total Managed Assets</p>
+                    <span class="text-slate-800 text-sm">{{ assets.count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    
+    // Parse values from Django. Using |default:0 and forcing to integer.
+    const active = parseInt("{{ active_assets_count|default:0 }}") || 0;
+    const inactive = parseInt("{{ inactive_assets_count|default:0 }}") || 0;
+    const maintenance = parseInt("{{ maintenance_assets_count|default:0 }}") || 0;
+
+    // Check if we have any data. If all are 0, we'll show a grey circle placeholder.
+    const hasData = (active + inactive + maintenance) > 0;
+    const chartData = hasData ? [active, inactive, maintenance] : [0, 0, 1]; 
+    const chartColors = hasData ? ['#22c55e', '#94a3b8', '#facc15'] : ['#e2e8f0', '#e2e8f0', '#e2e8f0'];
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Inactive', 'Maintenance'],
+            datasets: [{
+                data: chartData,
+                backgroundColor: chartColors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } }
+                }
+            }
+        }
+    });
+
+    // SEARCH & FILTER
+    const searchInput = document.getElementById('searchInput');
+    const typeFilter = document.getElementById('typeFilter');
+    const rows = document.querySelectorAll('.asset-row');
+
+    function filter() {
+        const query = searchInput.value.toLowerCase();
+        const type = typeFilter.value;
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            const rowType = row.getAttribute('data-type');
+            row.style.display = (text.includes(query) && (type === 'all' || rowType === type)) ? '' : 'none';
+        });
+    }
+    searchInput.addEventListener('input', filter);
+    typeFilter.addEventListener('change', filter);
+});
+
+function showDetails(id, name, type, loc, status, date, user) {
+    document.getElementById('detail-placeholder').classList.add('hidden');
+    const card = document.getElementById('detail-card');
+    card.classList.remove('hidden');
+    document.getElementById('det-id').innerText = id;
+    document.getElementById('det-name').innerText = name;
+    document.getElementById('det-user').innerText = user;
+    const stEl = document.getElementById('det-status');
+    stEl.innerText = status;
+    stEl.className = 'px-3 py-1 inline-block rounded text-[10px] font-bold uppercase ' + 
+        (status === 'Active' ? 'bg-green-100 text-green-700' : (status === 'Maintenance' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'));
+}
+</script>
+{% endblock %}
