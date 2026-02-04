@@ -10,6 +10,8 @@ from django.db.models import Count
 from django.contrib import messages
 from .models import Asset, Maintenance, Incident
 from .forms import AssetForm, MaintenanceForm, UserForm
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 # --- LANDING & REDIRECT ---
 def landing(request):
@@ -79,17 +81,74 @@ def dashboard(request):
         context['trend_labels'] = [days_map[item['day']] for item in trend_qs]
         context['trend_data'] = [item['total'] for item in trend_qs]
 
-        return render(request, 'core/commander_dashboard.html', context)
+        return render(request, 'core/Commander/commander_dashboard.html', context)
     
     
     elif 'Personnel' in user_groups:
+        # --- GET SEARCH QUERIES ---
+        q_incident = request.GET.get('q_incident', '').strip()
+        q_asset = request.GET.get('q_asset', '').strip()
+        q_task = request.GET.get('q_task', '').strip()
+
+        # --- 1. INCIDENTS SEARCH ---
+        incident_list = Incident.objects.all().order_by('-date')
+        if q_incident:
+            # If searching for status specifically, use exact match to avoid "Active" matching "Inactive"
+            if q_incident.lower() in ['active', 'inactive', 'resolved', 'pending']:
+                incident_list = incident_list.filter(
+                    Q(status__iexact=q_incident) | Q(title__icontains=q_incident)
+                )
+            else:
+                incident_list = incident_list.filter(
+                    Q(title__icontains=q_incident) | Q(id__icontains=q_incident)
+                )
+        
+        incident_paginator = Paginator(incident_list, 10)
+        page_obj = incident_paginator.get_page(request.GET.get('page'))
+
+        # --- 2. ASSETS SEARCH ---
+        asset_list = Asset.objects.filter(assigned_to=request.user).order_by('-date_added')
+        if q_asset:
+            if q_asset.lower() in ['active', 'inactive', 'maintenance', 'retired']:
+                asset_list = asset_list.filter(
+                    Q(status__iexact=q_asset) | Q(assets_name__icontains=q_asset)
+                )
+            else:
+                asset_list = asset_list.filter(assets_name__icontains=q_asset)
+
+        asset_paginator = Paginator(asset_list, 10)
+        asset_page_obj = asset_paginator.get_page(request.GET.get('asset_page'))
+
+        # --- 3. MAINTENANCE SEARCH ---
+        task_list = Maintenance.objects.filter(technician=request.user, status='In Progress').order_by('id')
+        if q_task:
+            # Maintenance tasks usually have statuses like "In Progress" or "Completed"
+            if q_task.lower() in ['in progress', 'completed', 'pending']:
+                task_list = task_list.filter(
+                    Q(status__iexact=q_task) | Q(asset__assets_name__icontains=q_task)
+                )
+            else:
+                task_list = task_list.filter(
+                    Q(asset__assets_name__icontains=q_task) | Q(maintenance_type__icontains=q_task)
+                )
+
+        task_paginator = Paginator(task_list, 10)
+        task_page_obj = task_paginator.get_page(request.GET.get('task_page'))
+
         personnel_context = {
-            'total_assets': total_assets,
-            'my_maintenance_count': Maintenance.objects.filter(status='In Progress').count(),
+            'total_assets': Asset.objects.filter(assigned_to=request.user).count(),
+            'my_maintenance_count': Maintenance.objects.filter(technician=request.user, status='In Progress').count(),
             'reported_incidents_count': Incident.objects.count(), 
-            'recent_incidents': Incident.objects.all().order_by('-date')[:5],
+            
+            'page_obj': page_obj,
+            'asset_page_obj': asset_page_obj,
+            'task_page_obj': task_page_obj,
+            
+            'q_incident': q_incident,
+            'q_asset': q_asset,
+            'q_task': q_task,
         }
-        return render(request, 'core/personnel_dashboard.html', personnel_context)
+        return render(request, 'core/Personnel/personnel_dashboard.html', personnel_context)
     
     elif 'Admin' in user_groups:
         asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
@@ -103,7 +162,7 @@ def dashboard(request):
         context['recent_maintenance'] = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
         context['open_incidents'] = Incident.objects.filter(status='Open').order_by('-date')[:5]
         
-        return render(request, 'core/admin_dashboard.html', context)
+        return render(request, 'core/Admin/admin_dashboard.html', context)
 
     return render(request, 'core/landing.html', {'error': 'Unauthorized access.'})
 
@@ -113,7 +172,7 @@ def user_list(request):
     if not request.user.groups.filter(name__in=['Admin', 'Commander']).exists():
         return redirect('dashboard')
     all_users = User.objects.all().prefetch_related('groups')
-    return render(request, 'core/user_list.html', {'users': all_users})
+    return render(request, 'core/Admin/user_list.html', {'users': all_users})
 
 @login_required
 def add_user(request):
@@ -130,7 +189,7 @@ def add_user(request):
             return redirect('user_list')
     else:
         form = UserForm()
-    return render(request, 'core/user_form.html', {'form': form, 'title': 'Add Personnel'})
+    return render(request, 'core/Admin/user_form.html', {'form': form, 'title': 'Add Personnel'})
 
 @login_required
 def edit_user(request, user_id):
@@ -150,7 +209,7 @@ def edit_user(request, user_id):
             return redirect('user_list')
     else:
         form = UserForm(instance=target_user)
-    return render(request, 'core/user_form.html', {'form': form, 'title': 'Edit Personnel'})
+    return render(request, 'core/Admin/user_form.html', {'form': form, 'title': 'Edit Personnel'})
 
 @login_required
 def delete_user(request, user_id):
@@ -181,7 +240,7 @@ def maintenance_list(request):
 
     asset_types = Asset.objects.values_list('assets_type', flat=True).distinct()
 
-    return render(request, 'core/maintenance_list.html', {
+    return render(request, 'core/Admin/maintenance_list.html', {
         'active_maintenance': active_maintenance,
         'maintenances': maintenances,
         'asset_types': asset_types,
@@ -198,7 +257,7 @@ def command_maintenance(request):
 
     # CRUCIAL: Point to a specific 'command_maintenance.html' 
     # to avoid mixing it up with the admin 'maintenance_list.html'
-    return render(request, 'core/command_maintenance.html', {
+    return render(request, 'core/Commander/command_maintenance.html', {
         'active_maintenance': active_maintenance,
         'maintenances': maintenances,
         'asset_types': asset_types,
@@ -237,7 +296,7 @@ def add_maintenance(request):
     else:
         form = MaintenanceForm(initial=initial_data)
 
-    return render(request, 'core/add_maintenance.html', {'form': form})
+    return render(request, 'core/Admin/add_maintenance.html', {'form': form})
 
 @login_required
 def edit_maintenance(request, pk):
@@ -253,7 +312,7 @@ def edit_maintenance(request, pk):
             return redirect('maintenance_list')
     else:
         form = MaintenanceForm(instance=log)
-    return render(request, 'core/add_maintenance.html', {'form': form, 'edit_mode': True})
+    return render(request, 'core/Admin/add_maintenance.html', {'form': form, 'edit_mode': True})
 
 @login_required
 def delete_maintenance(request, pk):
@@ -277,7 +336,7 @@ def asset_list(request):
         'inactive_assets_count': assets.filter(status='Inactive').count(),
         'maintenance_assets_count': assets.filter(status='Maintenance').count(),
     }
-    return render(request, 'core/asset_list.html', context)
+    return render(request, 'core/Admin/asset_list.html', context)
 
 @login_required
 def command_asset(request):
@@ -291,7 +350,7 @@ def command_asset(request):
         'maintenance_assets_count': assets.filter(status='Maintenance').count(),
     }
     
-    return render(request, 'core/command_asset.html', context)
+    return render(request, 'core/Commander/command_asset.html', context)
 
 
 @login_required
@@ -306,7 +365,7 @@ def add_asset(request):
             return redirect('asset_list')
     else:
         form = AssetForm()
-    return render(request, 'core/add_asset.html', {'form': form})
+    return render(request, 'core/Admin/add_asset.html', {'form': form})
 
 @login_required
 def edit_asset(request, asset_id):
@@ -319,7 +378,7 @@ def edit_asset(request, asset_id):
             return redirect('asset_list')
     else:
         form = AssetForm(instance=asset)
-    return render(request, 'core/add_asset.html', {'form': form, 'title': f'Edit Asset: {asset.assets_id}'})
+    return render(request, 'core/Admin/add_asset.html', {'form': form, 'title': f'Edit Asset: {asset.assets_id}'})
 
 @login_required
 def delete_asset(request, asset_id):
@@ -345,13 +404,13 @@ def incident_list(request):
         'incidents': Incident.objects.all().order_by('-date'),
         'assets': Asset.objects.all(),
     }
-    return render(request, 'core/incident_list.html', context)
+    return render(request, 'core/Admin/incident_list.html', context)
 
 @login_required
 def command_incident(request):
     # Purely retrieval for the Commander
     incidents = Incident.objects.all().order_by('-date')
-    return render(request, 'core/command_incident.html', {
+    return render(request, 'core/Commander/command_incident.html', {
         'incidents': incidents
     })
 
@@ -378,7 +437,7 @@ def add_incident(request):
         return redirect('incident_list')
 
     # If GET, just show the form
-    return render(request, 'core/add_incident.html')
+    return render(request, 'core/Admin/add_incident.html')
 
 @login_required
 def edit_incident(request, incident_id):  # Make sure this matches the URL keyword
@@ -389,7 +448,7 @@ def edit_incident(request, incident_id):  # Make sure this matches the URL keywo
         incident.save()
         return redirect('incident_list')
         
-    return render(request, 'core/edit_incident.html', {'incident': incident})
+    return render(request, 'core/Admin/edit_incident.html', {'incident': incident})
 
 @login_required
 def delete_incident(request, incident_id):
@@ -408,8 +467,12 @@ def analytics(request):
         'severity_counts': Incident.objects.values('severity').annotate(total=Count('id')),
         'status_counts': Incident.objects.values('status').annotate(total=Count('id')),
     }
-    return render(request, 'core/analytics.html', context)
+    return render(request, 'core/Admin/analytics.html', context)
 
 @login_required
 def reports(request):
-    return render(request, 'core/reports.html')
+    return render(request, 'core/Admin/reports.html')
+
+@login_required
+def command_reports(request):
+    return render(request, 'core/Commander/command_reports.html')

@@ -38,7 +38,8 @@ urlpatterns = [
     path('analytics/', views.analytics, name='analytics'),
     path('users/', views.user_list, name='user_list'),
     path('reports/', views.reports, name='reports'),
-    
+    path('command_reports/', views.command_reports, name='command_reports'),
+
     #Crud for Personnel
     path('users/add/', views.add_user, name='add_user'),
     path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),

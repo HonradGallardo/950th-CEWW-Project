@@ -10,76 +10,99 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        :root {
-            --sb-width: 256px;
-            --sb-collapsed: 80px;
-            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        :root { 
+            --sb-width: 260px; 
+            --sb-collapsed: 80px; 
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        body, html {
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            background-color: #f1f5f9;
+        
+        body, html { 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #f8fafc; 
         }
-
+        
         #sidebar {
             width: var(--sb-width);
             transition: width var(--transition);
-            will-change: width;
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
             background-color: #3d5171;
             z-index: 50;
-        }
-        
-        #main-content {
-            padding-left: var(--sb-width);
-            transition: padding-left var(--transition);
-            will-change: padding-left;
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
+        
+        #main-content { 
+            margin-left: var(--sb-width); 
+            width: calc(100% - var(--sb-width));
+            transition: margin-left var(--transition), width var(--transition); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+        }
 
-        .sidebar-collapsed #sidebar { width: var(--sb-collapsed) !important; }
-        .sidebar-collapsed #main-content { padding-left: var(--sb-collapsed) !important; }
+        /* Collapsed States */
+        .sidebar-collapsed #sidebar { 
+            width: var(--sb-collapsed); 
+        }
 
+        .sidebar-collapsed #main-content { 
+            margin-left: var(--sb-collapsed); 
+            width: calc(100% - var(--sb-collapsed));
+        }
+
+        /* Hide text when collapsed */
         .sidebar-text {
             white-space: nowrap;
             transition: opacity 0.2s ease;
+            opacity: 1;
         }
 
         .sidebar-collapsed .sidebar-text {
-            display: none;
             opacity: 0;
+            pointer-events: none;
+            width: 0;
+            display: inline-block;
+            overflow: hidden;
         }
 
+        /* Center icons when collapsed */
         .sidebar-collapsed .nav-item {
-            justify-content: center !important;
-            padding-left: 0 !important;
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
         }
 
         .sidebar-collapsed .nav-item i {
-            margin-right: 0 !important;
-            width: 100%;
-            text-align: center;
+            margin-right: 0;
             font-size: 1.25rem;
         }
 
+        /* Header Logo area when collapsed */
+        .sidebar-collapsed .sidebar-header-text {
+            display: none;
+        }
+        .sidebar-collapsed .sidebar-icon-only {
+            display: block !important;
+        }
+
+        .nav-item i {
+            flex-shrink: 0;
+        }
+
+        /* Admin-specific layout adjustments */
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
+        
         main {
             flex: 1;
-            display: flex;
-            flex-direction: column;
+            overflow-y: auto;
             padding: 2rem;
-            gap: 2rem;
         }
 
         .dashboard-grid {
@@ -111,7 +134,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 font-sans">
+<body class="bg-slate-50 font-sans">
     <script>
         (function() {
             if (localStorage.getItem('sidebarState') === 'collapsed') {
@@ -124,12 +147,18 @@
     <div id="sidebar" class="text-white flex flex-col overflow-hidden">
         <div class="p-6 border-b border-slate-600/50 flex items-center justify-between min-h-[73px]">
             <h2 class="text-sm font-bold tracking-tight uppercase sidebar-text text-white">950th CEWW System</h2>
-            <i class="fas fa-shield-alt hidden sidebar-collapsed:block text-xl mx-auto"></i>
+            <i class="fas fa-shield-alt hidden sidebar-icon-only text-xl mx-auto"></i>
         </div>
 
         <nav class="flex-1 mt-4 px-2 space-y-1">
             <a href="{% url 'dashboard' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'dashboard' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-th-large mr-3 w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
+            </a>
+            <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
+            </a>
+            <a href="{% url 'analytics' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
             </a>
             <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
@@ -137,20 +166,14 @@
             <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
             </a>
-            <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
-            </a>
             {% if request.user.groups.all.0.name == 'Admin' %}
-            <a href="{% url 'analytics' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
-            </a>
             <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
             </a>
-            {% endif %}
             <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
             </a>
+            {% endif %}
         </nav>
 
         <div class="p-4 border-t border-slate-600/50">
@@ -163,11 +186,11 @@
         </div>
     </div>
 
-    <div id="main-content" class="flex-1 bg-[#eef2f7]">
+    <div id="main-content">
         <header class="bg-white px-8 py-4 flex items-center justify-between border-b border-slate-200 shrink-0">
             <div class="flex items-center">
                 <i id="burgerBtn" class="fas fa-bars text-slate-600 cursor-pointer hover:text-blue-600 transition-colors text-lg p-2 rounded-md hover:bg-slate-50"></i>
-                </div>
+            </div>
 
             <div class="flex items-center space-x-6">
                 <i class="fas fa-bell text-slate-600 cursor-pointer hover:text-blue-600"></i>
@@ -188,7 +211,7 @@
             </div>
         </header>
 
-        <main>
+        <main class="custom-scrollbar">
             {% block content %}
             <div class="dashboard-grid">
                 <h1 class="text-xl font-black text-slate-800 uppercase">Dashboard Overview</h1>
@@ -295,7 +318,6 @@
 </div>
 
 <script>
-    // --- UI LOGIC ---
     const burgerBtn = document.getElementById('burgerBtn');
     const body = document.body;
 
@@ -320,7 +342,6 @@
     Chart.defaults.font.family = 'Inter, sans-serif';
     Chart.defaults.color = '#94a3b8';
 
-    // Asset Distribution Bar Chart
     if (document.getElementById('adminAssetChart')) {
         new Chart(document.getElementById('adminAssetChart'), {
             type: 'bar',
@@ -344,7 +365,6 @@
         });
     }
 
-    // Incident Severity Doughnut Chart
     if (document.getElementById('adminIncidentPie')) {
         new Chart(document.getElementById('adminIncidentPie'), {
             type: 'doughnut',

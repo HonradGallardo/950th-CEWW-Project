@@ -1,0 +1,453 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personnel Dashboard | 950th CEWW</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { 
+            --sb-width: 260px; 
+            --sb-collapsed: 80px; 
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body, html { 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #f8fafc; 
+        }
+        
+        #sidebar {
+            width: var(--sb-width);
+            transition: width var(--transition);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background-color: #3d5171;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #main-content { 
+            /* This pushes the content to the right of the fixed sidebar */
+            margin-left: var(--sb-width); 
+            width: calc(100% - var(--sb-width));
+            transition: margin-left var(--transition), width var(--transition); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+        }
+
+        /* Collapsed States */
+        .sidebar-collapsed #sidebar { 
+            width: var(--sb-collapsed); 
+        }
+
+        .sidebar-collapsed #main-content { 
+            margin-left: var(--sb-collapsed); 
+            width: calc(100% - var(--sb-collapsed));
+        }
+
+        /* Hide text when collapsed */
+        .sidebar-text {
+            white-space: nowrap;
+            transition: opacity 0.2s ease;
+            opacity: 1;
+        }
+
+        .sidebar-collapsed .sidebar-text {
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            display: inline-block; /* Helps with smooth transition */
+            overflow: hidden;
+        }
+
+        /* Center icons when collapsed */
+        .sidebar-collapsed .nav-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .sidebar-collapsed .nav-item i {
+            margin-right: 0;
+            font-size: 1.25rem;
+        }
+
+        /* Fix for the Logo/Header area when collapsed */
+        .sidebar-collapsed .sidebar-header-text {
+            display: none;
+        }
+        .sidebar-collapsed .sidebar-icon-only {
+            display: block !important;
+        }
+
+        /* Ensure icons in nav items don't shrink */
+        .nav-item i {
+            flex-shrink: 0;
+        }
+
+        .table-section {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .scrollable-body {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8fafc;
+            z-index: 20;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .inner-table-search {
+            font-size: 11px;
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            outline: none;
+        }
+        .inner-table-search:focus { border-color: #3d5171; }
+
+        /* PAGINATION STYLING */
+        .pagination-footer {
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .pg-link {
+            padding: 0.25rem 0.5rem;
+            transition: all 0.3s ease;
+            color: #94a3b8; /* Slate-400 (Gray) */
+            text-decoration: none;
+        }
+
+        .pg-link:hover {
+            color: #64748b;
+        }
+
+        /* Active State: Glowing Blue Text, No Background, No Border */
+        .pg-active {
+            color: #3b82f6 !important; 
+            background: none !important;
+            border: none !important;
+            text-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+            font-size: 13px; /* Slightly larger to stand out */
+        }
+
+        .pg-disabled {
+            color: #cbd5e1;
+            cursor: not-allowed;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans">
+
+<div class="flex">
+    <div id="sidebar" class="text-white flex flex-col overflow-hidden">
+    <div class="p-6 border-b border-slate-600/50 flex items-center justify-between min-h-[73px]">
+        <h2 class="text-sm font-bold tracking-tight uppercase sidebar-text text-white">950th CEWW System</h2>
+        <i class="fas fa-shield-alt hidden sidebar-icon-only text-xl mx-auto"></i>
+    </div>
+
+        <nav class="flex-1 mt-4 px-2 space-y-1">
+            <a href="{% url 'dashboard' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'dashboard' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-th-large mr-3 w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
+            </a>
+            <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
+            </a>
+            <a href="{% url 'analytics' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
+            </a>
+            <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
+            </a>
+            <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
+            </a>
+            {% if request.user.groups.all.0.name == 'Admin' %}
+            <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
+            </a>
+            <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="p-4 border-t border-slate-600/50">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="nav-item w-full text-left p-3 text-slate-400 hover:text-white transition flex items-center">
+                    <i class="fas fa-sign-out-alt mr-2 w-5 text-center"></i> <span class="sidebar-text">Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <header class="bg-white px-8 py-4 flex items-center justify-between border-b border-slate-200 shrink-0">
+            <div class="flex items-center">
+                <i id="burgerBtn" class="fas fa-bars text-slate-600 cursor-pointer hover:text-blue-600 transition-colors text-lg p-2 rounded-md hover:bg-slate-50"></i>
+                </div>
+
+            <div class="flex items-center space-x-6">
+                <i class="fas fa-bell text-slate-600 cursor-pointer hover:text-blue-600"></i>
+                <div class="relative">
+                    <button id="userMenuBtn" onclick="toggleDropdown(event)" class="flex items-center space-x-2 text-slate-700 font-bold focus:outline-none hover:text-blue-600 transition">
+                        <span>{{ user.username|default:"User" }}</span>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-xl py-2 border border-slate-200 z-50">
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Profile</a>
+                        <hr class="my-2">
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-hidden p-6 flex flex-col gap-6">
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight shrink-0 uppercase">Dashboard Overview</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-[1.2] min-h-0">
+                <div class="lg:col-span-3 table-section shadow-sm">
+                    <div class="px-5 py-4 bg-white border-b flex justify-between items-center shrink-0">
+                        <span class="font-bold text-slate-700 text-sm">Recent Incident Reports</span>
+                        <form method="GET" action="." class="flex items-center">
+                            <input type="text" name="q_incident" placeholder="Filter incidents..." class="inner-table-search" value="{{ q_incident }}">
+                        </form>
+                    </div>
+                    <div class="scrollable-body">
+                        <table class="w-full text-left text-[13px]" id="incidentTable">
+                            <thead class="text-slate-500 uppercase text-[11px] tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4">ID</th>
+                                    <th class="px-6 py-4">Incident Type</th>
+                                    <th class="px-6 py-4 text-center">Severity</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4">Date Reported</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for incident in page_obj %}
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-6 py-4 font-mono text-slate-400">{{ incident.id }}</td>
+                                    <td class="px-6 py-4 font-bold text-slate-700">{{ incident.title }}</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="px-2 py-0.5 rounded bg-red-50 text-red-500 text-[10px] font-black uppercase">{{ incident.severity }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-600 text-[10px] font-black uppercase">{{ incident.status }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-500">{{ incident.date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="p-10 text-center text-slate-400">No incident reports available.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="pagination-footer">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}&q_incident={{ q_incident }}" class="pg-link">Previous</a>
+                        {% else %}
+                            <span class="pg-disabled">Previous</span>
+                        {% endif %}
+                        <div class="flex items-center gap-4">
+                            {% for i in page_obj.paginator.page_range %}
+                                <a href="?page={{ i }}&q_incident={{ q_incident }}" class="pg-link {% if page_obj.number == i %}pg-active{% endif %}">{{ i }}</a>
+                            {% endfor %}
+                        </div>
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}&q_incident={{ q_incident }}" class="pg-link">Next</a>
+                        {% else %}
+                            <span class="pg-disabled">Next</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center flex-1">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Assets</p>
+                        <p class="text-3xl font-black text-slate-800">{{ total_assets|default:"0" }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center flex-1">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">My Tasks</p>
+                        <p class="text-3xl font-black text-emerald-500">{{ my_maintenance_count|default:"0" }}</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border-l-4 border-l-red-500 shadow-sm flex flex-col justify-center flex-1">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Alerts</p>
+                        <p class="text-3xl font-black text-red-500">{{ reported_incidents_count|default:"0" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+                <div class="table-section shadow-sm">
+                    <div class="px-5 py-3 bg-white border-b flex justify-between items-center shrink-0">
+                        <span class="font-bold text-slate-700 text-sm">My Assigned Assets</span>
+                        <form method="GET" action="." class="flex items-center">
+                            <input type="text" name="q_asset" placeholder="Filter assets..." class="inner-table-search" value="{{ q_asset }}">
+                        </form>
+                    </div>
+                    <div class="scrollable-body">
+                        <table class="w-full text-left text-[12px]" id="assetsTable">
+                            <thead class="text-slate-500 uppercase text-[10px] tracking-wider">
+                                <tr>
+                                    <th class="px-5 py-3">Asset</th>
+                                    <th class="px-5 py-3 text-center">Status</th>
+                                    <th class="px-5 py-3">Added</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for asset in asset_page_obj %}
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-5 py-4 font-bold text-slate-700">{{ asset.assets_name }}</td>
+                                    <td class="px-5 py-4 text-center"><span class="text-emerald-500 font-black uppercase text-[10px]">{{ asset.status }}</span></td>
+                                    <td class="px-5 py-4 text-slate-400">{{ asset.date_added|date:"d-m-Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="p-10 text-center text-slate-400">No assets assigned.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-footer">
+                        {% if asset_page_obj.has_previous %}
+                            <a href="?asset_page={{ asset_page_obj.previous_page_number }}&q_asset={{ q_asset }}" class="pg-link">Previous</a>
+                        {% else %}
+                            <span class="pg-disabled">Previous</span>
+                        {% endif %}
+                        <div class="flex items-center gap-4">
+                            {% for i in asset_page_obj.paginator.page_range %}
+                                <a href="?asset_page={{ i }}&q_asset={{ q_asset }}" class="pg-link {% if asset_page_obj.number == i %}pg-active{% endif %}">{{ i }}</a>
+                            {% endfor %}
+                        </div>
+                        {% if asset_page_obj.has_next %}
+                            <a href="?asset_page={{ asset_page_obj.next_page_number }}&q_asset={{ q_asset }}" class="pg-link">Next</a>
+                        {% else %}
+                            <span class="pg-disabled">Next</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="table-section shadow-sm">
+                    <div class="px-5 py-3 bg-white border-b flex justify-between items-center shrink-0">
+                        <span class="font-bold text-slate-700 text-sm">My Maintenance Tasks</span>
+                        <form method="GET" action="." class="flex items-center">
+                            <input type="text" name="q_task" placeholder="Filter tasks..." class="inner-table-search" value="{{ q_task }}">
+                        </form>
+                    </div>
+                    <div class="scrollable-body">
+                        <table class="w-full text-left text-[12px]" id="tasksTable">
+                            <thead class="text-slate-500 uppercase text-[10px] tracking-wider">
+                                <tr>
+                                    <th class="px-5 py-3">Asset</th>
+                                    <th class="px-5 py-3">Task Type</th>
+                                    <th class="px-5 py-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for task in task_page_obj %}
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-5 py-4 font-bold text-slate-700">{{ task.asset.assets_name }}</td>
+                                    <td class="px-5 py-4 text-slate-500">{{ task.maintenance_type }}</td>
+                                    <td class="px-5 py-4 text-center">
+                                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-600 font-black uppercase text-[10px]">{{ task.status }}</span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="p-10 text-center text-slate-400">No active tasks.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-footer">
+                        {% if task_page_obj.has_previous %}
+                            <a href="?task_page={{ task_page_obj.previous_page_number }}&q_task={{ q_task }}" class="pg-link">Previous</a>
+                        {% else %}
+                            <span class="pg-disabled">Previous</span>
+                        {% endif %}
+                        <div class="flex items-center gap-4">
+                            {% for i in task_page_obj.paginator.page_range %}
+                                <a href="?task_page={{ i }}&q_task={{ q_task }}" class="pg-link {% if task_page_obj.number == i %}pg-active{% endif %}">{{ i }}</a>
+                            {% endfor %}
+                        </div>
+                        {% if task_page_obj.has_next %}
+                            <a href="?task_page={{ task_page_obj.next_page_number }}&q_task={{ q_task }}" class="pg-link">Next</a>
+                        {% else %}
+                            <span class="pg-disabled">Next</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const burgerBtn = document.getElementById('burgerBtn');
+    const body = document.body;
+
+    // Check for saved state on load
+    if (localStorage.getItem('sidebarState') === 'collapsed') {
+        body.classList.add('sidebar-collapsed');
+    }
+
+    burgerBtn.addEventListener('click', () => {
+        body.classList.toggle('sidebar-collapsed');
+        // Save state
+        if (body.classList.contains('sidebar-collapsed')) {
+            localStorage.setItem('sidebarState', 'collapsed');
+        } else {
+            localStorage.setItem('sidebarState', 'expanded');
+        }
+    });
+
+    // Dropdown logic
+    function toggleDropdown(event) {
+        event.stopPropagation();
+        document.getElementById('userDropdown').classList.toggle('hidden');
+    }
+
+    window.onclick = function(event) {
+        const dropdown = document.getElementById('userDropdown');
+        if (dropdown && !event.target.closest('#userMenuBtn') && !dropdown.classList.contains('hidden')) {
+            dropdown.classList.add('hidden');
+        }
+    }
+</script>
+</body>
+</html>
