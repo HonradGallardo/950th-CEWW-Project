@@ -157,7 +157,7 @@
             <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
             </a>
-            <a href="{% url 'analytics' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+            <a href="{% url 'analytics_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
             </a>
             <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
