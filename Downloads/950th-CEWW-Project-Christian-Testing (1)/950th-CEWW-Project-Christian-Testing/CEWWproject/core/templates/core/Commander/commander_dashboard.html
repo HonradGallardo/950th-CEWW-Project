@@ -45,7 +45,6 @@
             flex-direction: column;
         }
 
-        /* Target the body class to trigger changes */
         body.sidebar-collapsed #sidebar { 
             width: var(--sb-collapsed); 
         }
@@ -100,7 +99,6 @@
 </head>
 <body class="bg-slate-50 font-sans">
     <script>
-        // Critical: Set the class before the body renders to prevent "flicker"
         (function() {
             if (localStorage.getItem('sidebarState') === 'collapsed') {
                 document.body.classList.add('sidebar-collapsed');
@@ -181,7 +179,6 @@
         <main class="custom-scrollbar">
             {% block content %}
             <h1 class="text-xl font-black text-slate-800 uppercase mb-8">Strategic Overview</h1>
-            
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Operational Assets</p>
@@ -228,110 +225,97 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // UI LOGIC
+    // FIX: This function is now defined in a way that handles the sidebar on ALL pages
+    function initSidebar() {
         const burgerBtn = document.getElementById('burgerBtn');
         const body = document.body;
-
         if (burgerBtn) {
-            burgerBtn.addEventListener('click', function() {
+            // Remove old listeners to prevent duplicates
+            burgerBtn.replaceWith(burgerBtn.cloneNode(true));
+            const newBurgerBtn = document.getElementById('burgerBtn');
+            
+            newBurgerBtn.addEventListener('click', function() {
                 body.classList.toggle('sidebar-collapsed');
                 const isCollapsed = body.classList.contains('sidebar-collapsed');
                 localStorage.setItem('sidebarState', isCollapsed ? 'collapsed' : 'expanded');
             });
         }
+    }
 
-        // CHART GLOBAL DEFAULTS
+    document.addEventListener('DOMContentLoaded', function() {
+        initSidebar();
+
+        // --- CHART LOGIC (ONLY RUNS IF CANVAS EXISTS) ---
         Chart.defaults.font.family = 'Inter, sans-serif';
         Chart.defaults.color = '#94a3b8';
 
-        // 1. INVENTORY COMPOSITION
-        new Chart(document.getElementById('assetChart'), {
-            type: 'bar',
-            data: {
-                labels: [{% for item in asset_counts %}"{{ item.assets_type }}",{% endfor %}],
-                datasets: [{
-                    data: [{% for item in asset_counts %}{{ item.total }},{% endfor %}],
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-                    borderRadius: 6
-                }]
-            },
-            options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
+        const assetCtx = document.getElementById('assetChart');
+        if (assetCtx) {
+            new Chart(assetCtx, {
+                type: 'bar',
+                data: {
+                    labels: [{% for item in asset_counts %}"{{ item.assets_type }}",{% endfor %}],
+                    datasets: [{
+                        data: [{% for item in asset_counts %}{{ item.total }},{% endfor %}],
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                        borderRadius: 6
+                    }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
 
-        // 2. SEVERITY CHART
-        new Chart(document.getElementById('severityChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Low', 'Medium', 'High', 'Critical'],
-                datasets: [{
-                    data: [
-                        {{ severity_counts.Low|default:0 }},
-                        {{ severity_counts.Medium|default:0 }},
-                        {{ severity_counts.High|default:0 }},
-                        {{ severity_counts.Critical|default:0 }}
-                    ],
-                    backgroundColor: ['#bbf7d0', '#fde68a', '#fdba74', '#f87171'],
-                    borderWidth: 0
-                }]
-            },
-            options: { 
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
+        const sevCtx = document.getElementById('severityChart');
+        if (sevCtx) {
+            new Chart(sevCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Low', 'Medium', 'High', 'Critical'],
+                    datasets: [{
+                        data: [{{ severity_counts.Low|default:0 }}, {{ severity_counts.Medium|default:0 }}, {{ severity_counts.High|default:0 }}, {{ severity_counts.Critical|default:0 }}],
+                        backgroundColor: ['#bbf7d0', '#fde68a', '#fdba74', '#f87171'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
+        }
 
-        // 3. TREND CHART
-        new Chart(document.getElementById('trendChart'), {
-            type: 'line',
-            data: {
-                labels: {{ trend_labels|safe|default:"['No Data']" }},
-                datasets: [{
-                    label: 'New Incidents',
-                    data: {{ trend_data|safe|default:"[0]" }},
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: { 
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                }
-            }
-        });
+        const trendCtx = document.getElementById('trendChart');
+        if (trendCtx) {
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: {{ trend_labels|safe|default:"['No Data']" }},
+                    datasets: [{
+                        label: 'New Incidents',
+                        data: {{ trend_data|safe|default:"[0]" }},
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
 
-        // 4. MAINTENANCE CHART
-        new Chart(document.getElementById('maintenanceChart'), {
-            type: 'bar',
-            data: {
-                labels: {{ m_labels|safe|default:"['No Data']" }}, 
-                datasets: [
-                    {
-                        label: 'Completed', 
-                        data: {{ m_completed|safe }}, 
-                        backgroundColor: '#22c55e'
-                    },
-                    {
-                        label: 'Pending', 
-                        data: {{ m_pending|safe }}, 
-                        backgroundColor: '#facc15'
-                    }
-                ]
-            },
-            options: { 
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                }
-            }
-        });
+        const maintCtx = document.getElementById('maintenanceChart');
+        if (maintCtx) {
+            new Chart(maintCtx, {
+                type: 'bar',
+                data: {
+                    labels: {{ m_labels|safe|default:"['No Data']" }}, 
+                    datasets: [
+                        { label: 'Completed', data: {{ m_completed|safe|default:"[]" }}, backgroundColor: '#22c55e' },
+                        { label: 'Pending', data: {{ m_pending|safe|default:"[]" }}, backgroundColor: '#facc15' }
+                    ]
+                },
+                options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
     });
 
-    // Dropdown toggle function (outside DOMContentLoaded to be reachable by onclick)
     function toggleDropdown(event) {
         event.stopPropagation();
         const dropdown = document.getElementById('userDropdown');

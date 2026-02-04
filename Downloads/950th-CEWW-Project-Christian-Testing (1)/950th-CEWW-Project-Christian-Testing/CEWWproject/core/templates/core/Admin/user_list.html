@@ -17,8 +17,17 @@
         
         <div class="col-span-12 lg:col-span-7 flex flex-col min-h-0">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full min-h-0 overflow-hidden">
+                
+                <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 shrink-0">
+                    <div class="relative max-w-xs">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                        <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="Search personnel..." 
+                               class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500/10 w-full outline-none">
+                    </div>
+                </div>
+
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse" id="userTable">
                         <thead class="sticky top-0 bg-slate-50 z-10 shadow-[0_1px_0_0_rgba(226,232,240,1)]">
                             <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                 <th class="px-6 py-4">Personnel</th>
@@ -26,13 +35,13 @@
                                 <th class="px-6 py-4 text-center">Actions</th> 
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-100" id="userTableBody">
                             {% for person in users %}
-                            <tr class="hover:bg-blue-50/40 transition-colors cursor-pointer group" 
+                            <tr class="user-row hover:bg-blue-50/40 transition-colors cursor-pointer group" 
                                 onclick="showUserDetails('{{ person.id }}', '{{ person.username }}', '{{ person.get_full_name|default:person.username }}', '{{ person.email }}', '{{ person.groups.all.0.name|default:"Unassigned" }}')">
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-sm text-slate-800">{{ person.get_full_name|default:person.username }}</div>
-                                    <div class="text-[9px] mt-1 uppercase font-black tracking-wider px-2 py-0.5 rounded-md border
+                                    <div class="text-[9px] mt-1 uppercase font-black tracking-wider px-2 py-0.5 rounded-md border inline-block
                                         {% if person.groups.all.0.name == 'Admin' %} bg-red-50 text-red-600 border-red-100
                                         {% elif person.groups.all.0.name == 'Commander' %} bg-purple-50 text-purple-600 border-purple-100
                                         {% else %} bg-slate-50 text-slate-500 border-slate-200 {% endif %}">
@@ -52,28 +61,28 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center justify-center space-x-1">
-                                        <a href="{% url 'edit_user' person.id %}" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit User">
+                                        <a href="{% url 'edit_user' person.id %}" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
                                             <i class="fas fa-edit text-sm"></i>
                                         </a>
                                         <form action="{% url 'delete_user' person.id %}" method="POST" onsubmit="return confirm('Permanently delete {{ person.username }}?');" class="inline">
                                             {% csrf_token %}
-                                            <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete User">
+                                            <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
                                                 <i class="fas fa-trash-alt text-sm"></i>
                                             </button>
                                         </form>
                                     </div>
                                 </td>
                             </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="px-6 py-20 text-center text-slate-400">
-                                    <i class="fas fa-users text-4xl mb-4 block opacity-10"></i>
-                                    <p class="italic text-sm">No personnel found in the system.</p>
-                                </td>
-                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+
+                <div class="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" id="userPageInfo">
+                        Showing 0-0 of 0 users
+                    </p>
+                    <div class="flex items-center space-x-2" id="userPaginationControls"></div>
                 </div>
             </div>
         </div>
@@ -132,6 +141,68 @@
 </div>
 
 <script>
+let currentUserPage = 1;
+const usersPerPage = 10;
+let filteredUsers = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    initUserTable();
+});
+
+function initUserTable() {
+    const search = document.getElementById("userSearch").value.toUpperCase();
+    const allRows = Array.from(document.getElementsByClassName("user-row"));
+    
+    filteredUsers = allRows.filter(row => {
+        const personnelName = row.cells[0].innerText.toUpperCase();
+        const matches = (personnelName.includes(search));
+        
+        row.style.display = "none";
+        return matches;
+    });
+
+    const totalEntries = filteredUsers.length;
+    const totalPages = Math.ceil(totalEntries / usersPerPage) || 1;
+    
+    if (currentUserPage > totalPages) currentUserPage = totalPages;
+
+    const start = (currentUserPage - 1) * usersPerPage;
+    const end = Math.min(start + usersPerPage, totalEntries);
+
+    filteredUsers.slice(start, end).forEach(row => row.style.display = "");
+
+    document.getElementById('userPageInfo').innerText = `Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries} personnel`;
+    renderUserPagination(totalPages);
+}
+
+function renderUserPagination(totalPages) {
+    const container = document.getElementById('userPaginationControls');
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
+            i === currentUserPage 
+            ? 'bg-blue-600 text-white shadow-md' 
+            : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
+        }`;
+        
+        btn.onclick = () => {
+            currentUserPage = i;
+            initUserTable();
+        };
+        container.appendChild(btn);
+    }
+}
+
+function filterUsers() {
+    currentUserPage = 1;
+    initUserTable();
+}
+
 function showUserDetails(id, username, fullName, email, role) {
     document.getElementById('empty-message').classList.add('hidden');
     document.getElementById('user-details').classList.remove('hidden');
@@ -153,13 +224,8 @@ function showUserDetails(id, username, fullName, email, role) {
 </script>
 
 <style>
-    /* Hide scrollbar for the page but keep it for the table */
-    html, body {
-        overflow: hidden;
-        height: 100%;
-    }
+    html, body { overflow: hidden; height: 100%; }
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 </style>
 {% endblock %}
