@@ -5,25 +5,31 @@ from .models import Asset, Maintenance, Incident
 class MaintenanceForm(forms.ModelForm):
     class Meta:
         model = Maintenance
-        fields = ['asset', 'maintenance_type', 'status', 'notes'] 
+        fields = ['asset', 'maintenance_type', 'status', 'notes']
         widgets = {
-            'asset': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
-            'maintenance_type': forms.TextInput(attrs={
-                'placeholder': 'e.g., OS Reinstallation', 
+            'asset': forms.Select(attrs={
                 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
             }),
-            'status': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
+            'maintenance_type': forms.TextInput(attrs={
+                'placeholder': 'e.g., OS Reinstallation',
+                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
+            }),
+            'status': forms.Select(attrs={
+                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
+            }),
             'notes': forms.Textarea(attrs={
-                'placeholder': 'Detail the technical actions taken...', 
+                'placeholder': 'Detail the technical actions taken...',
                 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 h-32'
             }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # If we are pre-filling from an asset_id, make the dropdown look cleaner
-        if 'initial' in kwargs and 'asset' in kwargs['initial']:
-            self.fields['asset'].help_text = "Target asset selected."
+
+        # 🔒 LOCK ASSET WHEN EDITING
+        if self.instance.pk:
+            self.fields['asset'].disabled = True
+
         
 class AssetForm(forms.ModelForm):
     # Keep your maintenance field

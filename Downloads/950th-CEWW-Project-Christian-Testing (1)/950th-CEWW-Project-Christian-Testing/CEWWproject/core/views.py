@@ -1,6 +1,8 @@
+from multiprocessing import context
 from urllib import request
 import calendar
 from django.db.models.functions import ExtractMonth, ExtractWeekDay
+from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
@@ -8,12 +10,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.contrib import messages
-from .models import Asset, Maintenance, Incident
+from .models import Asset, IncidentComment, Maintenance, Incident
 from .forms import AssetForm, MaintenanceForm, UserForm
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.db.models.functions import TruncDay
+from django.db.models.functions import TruncMonth
 from django.utils.timezone import localtime
+
 
 # --- LANDING & REDIRECT ---
 def landing(request):
@@ -303,18 +307,31 @@ def add_maintenance(request):
 @login_required
 def edit_maintenance(request, pk):
     log = get_object_or_404(Maintenance, pk=pk)
+    
     if request.method == 'POST':
         form = MaintenanceForm(request.POST, instance=log)
+        # We re-disable it here because POST data doesn't include disabled fields
+        form.fields['asset'].disabled = True 
+        
         if form.is_valid():
             updated_log = form.save()
+            # Sync the Asset status with the Maintenance status
             asset = updated_log.asset
             asset.status = 'Active' if updated_log.status == 'Completed' else 'Maintenance'
             asset.save()
+            
             messages.success(request, "Service log updated.")
             return redirect('maintenance_list')
     else:
         form = MaintenanceForm(instance=log)
-    return render(request, 'core/Admin/add_maintenance.html', {'form': form, 'edit_mode': True})
+        # Disable the field so it renders as read-only in the template
+        form.fields['asset'].disabled = True
+
+    return render(request, 'core/Admin/add_maintenance.html', {
+        'form': form, 
+        'maintenance': log, # Passing the object for the sidebar info
+        'edit_mode': True
+    })
 
 @login_required
 def delete_maintenance(request, pk):
@@ -394,7 +411,29 @@ def delete_asset(request, asset_id):
 # --- INCIDENT MODULE ---
 @login_required
 def incident_list(request):
-    # Optional: Delete logic if called from this page
+    # --- HANDLE COMMENT POST ---
+    if request.method == 'POST' and 'message' in request.POST:
+        incident_id = request.POST.get('incident_id')
+
+        if not incident_id:
+            messages.error(request, "Please select an incident first.")
+            return redirect('incident_list')
+
+        request.session['active_incident_id'] = incident_id
+
+        incident = get_object_or_404(Incident, id=incident_id)
+        message_text = request.POST.get('message', '').strip()
+
+        if message_text:
+            IncidentComment.objects.create(
+                incident=incident,
+                author=request.user,
+                message=message_text
+            )
+
+        return redirect('incident_list')
+
+    # --- HANDLE DELETE ---
     if request.method == 'POST' and request.POST.get('action') == 'delete':
         incident_id = request.POST.get('incident_id')
         incident = get_object_or_404(Incident, id=incident_id)
@@ -402,11 +441,24 @@ def incident_list(request):
         messages.success(request, "Incident record removed.")
         return redirect('incident_list')
 
+    # --- LOAD ACTIVE INCIDENT ---
+    active_incident = None
+    comments = []
+
+    active_id = request.session.get('active_incident_id')
+    if active_id:
+        active_incident = get_object_or_404(Incident, id=active_id)
+        comments = active_incident.comments.all().order_by('created_at')
+
+    # --- FINAL CONTEXT ---
     context = {
         'incidents': Incident.objects.all().order_by('-date'),
-        'assets': Asset.objects.all(),
+        'incident': active_incident,
+        'comments': comments,
     }
+
     return render(request, 'core/Admin/incident_list.html', context)
+
 
 @login_required
 def command_incident(request):
@@ -458,6 +510,39 @@ def delete_incident(request, incident_id):
     incident.delete()
     return redirect('incident_list')
 
+# views.py
+@login_required
+def incident_detail(request, incident_id):
+    incident = get_object_or_404(Incident, id=incident_id)
+    comments = incident.comments.all()
+
+    if request.method == 'POST' and 'message' in request.POST:
+        message_text = request.POST.get('message').strip()
+        if message_text:
+            IncidentComment.objects.create(
+                incident=incident,
+                author=request.user,
+                message=message_text
+            )
+            messages.success(request, "Note added to log.")
+            return redirect('incident_detail', incident_id=incident.id)
+
+    return render(request, 'core/Admin/incident_detail.html', {
+        'incident': incident,
+        'comments': comments
+    })
+
+def get_incident_comments(request, incident_id):
+    comments = IncidentComment.objects.filter(incident_id=incident_id).order_by('created_at')
+    data = []
+    for c in comments:
+        data.append({
+            'author': c.author.username,
+            'message': c.message,
+            'created_at': c.created_at.strftime("%b %d, %H:%M"),
+            'is_current_user': c.author == request.user
+        })
+    return JsonResponse({'comments': data})
 
 
 @login_required
@@ -508,6 +593,38 @@ def analytics_list(request):
         'resolved_incidents': resolved_incidents,
         'asset_types': Asset.objects.values('assets_type').annotate(total=Count('id')),
     }
+    
+    three_months_ago = timezone.now() - timedelta(days=90)
+    monthly_trends = Incident.objects.filter(date__gte=three_months_ago) \
+        .annotate(month=TruncMonth('date')) \
+        .values('month') \
+        .annotate(total=Count('id')) \
+        .order_by('month')
+
+    counts = [item['total'] for item in monthly_trends]
+    
+    # Default values
+    predicted_incidents = 0
+    confidence_level = "Low (Insufficient Data)"
+    current_month_total = 0
+
+    if len(counts) >= 2:
+        # Calculate growth: (Latest - Oldest) / Number of gaps
+        growth = (counts[-1] - counts[0]) / (len(counts) - 1)
+        predicted_incidents = max(0, round(counts[-1] + growth))
+        current_month_total = counts[-1]
+        confidence_level = "High" if len(counts) >= 3 else "Medium"
+    elif len(counts) == 1:
+        predicted_incidents = counts[0]
+        current_month_total = counts[0]
+        confidence_level = "Low (Baseline Only)"
+
+    context.update({
+        'predicted_incidents': predicted_incidents,
+        'confidence_level': confidence_level,
+        'current_month_total': current_month_total,
+    })
+    
     return render(request, 'core/Admin/analytics_list.html', context)
 
 
