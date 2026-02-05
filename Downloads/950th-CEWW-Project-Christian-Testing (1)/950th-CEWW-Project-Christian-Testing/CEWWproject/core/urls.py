@@ -35,7 +35,7 @@ urlpatterns = [
 
 
 
-    path('analytics/', views.analytics, name='analytics'),
+    path('analytics_list/', views.analytics_list, name='analytics_list'),
     path('users/', views.user_list, name='user_list'),
     path('reports/', views.reports, name='reports'),
     path('command_reports/', views.command_reports, name='command_reports'),

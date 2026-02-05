@@ -1,0 +1,119 @@
+{% extends "core/Admin/admin_dashboard.html" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="flex flex-col h-full space-y-6 overflow-y-auto pb-10">
+    
+    <div class="px-2">
+        <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">System Monitoring Dashboard</h1>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Weekly IT Asset & Incident Intelligence</p>
+    </div>
+
+    <div class="grid grid-cols-12 gap-6 min-h-[400px]">
+        
+        <div class="col-span-12 lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Asset Restoration Trend</h3>
+                <span class="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold uppercase">Maintenance Stats</span>
+            </div>
+            <div class="flex-1">
+                <canvas id="assetChart"></canvas>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Incident Response Volume</h3>
+                <span class="text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold uppercase">Security Logs</span>
+            </div>
+            <div class="flex-1">
+                <canvas id="incidentChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Risk Profile by Asset Type</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {% for entry in asset_types %}
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p class="text-[9px] font-black text-slate-400 uppercase">{{ entry.assets_type }}</p>
+                <div class="flex items-end justify-between mt-2">
+                    <span class="text-xl font-black text-slate-800">{{ entry.total }}</span>
+                    <span class="text-[9px] font-bold text-slate-400">Total Units</span>
+                </div>
+                <div class="w-full bg-slate-200 h-1 rounded-full mt-3 overflow-hidden">
+                    <div class="bg-blue-500 h-full" style="width: 60%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const labels = {{ labels|safe }};
+
+    // 1. Asset Maintenance Line Chart
+    new Chart(document.getElementById('assetChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Fixed (Completed)',
+                    data: {{ fixed_assets|safe }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Still In Progress',
+                    data: {{ pending_assets|safe }},
+                    borderColor: '#f59e0b',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' }, usePointStyle: true } } },
+            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+        }
+    });
+
+    // 2. Incident Bar Chart
+    new Chart(document.getElementById('incidentChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'New Reports',
+                    data: {{ new_incidents|safe }},
+                    backgroundColor: '#ef4444',
+                    borderRadius: 5
+                },
+                {
+                    label: 'Resolved',
+                    data: {{ resolved_incidents|safe }},
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 10, weight: 'bold' }, usePointStyle: true } } },
+            scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+        }
+    });
+</script>
+{% endblock %}

@@ -12,6 +12,8 @@ from .models import Asset, Maintenance, Incident
 from .forms import AssetForm, MaintenanceForm, UserForm
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db.models.functions import TruncDay
+from django.utils.timezone import localtime
 
 # --- LANDING & REDIRECT ---
 def landing(request):
@@ -456,18 +458,57 @@ def delete_incident(request, incident_id):
     incident.delete()
     return redirect('incident_list')
 
+
+
 @login_required
-def analytics(request):
-    if request.user.groups.filter(name='Personnel').exists():
-        messages.warning(request, "Access denied.")
-        return redirect('dashboard')
+def analytics_list(request):
+    # 1. Setup Time Window using Local Time
+    today = localtime(timezone.now()).date()
+    date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    labels = [d.strftime('%a') for d in date_list]
+    date_to_idx = {d: i for i, d in enumerate(date_list)}
+
+    # Initialize data arrays
+    fixed_counts, pending_counts = [0]*7, [0]*7
+    new_incidents, resolved_incidents = [0]*7, [0]*7
+
+    # 2. Query Maintenance
+    # We use date__date to capture the database's date part
+    maint_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
+        .values('date__date', 'status') \
+        .annotate(count=Count('id'))
+
+    for item in maint_qs:
+        d = item['date__date']
+        if d in date_to_idx:
+            idx = date_to_idx[d]
+            if item['status'] == 'Completed': fixed_counts[idx] += item['count']
+            else: pending_counts[idx] += item['count']
+
+    # 3. Query Incidents
+    inc_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
+        .values('date__date', 'status') \
+        .annotate(count=Count('id'))
+
+    for item in inc_qs:
+        d = item['date__date']
+        if d in date_to_idx:
+            idx = date_to_idx[d]
+            if item['status'] == 'Resolved':
+                resolved_incidents[idx] += item['count']
+            else:
+                # This catches 'Open' and 'Investigating'
+                new_incidents[idx] += item['count']
+
     context = {
-        'total_assets': Asset.objects.count(),
-        'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')),
-        'severity_counts': Incident.objects.values('severity').annotate(total=Count('id')),
-        'status_counts': Incident.objects.values('status').annotate(total=Count('id')),
+        'labels': labels,
+        'fixed_assets': fixed_counts,
+        'pending_assets': pending_counts,
+        'new_incidents': new_incidents,
+        'resolved_incidents': resolved_incidents,
+        'asset_types': Asset.objects.values('assets_type').annotate(total=Count('id')),
     }
-    return render(request, 'core/Admin/analytics.html', context)
+    return render(request, 'core/Admin/analytics_list.html', context)
 
 @login_required
 def reports(request):
