@@ -134,6 +134,61 @@
                             <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-600 leading-relaxed italic" id="view_actions"></div>
                         </div>
                     </div>
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[500px]">
+                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Resolution Activity Log</h3>
+                                                <span class="text-[9px] font-bold bg-slate-100 px-2 py-1 rounded uppercase">
+                                                      Assigned to: {{ incident.assigned_to.username }}
+                                                 </span>
+                            <span class="text-[9px] bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold uppercase">Internal Only</span>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50" id="chat-container">
+                            {% for comment in comments %}
+                                <div class="flex flex-col {% if comment.author == request.user %}items-end{% endif %}">
+                                    <div class="max-w-[80%] {% if comment.author == request.user %}bg-blue-600 text-white rounded-l-xl rounded-tr-xl{% else %}bg-white border border-slate-200 text-slate-800 rounded-r-xl rounded-tl-xl{% endif %} p-3 shadow-sm">
+                                        <p class="text-[10px] font-black {% if comment.author == request.user %}text-blue-100{% else %}text-slate-400{% endif %} uppercase mb-1">
+                                            {{ comment.author.username }} • {{ comment.created_at|date:"M d, H:i" }}
+                                        </p>
+                                        <p class="text-xs font-medium leading-relaxed">{{ comment.message }}</p>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="text-center py-10">
+                                    <i class="fas fa-comments text-slate-200 text-3xl mb-2"></i>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase">No actions logged yet</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                                <form id="chat-form" class="p-4 border-t border-slate-100 bg-white rounded-b-2xl">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="incident_id" id="incident_id">
+
+                                    <div class="relative">
+                                        <textarea 
+                                            name="message"
+                                            id="chat-message"
+                                            placeholder="Log an action or update..."
+                                            class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 pr-12 text-xs font-bold text-slate-700"
+                                            rows="2"
+                                        ></textarea>
+
+                                        <button type="submit"
+                                            class="absolute right-2 bottom-2 bg-blue-600 text-white p-2 rounded-lg">
+                                            <i class="fas fa-paper-plane text-xs"></i>
+                                        </button>
+                                    </div>
+                                </form>
+
+
+                    </div>
+
+                    <script>
+                        // Auto-scroll to bottom of chat
+                        const container = document.getElementById('chat-container');
+                        container.scrollTop = container.scrollHeight;
+                    </script>
 
                     <div class="mt-6 pt-6 border-t border-slate-50 flex gap-3">
                         <a id="editLink" href="#" class="w-full px-4 py-4 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center group touch-manipulation">
@@ -175,38 +230,134 @@
 </style>
 
 <script>
-    // Logic is preserved exactly as original
+document.getElementById('chat-form').addEventListener('submit', function(e) {
+    e.preventDefault(); // 🚫 STOP PAGE REFRESH
+
+    const messageInput = document.getElementById('chat-message');
+    const incidentId = document.getElementById('incident_id').value;
+    const message = messageInput.value.trim();
+
+    if (!message || !incidentId) return;
+
+    fetch("{% url 'incident_list' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+            message: message,
+            incident_id: incidentId
+        })
+    })
+    .then(res => res.ok ? res.text() : Promise.reject())
+    .then(() => {
+        // Append message instantly (no reload)
+        const chat = document.getElementById('chat-container');
+        chat.insertAdjacentHTML('beforeend', `
+            <div class="flex flex-col items-end">
+                <div class="max-w-[80%] bg-blue-600 text-white rounded-l-xl rounded-tr-xl p-3 shadow-sm">
+                    <p class="text-[10px] font-black text-blue-100 uppercase mb-1">
+                        You • just now
+                    </p>
+                    <p class="text-xs font-medium">${message}</p>
+                </div>
+            </div>
+        `);
+
+        messageInput.value = '';
+        chat.scrollTop = chat.scrollHeight;
+    });
+});
+</script>
+
+{% if incident %}
+<script>
+    previewIncident(
+        "{{ incident.id }}",
+        "{{ incident.title|escapejs }}",
+        "{{ incident.severity }}",
+        "{{ incident.status }}",
+        "{{ incident.description|escapejs }}",
+        "{{ incident.actions_taken|escapejs }}",
+        "{{ incident.date|date:'d-m-Y H:i' }}",
+        "{% url 'delete_incident' incident.id %}"
+    );
+</script>
+{% endif %}
+
+<script>
     function previewIncident(id, title, severity, status, desc, actions, date, deleteUrl) {
-        document.getElementById('emptyState').classList.add('hidden');
-        document.getElementById('detailContent').classList.remove('hidden');
+    const emptyState = document.getElementById('emptyState');
+    const detailContent = document.getElementById('detailContent');
+    const badgeContainer = document.getElementById('view_severity_badge');
+    const chatContainer = document.getElementById('chat-container');
+    const deleteForm = document.getElementById('delete-incident-form');
 
-        document.getElementById('view_id').innerText = "ID: INC-" + String(id).padStart(3, '0');
-        document.getElementById('view_title').innerText = title;
-        document.getElementById('view_status').innerText = status;
-        document.getElementById('view_date').innerText = date;
-        document.getElementById('view_description').innerText = desc || "No technical description provided.";
-        document.getElementById('view_actions').innerText = actions || "No actions logged.";
+    emptyState.classList.add('hidden');
+    detailContent.classList.remove('hidden');
 
-        const badgeContainer = document.getElementById('view_severity_badge');
-        let colorClass = severity === 'Critical' ? 'bg-red-50 text-red-600 border-red-100' : 
-                         severity === 'High' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
-                         'bg-amber-50 text-amber-600 border-amber-100';
-        badgeContainer.innerHTML = `<span class="px-2 py-1 rounded-md border text-[10px] font-black uppercase ${colorClass}">${severity}</span>`;
+    document.getElementById('incident_id').value = id;
+    document.getElementById('view_id').innerText = "ID: INC-" + String(id).padStart(3, '0');
+    document.getElementById('view_title').innerText = title;
+    document.getElementById('view_status').innerText = status;
+    document.getElementById('view_date').innerText = date;
+    document.getElementById('view_description').innerText = desc || "No technical description provided.";
+    document.getElementById('view_actions').innerText = actions || "No actions logged.";
 
-        document.getElementById('editLink').href = `/incidents/edit/${id}/`;
+    // Severity badge
+    let colorClass = severity === 'Critical' ? 'bg-red-50 text-red-600 border-red-100' : 
+                     severity === 'High' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
+                     'bg-amber-50 text-amber-600 border-amber-100';
+    badgeContainer.innerHTML = `<span class="px-2 py-1 rounded-md border text-[10px] font-black uppercase ${colorClass}">${severity}</span>`;
 
-        const deleteForm = document.getElementById('delete-incident-form');
-        if (status === 'Resolved' && deleteUrl) {
-            deleteForm.classList.remove('hidden');
-            deleteForm.action = deleteUrl;
-        } else {
-            deleteForm.classList.add('hidden');
-        }
+    document.getElementById('editLink').href = `/incidents/edit/${id}/`;
 
-        if (window.innerWidth < 1024) {
-            document.getElementById('incidentDetailPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+    // Show/hide delete button
+    if (status === 'Resolved' && deleteUrl) {
+        deleteForm.classList.remove('hidden');
+        deleteForm.action = deleteUrl;
+    } else {
+        deleteForm.classList.add('hidden');
     }
+
+    // Load chat dynamically
+    chatContainer.innerHTML = '<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Loading Activity Logs...</p>';
+    fetch(`/incidents/${id}/comments/`)
+        .then(res => res.json())
+        .then(data => {
+            chatContainer.innerHTML = '';
+            if (!data.comments.length) {
+                chatContainer.innerHTML = `<div class="text-center py-10">
+                    <i class="fas fa-comments text-slate-200 text-3xl mb-2"></i>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">No actions logged yet</p>
+                </div>`;
+                return;
+            }
+            data.comments.forEach(comment => {
+                const isMe = comment.is_current_user;
+                const bubbleClass = isMe ? "bg-blue-600 text-white rounded-l-xl rounded-tr-xl" : "bg-white border border-slate-200 text-slate-800 rounded-r-xl rounded-tl-xl";
+                const alignClass = isMe ? "items-end" : "items-start";
+                const textMuted = isMe ? "text-blue-100" : "text-slate-400";
+
+                chatContainer.insertAdjacentHTML('beforeend', `
+                    <div class="flex flex-col ${alignClass}">
+                        <div class="max-w-[80%] ${bubbleClass} p-3 shadow-sm">
+                            <p class="text-[10px] font-black ${textMuted} uppercase mb-1">${comment.author} • ${comment.created_at}</p>
+                            <p class="text-xs font-medium leading-relaxed">${comment.message}</p>
+                        </div>
+                    </div>
+                `);
+            });
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+    if (window.innerWidth < 1024) {
+        document.getElementById('incidentDetailPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+    
 
     function openDeleteModal() { document.getElementById('deleteModal').classList.remove('hidden'); }
     function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }

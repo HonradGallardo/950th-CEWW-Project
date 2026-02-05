@@ -35,19 +35,27 @@
             </div>
         </div>
 
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 order-2 lg:order-2">
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 order-2 lg:order-2">
             <form method="POST" class="space-y-6">
                 {% csrf_token %}
                 
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Locked Asset ID</label>
+                    <div class="[&_select]:w-full [&_select]:bg-slate-100 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:p-3 [&_select]:text-sm [&_select]:font-bold [&_select]:text-slate-400 [&_select]:cursor-not-allowed">
+                        {{ form.asset }}
+                        <p class="text-[9px] text-slate-400 font-bold mt-1 italic uppercase tracking-tighter">Note: Asset identity cannot be changed once a log is created.</p>
+                    </div>
+                </div>
+
                 <div class="space-y-3">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Status</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
-                            <input type="radio" name="status" value="Under Repair" {% if maintenance.asset.status == 'Maintenance' %}checked{% endif %} class="hidden">
-                            <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-blue-600">Under Repair</span>
+                            <input type="radio" name="status" value="In Progress" {% if log.status == 'In Progress' %}checked{% endif %} class="hidden">
+                            <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-blue-600">In Progress</span>
                         </label>
                         <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50">
-                            <input type="radio" name="status" value="Completed" {% if maintenance.asset.status != 'Maintenance' %}checked{% endif %} class="hidden">
+                            <input type="radio" name="status" value="Completed" {% if log.status == 'Completed' %}checked{% endif %} class="hidden">
                             <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-emerald-600">Mark Completed</span>
                         </label>
                     </div>
@@ -63,7 +71,7 @@
                     {{ form.notes }}
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all transform active:scale-[0.97] touch-manipulation">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all transform active:scale-[0.97]">
                     Save and Apply Changes
                 </button>
             </form>

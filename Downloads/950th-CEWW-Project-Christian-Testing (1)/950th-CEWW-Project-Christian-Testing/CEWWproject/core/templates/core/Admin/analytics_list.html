@@ -33,6 +33,38 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="col-span-1 md:col-span-2 bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-800 flex items-center justify-between">
+            <div>
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Next Month AI Projection</h3>
+                <p class="text-white text-3xl font-black">
+                    {{ predicted_incidents }} 
+                    <span class="text-xs text-slate-400 font-normal uppercase tracking-wider">Expected Attacks</span>
+                </p>
+                <div class="mt-4 flex items-center space-x-2">
+                    <span class="text-[9px] font-bold px-2 py-1 rounded {% if confidence_level == 'High' %}bg-emerald-500/20 text-emerald-400{% else %}bg-amber-500/20 text-amber-400{% endif %} uppercase">
+                        Confidence: {{ confidence_level }}
+                    </span>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter italic">Based on 90-day trend</span>
+                </div>
+            </div>
+            <div class="hidden sm:block">
+                <i class="fas fa-chart-line text-slate-700 text-6xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border-2 {% if predicted_incidents > current_month_total %}border-red-100 bg-red-50/30{% else %}border-emerald-100 bg-emerald-50/30{% endif %} flex flex-col justify-center">
+            <h4 class="text-[10px] font-black {% if predicted_incidents > current_month_total %}text-red-500{% else %}text-emerald-600{% endif %} uppercase tracking-widest mb-1">Readiness Advisory</h4>
+            <p class="text-slate-800 font-bold text-sm leading-tight">
+                {% if predicted_incidents > current_month_total %}
+                    Trend is rising. Increase perimeter checks and asset maintenance immediately.
+                {% else %}
+                    System activity is stabilizing. Maintain current security protocols.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
     <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
         <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Risk Profile by Asset Type</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
@@ -41,10 +73,7 @@
                 <p class="text-[9px] font-black text-slate-400 uppercase">{{ entry.assets_type }}</p>
                 <div class="flex items-end justify-between mt-2">
                     <span class="text-xl font-black text-slate-800">{{ entry.total }}</span>
-                    <span class="text-[9px] font-bold text-slate-400">Total Units</span>
-                </div>
-                <div class="w-full bg-slate-200 h-1 rounded-full mt-3 overflow-hidden">
-                    <div class="bg-blue-500 h-full" style="width: 60%"></div>
+                    <span class="text-[9px] font-bold text-slate-400">Units</span>
                 </div>
             </div>
             {% endfor %}

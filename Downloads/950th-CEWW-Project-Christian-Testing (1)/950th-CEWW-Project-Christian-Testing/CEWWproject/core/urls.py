@@ -32,6 +32,7 @@ urlpatterns = [
     path('incidents/add/', views.add_incident, name='add_incident'),
     path('incidents/edit/<int:incident_id>/', views.edit_incident, name='edit_incident'),
     path('incidents/delete/<int:incident_id>/', views.delete_incident, name='delete_incident'),
+    path('incidents/<int:incident_id>/comments/', views.get_incident_comments, name='get_comments'),
 
 
 

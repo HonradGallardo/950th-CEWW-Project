@@ -52,6 +52,8 @@ class Maintenance(models.Model):
 
     def __str__(self):
         return f"{self.asset.assets_name} - {self.date.date()}"
+    
+
 
 class Incident(models.Model):
     SEVERITY_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High'), ('Critical', 'Critical')]
@@ -67,3 +69,13 @@ class Incident(models.Model):
 
     def __str__(self):
         return f"{self.severity} - {self.title}"
+    
+class IncidentComment(models.Model):
+    # Use 'Incident' as a string instead of a direct reference
+    incident = models.ForeignKey('Incident', on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
