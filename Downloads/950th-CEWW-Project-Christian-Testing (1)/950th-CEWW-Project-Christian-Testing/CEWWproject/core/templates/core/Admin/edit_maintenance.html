@@ -1,87 +1,80 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto h-full flex flex-col space-y-6">
-    <div class="flex items-center justify-between px-2">
+<div class="max-w-4xl mx-auto min-h-full flex flex-col space-y-4 sm:space-y-6 p-2 sm:p-6 bg-slate-50/30">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
         <div>
-            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Update Service Log</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tight">Update Service Log</h1>
             <p class="text-slate-500 text-[10px] font-bold uppercase mt-1">Editing Record for: {{ maintenance.asset.assets_id }}</p>
         </div>
-        <a href="{% url 'maintenance_list' %}" class="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase tracking-widest flex items-center">
+        <a href="{% url 'maintenance_list' %}" class="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase tracking-widest flex items-center self-start sm:self-center transition-colors">
             <i class="fas fa-times mr-2"></i> Cancel
         </a>
     </div>
-<form method="POST" class="space-y-6">
-    {% csrf_token %}
-    
-    <div>
-        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Maintenance Type</label>
-        {{ form.maintenance_type }}
-    </div>
 
-    <div>
-        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Service Status</label>
-        {{ form.status }}
-    </div>
-
-    <div>
-        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Service Notes & Progress</label>
-        {{ form.notes }}
-    </div>
-
-    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all transform active:scale-[0.98]">
-        Save and Apply Changes
-    </button>
-</form>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="bg-slate-800 rounded-2xl p-6 text-white shadow-xl shadow-slate-200">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        
+        <div class="bg-slate-800 rounded-2xl p-5 sm:p-6 text-white shadow-xl shadow-slate-200/50 order-1 lg:order-1">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Currently Editing</label>
-            <h2 class="text-2xl font-black mt-1">{{ maintenance.asset.assets_name }}</h2>
+            <h2 class="text-xl sm:text-2xl font-black mt-1 break-words">{{ maintenance.asset.assets_name }}</h2>
             
-            <div class="mt-8 space-y-4">
+            <div class="mt-6 sm:mt-8 space-y-4">
                 <div class="flex justify-between border-b border-white/10 pb-2">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase">Asset ID</span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Asset ID</span>
                     <span class="text-xs font-bold">{{ maintenance.asset.assets_id }}</span>
                 </div>
                 <div class="flex justify-between border-b border-white/10 pb-2">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase">Technician</span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Technician</span>
                     <span class="text-xs font-bold">{{ maintenance.technician.username }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase">Log Created</span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Log Created</span>
                     <span class="text-xs font-bold">{{ maintenance.date|date:"d M Y" }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 order-2 lg:order-2">
             <form method="POST" class="space-y-6">
                 {% csrf_token %}
                 
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Service Status</label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition group border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Status</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
                             <input type="radio" name="status" value="Under Repair" {% if maintenance.asset.status == 'Maintenance' %}checked{% endif %} class="hidden">
                             <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-blue-600">Under Repair</span>
                         </label>
-                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition group border-slate-100 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50">
+                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50">
                             <input type="radio" name="status" value="Completed" {% if maintenance.asset.status != 'Maintenance' %}checked{% endif %} class="hidden">
                             <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-emerald-600">Mark Completed</span>
                         </label>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Service Notes & Progress</label>
-                    {{ form.notes }}
-                    </div>
+                <div class="space-y-2 [&_select]:w-full [&_select]:bg-slate-50 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:p-3 [&_select]:text-sm [&_select]:font-bold [&_select]:text-slate-700">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Maintenance Type</label>
+                    {{ form.maintenance_type }}
+                </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all transform active:scale-[0.98]">
+                <div class="space-y-2 [&_textarea]:w-full [&_textarea]:bg-slate-50 [&_textarea]:border-slate-200 [&_textarea]:rounded-xl [&_textarea]:p-4 [&_textarea]:text-sm [&_textarea]:min-h-[120px] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-blue-500/20 [&_textarea]:outline-none [&_textarea]:transition-all">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Notes & Progress</label>
+                    {{ form.notes }}
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all transform active:scale-[0.97] touch-manipulation">
                     Save and Apply Changes
                 </button>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    /* Ensures Django-rendered inputs never break the mobile container width */
+    input, select, textarea {
+        max-width: 100% !important;
+    }
+</style>
 {% endblock %}

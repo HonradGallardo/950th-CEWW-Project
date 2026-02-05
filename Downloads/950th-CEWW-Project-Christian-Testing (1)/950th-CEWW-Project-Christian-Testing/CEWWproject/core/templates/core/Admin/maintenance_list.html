@@ -1,25 +1,25 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex flex-col h-[calc(100vh-120px)] overflow-hidden space-y-4">
+<div class="flex flex-col min-h-screen lg:h-[calc(100vh-120px)] lg:overflow-hidden space-y-4 p-2 sm:p-0">
     
-    <div class="flex items-center justify-between shrink-0 px-2">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
         <div>
             <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Service History</h1>
             <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
         </div>
-        <a href="{% url 'add_maintenance' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center group">
+        <a href="{% url 'add_maintenance' %}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center group">
             <i class="fas fa-tools mr-2 group-hover:rotate-12 transition-transform"></i> Create Service Log
         </a>
     </div>
 
-    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 overflow-hidden">
+    <div class="flex-1 grid grid-cols-12 gap-6 lg:min-h-0 lg:overflow-hidden pb-10 sm:pb-4">
         
-        <div class="col-span-12 lg:col-span-8 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="col-span-12 lg:col-span-8 flex flex-col h-fit lg:h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
-                <div class="flex items-center space-x-3 flex-1">
-                    <div class="relative flex-1 max-w-xs">
+                <div class="flex items-center space-x-3 flex-1 overflow-x-auto no-scrollbar">
+                    <div class="relative flex-1 min-w-[150px] max-w-xs">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
                         <input type="text" id="assetSearch" onkeyup="filterTable()" placeholder="Search ID or Name..." 
                                class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500/10 w-full outline-none">
@@ -39,8 +39,8 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse" id="maintenanceTable" style="table-layout: fixed;">
+            <div class="flex-1 overflow-x-auto lg:overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse min-w-[600px] sm:min-w-0" id="maintenanceTable" style="table-layout: fixed;">
                     <thead class="sticky top-0 bg-white shadow-sm z-10">
                         <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <th class="px-6 py-4" style="width: 20%;">Asset ID</th>
@@ -107,7 +107,7 @@
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-4 flex flex-col min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden">
+        <div class="col-span-12 lg:col-span-4 flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden">
             <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center">
                 <i class="fas fa-file-medical text-slate-200 text-3xl mb-4"></i>
                 <p class="text-slate-400 text-xs font-medium">Select log to view activity</p>
@@ -195,11 +195,13 @@
 </div>
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
 </style>
 
 <script>
+// ALL ORIGINAL LOGIC PRESERVED
 let currentPage = 1;
 const rowsPerPage = 10;
 let filteredRows = [];
@@ -317,6 +319,10 @@ function showDetails(data) {
     }
 
     document.getElementById('det-edit-link').href = data.editUrl;
+
+    if (window.innerWidth < 1024) {
+        document.getElementById('detail-content').scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 function openDeleteModal() {

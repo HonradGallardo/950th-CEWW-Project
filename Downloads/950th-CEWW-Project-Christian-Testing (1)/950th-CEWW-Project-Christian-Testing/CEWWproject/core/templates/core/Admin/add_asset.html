@@ -1,42 +1,42 @@
 {% extends 'core/Admin/admin_dashboard.html' %}
 
 {% block content %}
-<div class="flex justify-center items-center min-h-[80vh]">
-    <div class="w-full max-w-md bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden">
+<div class="flex justify-center items-center min-h-[80vh] px-4 py-8">
+    <div class="w-full max-w-lg bg-white rounded-xl shadow-lg border border-slate-100 overflow-hidden">
         <div class="bg-slate-50 p-4 border-b border-slate-100">
             <h2 class="text-center font-bold text-slate-800 uppercase tracking-wide text-sm">Register New Asset</h2>
         </div>
         
-        <form method="POST" class="p-6 space-y-4" id="assetForm">
+        <form method="POST" class="p-4 sm:p-6 space-y-4" id="assetForm">
             {% csrf_token %}
             
-            <div class="grid grid-cols-1 gap-3">
+            <div class="grid grid-cols-1 gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-tag text-xs"></i></div>
-                    {{ form.assets_name }}
+                    <div class="w-10 h-10 sm:w-8 sm:h-8 bg-blue-600 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-tag text-xs"></i></div>
+                    <div class="flex-1">{{ form.assets_name }}</div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-laptop text-xs"></i></div>
-                    {{ form.assets_type }}
+                    <div class="w-10 h-10 sm:w-8 sm:h-8 bg-blue-600 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-laptop text-xs"></i></div>
+                    <div class="flex-1">{{ form.assets_type }}</div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-map-marker-alt text-xs"></i></div>
-                    {{ form.location }}
+                    <div class="w-10 h-10 sm:w-8 sm:h-8 bg-blue-600 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-map-marker-alt text-xs"></i></div>
+                    <div class="flex-1">{{ form.location }}</div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                        <div class="w-6 h-6 bg-slate-400 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-user-edit text-[10px]"></i></div>
-                        <div class="flex flex-col">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                        <div class="w-8 h-8 bg-slate-400 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-user-edit text-[10px]"></i></div>
+                        <div class="flex flex-col min-w-0">
                             <span class="text-[8px] font-black text-slate-400 uppercase leading-none">User</span>
-                            <span class="text-[10px] font-bold text-slate-700 truncate">{{ request.user.username }}</span>
+                            <span class="text-[11px] font-bold text-slate-700 truncate">{{ request.user.username }}</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                        <div class="w-6 h-6 bg-slate-400 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-calendar-check text-[10px]"></i></div>
+                    <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                        <div class="w-8 h-8 bg-slate-400 rounded flex items-center justify-center text-white shrink-0"><i class="fas fa-calendar-check text-[10px]"></i></div>
                         <div class="flex flex-col">
                             <span class="text-[8px] font-black text-slate-400 uppercase leading-none">Date</span>
-                            <span class="text-[10px] font-bold text-slate-700">{% now "d-m-Y" %}</span>
+                            <span class="text-[11px] font-bold text-slate-700">{% now "d-m-Y" %}</span>
                         </div>
                     </div>
                 </div>
@@ -44,9 +44,9 @@
 
             <div class="py-2">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Status</span>
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div class="flex flex-wrap gap-4 sm:justify-between items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
                     {% for radio in form.status %}
-                        <label class="flex items-center gap-1.5 cursor-pointer group">
+                        <label class="flex items-center gap-2 cursor-pointer group">
                             <span class="status-radio-wrapper">{{ radio.tag }}</span>
                             <span class="text-[11px] font-bold text-slate-600 group-hover:text-blue-600 transition-colors">
                                 {{ radio.choice_label }}
@@ -62,7 +62,9 @@
                         <i class="fas fa-tools text-xs"></i>
                         <span class="text-[10px] font-black uppercase">Maintenance Reason</span>
                     </div>
-                    {{ form.type_of_maintenance }}
+                    <div class="w-full">
+                        {{ form.type_of_maintenance }}
+                    </div>
                 </div>
             </div>
 
@@ -70,7 +72,7 @@
                 <div class="hidden">{{ form.date_added }}</div>
             {% endif %}
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow-md transition-all text-xs uppercase tracking-widest active:scale-95">
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 sm:py-3 rounded-xl shadow-md transition-all text-xs uppercase tracking-widest active:scale-95">
                 Save Asset Entry
             </button>
         </form>
@@ -92,10 +94,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (isMaintenance) {
             container.classList.remove('hidden');
-            setTimeout(() => { container.style.opacity = "1"; }, 10);
+            // Ensure smoothness for visibility transition
+            setTimeout(() => { 
+                container.style.opacity = "1"; 
+                container.style.maxHeight = "200px";
+            }, 10);
         } else {
             container.style.opacity = "0";
-            setTimeout(() => { if (!isMaintenance) container.classList.add('hidden'); }, 300);
+            container.style.maxHeight = "0px";
+            setTimeout(() => { 
+                if (!isMaintenance) container.classList.add('hidden'); 
+            }, 300);
         }
     }
 
@@ -103,4 +112,23 @@ document.addEventListener('DOMContentLoaded', function() {
     updateVisibility();
 });
 </script>
+
+<style>
+    /* Responsive Styling for form fields injected by Django */
+    #assetForm input:not([type="radio"]), 
+    #assetForm select, 
+    #assetForm textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    #assetForm input:focus, 
+    #assetForm select:focus {
+        border-color: #3b82f6;
+    }
+</style>
 {% endblock %}

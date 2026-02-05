@@ -35,6 +35,7 @@ urlpatterns = [
 
 
 
+    path('command_analytics/', views.commander_analytics, name='command_analytics'),
     path('analytics_list/', views.analytics_list, name='analytics_list'),
     path('users/', views.user_list, name='user_list'),
     path('reports/', views.reports, name='reports'),

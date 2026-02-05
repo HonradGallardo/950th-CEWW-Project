@@ -1,29 +1,31 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex flex-col h-full space-y-6">
-    <div class="flex items-center justify-between shrink-0 px-2">
+<div class="flex flex-col min-h-screen lg:h-full space-y-4 sm:space-y-6 p-1 sm:p-0">
+    
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
         <div>
             <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">System Reports</h1>
             <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Generate & Export Comprehensive Data</p>
         </div>
-        <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-blue-200 transition flex items-center group">
+        <button class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md shadow-blue-200 transition flex items-center justify-center group">
             <i class="fas fa-file-pdf mr-2 transition-transform group-hover:scale-110"></i> Export All (PDF)
         </button>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
         <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Select Report Type</label>
-        <div class="flex flex-wrap gap-3 mb-8">
-            <button class="px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 rounded-xl text-xs font-black shadow-sm transition">IT Asset Report</button>
-            <button class="px-6 py-3 bg-slate-50 border-2 border-transparent text-slate-500 hover:border-slate-200 rounded-xl text-xs font-black transition">Maintenance Report</button>
-            <button class="px-6 py-3 bg-slate-50 border-2 border-transparent text-slate-500 hover:border-slate-200 rounded-xl text-xs font-black transition">Incident Report</button>
+        
+        <div class="flex overflow-x-auto no-scrollbar sm:flex-wrap gap-3 mb-8 pb-2 sm:pb-0">
+            <button class="whitespace-nowrap px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 rounded-xl text-xs font-black shadow-sm transition">IT Asset Report</button>
+            <button class="whitespace-nowrap px-6 py-3 bg-slate-50 border-2 border-transparent text-slate-500 hover:border-slate-200 rounded-xl text-xs font-black transition">Maintenance Report</button>
+            <button class="whitespace-nowrap px-6 py-3 bg-slate-50 border-2 border-transparent text-slate-500 hover:border-slate-200 rounded-xl text-xs font-black transition">Incident Report</button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end border-t border-slate-50 pt-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end border-t border-slate-50 pt-6">
             <div class="space-y-2">
                 <label class="block text-[9px] font-black text-slate-400 uppercase tracking-tighter">Date Range</label>
-                <select class="w-full text-xs px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
+                <select class="w-full text-xs px-4 py-3 sm:py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
                     <option>Last 30 Days</option>
                     <option>Quarter to Date</option>
                     <option>Year to Date</option>
@@ -31,7 +33,7 @@
             </div>
             <div class="space-y-2">
                 <label class="block text-[9px] font-black text-slate-400 uppercase tracking-tighter">Category</label>
-                <select class="w-full text-xs px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
+                <select class="w-full text-xs px-4 py-3 sm:py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
                     <option>All Assets</option>
                     <option>Laptops</option>
                     <option>Servers</option>
@@ -39,63 +41,75 @@
             </div>
             <div class="space-y-2">
                 <label class="block text-[9px] font-black text-slate-400 uppercase tracking-tighter">Status Filter</label>
-                <select class="w-full text-xs px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
+                <select class="w-full text-xs px-4 py-3 sm:py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 focus:outline-none font-bold">
                     <option>All Active</option>
                     <option>Maintenance Only</option>
                 </select>
             </div>
-            <button class="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold text-xs hover:bg-blue-700 transition h-[42px]">
+            <button class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-xs hover:bg-blue-700 transition h-[48px] sm:h-[42px] shadow-lg shadow-blue-100">
                 Generate Report
             </button>
         </div>
     </div>
 
     <div class="flex-1 min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-        <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
+        <div class="px-4 py-4 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <span class="text-xs font-black text-slate-500 uppercase tracking-widest">IT Asset Report Preview</span>
-            <span class="text-[10px] font-bold text-slate-400">Previewing 102 Records</span>
+            <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">Previewing 102 Records</span>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                        <th class="pb-4 px-2">Assets ID</th>
-                        <th class="pb-4 px-2">Asset Name</th>
-                        <th class="pb-4 px-2">Type</th>
-                        <th class="pb-4 px-2">Location</th>
-                        <th class="pb-4 px-2">Status</th>
-                        <th class="pb-4 px-2">Date Added</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    <tr class="text-xs font-medium text-slate-600">
-                        <td class="py-4 px-2 font-bold text-blue-600">AST-01</td>
-                        <td class="py-4 px-2">Workstation PC-01</td>
-                        <td class="py-4 px-2">PC</td>
-                        <td class="py-4 px-2">Office 1</td>
-                        <td class="py-4 px-2 font-bold text-emerald-500">Active</td>
-                        <td class="py-4 px-2">28-01-2026</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 custom-scrollbar">
+            
+            <div class="overflow-x-auto rounded-xl border border-slate-50">
+                <table class="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                        <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                            <th class="pb-4 px-4">Assets ID</th>
+                            <th class="pb-4 px-4">Asset Name</th>
+                            <th class="pb-4 px-4">Type</th>
+                            <th class="pb-4 px-4">Location</th>
+                            <th class="pb-4 px-4">Status</th>
+                            <th class="pb-4 px-4">Date Added</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        <tr class="text-xs font-medium text-slate-600 hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-4 font-bold text-blue-600">AST-01</td>
+                            <td class="py-4 px-4">Workstation PC-01</td>
+                            <td class="py-4 px-4"><span class="bg-slate-100 px-2 py-1 rounded text-[10px]">PC</span></td>
+                            <td class="py-4 px-4 italic">Office 1</td>
+                            <td class="py-4 px-4">
+                                <span class="flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                                    <span class="font-bold text-emerald-600">Active</span>
+                                </span>
+                            </td>
+                            <td class="py-4 px-4 font-mono text-slate-400">28-01-2026</td>
+                        </tr>
+                        </tbody>
+                </table>
+            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 min-h-[250px] flex flex-col items-center justify-center">
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-4 self-start">Asset Distribution</p>
-                    <i class="fas fa-chart-bar text-slate-200 text-6xl"></i>
-                    <p class="text-[10px] text-slate-400 mt-4 font-bold italic">Chart Preview will render here</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 pt-4">
+                <div class="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 min-h-[280px] flex flex-col items-center justify-center group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-4 self-start tracking-tighter">Asset Distribution</p>
+                    <div class="flex-1 flex flex-col items-center justify-center">
+                        <i class="fas fa-chart-bar text-slate-200 text-6xl group-hover:text-blue-200 transition-colors"></i>
+                        <p class="text-[10px] text-slate-400 mt-4 font-bold italic">Chart Preview will render here</p>
+                    </div>
                 </div>
-                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 min-h-[250px] flex flex-col items-center justify-center">
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-4 self-start">Asset Status</p>
-                    <i class="fas fa-chart-pie text-slate-200 text-6xl"></i>
-                    <p class="text-[10px] text-slate-400 mt-4 font-bold italic">Pie Chart Preview will render here</p>
+                <div class="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 min-h-[280px] flex flex-col items-center justify-center group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-4 self-start tracking-tighter">Asset Status</p>
+                    <div class="flex-1 flex flex-col items-center justify-center">
+                        <i class="fas fa-chart-pie text-slate-200 text-6xl group-hover:text-blue-200 transition-colors"></i>
+                        <p class="text-[10px] text-slate-400 mt-4 font-bold italic">Pie Chart Preview will render here</p>
+                    </div>
                 </div>
             </div>
         </div>
         
         <div class="p-4 border-t border-slate-100 bg-slate-50/30 flex justify-end">
-             <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-black text-xs shadow-md shadow-blue-200 transition">
+             <button class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 sm:py-3 rounded-xl font-black text-xs shadow-lg shadow-blue-200 transition active:scale-95">
                 Export Current Preview (PDF)
             </button>
         </div>
@@ -103,8 +117,13 @@
 </div>
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    /* Clean, non-intrusive scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    
+    /* Utility for horizontal button scrolling */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 {% endblock %}

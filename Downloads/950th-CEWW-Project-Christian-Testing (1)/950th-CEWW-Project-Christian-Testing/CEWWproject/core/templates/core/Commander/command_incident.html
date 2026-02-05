@@ -1,24 +1,25 @@
 {% extends "core/Commander/commander_dashboard.html" %}
 
 {% block content %}
-<div class="flex flex-col h-full space-y-6">
-    <div class="flex items-center justify-between shrink-0 px-2">
+<div class="flex flex-col lg:h-[calc(100vh-140px)] space-y-4 sm:space-y-6 overflow-x-hidden lg:overflow-hidden p-2 sm:p-0">
+    
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 px-2 gap-2">
         <div>
-            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Cybersecurity Incidents</h1>
+            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight leading-tight">Cybersecurity Incidents</h1>
             <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Real-time Threat Monitoring & Response</p>
         </div>
-        </div>
+    </div>
 
-    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
+    <div class="flex-1 grid grid-cols-12 gap-4 sm:gap-6 min-h-0 pb-10 sm:pb-4">
         
-        <div class="col-span-12 lg:col-span-7 flex flex-col min-h-0">
+        <div class="col-span-12 lg:col-span-7 flex flex-col min-h-[400px] lg:min-h-0">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                    <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Active Incident Feed</span>
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Incident Feed</span>
                 </div>
 
-                <div class="flex-1 overflow-y-auto custom-scrollbar">
-                    <table class="w-full text-left border-collapse">
+                <div class="flex-1 overflow-x-auto lg:overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse min-w-[500px] sm:min-w-0">
                         <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_rgba(226,232,240,1)] z-10">
                             <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                 <th class="px-6 py-4">Title</th>
@@ -31,26 +32,28 @@
                             {% for inc in incidents %}
                             <tr onclick="previewIncident('{{ inc.id }}', '{{ inc.title|escapejs }}', '{{ inc.severity }}', '{{ inc.status }}', '{{ inc.description|escapejs }}', '{{ inc.actions_taken|escapejs }}', '{{ inc.date|date:'d-m-Y H:i' }}')" 
                                 class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-                                <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ inc.title }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase 
+                                    <div class="text-xs font-bold text-slate-700 leading-snug">{{ inc.title }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase inline-block whitespace-nowrap
                                         {% if inc.severity == 'Critical' %}bg-red-50 text-red-600 border border-red-100
                                         {% elif inc.severity == 'High' %}bg-orange-50 text-orange-600 border border-orange-100
                                         {% else %}bg-amber-50 text-amber-600 border border-amber-100{% endif %}">
                                         {{ inc.severity }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-xs font-bold 
+                                <td class="px-6 py-4 text-[10px] sm:text-xs font-bold whitespace-nowrap
                                     {% if inc.status == 'Open' %}text-red-500
                                     {% elif inc.status == 'Investigating' %}text-orange-500
                                     {% else %}text-emerald-500{% endif %}">
                                     {{ inc.status }}
                                 </td>
-                                <td class="px-6 py-4 text-[10px] text-slate-400 font-medium">{{ inc.date|date:"d-m-Y H:i" }}</td>
+                                <td class="px-6 py-4 text-[9px] sm:text-[10px] text-slate-400 font-medium whitespace-nowrap">{{ inc.date|date:"d-m-Y H:i" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-xs italic">No incidents recorded.</td>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 text-xs italic">No incidents recorded.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -59,12 +62,12 @@
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-5 flex flex-col h-full">
-            <div id="incidentDetailPanel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+        <div class="col-span-12 lg:col-span-5 flex flex-col h-full min-h-0">
+            <div id="incidentDetailPanel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 flex flex-col h-full lg:overflow-hidden">
                 
-                <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center py-12 lg:py-0 space-y-4">
                     <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
-                        <i class="fas fa-shield-virus text-slate-300 text-2xl"></i>
+                        <i class="fas fa-shield-virus text-slate-200 text-2xl"></i>
                     </div>
                     <div>
                         <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Threat Intelligence</p>
@@ -73,18 +76,16 @@
                 </div>
 
                 <div id="detailContent" class="hidden flex flex-col h-full">
-                    <div class="flex items-start justify-between mb-6 border-b border-slate-50 pb-4">
+                    <div class="flex flex-col sm:flex-row items-start justify-between mb-6 border-b border-slate-50 pb-4 gap-3">
                         <div class="space-y-1">
                             <span id="view_id" class="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider"></span>
                             <h3 id="view_title" class="font-black text-sm text-slate-800 uppercase tracking-tight leading-tight"></h3>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <div id="view_severity_badge"></div>
-                            </div>
+                        <div id="view_severity_badge" class="shrink-0"></div>
                     </div>
 
-                    <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                        <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-6 flex-1 lg:overflow-y-auto pr-0 lg:pr-2 custom-scrollbar">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                 <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label>
                                 <p id="view_status" class="text-xs font-bold text-slate-700 italic uppercase"></p>
@@ -97,29 +98,33 @@
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Investigation Summary</label>
-                            <div class="bg-white border border-slate-100 rounded-xl p-4 text-xs text-slate-600 leading-relaxed min-h-[100px]" id="view_description"></div>
+                            <div class="bg-white border border-slate-100 rounded-xl p-4 text-xs text-slate-600 leading-relaxed min-h-[100px] break-words shadow-inner sm:shadow-none" id="view_description"></div>
                         </div>
 
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions Taken</label>
-                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-600 leading-relaxed italic" id="view_actions"></div>
+                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-600 leading-relaxed italic break-words" id="view_actions"></div>
                         </div>
                     </div>
-
-                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    /* Prevent body overflow only on large screens */
+    @media (min-width: 1024px) {
+        html, body { height: 100%; overflow: hidden; }
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 </style>
 
 <script>
     function previewIncident(id, title, severity, status, desc, actions, date) {
+        // Core Logic (Preserved)
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('detailContent').classList.remove('hidden');
 
@@ -136,6 +141,14 @@
                          'bg-amber-50 text-amber-600 border-amber-100';
         
         badgeContainer.innerHTML = `<span class="px-2 py-1 rounded-md border text-[10px] font-black uppercase ${colorClass}">${severity}</span>`;
+
+        // Mobile UX: Smooth scroll to details panel when an incident is clicked
+        if (window.innerWidth < 1024) {
+            document.getElementById('incidentDetailPanel').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
     }
 </script>
 {% endblock %}

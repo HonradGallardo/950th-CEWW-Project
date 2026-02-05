@@ -1,48 +1,163 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-full bg-slate-100 p-6">
+<div class="flex items-center justify-center min-h-screen bg-slate-100 p-2 sm:p-6">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200">
         <div class="bg-slate-50 border-b border-slate-200 py-4 text-center">
-            <h2 class="text-xl font-black uppercase tracking-widest text-slate-800">Service Log</h2>
+            <h2 class="text-lg sm:text-xl font-black uppercase tracking-widest text-slate-800">Service Log</h2>
         </div>
 
-        <form method="POST" class="p-8 space-y-6">
+        <form method="POST" class="p-4 sm:p-8 space-y-6" id="serviceLogForm">
             {% csrf_token %}
             
             <div class="text-[11px] font-bold text-slate-500 space-y-1 italic">
-                <p class="text-slate-600 font-black">Technician:  <span class="text-gray-500 font-bold">{{ request.user.username }}</span></p>
+                <p class="text-slate-600 font-black">Technician: <span class="text-gray-500 font-bold">{{ request.user.username }}</span></p>
                 <p class="text-slate-800 font-Black">Date / Time: <span class="text-gray-500 font-bold">{% now "d-m-Y | H:i" %}</span></p>
             </div>
 
             <div class="space-y-4">
-                <div class="grid grid-cols-3 items-center">
-                    <label class="text-sm font-bold text-slate-700">Assets ID:</label>
-                    <div class="col-span-2">{{ form.asset }}</div>
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700 pt-2">Assets ID:</label>
+                    <div class="md:col-span-2 relative">
+                        <div class="relative w-full custom-dropdown" id="dropdown-asset">
+                            <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-blue-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                <span class="selected-label">---------</span>
+                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                            </button>
+                            <div class="dropdown-list hidden absolute z-[110] mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-2xl max-h-[200px] overflow-y-auto">
+                                {% for value, label in form.asset.field.choices %}
+                                <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-slate-50 last:border-0" data-value="{{ value }}">
+                                    {{ label }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="hidden">{{ form.asset }}</div>
+                        </div>
+                    </div>
                 </div>
 
-            <div class="grid grid-cols-3 items-center">
-                <label class="text-sm font-bold text-slate-700">Maintenance Type:</label>
-                <div class="col-span-2">{{ form.maintenance_type }}</div>
-            </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start md:items-center gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700">Maintenance Type:</label>
+                    <div class="md:col-span-2">{{ form.maintenance_type }}</div>
+                </div>
 
-            <div class="grid grid-cols-3 items-center">
-                <label class="text-sm font-bold text-slate-700">Status:</label>
-                <div class="col-span-2">{{ form.status }}</div>
-            </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700 pt-2">Status:</label>
+                    <div class="md:col-span-2 relative">
+                        <div class="relative w-full custom-dropdown" id="dropdown-status">
+                            <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 hover:border-blue-400 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                                <span class="selected-label">---------</span>
+                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                            </button>
+                            <div class="dropdown-list hidden absolute z-[100] mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-2xl max-h-[150px] overflow-y-auto">
+                                {% for value, label in form.status.field.choices %}
+                                <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-slate-50 last:border-0" data-value="{{ value }}">
+                                    {{ label }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="hidden">{{ form.status }}</div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="space-y-2">
-                    <label class="text-sm font-bold text-slate-700">Description</label>
-                    {{ form.notes }}
+                    <label class="text-sm font-bold text-slate-700 block">Description</label>
+                    <div class="w-full">
+                        {{ form.notes }}
+                    </div>
                 </div>
             </div>
 
             <div class="pt-4">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-blue-200">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 sm:py-3 rounded-lg transition shadow-lg shadow-blue-200 active:scale-[0.98]">
                     Submit
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    /* Styling for standard inputs like Maintenance Type and Notes */
+    #serviceLogForm input, 
+    #serviceLogForm select, 
+    #serviceLogForm textarea {
+        width: 100% !important;
+        max-width: 100%;
+        display: block;
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 14px; 
+        outline: none;
+        background-color: #ffffff;
+    }
+
+    #serviceLogForm textarea {
+        min-height: 120px;
+        resize: none;
+    }
+
+    /* Scrollbar Styling */
+    .dropdown-list::-webkit-scrollbar {
+        width: 5px;
+    }
+    .dropdown-list::-webkit-scrollbar-track {
+        background: #f8fafc;
+    }
+    .dropdown-list::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all custom dropdown containers
+    const dropdowns = document.querySelectorAll('.custom-dropdown');
+
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector('.dropdown-toggle');
+        const list = dropdown.querySelector('.dropdown-list');
+        const label = dropdown.querySelector('.selected-label');
+        const realSelect = dropdown.querySelector('select'); // Hidden Django select
+        const items = dropdown.querySelectorAll('.dropdown-item');
+
+        // Toggle visibility
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other open dropdowns first
+            document.querySelectorAll('.dropdown-list').forEach(l => {
+                if(l !== list) l.classList.add('hidden');
+            });
+            list.classList.toggle('hidden');
+        });
+
+        // Handle Selection
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                const val = item.getAttribute('data-value');
+                const txt = item.innerText;
+
+                label.innerText = txt;
+                label.classList.add('text-slate-900');
+                
+                if (realSelect) {
+                    realSelect.value = val;
+                }
+                
+                list.classList.add('hidden');
+            });
+        });
+    });
+
+    // Global click to close dropdowns
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.dropdown-list').forEach(list => {
+            list.classList.add('hidden');
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -3,19 +3,21 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="flex flex-col lg:flex-row gap-6 h-full overflow-hidden">
-    <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-0">
-        <div class="p-6 border-b border-slate-100 flex-none">
+<div class="flex flex-col lg:flex-row gap-6 lg:h-full lg:overflow-hidden p-1 sm:p-0">
+    
+    <div class="flex-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col min-h-[500px] lg:min-h-0">
+        <div class="p-4 sm:p-6 border-b border-slate-100 flex-none">
             <h2 class="text-lg font-bold text-slate-800 mb-4 tracking-tight uppercase">IT Asset Inventory</h2>
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex gap-2">
-                    <div class="relative">
+            
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
+                    <div class="relative w-full sm:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         <input type="text" id="searchInput" placeholder="Search assets..." 
-                            class="pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 w-64">
+                            class="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10">
                     </div>
                     <select id="typeFilter" 
-                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm outline-none cursor-pointer font-bold text-slate-600 hover:border-slate-300">
+                        class="w-full sm:w-auto px-3 py-2.5 sm:py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none cursor-pointer font-bold text-slate-600 hover:border-slate-300">
                         <option value="all">All Types</option>
                         <option value="PC">PC</option>
                         <option value="Laptop">Laptop</option>
@@ -26,16 +28,16 @@
             </div>
         </div>
 
-        <div class="flex-grow overflow-y-auto overflow-x-auto custom-scrollbar min-h-0">
-            <table class="w-full text-left text-sm border-separate border-spacing-0" id="assetTable" style="table-layout: fixed; min-width: 800px;">
-                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] sticky top-0 z-10 shadow-sm">
+        <div class="flex-grow overflow-x-auto lg:overflow-y-auto custom-scrollbar min-h-0">
+            <table class="w-full text-left text-sm border-separate border-spacing-0" id="assetTable" style="min-width: 800px;">
+                <thead class="bg-slate-50 text-slate-500 font-black uppercase text-[10px] sticky top-0 z-10 shadow-sm">
                     <tr>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 15%;">Assets ID</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 25%;">Assets name</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 15%;">Assets Type</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 18%;">Location</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 14%;">Status</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 13%;">Date</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 w-[15%]">Assets ID</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 w-[25%]">Assets name</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 w-[15%]">Assets Type</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 w-[18%]">Location</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 w-[14%]">Status</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 w-[13%]">Date</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100" id="tableBody">
@@ -44,87 +46,87 @@
                         data-type="{{ asset.assets_type }}"
                         onclick="showDetails('{{ asset.assets_id }}', '{{ asset.assets_name }}', '{{ asset.assets_type }}', '{{ asset.location }}', '{{ asset.status }}', '{{ asset.date_added|date:'d-m-Y' }}', '{% if asset.assigned_to %}{{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}{% else %}Unassigned{% endif %}')">
                         
-                        <td class="p-4 font-medium text-blue-600 group-hover:underline truncate">{{ asset.assets_id }}</td>
-                        <td class="p-4 font-medium text-slate-700 truncate">{{ asset.assets_name }}</td>
+                        <td class="p-4 font-bold text-blue-600 group-hover:underline truncate">{{ asset.assets_id }}</td>
+                        <td class="p-4 font-semibold text-slate-700 truncate">{{ asset.assets_name }}</td>
                         <td class="p-4 text-slate-600 truncate">{{ asset.assets_type }}</td>
                         <td class="p-4 text-slate-500 truncate">{{ asset.location }}</td>
                         <td class="p-4 whitespace-nowrap">
-                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase 
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase 
                                 {% if asset.status == 'Active' %}bg-green-100 text-green-700
                                 {% elif asset.status == 'Maintenance' %}bg-yellow-100 text-yellow-700
                                 {% else %}bg-red-100 text-red-700{% endif %}">
                                 {{ asset.status }}
                             </span>
                         </td>
-                        <td class="p-4 text-slate-500 whitespace-nowrap">{{ asset.date_added|date:"d-m-Y" }}</td>
+                        <td class="p-4 text-slate-400 font-mono text-xs whitespace-nowrap">{{ asset.date_added|date:"d-m-Y" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="p-8 text-center text-slate-400 italic">No assets found in database.</td>
+                        <td colspan="6" class="p-12 text-center text-slate-400 italic font-medium">No assets found in database.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <div class="px-6 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
-            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" id="pageInfo">
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest" id="pageInfo">
                 Showing 0-0 of 0 assets
             </p>
             <div class="flex items-center space-x-2" id="paginationControls"></div>
         </div>
     </div>
 
-    <div class="w-full lg:w-80 space-y-6 flex-none">
-        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-4 border-b border-slate-100 font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider">
+    <div class="w-full lg:w-80 space-y-6 flex-none pb-10 lg:pb-0">
+        <div id="detail-panel" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all">
+            <div class="p-4 border-b border-slate-100 font-black text-slate-800 flex items-center gap-2 text-[10px] uppercase tracking-wider bg-slate-50/50">
                 <i class="fas fa-info-circle text-blue-500"></i> Asset Quick View
             </div>
             <div id="detail-placeholder" class="p-12 text-center text-slate-400 italic">
                 <i class="fas fa-mouse-pointer block text-2xl mb-2 opacity-20"></i> Select an asset
             </div>
-            <div id="detail-card" class="hidden p-6 space-y-5">
+            <div id="detail-card" class="hidden p-6 space-y-6">
                 <div>
-                    <label class="text-[10px] uppercase font-black text-slate-400 tracking-wider">Asset ID</label>
-                    <p id="det-id" class="text-xl font-black text-blue-600"></p>
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Asset ID</label>
+                    <p id="det-id" class="text-2xl font-black text-blue-600 leading-tight"></p>
                 </div>
-                <div class="space-y-3">
+                <div class="grid grid-cols-2 lg:grid-cols-1 gap-4">
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset Name</label>
-                        <p id="det-name" class="font-semibold text-slate-800"></p>
+                        <label class="text-[9px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Asset Name</label>
+                        <p id="det-name" class="font-bold text-slate-800 text-sm"></p>
                     </div>
                     <div>
-                        <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned To</label>
-                        <p id="det-user" class="text-slate-700 font-medium text-sm"></p>
+                        <label class="text-[9px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Assigned To</label>
+                        <p id="det-user" class="text-slate-700 font-bold text-xs bg-slate-100 px-2 py-1 rounded inline-block"></p>
                     </div>
                 </div>
                 <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Status</label>
-                    <p id="det-status" class="px-3 py-1 inline-block rounded text-[10px] font-bold uppercase"></p>
+                    <label class="text-[9px] uppercase font-bold text-slate-400 tracking-widest mb-2 block">Status</label>
+                    <p id="det-status" class="px-4 py-1.5 inline-block rounded-lg text-[10px] font-black uppercase shadow-sm"></p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-            <h3 class="font-bold text-xs mb-4 text-slate-800 uppercase tracking-tight">Status Distribution</h3>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="font-black text-[10px] mb-6 text-slate-800 uppercase tracking-widest">Status Distribution</h3>
             <div class="relative h-48 w-full">
                 <canvas id="statusChart"></canvas>
             </div>
-            <div class="mt-4 text-[11px] space-y-2 font-bold text-slate-600 border-t border-slate-50 pt-2 flex justify-between">
+            <div class="mt-6 text-[10px] font-black text-slate-500 border-t border-slate-100 pt-4 flex justify-between items-center uppercase tracking-tighter">
                 <p>Total Managed Assets</p>
-                <span class="text-slate-800 text-sm">{{ assets.count }}</span>
+                <span class="text-slate-900 text-base leading-none">{{ assets.count }}</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// Logic remains unchanged to ensure system stability
 let currentPage = 1;
 const rowsPerPage = 10;
 let tableRows = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Chart Logic
     const ctx = document.getElementById('statusChart').getContext('2d');
     const active = parseInt("{{ active_assets_count|default:0 }}") || 0;
     const inactive = parseInt("{{ inactive_assets_count|default:0 }}") || 0;
@@ -141,16 +143,17 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 data: chartData,
                 backgroundColor: chartColors,
-                borderWidth: 2,
-                borderColor: '#ffffff'
+                borderWidth: 4,
+                borderColor: '#ffffff',
+                hoverOffset: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '70%',
+            cutout: '75%',
             plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10, weight: 'bold' } } }
+                legend: { position: 'bottom', labels: { boxWidth: 8, padding: 15, font: { size: 9, weight: '900', family: 'Inter' } } }
             }
         }
     });
@@ -203,9 +206,9 @@ function renderPagination(totalPages) {
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.innerText = i;
-        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
+        btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
             i === currentPage 
-            ? 'bg-blue-600 text-white shadow-md' 
+            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
             : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
         }`;
         btn.onclick = () => { currentPage = i; updateTable(); };
@@ -222,14 +225,23 @@ function showDetails(id, name, type, loc, status, date, user) {
     document.getElementById('det-user').innerText = user;
     const stEl = document.getElementById('det-status');
     stEl.innerText = status;
-    stEl.className = 'px-3 py-1 inline-block rounded text-[10px] font-bold uppercase ' + 
+    stEl.className = 'px-4 py-1.5 inline-block rounded-lg text-[10px] font-black uppercase shadow-sm ' + 
         (status === 'Active' ? 'bg-green-100 text-green-700' : (status === 'Maintenance' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'));
+
+    // UX Touch: Smooth scroll to the details panel on mobile when an item is clicked
+    if (window.innerWidth < 1024) {
+        document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 </script>
 
 <style>
+    /* Improved readability scrollbar */
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+    
+    /* Ensure Chart.js is legible on all displays */
+    canvas { max-width: 100% !important; }
 </style>
 {% endblock %}

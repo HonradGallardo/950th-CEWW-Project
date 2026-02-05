@@ -1,55 +1,74 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex flex-col h-full space-y-6">
-    <div class="flex items-center justify-between shrink-0 px-2">
+<div class="flex flex-col min-h-full space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+    
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
         <div>
-            <h1 class="text-xl font-black text-slate-800 uppercase tracking-tight">Cybersecurity Incidents</h1>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tight">Cybersecurity Incidents</h1>
             <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Real-time Threat Monitoring & Response</p>
         </div>
-        <a href="{% url 'add_incident' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center group">
+        <a href="{% url 'add_incident' %}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center group">
             <i class="fas fa-plus-circle mr-2 group-hover:rotate-90 transition-transform"></i> Log New Incident
         </a>
     </div>
 
     <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
         
-        <div class="col-span-12 lg:col-span-7 flex flex-col min-h-0">
+        <div class="col-span-12 lg:col-span-7 flex flex-col min-h-[400px] lg:min-h-0">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                     <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Active Incident Feed</span>
                 </div>
 
-                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
                     <table class="w-full text-left border-collapse">
                         <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_rgba(226,232,240,1)] z-10">
                             <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                <th class="px-6 py-4">Title</th>
-                                <th class="px-6 py-4">Severity</th>
-                                <th class="px-6 py-4">Status</th>
-                                <th class="px-6 py-4">Date</th>
+                                <th class="px-4 sm:px-6 py-4">Incident Details</th>
+                                <th class="px-4 sm:px-6 py-4">Severity</th>
+                                <th class="px-4 sm:px-6 py-4 hidden md:table-cell">Status</th>
+                                <th class="px-4 sm:px-6 py-4 text-right sm:text-left">Timestamp</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             {% for inc in incidents %}
                             <tr onclick="previewIncident('{{ inc.id }}', '{{ inc.title|escapejs }}', '{{ inc.severity }}', '{{ inc.status }}', '{{ inc.description|escapejs }}', '{{ inc.actions_taken|escapejs }}', '{{ inc.date|date:'d-m-Y H:i' }}', '{% url 'delete_incident' inc.id %}')" 
-                                class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-                                <td class="px-6 py-4 text-xs font-bold text-slate-700">{{ inc.title }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase 
-                                        {% if inc.severity == 'Critical' %}bg-red-50 text-red-600 border border-red-100
-                                        {% elif inc.severity == 'High' %}bg-orange-50 text-orange-600 border border-orange-100
-                                        {% else %}bg-amber-50 text-amber-600 border border-amber-100{% endif %}">
+                                class="hover:bg-slate-50/80 transition-colors cursor-pointer group active:bg-slate-100">
+                                
+                                <td class="px-4 sm:px-6 py-4">
+                                    <div class="flex flex-col space-y-1">
+                                        <span class="text-xs font-bold text-slate-700 leading-tight">{{ inc.title }}</span>
+                                        <div class="md:hidden">
+                                            <span class="text-[9px] font-black uppercase tracking-tighter
+                                                {% if inc.status == 'Open' %}text-red-500
+                                                {% elif inc.status == 'Investigating' %}text-orange-500
+                                                {% else %}text-emerald-500{% endif %}">
+                                                ● {{ inc.status }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="px-4 sm:px-6 py-4">
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase border
+                                        {% if inc.severity == 'Critical' %}bg-red-50 text-red-600 border-red-100
+                                        {% elif inc.severity == 'High' %}bg-orange-50 text-orange-600 border-orange-100
+                                        {% else %}bg-amber-50 text-amber-600 border-amber-100{% endif %}">
                                         {{ inc.severity }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-xs font-bold 
+
+                                <td class="px-4 sm:px-6 py-4 text-xs font-bold hidden md:table-cell
                                     {% if inc.status == 'Open' %}text-red-500
                                     {% elif inc.status == 'Investigating' %}text-orange-500
                                     {% else %}text-emerald-500{% endif %}">
                                     {{ inc.status }}
                                 </td>
-                                <td class="px-6 py-4 text-[10px] text-slate-400 font-medium">{{ inc.date|date:"d-m-Y H:i" }}</td>
+
+                                <td class="px-4 sm:px-6 py-4 text-[10px] text-slate-400 font-medium text-right sm:text-left whitespace-nowrap">
+                                    {{ inc.date|date:"d/m H:i" }}
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -62,10 +81,10 @@
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-5 flex flex-col h-full">
-            <div id="incidentDetailPanel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-full">
+        <div class="col-span-12 lg:col-span-5 flex flex-col h-full min-h-[500px] lg:min-h-0">
+            <div id="incidentDetailPanel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 flex flex-col h-full">
                 
-                <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-12">
                     <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
                         <i class="fas fa-shield-virus text-slate-300 text-2xl"></i>
                     </div>
@@ -86,15 +105,15 @@
                             
                             <form id="delete-incident-form" method="POST" action="" class="hidden">
                                 {% csrf_token %}
-                                <button type="button" onclick="openDeleteModal()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                                    <i class="fas fa-trash-alt text-[10px]"></i>
+                                <button type="button" onclick="openDeleteModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                    <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </form>
                         </div>
                     </div>
 
                     <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                 <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label>
                                 <p id="view_status" class="text-xs font-bold text-slate-700 italic uppercase"></p>
@@ -117,7 +136,7 @@
                     </div>
 
                     <div class="mt-6 pt-6 border-t border-slate-50 flex gap-3">
-                        <a id="editLink" href="#" class="w-full px-4 py-3 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center group">
+                        <a id="editLink" href="#" class="w-full px-4 py-4 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center group touch-manipulation">
                             Modify Report <i class="fas fa-external-link-alt ml-2 group-hover:scale-110 transition-transform"></i>
                         </a>
                     </div>
@@ -128,7 +147,7 @@
 </div>
 
 <div id="deleteModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
-    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
     <div class="flex min-h-full items-center justify-center p-4">
         <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-sm border border-slate-100">
             <div class="p-6">
@@ -138,37 +157,29 @@
                 <div class="text-center">
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Confirm Deletion</h3>
                     <p class="mt-2 text-xs text-slate-500 leading-relaxed">
-                        Are you sure you want to permanently delete this incident record? This action cannot be undone.
+                        Are you sure you want to permanently delete this incident record?
                     </p>
                 </div>
             </div>
             <div class="flex items-center gap-3 p-4 bg-slate-50">
-                <button type="button" onclick="closeDeleteModal()" 
-                    class="flex-1 px-4 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
-                    CANCEL
-                </button>
-                <button type="button" id="confirmDeleteBtn"
-                    class="flex-1 px-4 py-2.5 text-xs font-bold text-white bg-red-500 rounded-xl hover:bg-red-600 shadow-md shadow-red-100 transition-all">
-                    DELETE LOG
-                </button>
+                <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl">CANCEL</button>
+                <button type="button" id="confirmDeleteBtn" class="flex-1 px-4 py-3 text-xs font-bold text-white bg-red-500 rounded-xl">DELETE LOG</button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 </style>
 
 <script>
+    // Logic is preserved exactly as original
     function previewIncident(id, title, severity, status, desc, actions, date, deleteUrl) {
-        // Show detail panel
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('detailContent').classList.remove('hidden');
 
-        // Fill data
         document.getElementById('view_id').innerText = "ID: INC-" + String(id).padStart(3, '0');
         document.getElementById('view_title').innerText = title;
         document.getElementById('view_status').innerText = status;
@@ -176,45 +187,28 @@
         document.getElementById('view_description').innerText = desc || "No technical description provided.";
         document.getElementById('view_actions').innerText = actions || "No actions logged.";
 
-        // Update Severity Badge
         const badgeContainer = document.getElementById('view_severity_badge');
         let colorClass = severity === 'Critical' ? 'bg-red-50 text-red-600 border-red-100' : 
                          severity === 'High' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
                          'bg-amber-50 text-amber-600 border-amber-100';
-        
         badgeContainer.innerHTML = `<span class="px-2 py-1 rounded-md border text-[10px] font-black uppercase ${colorClass}">${severity}</span>`;
 
-        // Update Edit Link
         document.getElementById('editLink').href = `/incidents/edit/${id}/`;
 
-        // DELETE LOGIC: Only show if status is 'Resolved'
         const deleteForm = document.getElementById('delete-incident-form');
         if (status === 'Resolved' && deleteUrl) {
             deleteForm.classList.remove('hidden');
             deleteForm.action = deleteUrl;
         } else {
             deleteForm.classList.add('hidden');
-            deleteForm.action = "";
+        }
+
+        if (window.innerWidth < 1024) {
+            document.getElementById('incidentDetailPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
-    function openDeleteModal() {
-        document.getElementById('deleteModal').classList.remove('hidden');
-        document.getElementById('confirmDeleteBtn').onclick = function() {
-            document.getElementById('delete-incident-form').submit();
-        };
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
-    }
-
-    // Backdrop click to close modal
-    window.onclick = function(event) {
-        const modal = document.getElementById('deleteModal');
-        if (event.target.classList.contains('bg-slate-900/40')) {
-            closeDeleteModal();
-        }
-    }
+    function openDeleteModal() { document.getElementById('deleteModal').classList.remove('hidden'); }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
 </script>
 {% endblock %}

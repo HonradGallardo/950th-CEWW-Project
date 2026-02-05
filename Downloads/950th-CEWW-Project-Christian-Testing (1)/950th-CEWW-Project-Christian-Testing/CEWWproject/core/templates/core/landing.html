@@ -8,111 +8,190 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
-        body { font-family: 'Inter', sans-serif; }
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --slate-900: #0f172a;
+        }
 
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: var(--slate-900);
+            background-color: #ffffff;
+        }
+
+        /* Sophisticated Background */
         .hero-bg {
-            background: linear-gradient(180deg, #f0f4f9 0%, #ffffff 100%);
+            background: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+        }
+
+        /* Glassmorphism Navbar */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* Enhanced Floating Animation */
+        .hero-image-container {
+            position: relative;
+            perspective: 1000px;
         }
 
         .floating-laptop {
-            filter: drop-shadow(0 20px 30px rgba(59, 130, 246, 0.15));
+            filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.1));
             animation: float 6s ease-in-out infinite;
+            transition: transform 0.5s ease;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
+            0%, 100% { transform: translateY(0px) rotateX(0deg); }
+            50% { transform: translateY(-20px) rotateX(2deg); }
         }
 
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.05);
+        /* Interactive Feature Cards */
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #f1f5f9;
         }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(37, 99, 235, 0.2);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Smooth Button Gradient */
+        .btn-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-gradient:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        .text-balance { text-wrap: balance; }
     </style>
 </head>
-<body class="bg-white">
+<body class="antialiased">
 
-    <nav class="flex justify-between items-center px-8 md:px-16 py-6 bg-[#f0f4f9]">
-        <div class="flex items-center space-x-2">
-            <span class="text-slate-800 font-bold text-lg tracking-tight">IT Asset & <span class="text-blue-600">Cybersecurity</span> System</span>
+    <nav class="glass-nav sticky top-0 z-50 px-6 md:px-16 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <i class="fas fa-shield-halved text-white text-lg"></i>
+            </div>
+            <span class="font-extrabold text-lg tracking-tight text-slate-900">
+                950th CEWW <span class="text-blue-600">Assets & Incident Monitoring System</span>
+            </span>
         </div>
-        <a href="{% url 'login' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition flex items-center shadow-md">
-            <i class="fas fa-user mr-2 text-sm"></i> Login
-        </a>
-    </nav>
-
-    <div class="hero-bg px-8 md:px-24 pt-16 pb-32 flex flex-col md:flex-row items-center gap-16">
-        <div class="md:w-1/2 space-y-8">
-            <h1 class="text-4xl md:text-6xl font-black text-[#2c3e50] leading-tight">
-                Welcome to the IT Asset & <br>
-                <span class="text-blue-600">Cybersecurity</span> Management System
-            </h1>
-            <p class="text-slate-500 text-xl leading-relaxed max-w-xl font-medium">
-                Efficiently manage IT assets, track maintenance, and log cybersecurity incidents in one secure, offline platform.
-            </p>
-            <a href="{% url 'login' %}" class="inline-block bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-200">
-                Login to Get Started
+        
+        <div class="flex items-center space-x-6">
+            <div class="hidden lg:flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                Secure Network Active
+            </div>
+            <a href="{% url 'login' %}" class="btn-gradient text-white px-7 py-2.5 rounded-full font-bold text-sm flex items-center shadow-lg">
+                <i class="fas fa-lock-open mr-2 text-xs"></i> Portal Login
             </a>
         </div>
+    </nav>
 
-        <div class="md:w-1/2 relative">
+    <section class="hero-bg px-6 md:px-24 pt-16 md:pt-28 pb-24 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        <div class="w-full lg:w-3/5 space-y-8 text-center lg:text-left">
+            <div class="inline-flex items-center space-x-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full">
+                <span class="text-blue-700 text-[10px] font-extrabold uppercase tracking-wider">Enterprise Security</span>
+                <i class="fas fa-chevron-right text-blue-300 text-[10px]"></i>
+            </div>
+            
+            <h1 class="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight text-balance">
+                The Standard in <span class="text-blue-600">Infrastructure</span> Oversight
+            </h1>
+            
+            <p class="text-slate-500 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
+                A unified, air-gapped ecosystem for the rigorous management of IT assets and high-fidelity cybersecurity incident tracking.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl active:scale-95 text-center">
+                    Get Started
+                </a>
+                <div class="flex items-center space-x-4 text-slate-400 font-semibold px-6 py-4">
+                    <i class="fas fa-network-wired"></i>
+                    <span class="text-sm">Local Area Access Only</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-2/5 hero-image-container">
             <img src="static/image_2.png" 
                  alt="System Infographic" 
                  class="w-full h-auto floating-laptop rounded-3xl">
             
-            <div class="absolute -top-10 -left-10 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center space-x-3">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-shield-alt text-blue-600"></i>
+            <div class="absolute -top-4 left-4 md:-top-10 md:-left-10 bg-white/90 backdrop-blur px-5 py-4 rounded-2xl shadow-2xl border border-white/50 flex items-center space-x-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                    <i class="fas fa-fingerprint text-white text-xl"></i>
                 </div>
-                <div class="pr-4">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">Security</p>
-                    <p class="text-xs font-bold text-slate-700">Protected</p>
+                <div>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Protocol</p>
+                    <p class="text-sm font-bold text-slate-800 tracking-tight">Encrypted Logs</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="px-8 md:px-16 py-24 bg-white -mt-16 relative z-10">
-        <div class="text-center mb-20">
-            <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">About the System</h2>
-            <p class="text-slate-500 mt-6 max-w-3xl mx-auto text-lg leading-relaxed font-medium">
-                This system is designed to centralize and streamline the management of non-classified IT assets, maintenance records, and cybersecurity incidents. Accessible only within the unit's local network, it ensures secure, offline operation to comply with unit standards.
+    <section class="px-6 md:px-16 py-24 bg-white relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20 space-y-4">
+                <h2 class="text-xs font-extrabold text-blue-600 uppercase tracking-[0.3em]">Core Capabilities</h2>
+                <h3 class="text-3xl md:text-5xl font-extrabold text-slate-900">Integrated Control Center</h3>
+                <div class="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="feature-card bg-slate-50/50 p-10 rounded-[2.5rem] flex flex-col items-start">
+                    <div class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                        <i class="fas fa-cubes text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-extrabold text-xl text-slate-900 mb-4">Asset Ledger</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">Automated cataloging and lifecycle tracking for mission-critical hardware and software nodes.</p>
+                </div>
+
+                <div class="feature-card bg-slate-50/50 p-10 rounded-[2.5rem] flex flex-col items-start">
+                    <div class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                        <i class="fas fa-screwdriver-wrench text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-extrabold text-xl text-slate-900 mb-4">Maintenance Core</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">Predictive logging and historical audit trails to ensure 24/7 infrastructure availability.</p>
+                </div>
+
+                <div class="feature-card bg-slate-50/50 p-10 rounded-[2.5rem] flex flex-col items-start">
+                    <div class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                        <i class="fas fa-shield-virus text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-extrabold text-xl text-slate-900 mb-4">Incident Matrix</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">High-security logging of network anomalies and cybersecurity events with rapid triage tools.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 border-t border-slate-100 text-center px-6 bg-slate-50/30">
+        <div class="flex flex-col items-center space-y-6">
+            <div class="flex items-center space-x-4 grayscale opacity-50">
+                <i class="fas fa-shield-halved text-2xl"></i>
+                <span class="font-bold text-lg">950TH CEWW</span>
+            </div>
+            <p class="text-slate-400 text-[10px] font-extrabold tracking-[0.2em] uppercase">
+                &copy; 2026 OFFICIAL USE ONLY - SECURE OFFLINE ARCHITECTURE
             </p>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div class="bg-white p-10 rounded-3xl border border-slate-100 card-hover transition-all text-center flex flex-col items-center">
-                <div class="bg-blue-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8">
-                    <i class="fas fa-server text-blue-600 text-3xl"></i>
-                </div>
-                <h3 class="font-black text-xl text-slate-800 mb-4">Asset Management</h3>
-                <p class="text-slate-500 text-sm leading-relaxed font-medium">Catalog, track, and manage IT assets efficiently within the centralized database.</p>
-            </div>
-
-            <div class="bg-white p-10 rounded-3xl border border-slate-100 card-hover transition-all text-center flex flex-col items-center">
-                <div class="bg-indigo-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8">
-                    <i class="fas fa-tools text-indigo-600 text-3xl"></i>
-                </div>
-                <h3 class="font-black text-xl text-slate-800 mb-4">Maintenance Logs</h3>
-                <p class="text-slate-500 text-sm leading-relaxed font-medium">Record and monitor IT asset maintenance activities to ensure system longevity.</p>
-            </div>
-
-            <div class="bg-white p-10 rounded-3xl border border-slate-100 card-hover transition-all text-center flex flex-col items-center">
-                <div class="bg-red-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>
-                </div>
-                <h3 class="font-black text-xl text-slate-800 mb-4">Incident Reporting</h3>
-                <p class="text-slate-500 text-sm leading-relaxed font-medium">Log and track cybersecurity incidents securely to maintain unit network integrity.</p>
-            </div>
-        </div>
-    </div>
-
-    <footer class="py-12 border-t border-slate-100 text-center">
-        <p class="text-slate-400 text-xs font-bold tracking-widest uppercase">
-            &copy; 2026 950TH CEWW - Secure Offline Infrastructure
-        </p>
     </footer>
 
 </body>

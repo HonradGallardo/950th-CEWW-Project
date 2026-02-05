@@ -3,19 +3,20 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="flex flex-col lg:flex-row gap-6 h-full">
-    <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+<div class="flex flex-col lg:flex-row gap-6 min-h-screen p-2 md:p-4 bg-slate-50">
+    
+    <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col min-w-0">
         
-        <div class="p-6 border-b border-slate-100 flex-none">
+        <div class="p-4 md:p-6 border-b border-slate-100 flex-none">
             <h2 class="text-lg font-bold text-slate-800 mb-4">IT Asset Inventory</h2>
             
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex gap-2">
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                <div class="flex flex-col sm:flex-row gap-2">
                     <input type="text" id="searchInput" placeholder="Search" 
-                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-64">
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full md:w-64">
                     
                     <select id="typeFilter" 
-                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm outline-none">
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm outline-none w-full sm:w-auto">
                         <option value="all">All Types</option>
                         <option value="PC">PC</option>
                         <option value="Laptop">Laptop</option>
@@ -23,23 +24,23 @@
                         <option value="Router">Router</option>
                     </select>
                 </div>
-                <a href="{% url 'add_asset' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition">
+                <a href="{% url 'add_asset' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition text-center">
                     + Add new Asset
                 </a>
             </div>
         </div>
 
-        <div class="flex-grow overflow-x-auto overflow-y-auto max-h-[calc(100vh-340px)] scrollbar-thin scrollbar-thumb-slate-300">
-            <table class="w-full text-left text-sm border-separate border-spacing-0" style="table-layout: fixed; min-width: 800px;" id="assetTable">
+        <div class="flex-grow overflow-x-auto overflow-y-auto max-h-[500px] lg:max-h-[calc(100vh-340px)] scrollbar-thin scrollbar-thumb-slate-300">
+            <table class="w-full text-left text-sm border-separate border-spacing-0" style="table-layout: auto; min-width: 850px;" id="assetTable">
                 <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] sticky top-0 z-10 shadow-sm">
                     <tr>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 15%;">Assets ID</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 20%;">Assets name</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 15%;">Assets Type</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 15%;">Location</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 15%;">Status</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50" style="width: 10%;">Date</th>
-                        <th class="p-4 border-b border-slate-100 bg-slate-50 text-right" style="width: 10%;">Action</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Assets ID</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Assets name</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Assets Type</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Location</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Status</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Date</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 text-right whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100" id="tableBody">
@@ -48,10 +49,10 @@
                         data-type="{{ asset.assets_type }}"
                         onclick="showDetails('{{ asset.assets_id }}', '{{ asset.assets_name }}', '{{ asset.assets_type }}', '{{ asset.location }}', '{{ asset.status }}', '{{ asset.date_added|date:'d-m-Y' }}', '{% if asset.assigned_to %}{{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}{% else %}Unassigned{% endif %}')">
                         
-                        <td class="p-4 font-medium text-blue-600 truncate">{{ asset.assets_id }}</td>
-                        <td class="p-4 font-medium text-slate-700 truncate">{{ asset.assets_name }}</td>
-                        <td class="p-4 truncate">{{ asset.assets_type }}</td>
-                        <td class="p-4 text-slate-500 truncate">{{ asset.location }}</td>
+                        <td class="p-4 font-medium text-blue-600 whitespace-nowrap">{{ asset.assets_id }}</td>
+                        <td class="p-4 font-medium text-slate-700 whitespace-nowrap">{{ asset.assets_name }}</td>
+                        <td class="p-4 whitespace-nowrap">{{ asset.assets_type }}</td>
+                        <td class="p-4 text-slate-500 whitespace-nowrap">{{ asset.location }}</td>
                         <td class="p-4">
                             <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap
                                 {% if asset.status == 'Active' %}bg-green-100 text-green-700
@@ -81,9 +82,9 @@
             </table>
         </div>
 
-        <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between flex-none">
-            <span class="text-xs text-slate-500 font-medium" id="pageInfo">Showing 1 to 10 of {{ assets.count }} entries</span>
-            <div class="flex gap-1" id="paginationButtons"></div>
+        <div class="p-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4 flex-none">
+            <span class="text-xs text-slate-500 font-medium text-center sm:text-left" id="pageInfo">Showing 1 to 10 of {{ assets.count }} entries</span>
+            <div class="flex flex-wrap justify-center gap-1" id="paginationButtons"></div>
         </div>
     </div>
 
@@ -160,7 +161,7 @@ function updateTable() {
     const end = start + rowsPerPage;
 
     tableRows.forEach(row => row.style.display = "none");
-    filteredRows.slice(start, end).forEach(row => row.style.display = "table-row"); // Use table-row to maintain structure
+    filteredRows.slice(start, end).forEach(row => row.style.display = "table-row");
 
     document.getElementById('pageInfo').innerText = `Showing ${totalEntries === 0 ? 0 : start + 1} to ${end > totalEntries ? totalEntries : end} of ${totalEntries} entries`;
     renderPagination(totalPages);
@@ -192,6 +193,11 @@ function showDetails(id, name, type, loc, status, date, user) {
     statusEl.innerText = status;
     statusEl.className = 'px-3 py-1 inline-block rounded text-[10px] font-bold uppercase ' + 
         (status === 'Active' ? 'bg-green-100 text-green-700' : status === 'Maintenance' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
+    
+    // UX improvement: Scroll to detail view on mobile after click
+    if (window.innerWidth < 1024) {
+        document.getElementById('detail-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
 </script>
 {% endblock %}
