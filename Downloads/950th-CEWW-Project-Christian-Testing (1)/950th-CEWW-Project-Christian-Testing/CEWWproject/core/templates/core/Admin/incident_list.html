@@ -1,44 +1,51 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="flex flex-col min-h-full space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6">
+<div class="flex flex-col min-h-full space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 transition-colors duration-300 bg-slate-50 dark:bg-slate-900">
     
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tight">Cybersecurity Incidents</h1>
-            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Real-time Threat Monitoring & Response</p>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Cybersecurity Incidents</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-wider">Real-time Threat Monitoring & Response</p>
         </div>
-        <a href="{% url 'add_incident' %}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center group">
-            <i class="fas fa-plus-circle mr-2 group-hover:rotate-90 transition-transform"></i> Log New Incident
-        </a>
+        
+        <div class="flex items-center gap-4 w-full sm:w-auto">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 shadow-sm transition-all focus:outline-none">
+                <i id="theme-icon" class="fas fa-moon"></i>
+            </button>
+
+            <a href="{% url 'add_incident' %}" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center group">
+                <i class="fas fa-plus-circle mr-2 group-hover:rotate-90 transition-transform"></i> Log New Incident
+            </a>
+        </div>
     </div>
 
     <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4">
         
         <div class="col-span-12 lg:col-span-7 flex flex-col min-h-[400px] lg:min-h-0">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                    <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Active Incident Feed</span>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-full overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between">
+                    <span class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
                 </div>
 
                 <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
                     <table class="w-full text-left border-collapse">
-                        <thead class="sticky top-0 bg-white shadow-[0_1px_0_0_rgba(226,232,240,1)] z-10">
-                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <thead class="sticky top-0 bg-white dark:bg-slate-800 shadow-[0_1px_0_0_rgba(226,232,240,1)] dark:shadow-[0_1px_0_0_rgba(51,65,85,1)] z-10">
+                            <tr class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                 <th class="px-4 sm:px-6 py-4">Incident Details</th>
                                 <th class="px-4 sm:px-6 py-4">Severity</th>
                                 <th class="px-4 sm:px-6 py-4 hidden md:table-cell">Status</th>
                                 <th class="px-4 sm:px-6 py-4 text-right sm:text-left">Timestamp</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-50">
+                        <tbody class="divide-y divide-slate-50 dark:divide-slate-700/50">
                             {% for inc in incidents %}
                             <tr onclick="previewIncident('{{ inc.id }}', '{{ inc.title|escapejs }}', '{{ inc.severity }}', '{{ inc.status }}', '{{ inc.description|escapejs }}', '{{ inc.actions_taken|escapejs }}', '{{ inc.date|date:'d-m-Y H:i' }}', '{% url 'delete_incident' inc.id %}')" 
-                                class="hover:bg-slate-50/80 transition-colors cursor-pointer group active:bg-slate-100">
+                                class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700">
                                 
                                 <td class="px-4 sm:px-6 py-4">
                                     <div class="flex flex-col space-y-1">
-                                        <span class="text-xs font-bold text-slate-700 leading-tight">{{ inc.title }}</span>
+                                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200 leading-tight">{{ inc.title }}</span>
                                         <div class="md:hidden">
                                             <span class="text-[9px] font-black uppercase tracking-tighter
                                                 {% if inc.status == 'Open' %}text-red-500
@@ -52,9 +59,9 @@
 
                                 <td class="px-4 sm:px-6 py-4">
                                     <span class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase border
-                                        {% if inc.severity == 'Critical' %}bg-red-50 text-red-600 border-red-100
-                                        {% elif inc.severity == 'High' %}bg-orange-50 text-orange-600 border-orange-100
-                                        {% else %}bg-amber-50 text-amber-600 border-amber-100{% endif %}">
+                                        {% if inc.severity == 'Critical' %}bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800
+                                        {% elif inc.severity == 'High' %}bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-800
+                                        {% else %}bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800{% endif %}">
                                         {{ inc.severity }}
                                     </span>
                                 </td>
@@ -66,13 +73,13 @@
                                     {{ inc.status }}
                                 </td>
 
-                                <td class="px-4 sm:px-6 py-4 text-[10px] text-slate-400 font-medium text-right sm:text-left whitespace-nowrap">
+                                <td class="px-4 sm:px-6 py-4 text-[10px] text-slate-400 dark:text-slate-500 font-medium text-right sm:text-left whitespace-nowrap">
                                     {{ inc.date|date:"d/m H:i" }}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-xs italic">No incidents recorded.</td>
+                                <td colspan="4" class="px-6 py-10 text-center text-slate-400 dark:text-slate-500 text-xs italic">No incidents recorded.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -82,30 +89,30 @@
         </div>
 
         <div class="col-span-12 lg:col-span-5 flex flex-col h-full min-h-[500px] lg:min-h-0">
-            <div id="incidentDetailPanel" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 flex flex-col h-full">
+            <div id="incidentDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 sm:p-6 flex flex-col h-full">
                 
                 <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-12">
-                    <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center">
-                        <i class="fas fa-shield-virus text-slate-300 text-2xl"></i>
+                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-700/50 rounded-full flex items-center justify-center">
+                        <i class="fas fa-shield-virus text-slate-300 dark:text-slate-600 text-2xl"></i>
                     </div>
                     <div>
-                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Threat Intelligence</p>
-                        <p class="text-[10px] text-slate-400 mt-1">Select an incident to analyze details</p>
+                        <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Threat Intelligence</p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Select an incident to analyze details</p>
                     </div>
                 </div>
 
                 <div id="detailContent" class="hidden flex flex-col h-full">
-                    <div class="flex items-start justify-between mb-6 border-b border-slate-50 pb-4">
+                    <div class="flex items-start justify-between mb-6 border-b border-slate-50 dark:border-slate-700 pb-4">
                         <div class="space-y-1">
-                            <span id="view_id" class="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider"></span>
-                            <h3 id="view_title" class="font-black text-sm text-slate-800 uppercase tracking-tight leading-tight"></h3>
+                            <span id="view_id" class="text-[9px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded uppercase tracking-wider"></span>
+                            <h3 id="view_title" class="font-black text-sm text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight"></h3>
                         </div>
                         <div class="flex items-center space-x-2">
                             <div id="view_severity_badge"></div>
                             
                             <form id="delete-incident-form" method="POST" action="" class="hidden">
                                 {% csrf_token %}
-                                <button type="button" onclick="openDeleteModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                                <button type="button" onclick="openDeleteModal()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 text-red-400 dark:text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
                                     <i class="fas fa-trash-alt text-xs"></i>
                                 </button>
                             </form>
@@ -114,40 +121,41 @@
 
                     <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label>
-                                <p id="view_status" class="text-xs font-bold text-slate-700 italic uppercase"></p>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <label class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Status</label>
+                                <p id="view_status" class="text-xs font-bold text-slate-700 dark:text-slate-300 italic uppercase"></p>
                             </div>
-                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Incident Date</label>
-                                <p id="view_date" class="text-xs font-bold text-slate-700"></p>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <label class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Incident Date</label>
+                                <p id="view_date" class="text-xs font-bold text-slate-700 dark:text-slate-300"></p>
                             </div>
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Investigation Summary</label>
-                            <div class="bg-white border border-slate-100 rounded-xl p-4 text-xs text-slate-600 leading-relaxed min-h-[100px]" id="view_description"></div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Investigation Summary</label>
+                            <div class="bg-white dark:bg-slate-900/30 border border-slate-100 dark:border-slate-700 rounded-xl p-4 text-xs text-slate-600 dark:text-slate-400 leading-relaxed min-h-[100px]" id="view_description"></div>
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions Taken</label>
-                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-600 leading-relaxed italic" id="view_actions"></div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Actions Taken</label>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 rounded-xl p-4 text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic" id="view_actions"></div>
                         </div>
                     </div>
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[500px]">
-                        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Resolution Activity Log</h3>
-                                                <span class="text-[9px] font-bold bg-slate-100 px-2 py-1 rounded uppercase">
-                                                      Assigned to: {{ incident.assigned_to.username }}
-                                                 </span>
-                            <span class="text-[9px] bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold uppercase">Internal Only</span>
+
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-[500px] mt-4">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                            <h3 class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Resolution Activity Log</h3>
+                            <span class="text-[9px] font-bold bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-1 rounded uppercase">
+                                Assigned to: {{ incident.assigned_to.username }}
+                            </span>
+                            <span class="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded font-bold uppercase">Internal Only</span>
                         </div>
 
-                        <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50" id="chat-container">
+                        <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-900/20" id="chat-container">
                             {% for comment in comments %}
                                 <div class="flex flex-col {% if comment.author == request.user %}items-end{% endif %}">
-                                    <div class="max-w-[80%] {% if comment.author == request.user %}bg-blue-600 text-white rounded-l-xl rounded-tr-xl{% else %}bg-white border border-slate-200 text-slate-800 rounded-r-xl rounded-tl-xl{% endif %} p-3 shadow-sm">
-                                        <p class="text-[10px] font-black {% if comment.author == request.user %}text-blue-100{% else %}text-slate-400{% endif %} uppercase mb-1">
+                                    <div class="max-w-[80%] {% if comment.author == request.user %}bg-blue-600 text-white rounded-l-xl rounded-tr-xl{% else %}bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-r-xl rounded-tl-xl{% endif %} p-3 shadow-sm">
+                                        <p class="text-[10px] font-black {% if comment.author == request.user %}text-blue-100{% else %}text-slate-400 dark:text-slate-400{% endif %} uppercase mb-1">
                                             {{ comment.author.username }} • {{ comment.created_at|date:"M d, H:i" }}
                                         </p>
                                         <p class="text-xs font-medium leading-relaxed">{{ comment.message }}</p>
@@ -155,43 +163,32 @@
                                 </div>
                             {% empty %}
                                 <div class="text-center py-10">
-                                    <i class="fas fa-comments text-slate-200 text-3xl mb-2"></i>
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase">No actions logged yet</p>
+                                    <i class="fas fa-comments text-slate-200 dark:text-slate-700 text-3xl mb-2"></i>
+                                    <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">No actions logged yet</p>
                                 </div>
                             {% endfor %}
                         </div>
 
-                                <form id="chat-form" class="p-4 border-t border-slate-100 bg-white rounded-b-2xl">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="incident_id" id="incident_id">
-
-                                    <div class="relative">
-                                        <textarea 
-                                            name="message"
-                                            id="chat-message"
-                                            placeholder="Log an action or update..."
-                                            class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 pr-12 text-xs font-bold text-slate-700"
-                                            rows="2"
-                                        ></textarea>
-
-                                        <button type="submit"
-                                            class="absolute right-2 bottom-2 bg-blue-600 text-white p-2 rounded-lg">
-                                            <i class="fas fa-paper-plane text-xs"></i>
-                                        </button>
-                                    </div>
-                                </form>
-
-
+                        <form id="chat-form" class="p-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-b-2xl">
+                            {% csrf_token %}
+                            <input type="hidden" name="incident_id" id="incident_id">
+                            <div class="relative">
+                                <textarea 
+                                    name="message"
+                                    id="chat-message"
+                                    placeholder="Log an action or update..."
+                                    class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl p-3 pr-12 text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-blue-500"
+                                    rows="2"
+                                ></textarea>
+                                <button type="submit" class="absolute right-2 bottom-2 bg-blue-600 text-white p-2 rounded-lg">
+                                    <i class="fas fa-paper-plane text-xs"></i>
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
-                    <script>
-                        // Auto-scroll to bottom of chat
-                        const container = document.getElementById('chat-container');
-                        container.scrollTop = container.scrollHeight;
-                    </script>
-
-                    <div class="mt-6 pt-6 border-t border-slate-50 flex gap-3">
-                        <a id="editLink" href="#" class="w-full px-4 py-4 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center group touch-manipulation">
+                    <div class="mt-6 pt-6 border-t border-slate-50 dark:border-slate-700 flex gap-3">
+                        <a id="editLink" href="#" class="w-full px-4 py-4 bg-slate-900 dark:bg-slate-700 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center group touch-manipulation">
                             Modify Report <i class="fas fa-external-link-alt ml-2 group-hover:scale-110 transition-transform"></i>
                         </a>
                     </div>
@@ -204,20 +201,20 @@
 <div id="deleteModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
     <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
     <div class="flex min-h-full items-center justify-center p-4">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-sm border border-slate-100">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-800 text-left shadow-2xl transition-all w-full max-w-sm border border-slate-100 dark:border-slate-700">
             <div class="p-6">
-                <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-50 rounded-full mb-4">
+                <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-50 dark:bg-red-900/20 rounded-full mb-4">
                     <i class="fas fa-exclamation-triangle text-red-500"></i>
                 </div>
                 <div class="text-center">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">Confirm Deletion</h3>
-                    <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+                    <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Confirm Deletion</h3>
+                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                         Are you sure you want to permanently delete this incident record?
                     </p>
                 </div>
             </div>
-            <div class="flex items-center gap-3 p-4 bg-slate-50">
-                <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl">CANCEL</button>
+            <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900/50">
+                <button type="button" onclick="closeDeleteModal()" class="flex-1 px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">CANCEL</button>
                 <button type="button" id="confirmDeleteBtn" class="flex-1 px-4 py-3 text-xs font-bold text-white bg-red-500 rounded-xl">DELETE LOG</button>
             </div>
         </div>
@@ -227,16 +224,49 @@
 <style>
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
 </style>
 
 <script>
-document.getElementById('chat-form').addEventListener('submit', function(e) {
-    e.preventDefault(); // 🚫 STOP PAGE REFRESH
+// --- ENHANCED THEME LOGIC ---
+const htmlElement = document.documentElement;
+const themeIcon = document.getElementById('theme-icon');
 
+function updateTheme(isDark) {
+    if (isDark) {
+        htmlElement.classList.add('dark');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        htmlElement.classList.remove('dark');
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+function toggleDarkMode() {
+    const isCurrentlyDark = htmlElement.classList.contains('dark');
+    updateTheme(!isCurrentlyDark);
+}
+
+// Ensure theme is applied immediately on script execution
+(function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+        updateTheme(true);
+    } else {
+        updateTheme(false);
+    }
+})();
+
+// --- ORIGINAL FUNCTIONALITY ---
+document.getElementById('chat-form').addEventListener('submit', function(e) {
+    e.preventDefault(); 
     const messageInput = document.getElementById('chat-message');
     const incidentId = document.getElementById('incident_id').value;
     const message = messageInput.value.trim();
-
     if (!message || !incidentId) return;
 
     fetch("{% url 'incident_list' %}", {
@@ -245,49 +275,25 @@ document.getElementById('chat-form').addEventListener('submit', function(e) {
             "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
             "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({
-            message: message,
-            incident_id: incidentId
-        })
+        body: new URLSearchParams({ message: message, incident_id: incidentId })
     })
     .then(res => res.ok ? res.text() : Promise.reject())
     .then(() => {
-        // Append message instantly (no reload)
         const chat = document.getElementById('chat-container');
         chat.insertAdjacentHTML('beforeend', `
             <div class="flex flex-col items-end">
                 <div class="max-w-[80%] bg-blue-600 text-white rounded-l-xl rounded-tr-xl p-3 shadow-sm">
-                    <p class="text-[10px] font-black text-blue-100 uppercase mb-1">
-                        You • just now
-                    </p>
+                    <p class="text-[10px] font-black text-blue-100 uppercase mb-1">You • just now</p>
                     <p class="text-xs font-medium">${message}</p>
                 </div>
             </div>
         `);
-
         messageInput.value = '';
         chat.scrollTop = chat.scrollHeight;
     });
 });
-</script>
 
-{% if incident %}
-<script>
-    previewIncident(
-        "{{ incident.id }}",
-        "{{ incident.title|escapejs }}",
-        "{{ incident.severity }}",
-        "{{ incident.status }}",
-        "{{ incident.description|escapejs }}",
-        "{{ incident.actions_taken|escapejs }}",
-        "{{ incident.date|date:'d-m-Y H:i' }}",
-        "{% url 'delete_incident' incident.id %}"
-    );
-</script>
-{% endif %}
-
-<script>
-    function previewIncident(id, title, severity, status, desc, actions, date, deleteUrl) {
+function previewIncident(id, title, severity, status, desc, actions, date, deleteUrl) {
     const emptyState = document.getElementById('emptyState');
     const detailContent = document.getElementById('detailContent');
     const badgeContainer = document.getElementById('view_severity_badge');
@@ -305,15 +311,13 @@ document.getElementById('chat-form').addEventListener('submit', function(e) {
     document.getElementById('view_description').innerText = desc || "No technical description provided.";
     document.getElementById('view_actions').innerText = actions || "No actions logged.";
 
-    // Severity badge
-    let colorClass = severity === 'Critical' ? 'bg-red-50 text-red-600 border-red-100' : 
-                     severity === 'High' ? 'bg-orange-50 text-orange-600 border-orange-100' : 
-                     'bg-amber-50 text-amber-600 border-amber-100';
+    let colorClass = severity === 'Critical' ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-800' : 
+                     severity === 'High' ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-800' : 
+                     'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800';
     badgeContainer.innerHTML = `<span class="px-2 py-1 rounded-md border text-[10px] font-black uppercase ${colorClass}">${severity}</span>`;
 
     document.getElementById('editLink').href = `/incidents/edit/${id}/`;
 
-    // Show/hide delete button
     if (status === 'Resolved' && deleteUrl) {
         deleteForm.classList.remove('hidden');
         deleteForm.action = deleteUrl;
@@ -321,33 +325,21 @@ document.getElementById('chat-form').addEventListener('submit', function(e) {
         deleteForm.classList.add('hidden');
     }
 
-    // Load chat dynamically
     chatContainer.innerHTML = '<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Loading Activity Logs...</p>';
     fetch(`/incidents/${id}/comments/`)
         .then(res => res.json())
         .then(data => {
             chatContainer.innerHTML = '';
             if (!data.comments.length) {
-                chatContainer.innerHTML = `<div class="text-center py-10">
-                    <i class="fas fa-comments text-slate-200 text-3xl mb-2"></i>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">No actions logged yet</p>
-                </div>`;
+                chatContainer.innerHTML = `<div class="text-center py-10"><i class="fas fa-comments text-slate-200 dark:text-slate-700 text-3xl mb-2"></i><p class="text-[10px] text-slate-400 font-bold uppercase">No actions logged yet</p></div>`;
                 return;
             }
             data.comments.forEach(comment => {
                 const isMe = comment.is_current_user;
-                const bubbleClass = isMe ? "bg-blue-600 text-white rounded-l-xl rounded-tr-xl" : "bg-white border border-slate-200 text-slate-800 rounded-r-xl rounded-tl-xl";
+                const bubbleClass = isMe ? "bg-blue-600 text-white rounded-l-xl rounded-tr-xl" : "bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-r-xl rounded-tl-xl";
                 const alignClass = isMe ? "items-end" : "items-start";
-                const textMuted = isMe ? "text-blue-100" : "text-slate-400";
-
-                chatContainer.insertAdjacentHTML('beforeend', `
-                    <div class="flex flex-col ${alignClass}">
-                        <div class="max-w-[80%] ${bubbleClass} p-3 shadow-sm">
-                            <p class="text-[10px] font-black ${textMuted} uppercase mb-1">${comment.author} • ${comment.created_at}</p>
-                            <p class="text-xs font-medium leading-relaxed">${comment.message}</p>
-                        </div>
-                    </div>
-                `);
+                const textMuted = isMe ? "text-blue-100" : "text-slate-400 dark:text-slate-400";
+                chatContainer.insertAdjacentHTML('beforeend', `<div class="flex flex-col ${alignClass}"><div class="max-w-[80%] ${bubbleClass} p-3 shadow-sm"><p class="text-[10px] font-black ${textMuted} uppercase mb-1">${comment.author} • ${comment.created_at}</p><p class="text-xs font-medium leading-relaxed">${comment.message}</p></div></div>`);
             });
             chatContainer.scrollTop = chatContainer.scrollHeight;
         });
@@ -356,10 +348,7 @@ document.getElementById('chat-form').addEventListener('submit', function(e) {
         document.getElementById('incidentDetailPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
-
-    
-
-    function openDeleteModal() { document.getElementById('deleteModal').classList.remove('hidden'); }
-    function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
+function openDeleteModal() { document.getElementById('deleteModal').classList.remove('hidden'); }
+function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
 </script>
 {% endblock %}

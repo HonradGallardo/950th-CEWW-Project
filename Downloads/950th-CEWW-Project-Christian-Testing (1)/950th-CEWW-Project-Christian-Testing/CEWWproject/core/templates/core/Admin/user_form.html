@@ -1,18 +1,18 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="w-full max-w-xl mx-auto mt-2 px-2 sm:px-0 mb-10"> 
+<div class="w-full max-w-xl mx-auto mt-2 px-2 sm:px-0 mb-10 transition-colors duration-300"> 
     
     <div class="mb-4">
-        <a href="{% url 'user_list' %}" class="text-slate-500 hover:text-slate-800 text-sm font-bold transition inline-flex items-center py-2">
+        <a href="{% url 'user_list' %}" class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-sm font-bold transition inline-flex items-center py-2">
             <i class="fas fa-arrow-left mr-2"></i> User Access Control & RBAC
         </a>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-        <div class="px-6 py-6 bg-[#3d5171] text-white">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="px-6 py-6 bg-[#3d5171] dark:bg-slate-800 text-white border-b dark:border-slate-700">
             <h2 class="text-xl font-black uppercase tracking-tight">{{ title }}</h2>
-            <p class="text-slate-300 text-[10px] sm:text-xs mt-0.5">Enter the details for the system user below.</p>
+            <p class="text-slate-300 dark:text-slate-400 text-[10px] sm:text-xs mt-0.5">Enter the details for the system user below.</p>
         </div>
         
         <form method="POST" class="p-4 sm:p-8 space-y-6">
@@ -21,7 +21,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                 {% for field in form %}
                     <div class="space-y-1.5 {% if field.name == 'email' or field.name == 'username' %}md:col-span-2{% endif %}">
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-wider ml-1">
+                        <label class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider ml-1">
                             {{ field.label }}
                         </label>
                         
@@ -30,13 +30,13 @@
                         </div>
                         
                         {% if field.help_text %}
-                            <p class="text-slate-400 text-[9px] sm:text-[10px] italic leading-tight px-1">{{ field.help_text }}</p>
+                            <p class="text-slate-400 dark:text-slate-500 text-[9px] sm:text-[10px] italic leading-tight px-1">{{ field.help_text }}</p>
                         {% endif %}
                         
                         {% if field.errors %}
                             <div class="space-y-1 px-1 mt-1">
                                 {% for error in field.errors %}
-                                    <p class="text-red-500 text-[10px] font-bold flex items-center">
+                                    <p class="text-red-500 dark:text-red-400 text-[10px] font-bold flex items-center">
                                         <i class="fas fa-exclamation-circle mr-1"></i> {{ error }}
                                     </p>
                                 {% endfor %}
@@ -46,11 +46,11 @@
                 {% endfor %}
             </div>
 
-            <div class="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
-                <a href="{% url 'user_list' %}" class="w-full sm:w-auto text-center text-slate-400 hover:text-slate-600 font-bold text-xs px-4 py-3 sm:py-2 transition">
+            <div class="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+                <a href="{% url 'user_list' %}" class="w-full sm:w-auto text-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-xs px-4 py-3 sm:py-2 transition">
                     Cancel
                 </a>
-                <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-8 py-3.5 sm:py-2.5 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center justify-center text-sm active:scale-[0.98]">
+                <button type="submit" class="w-full sm:w-auto bg-blue-600 dark:bg-blue-500 text-white px-8 py-3.5 sm:py-2.5 rounded-xl font-bold hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center text-sm active:scale-[0.98]">
                     <i class="fas fa-save mr-2 text-xs"></i> Save Personnel
                 </button>
             </div>
@@ -59,19 +59,24 @@
 </div>
 
 <style>
-    /* Logic-safe CSS injection:
-       This ensures the Django-rendered 'field' inputs 
-       match your UI theme perfectly regardless of screen size.
-    */
+    /* Django-rendered Input Theming */
     input, select, textarea {
         width: 100% !important;
-        font-size: 0.875rem !important; /* 14px for better mobile readability */
+        font-size: 0.875rem !important; 
         padding: 0.75rem 1rem !important;
         border-radius: 0.75rem !important;
         border: 1px solid #e2e8f0 !important;
         background-color: #f8fafc !important;
+        color: #1e293b !important;
         transition: all 0.2s ease !important;
         outline: none !important;
+    }
+
+    /* Dark Mode Overrides for Inputs */
+    .dark input, .dark select, .dark textarea {
+        background-color: #0f172a !important; /* Slate-950 */
+        border-color: #1e293b !important; /* Slate-800 */
+        color: #f1f5f9 !important; /* Slate-100 */
     }
 
     input:focus, select:focus, textarea:focus {
@@ -80,7 +85,13 @@
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
     }
 
-    /* Fix for checkbox fields which shouldn't be full-width */
+    .dark input:focus, .dark select:focus, .dark textarea:focus {
+        background-color: #1e293b !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+    }
+
+    /* Fix for checkbox fields */
     input[type="checkbox"] {
         width: auto !important;
         padding: 0 !important;

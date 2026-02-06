@@ -3,6 +3,50 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<style>
+    /* --- ASSET LIST DARK MODE CONSISTENCY --- */
+    body.dark-mode .bg-slate-50 {
+        background-color: #0f172a !important;
+    }
+    body.dark-mode .bg-white {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    body.dark-mode .text-slate-800,
+    body.dark-mode .text-slate-700,
+    body.dark-mode h2,
+    body.dark-mode h3 {
+        color: #f1f5f9 !important;
+    }
+    body.dark-mode .text-slate-500,
+    body.dark-mode .text-slate-400 {
+        color: #94a3b8 !important;
+    }
+    body.dark-mode .border-slate-200,
+    body.dark-mode .border-slate-100 {
+        border-color: #334155 !important;
+    }
+    /* Table specific overrides */
+    body.dark-mode thead th {
+        background-color: #0f172a !important;
+        color: #94a3b8 !important;
+        border-bottom-color: #334155 !important;
+    }
+    body.dark-mode .asset-row:hover {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+    body.dark-mode #searchInput, 
+    body.dark-mode #typeFilter {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+    body.dark-mode .bg-slate-100 {
+        background-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+</style>
+
 <div class="flex flex-col lg:flex-row gap-6 min-h-screen p-2 md:p-4 bg-slate-50">
     
     <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col min-w-0">
@@ -133,7 +177,7 @@ new Chart(ctx, {
             borderWidth: 0
         }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
 });
 
 // --- PAGINATION & FILTER LOGIC ---
@@ -173,6 +217,7 @@ function renderPagination(totalPages) {
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.innerText = i;
+        const isDark = document.body.classList.contains('dark-mode');
         btn.className = `px-3 py-1 text-xs font-bold rounded ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
         btn.onclick = () => { currentPage = i; updateTable(); };
         container.appendChild(btn);
@@ -191,10 +236,11 @@ function showDetails(id, name, type, loc, status, date, user) {
     document.getElementById('det-name').innerText = name;
     const statusEl = document.getElementById('det-status');
     statusEl.innerText = status;
+    
+    // Status color logic kept intact but visually distinct
     statusEl.className = 'px-3 py-1 inline-block rounded text-[10px] font-bold uppercase ' + 
         (status === 'Active' ? 'bg-green-100 text-green-700' : status === 'Maintenance' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
     
-    // UX improvement: Scroll to detail view on mobile after click
     if (window.innerWidth < 1024) {
         document.getElementById('detail-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }

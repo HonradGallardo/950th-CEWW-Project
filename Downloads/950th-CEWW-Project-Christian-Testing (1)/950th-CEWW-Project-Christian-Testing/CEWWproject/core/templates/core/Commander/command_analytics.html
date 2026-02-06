@@ -3,29 +3,34 @@
 {% block content %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="flex flex-col min-h-screen space-y-6 overflow-y-auto pb-10 p-2 md:p-4">
+<div class="flex flex-col min-h-screen space-y-6 overflow-y-auto pb-10 p-2 md:p-4 transition-colors duration-300 bg-slate-50 dark:bg-slate-900">
     
-    <div class="px-2">
-        <h1 class="text-lg md:text-xl font-black text-slate-800 uppercase tracking-tight">System Monitoring Dashboard</h1>
-        <p class="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider">Weekly IT Asset & Incident Intelligence</p>
+    <div class="px-2 flex justify-between items-center">
+        <div>
+            <h1 class="text-lg md:text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">System Monitoring Dashboard</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-[9px] md:text-[10px] font-bold uppercase tracking-wider">Weekly IT Asset & Incident Intelligence</p>
+        </div>
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 shadow-sm transition-all focus:outline-none">
+            <i id="theme-icon" class="fas fa-moon"></i>
+        </button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <div class="col-span-1 lg:col-span-7 bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <div class="col-span-1 lg:col-span-7 bg-white dark:bg-slate-800 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Asset Restoration Trend</h3>
-                <span class="text-[8px] md:text-[9px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold uppercase">Maintenance Stats</span>
+                <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Asset Restoration Trend</h3>
+                <span class="text-[8px] md:text-[9px] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded font-bold uppercase">Maintenance Stats</span>
             </div>
             <div class="flex-1 min-h-[250px] md:min-h-[350px]">
                 <canvas id="assetChart"></canvas>
             </div>
         </div>
 
-        <div class="col-span-1 lg:col-span-5 bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+        <div class="col-span-1 lg:col-span-5 bg-white dark:bg-slate-800 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Incident Response Volume</h3>
-                <span class="text-[8px] md:text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold uppercase">Security Logs</span>
+                <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Incident Response Volume</h3>
+                <span class="text-[8px] md:text-[9px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded font-bold uppercase">Security Logs</span>
             </div>
             <div class="flex-1 min-h-[250px] md:min-h-[350px]">
                 <canvas id="incidentChart"></canvas>
@@ -33,17 +38,17 @@
         </div>
     </div>
 
-    <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Risk Profile by Asset Type</h3>
+    <div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6">Risk Profile by Asset Type</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {% for entry in asset_types %}
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <p class="text-[9px] font-black text-slate-400 uppercase">{{ entry.assets_type }}</p>
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                <p class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase">{{ entry.assets_type }}</p>
                 <div class="flex items-end justify-between mt-2">
-                    <span class="text-xl font-black text-slate-800">{{ entry.total }}</span>
-                    <span class="text-[9px] font-bold text-slate-400">Total Units</span>
+                    <span class="text-xl font-black text-slate-800 dark:text-slate-100">{{ entry.total }}</span>
+                    <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500">Total Units</span>
                 </div>
-                <div class="w-full bg-slate-200 h-1 rounded-full mt-3 overflow-hidden">
+                <div class="w-full bg-slate-200 dark:bg-slate-700 h-1 rounded-full mt-3 overflow-hidden">
                     <div class="bg-blue-500 h-full" style="width: 60%"></div>
                 </div>
             </div>
@@ -53,10 +58,76 @@
 </div>
 
 <script>
+    // --- THEME LOGIC ---
+    const htmlElement = document.documentElement;
+    const themeIcon = document.getElementById('theme-icon');
+
+    function updateTheme(isDark) {
+        if (isDark) {
+            htmlElement.classList.add('dark');
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            htmlElement.classList.remove('dark');
+            themeIcon.classList.replace('fa-sun', 'fa-moon');
+            localStorage.setItem('theme', 'light');
+        }
+        // Force charts to update colors if they exist
+        if (window.assetChartObj) updateChartColors(window.assetChartObj);
+        if (window.incidentChartObj) updateChartColors(window.incidentChartObj);
+    }
+
+    function toggleDarkMode() {
+        updateTheme(!htmlElement.classList.contains('dark'));
+    }
+
+    function updateChartColors(chart) {
+        const isDark = htmlElement.classList.contains('dark');
+        const color = isDark ? '#94a3b8' : '#64748b'; // slate-400 vs slate-500
+        
+        chart.options.scales.x.ticks.color = color;
+        chart.options.scales.y.ticks.color = color;
+        chart.options.plugins.legend.labels.color = color;
+        chart.update();
+    }
+
+    // Initialize Theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        updateTheme(true);
+    }
+
+    // --- CHART LOGIC ---
     const labels = {{ labels|safe }};
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { 
+            legend: { 
+                position: 'bottom', 
+                labels: { 
+                    font: { size: 10, weight: 'bold' }, 
+                    usePointStyle: true,
+                    padding: 20,
+                    color: htmlElement.classList.contains('dark') ? '#94a3b8' : '#64748b'
+                } 
+            } 
+        },
+        scales: { 
+            y: { 
+                beginAtZero: true, 
+                grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                ticks: { color: htmlElement.classList.contains('dark') ? '#94a3b8' : '#64748b' }
+            }, 
+            x: { 
+                grid: { display: false },
+                ticks: { color: htmlElement.classList.contains('dark') ? '#94a3b8' : '#64748b' }
+            } 
+        }
+    };
 
     // 1. Asset Maintenance Line Chart
-    new Chart(document.getElementById('assetChart'), {
+    window.assetChartObj = new Chart(document.getElementById('assetChart'), {
         type: 'line',
         data: {
             labels: labels,
@@ -80,28 +151,11 @@
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false, // Essential for responsive height
-            plugins: { 
-                legend: { 
-                    position: 'bottom', 
-                    labels: { 
-                        font: { size: 10, weight: 'bold' }, 
-                        usePointStyle: true,
-                        padding: 20
-                    } 
-                } 
-            },
-            scales: { 
-                y: { beginAtZero: true, grid: { display: false } }, 
-                x: { grid: { display: false } } 
-            }
-        }
+        options: commonOptions
     });
 
     // 2. Incident Bar Chart
-    new Chart(document.getElementById('incidentChart'), {
+    window.incidentChartObj = new Chart(document.getElementById('incidentChart'), {
         type: 'bar',
         data: {
             labels: labels,
@@ -120,24 +174,7 @@
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false, // Essential for responsive height
-            plugins: { 
-                legend: { 
-                    position: 'bottom', 
-                    labels: { 
-                        font: { size: 10, weight: 'bold' }, 
-                        usePointStyle: true,
-                        padding: 20
-                    } 
-                } 
-            },
-            scales: { 
-                y: { beginAtZero: true }, 
-                x: { grid: { display: false } } 
-            }
-        }
+        options: commonOptions
     });
 </script>
 {% endblock %}
