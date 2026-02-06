@@ -269,70 +269,82 @@ def command_maintenance(request):
         'asset_types': asset_types,
     })
 
+def get_maintenance_initial(asset_id):
+    """Helper to prep data from Asset to Maintenance"""
+    from .models import Asset
+    asset = get_object_or_404(Asset, assets_id=asset_id)
+    return {
+        'asset': asset,
+        'notes': asset.maintenance_reason, # Transfers the 'Why' to the 'Notes'
+        'status': 'In Progress'            # Default starting status
+    }
+
 @login_required
 def add_maintenance(request):
     asset_id = request.GET.get('asset_id')
     initial_data = {}
-    
+
     if asset_id:
-        asset = get_object_or_404(Asset, assets_id=asset_id)
-        initial_data['asset'] = asset
-        initial_data['notes'] = asset.maintenance_reason
+        initial_data = get_maintenance_initial(asset_id)
 
     if request.method == 'POST':
         form = MaintenanceForm(request.POST)
         if form.is_valid():
-            log = form.save(commit=False)
-            log.technician = request.user
-            log.save()
-
-            # PUSH TO ASSET: Update the Asset status based on this log
-            asset = log.asset
-            if log.status == 'Completed':
-                asset.status = 'Active'
-                asset.maintenance_reason = "" # Clear the problem description
-            else:
-                # If 'In Progress', ensure the asset is still marked as 'Maintenance'
-                asset.status = 'Maintenance'
+            maintenance = form.save(commit=False)
+            maintenance.technician = request.user
+            maintenance.save()
             
+            # Sync Asset status
+            asset = maintenance.asset
+            asset.status = 'Maintenance'
             asset.save()
-
-            messages.success(request, f"Service log for {asset.assets_id} saved!")
             return redirect('maintenance_list')
     else:
         form = MaintenanceForm(initial=initial_data)
+        # Filter dropdown to show only Queued/Broken assets
+        form.fields['asset'].queryset = Asset.objects.filter(status='Maintenance')
+        
+        if asset_id:
+            form.fields['asset'].disabled = True
 
     return render(request, 'core/Admin/add_maintenance.html', {'form': form})
+
 
 @login_required
 def edit_maintenance(request, pk):
     log = get_object_or_404(Maintenance, pk=pk)
-    
+
     if request.method == 'POST':
         form = MaintenanceForm(request.POST, instance=log)
-        # We re-disable it here because POST data doesn't include disabled fields
+        # Lock Asset ID - it cannot be changed during edit
         form.fields['asset'].disabled = True 
-        
+
         if form.is_valid():
             updated_log = form.save()
-            # Sync the Asset status with the Maintenance status
-            asset = updated_log.asset
-            asset.status = 'Active' if updated_log.status == 'Completed' else 'Maintenance'
-            asset.save()
             
-            messages.success(request, "Service log updated.")
+            # Update Asset Status based on the Maintenance Status
+            asset = updated_log.asset
+            if updated_log.status == 'Completed':
+                asset.status = 'Active'
+                asset.maintenance_reason = "" 
+            else:
+                asset.status = 'Maintenance'
+            asset.save()
+
+            messages.success(request, f"Maintenance for {asset.assets_id} updated successfully.")
             return redirect('maintenance_list')
     else:
         form = MaintenanceForm(instance=log)
-        # Disable the field so it renders as read-only in the template
         form.fields['asset'].disabled = True
 
-    return render(request, 'core/Admin/add_maintenance.html', {
-        'form': form, 
-        'maintenance': log, # Passing the object for the sidebar info
-        'edit_mode': True
+    # Note: Pointing to edit_maintenance.html instead of add_maintenance.html
+    return render(request, 'core/Admin/edit_maintenance.html', {
+        'form': form,
+        'maintenance': log
     })
 
+
+    
 @login_required
 def delete_maintenance(request, pk):
     maintenance = get_object_or_404(Maintenance, pk=pk)

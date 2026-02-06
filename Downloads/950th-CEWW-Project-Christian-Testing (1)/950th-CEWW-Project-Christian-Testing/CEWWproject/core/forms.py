@@ -18,17 +18,31 @@ class MaintenanceForm(forms.ModelForm):
                 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
             }),
             'notes': forms.Textarea(attrs={
-                'placeholder': 'Detail the technical actions taken...',
                 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 h-32'
             }),
         }
+    def clean_asset(self):
+        # If the field is disabled, 'cleaned_data' might be empty.
+        # This ensures the asset stays the same.
+        instance = getattr(self, 'instance', None)
+        if instance and instance.pk:
+            return instance.asset
+        return self.cleaned_data.get('asset')    
 
     def __init__(self, *args, **kwargs):
+        edit_mode = kwargs.pop('edit_mode', False)
         super().__init__(*args, **kwargs)
+        # 1. 🔍 FILTER: Only show assets waiting for maintenance (Queued or Maintenance)
+        # Note: Replace 'Maintenance' with whatever your "Queued" status string is in Asset model
+        if not edit_mode:
+            self.fields['asset'].queryset = Asset.objects.filter(status='Maintenance')
+            self.fields['asset'].label_from_instance = lambda obj: f"{obj.assets_id} - {obj.assets_name}"
 
-        # 🔒 LOCK ASSET WHEN EDITING
-        if self.instance.pk:
+        # 2. 🔒 EDIT MODE: lock the Asset choice, but leave notes/status open for the tech
+        if edit_mode:
             self.fields['asset'].disabled = True
+            self.fields['status'].disabled = True
+            self.fields['notes'].disabled = True
 
         
 class AssetForm(forms.ModelForm):
