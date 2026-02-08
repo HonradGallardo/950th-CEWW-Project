@@ -99,7 +99,6 @@
         .theme-option.active { color: white; }
         .theme-pill { position: absolute; width: 50%; height: calc(100% - 4px); background: #3b82f6; border-radius: 50px; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); left: 2px; }
         
-        /* Dark mode pill position */
         html.dark .theme-pill { transform: translateX(calc(100% - 4px)); }
 
         main { flex: 1; overflow-y: auto; padding: 1rem; }
@@ -145,6 +144,9 @@
             </a>
             <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
+            </a>
+            <a href="{% url 'submit_ticket' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'submit_ticket' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
             </a>
             <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
@@ -201,6 +203,7 @@
         </header>
 
         <div class="flex-1 p-4 md:p-6 flex flex-col gap-6 overflow-y-auto">
+            {% block content %}
             <h1 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white tracking-tight shrink-0 uppercase">Dashboard Overview</h1>
 
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
@@ -265,7 +268,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4 order-1 lg:order-2">
+                <div class="flex flex-col gap-4 order-1 lg:order-2">
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center">
                         <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total Assets</p>
                         <p class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</p>
@@ -277,6 +280,13 @@
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border-l-4 border-l-red-500 border-y border-r border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center">
                         <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Alerts</p>
                         <p class="text-2xl md:text-3xl font-black text-red-500">{{ reported_incidents_count|default:"0" }}</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex-1 min-h-[200px]">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">Incident Trends</p>
+                        <div class="relative h-40">
+                            <canvas id="incidentTrendChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -380,7 +390,7 @@
                         </div>
                         <div class="flex gap-2">
                         {% if task_page_obj.has_next %}
-                            <a href="?task_page={{ task_page_obj.next_page_number }}&q_task={{ q_task }}" class="pg-link">Next</a>
+                            <a href="?task_page={{ i }}&q_task={{ q_task }}" class="pg-link">Next</a>
                         {% else %}
                             <span class="pg-disabled">Next</span>
                         {% endif %}
@@ -391,7 +401,7 @@
         </div>
     </div>
 </div>
-
+{% endblock %}
 <script>
     const body = document.body;
     const html = document.documentElement;
@@ -444,12 +454,46 @@
         }
     }
 
+    // Chart.js Initialization
+    function initChart() {
+        const ctx = document.getElementById('incidentTrendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Incidents',
+                    data: [2, 5, 3, 8, 4, 2, 1], // Example static data
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { 
+                        display: false,
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
     // Initialize states
     window.addEventListener('DOMContentLoaded', () => {
         if (localStorage.getItem('sidebarState') === 'collapsed') body.classList.add('sidebar-collapsed');
         
         const isDark = html.classList.contains('dark');
         updateThemeUI(isDark);
+        initChart();
     });
 </script>
 

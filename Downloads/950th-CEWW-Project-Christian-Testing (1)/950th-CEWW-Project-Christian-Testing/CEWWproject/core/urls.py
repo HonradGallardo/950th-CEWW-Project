@@ -17,6 +17,15 @@ urlpatterns = [
     path('assets/add/', views.add_asset, name='add_asset'),
     path('assets/edit/<int:asset_id>/', views.edit_asset, name='edit_asset'),
     path('assets/delete/<int:asset_id>/', views.delete_asset, name='delete_asset'),
+    path("admin_tickets/", views.admin_ticket_dashboard, name="admin_tickets"),
+    path("submit_ticket/", views.submit_ticket, name="submit_ticket"),
+    # Admin views
+    path("admin_tickets/", views.admin_ticket_dashboard, name="admin_tickets"),
+    path('manage/ticket/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
+    # Personnel views
+    path("personnel/submit_ticket/", views.submit_ticket, name="submit_ticket"),
+
+
 
 
     path('maintenance/', views.maintenance_list, name='maintenance_list'),
