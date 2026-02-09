@@ -30,7 +30,7 @@
             <p class="text-slate-300 leading-relaxed">{{ ticket.description }}</p>
         </div>
 
-        <div class="space-y-4 mb-8">
+        <div id="chat-container" class="space-y-4 mb-8">
             {% for msg in ticket.messages.all %}
             <div class="{% if msg.sender.is_staff %}ml-12 bg-blue-600/10 border-blue-500/20{% else %}mr-12 bg-slate-800/20 border-slate-700{% endif %} border rounded-xl p-4">
                 <div class="flex justify-between mb-2">
@@ -58,4 +58,39 @@
         </form>
     </div>
 </div>
+
+<script>
+    // Define the ID inside the script block
+    const CURRENT_TICKET_ID = "{{ ticket.id }}";
+
+    function refreshChat() {
+        fetch(`/get_ticket_chat/${CURRENT_TICKET_ID}/`) 
+            .then(response => response.json())
+            .then(data => {
+                const chatContainer = document.getElementById('chat-container');
+                if (!chatContainer) return;
+
+                chatContainer.innerHTML = ''; 
+
+                data.messages.forEach(msg => {
+                    const isMe = msg.is_me;
+                    const msgHtml = `
+                        <div class="${isMe ? 'ml-12 bg-blue-600/10 border-blue-500/20' : 'mr-12 bg-slate-800/20 border-slate-700'} border rounded-xl p-4 mb-4">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-[10px] font-black uppercase ${isMe ? 'text-blue-400' : 'text-slate-500'}">
+                                    ${msg.sender}
+                                </span>
+                                <span class="text-[10px] text-slate-500">${msg.created_at}</span>
+                            </div>
+                            <p class="text-sm text-slate-200">${msg.message}</p>
+                        </div>`;
+                    chatContainer.insertAdjacentHTML('beforeend', msgHtml);
+                });
+            })
+            .catch(err => console.error("Chat refresh error:", err));
+    }
+
+    // Optional: Refresh every 5 seconds
+    // setInterval(refreshChat, 5000);
+</script>
 {% endblock %}

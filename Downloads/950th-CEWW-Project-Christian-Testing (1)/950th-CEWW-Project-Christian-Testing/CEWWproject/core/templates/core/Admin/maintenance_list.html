@@ -72,19 +72,22 @@
                         {% endfor %}
 
                         {% for log in maintenances %}
-                        <tr class="asset-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" data-type="{{ log.asset.assets_type }}" data-status="{{ log.status|upper }}" onclick="showDetails({
-                            id: '{{ log.asset.assets_id }}',
-                            name: '{{ log.asset.assets_name }}',
-                            status: '{{ log.status }}',
-                            tech: '{{ log.technician.username }}',
-                            notes: '{{ maintenance_reason}}',
-                            date: '{{ log.date|date:'d-m-Y' }}',
-                            time: '{{ log.date|time:'H:i A' }}',
-                            modified: '{{ log.last_modified|date:'d-m-Y H:i A' }}',
-                            a_type: '{{ log.asset.assets_type }}',
-                            editUrl: '{% url 'edit_maintenance' log.pk %}',
-                            deleteUrl: '{% url 'delete_maintenance' log.pk %}'
-                        })">
+                        <tr class="asset-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" 
+                            data-type="{{ log.asset.assets_type }}" 
+                            data-status="{{ log.status|upper }}" 
+                            onclick="showDetails({
+                                id: '{{ log.asset.assets_id }}',
+                                name: '{{ log.asset.assets_name }}',
+                                status: '{{ log.status }}',
+                                tech: '{{ log.technician.username }}',
+                                notes: '{{ log.notes|default:'No technical notes provided.'|escapejs }}',
+                                date: '{{ log.date|date:'d-m-Y' }}',
+                                time: '{{ log.date|time:'H:i A' }}',
+                                modified: '{{ log.last_modified|date:'d-m-Y H:i A' }}',
+                                a_type: '{{ log.asset.assets_type }}',
+                                editUrl: '{% url 'edit_maintenance' log.pk %}',
+                                deleteUrl: '{% url 'delete_maintenance' log.pk %}'
+                            })">
                             <td class="px-6 py-4 text-xs font-bold text-blue-600 dark:text-blue-400 truncate">{{ log.asset.assets_id }}</td>
                             <td class="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{{ log.asset.assets_name }}</td>
                             <td class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase truncate">{{ log.asset.assets_type }}</td>
@@ -100,9 +103,7 @@
             </div>
 
             <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between shrink-0">
-                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" id="pageInfo">
-                    Showing 0-0 of 0 logs
-                </p>
+                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" id="pageInfo">Showing 0-0 of 0 logs</p>
                 <div class="flex items-center space-x-2" id="paginationControls"></div>
             </div>
         </div>
@@ -202,7 +203,6 @@
 </style>
 
 <script>
-// ALL ORIGINAL LOGIC PRESERVED
 let currentPage = 1;
 const rowsPerPage = 10;
 let filteredRows = [];
@@ -215,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function sortTableByStatus() {
     const tableBody = document.getElementById("tableBody");
     const rows = Array.from(tableBody.getElementsByClassName("asset-row"));
-
     rows.sort((a, b) => {
         const statusA = a.getAttribute("data-status").toUpperCase();
         const statusB = b.getAttribute("data-status").toUpperCase();
@@ -223,7 +222,6 @@ function sortTableByStatus() {
         if (statusA !== "COMPLETED" && statusB === "COMPLETED") return -1;
         return 0;
     });
-
     rows.forEach(row => tableBody.appendChild(row));
 }
 
@@ -238,25 +236,19 @@ function initTable() {
         const nameText = row.cells[1].innerText.toUpperCase();
         const rowType = row.getAttribute("data-type").toUpperCase();
         const rowStatus = row.getAttribute("data-status").toUpperCase();
-        
         const matches = (idText.includes(search) || nameText.includes(search)) &&
                         (type === "" || rowType === type) &&
                         (status === "" || rowStatus === status);
-        
         row.style.display = "none";
         return matches;
     });
 
     const totalEntries = filteredRows.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
-    
     if (currentPage > totalPages) currentPage = totalPages;
-
     const start = (currentPage - 1) * rowsPerPage;
     const end = Math.min(start + rowsPerPage, totalEntries);
-
     filteredRows.slice(start, end).forEach(row => row.style.display = "");
-
     document.getElementById('pageInfo').innerText = `Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries} logs`;
     renderPagination(totalPages);
 }
@@ -264,35 +256,21 @@ function initTable() {
 function renderPagination(totalPages) {
     const container = document.getElementById('paginationControls');
     container.innerHTML = '';
-
     if (totalPages <= 1) return;
-
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.innerText = i;
-        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
-            i === currentPage 
-            ? 'bg-blue-600 text-white shadow-md' 
-            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
-        }`;
-        
-        btn.onclick = () => {
-            currentPage = i;
-            initTable();
-        };
+        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-500'}`;
+        btn.onclick = () => { currentPage = i; initTable(); };
         container.appendChild(btn);
     }
 }
 
-function filterTable() {
-    currentPage = 1;
-    initTable();
-}
+function filterTable() { currentPage = 1; initTable(); }
 
 function showDetails(data) {
     document.getElementById('placeholder-content').classList.add('hidden');
     document.getElementById('detail-content').classList.remove('hidden');
-
     document.getElementById('det-id').innerText = data.id;
     document.getElementById('det-date').innerText = data.date;
     document.getElementById('det-time').innerText = data.time || "Pending"; 
@@ -303,13 +281,7 @@ function showDetails(data) {
     document.getElementById('det-asset-type').innerText = data.a_type;
 
     const statusEl = document.getElementById('det-status');
-    if (data.status === 'Completed') {
-        statusEl.className = "font-black text-emerald-500 dark:text-emerald-400 italic uppercase";
-    } else if (data.status === 'In Queue') {
-        statusEl.className = "font-black text-amber-500 dark:text-amber-400 italic uppercase";
-    } else {
-        statusEl.className = "font-black text-blue-500 dark:text-blue-400 italic uppercase";
-    }
+    statusEl.className = data.status === 'Completed' ? "font-black text-emerald-500 uppercase italic" : (data.status === 'In Queue' ? "font-black text-amber-500 uppercase italic" : "font-black text-blue-500 uppercase italic");
 
     const deleteForm = document.getElementById('delete-log-form');
     if (data.status === 'Completed' && data.deleteUrl) {
@@ -318,23 +290,14 @@ function showDetails(data) {
     } else {
         deleteForm.classList.add('hidden');
     }
-
     document.getElementById('det-edit-link').href = data.editUrl;
-
-    if (window.innerWidth < 1024) {
-        document.getElementById('detail-content').scrollIntoView({ behavior: 'smooth' });
-    }
 }
 
 function openDeleteModal() {
     document.getElementById('deleteModal').classList.remove('hidden');
-    document.getElementById('confirmDeleteBtn').onclick = function() {
-        document.getElementById('delete-log-form').submit();
-    };
+    document.getElementById('confirmDeleteBtn').onclick = () => document.getElementById('delete-log-form').submit();
 }
 
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.add('hidden');
-}
+function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
 </script>
 {% endblock %}

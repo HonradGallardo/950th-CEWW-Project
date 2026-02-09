@@ -87,23 +87,55 @@
                         <th class="p-4 border-b border-slate-100 bg-slate-50 text-right whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100" id="tableBody">
+              <tbody class="divide-y divide-slate-100" id="tableBody">
                     {% for asset in assets %}
                     <tr class="hover:bg-slate-50 cursor-pointer asset-row transition-colors" 
                         data-type="{{ asset.assets_type }}"
-                        onclick="showDetails('{{ asset.assets_id }}', '{{ asset.assets_name }}', '{{ asset.assets_type }}', '{{ asset.location }}', '{{ asset.status }}', '{{ asset.date_added|date:'d-m-Y' }}', '{% if asset.assigned_to %}{{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}{% else %}Unassigned{% endif %}')">
+                        onclick="showDetails('{{ asset.assets_id }}', '{{ asset.assets_name }}', '{{ asset.assets_type }}', '{{ asset.location }}', '{{ asset.status }}', '{{ asset.date_added|date:'d-m-Y' }}')">
                         
                         <td class="p-4 font-medium text-blue-600 whitespace-nowrap">{{ asset.assets_id }}</td>
                         <td class="p-4 font-medium text-slate-700 whitespace-nowrap">{{ asset.assets_name }}</td>
-                        <td class="p-4 whitespace-nowrap">{{ asset.assets_type }}</td>
+                        
+                        <td class="p-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                {% if asset.assets_type == 'PC' %}
+                                    <i class="fas fa-desktop text-slate-400 w-4"></i>
+                                {% elif asset.assets_type == 'Laptop' %}
+                                    <i class="fas fa-laptop text-slate-400 w-4"></i>
+                                {% elif asset.assets_type == 'Server' %}
+                                    <i class="fas fa-server text-slate-400 w-4"></i>
+                                {% elif asset.assets_type == 'Router' %}
+                                    <i class="fas fa-network-wired text-slate-400 w-4"></i>
+                                {% else %}
+                                    <i class="fas fa-microchip text-slate-400 w-4"></i>
+                                {% endif %}
+                                <span class="text-slate-600">{{ asset.assets_type }}</span>
+                            </div>
+                        </td>
+
                         <td class="p-4 text-slate-500 whitespace-nowrap">{{ asset.location }}</td>
                         <td class="p-4">
-                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase whitespace-nowrap
-                                {% if asset.status == 'Active' %}bg-green-100 text-green-700
-                                {% elif asset.status == 'Maintenance' %}bg-yellow-100 text-yellow-700
-                                {% else %}bg-red-100 text-red-700{% endif %}">
-                                {{ asset.status }}
-                            </span>
+                            <div class="flex items-center gap-2">
+                                {% if asset.status == 'Active' %}
+                                    <span class="relative flex h-2 w-2">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-green-100 text-green-700 whitespace-nowrap">
+                                        Active
+                                    </span>
+                                {% elif asset.status == 'Maintenance' %}
+                                    <span class="h-2 w-2 rounded-full bg-yellow-500"></span>
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-yellow-100 text-yellow-700 whitespace-nowrap">
+                                        Maintenance
+                                    </span>
+                                {% else %}
+                                    <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 whitespace-nowrap">
+                                        Inactive
+                                    </span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td class="p-4 text-slate-500 whitespace-nowrap">{{ asset.date_added|date:"d-m-Y" }}</td>
                         
@@ -147,8 +179,16 @@
                     <p id="det-id" class="text-xl font-bold text-blue-600"></p>
                 </div>
                 <div>
-                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset Name</label>
-                    <p id="det-name" class="font-semibold text-slate-800"></p>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset Info</label>
+                    <div class="flex items-center gap-3 mt-1">
+                        <div id="det-icon-container" class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-500 text-lg">
+                            <i id="det-icon"></i>
+                        </div>
+                        <div>
+                            <p id="det-name" class="font-semibold text-slate-800 leading-tight"></p>
+                            <p id="det-type" class="text-xs text-slate-500"></p>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Status</label>
@@ -229,17 +269,44 @@ typeFilter.addEventListener('change', () => { currentPage = 1; updateTable(); })
 updateTable();
 
 // --- DETAIL LOGIC ---
-function showDetails(id, name, type, loc, status, date, user) {
+function showDetails(id, name, type, loc, status, date) {
     document.getElementById('detail-placeholder').classList.add('hidden');
     document.getElementById('detail-card').classList.remove('hidden');
+    
     document.getElementById('det-id').innerText = id;
     document.getElementById('det-name').innerText = name;
+    document.getElementById('det-type').innerText = type;
+
+    // --- Asset Type Icon Logic ---
+    const iconEl = document.getElementById('det-icon');
+    const iconMap = {
+        'PC': 'fa-desktop',
+        'Laptop': 'fa-laptop',
+        'Server': 'fa-server',
+        'Router': 'fa-network-wired'
+    };
+    iconEl.className = `fas ${iconMap[type] || 'fa-microchip'}`;
+
+    // --- Status Icon & Styling Logic ---
     const statusEl = document.getElementById('det-status');
-    statusEl.innerText = status;
     
-    // Status color logic kept intact but visually distinct
-    statusEl.className = 'px-3 py-1 inline-block rounded text-[10px] font-bold uppercase ' + 
-        (status === 'Active' ? 'bg-green-100 text-green-700' : status === 'Maintenance' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700');
+    // Create the icon HTML based on status
+    let statusIcon = '';
+    let statusClass = '';
+    
+    if (status === 'Active') {
+        statusIcon = '<i class="fas fa-check-circle mr-1"></i> ';
+        statusClass = 'bg-green-100 text-green-700';
+    } else if (status === 'Maintenance') {
+        statusIcon = '<i class="fas fa-tools mr-1"></i> ';
+        statusClass = 'bg-yellow-100 text-yellow-700';
+    } else {
+        statusIcon = '<i class="fas fa-exclamation-circle mr-1"></i> ';
+        statusClass = 'bg-red-100 text-red-700';
+    }
+
+    statusEl.innerHTML = statusIcon + status;
+    statusEl.className = `px-3 py-1 inline-block rounded text-[10px] font-bold uppercase ${statusClass}`;
     
     if (window.innerWidth < 1024) {
         document.getElementById('detail-card').scrollIntoView({ behavior: 'smooth', block: 'center' });

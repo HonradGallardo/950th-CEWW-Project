@@ -1,7 +1,9 @@
 from multiprocessing import context
 from urllib import request
+import openpyxl
 import json
 import calendar
+from django.http import HttpResponse
 from django.db.models.functions import ExtractMonth, ExtractWeekDay
 from django.http import JsonResponse
 from django.utils import timezone
@@ -20,6 +22,7 @@ from django.db.models.functions import TruncDay
 from django.db.models.functions import TruncMonth
 from django.utils.timezone import localtime
 from .models import Ticket, TicketMessage
+from django.db import models
 
 
 
@@ -161,18 +164,21 @@ def send_message(request, ticket_id):
 
 @login_required
 def get_ticket_chat(request, ticket_id):
-    # Ensure the user owns the ticket or is an admin/assigned staff
     ticket = get_object_or_404(Ticket, id=ticket_id)
-    if not request.user.is_staff and ticket.user != request.user:
+    
+    # IMPROVED CHECK: Use your existing is_admin logic
+    user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+    
+    if not user_is_admin and ticket.user != request.user:
         return JsonResponse({'error': 'Unauthorized'}, status=403)
 
-    messages = ticket.messages.all().select_related('sender')
+    messages = ticket.messages.all().select_related('sender').order_by('created_at')
+    
     message_data = [{
         'sender': msg.sender.username,
         'message': msg.message,
         'is_me': msg.sender == request.user,
         'created_at': msg.created_at.strftime("%b %d, %H:%M"),
-        'avatar_char': msg.sender.username[0].upper()
     } for msg in messages]
 
     return JsonResponse({'messages': message_data})
@@ -536,27 +542,37 @@ def add_maintenance(request):
         initial_data = get_maintenance_initial(asset_id)
 
     if request.method == 'POST':
+        # Create form without disabling the field first so it can validate the asset_id
         form = MaintenanceForm(request.POST)
+        
         if form.is_valid():
             maintenance = form.save(commit=False)
             maintenance.technician = request.user
             maintenance.save()
             
-            # Sync Asset status
             asset = maintenance.asset
             asset.status = 'Maintenance'
             asset.save()
             return redirect('maintenance_list')
+        else:
+            # If invalid, print errors to your console to see what's wrong
+            print(form.errors) 
     else:
         form = MaintenanceForm(initial=initial_data)
-        # Filter dropdown to show only Queued/Broken assets
-        form.fields['asset'].queryset = Asset.objects.filter(status='Maintenance')
+        
+        # Filtering logic to prevent duplicates
+        active_log_ids = Maintenance.objects.filter(status='In Progress').values_list('asset_id', flat=True)
         
         if asset_id:
-            form.fields['asset'].disabled = True
+            # If we have a specific asset, limit the queryset to ONLY that asset
+            form.fields['asset'].queryset = Asset.objects.filter(assets_id=asset_id)
+            # Use 'readonly' in the widget instead of .disabled = True 
+            # so the data still sends with the POST
+            form.fields['asset'].widget.attrs['readonly'] = True
+        else:
+            form.fields['asset'].queryset = Asset.objects.filter(status='Maintenance').exclude(id__in=active_log_ids)
 
     return render(request, 'core/Admin/add_maintenance.html', {'form': form})
-
 
 @login_required
 def edit_maintenance(request, pk):
@@ -938,9 +954,86 @@ def commander_analytics(request):
     }
     return render(request, 'core/Commander/command_analytics.html', context)
 
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Asset, Maintenance, Incident  # Ensure Incident model exists
+from django.db.models import Count
+
 @login_required
 def reports(request):
-    return render(request, 'core/Admin/reports.html')
+    report_type = request.GET.get('report_type', 'it_asset')
+    category = request.GET.get('category', 'All')
+    export_format = request.GET.get('export')
+    
+    # 1. FETCH DATA FIRST
+    data_list = []
+    status_labels, status_counts = [], []
+
+    if report_type == 'maintenance':
+        data_list = Maintenance.objects.all().select_related('asset', 'technician')
+        stats = data_list.values('status').annotate(total=models.Count('id'))
+        status_labels = [s['status'] for s in stats]
+        status_counts = [s['total'] for s in stats]
+
+    elif report_type == 'incident':
+        data_list = Incident.objects.all().select_related('asset')
+        stats = data_list.values('severity').annotate(total=models.Count('id'))
+        status_labels = [s['severity'] for s in stats]
+        status_counts = [s['total'] for s in stats]
+
+    else: # it_asset
+        data_list = Asset.objects.all()
+        if category != 'All' and category != 'All Assets':
+            data_list = data_list.filter(assets_type=category)
+        stats = data_list.values('status').annotate(total=models.Count('id'))
+        status_labels = [s['status'] for s in stats]
+        status_counts = [s['total'] for s in stats]
+
+    # 2. EXCEL EXPORT BLOCK (Now data_list is full!)
+    if export_format == 'excel':
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename={report_type}_report_{timezone.now().date()}.xlsx'
+        
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Report Data"
+
+        if report_type == 'it_asset':
+            headers = ['Asset ID', 'Name', 'Type', 'Location', 'Status', 'Date Added']
+            ws.append(headers)
+            for obj in data_list:
+                # Use timezone aware date formatting
+                date_str = obj.date_added.strftime('%Y-%m-%d') if obj.date_added else ""
+                ws.append([obj.assets_id, obj.assets_name, obj.assets_type, obj.location, obj.status, date_str])
+        
+        elif report_type == 'maintenance':
+            headers = ['Asset', 'Technician', 'Type', 'Status', 'Date']
+            ws.append(headers)
+            for obj in data_list:
+                date_str = obj.date.strftime('%Y-%m-%d') if obj.date else ""
+                ws.append([obj.asset.assets_name, str(obj.technician), obj.maintenance_type, obj.status, date_str])
+        
+        elif report_type == 'incident':
+            headers = ['Title', 'Asset', 'Severity', 'Status', 'Date']
+            ws.append(headers)
+            for obj in data_list:
+                date_str = obj.date.strftime('%Y-%m-%d') if obj.date else ""
+                ws.append([obj.title, str(obj.asset), obj.severity, obj.status, date_str])
+
+        wb.save(response)
+        return response
+
+    # 3. RENDER HTML
+    context = {
+        'report_type': report_type,
+        'data_list': data_list,
+        'asset_types': Asset.ASSET_TYPES,
+        'status_labels': status_labels,
+        'status_counts': status_counts,
+        'total_count': len(data_list),
+    }
+    return render(request, 'core/Admin/reports.html', context)
 
 @login_required
 def command_reports(request):

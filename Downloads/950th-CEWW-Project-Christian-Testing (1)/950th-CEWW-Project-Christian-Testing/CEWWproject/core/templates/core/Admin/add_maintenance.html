@@ -9,7 +9,11 @@
 
         <form method="POST" class="p-4 sm:p-8 space-y-6" id="serviceLogForm">
             {% csrf_token %}
-            
+            {% if form.errors %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {{ form.errors }}
+                </div>
+            {% endif %}
             <div class="text-[11px] font-bold text-slate-500 space-y-1 italic">
                 <p class="text-slate-600 dark-mode-subtext font-black">Technician: <span class="text-gray-500 font-bold">{{ request.user.username }}</span></p>
                 <p class="text-slate-800 dark-mode-subtext font-Black">Date / Time: <span class="text-gray-500 font-bold">{% now "d-m-Y | H:i" %}</span></p>
@@ -25,11 +29,17 @@
                                 <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                             </button>
                             <div class="dropdown-list hidden absolute z-[110] mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-2xl max-h-[200px] overflow-y-auto">
-                                {% for value, label in form.asset.field.choices %}
-                                <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-slate-50 last:border-0" data-value="{{ value }}">
+                            {% for value, label in form.asset.field.choices %}
+                                {% if value %} {# This hides the "---------" empty choice from appearing as a clickable item #}
+                                <div class="dropdown-item px-4 py-2.5 ..." data-value="{{ value }}">
                                     {{ label }}
                                 </div>
-                                {% endfor %}
+                                {% endif %}
+                            {% empty %}
+                                <div class="px-4 py-2.5 text-sm text-slate-400 italic">
+                                    No assets currently queued for service.
+                                </div>
+                            {% endfor %}
                             </div>
                             <div class="hidden">{{ form.asset }}</div>
                         </div>
