@@ -200,6 +200,14 @@
             <a href="{% url 'command_asset' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'command_asset' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
             </a>
+            <a href="{% url 'command_submit_ticket' %}" class="nav-item flex items-center p-3 rounded-lg transition 
+    {% if request.resolver_match.url_name == 'command_submit_ticket' %} 
+        bg-white/10 text-white font-bold 
+    {% else %} 
+        text-slate-300 hover:bg-white/5 
+    {% endif %}">
+    <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
+</a>
 
             <a href="{% url 'command_maintenance' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'command_maintenance' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>

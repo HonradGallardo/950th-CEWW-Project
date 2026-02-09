@@ -18,6 +18,13 @@ class Ticket(models.Model):
         ('High', 'High'),
     ]
 
+    technician = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+
     subject = models.CharField(max_length=255)
     category = models.CharField(max_length=100)
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Low')

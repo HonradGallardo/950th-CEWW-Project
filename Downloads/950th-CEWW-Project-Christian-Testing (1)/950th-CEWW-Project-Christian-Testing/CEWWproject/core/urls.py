@@ -19,11 +19,10 @@ urlpatterns = [
     path('assets/delete/<int:asset_id>/', views.delete_asset, name='delete_asset'),
     path("admin_tickets/", views.admin_ticket_dashboard, name="admin_tickets"),
     path("submit_ticket/", views.submit_ticket, name="submit_ticket"),
+    path("command_submit_ticket/", views.command_submit_ticket, name="command_submit_ticket"),
     # Admin views
     path("admin_tickets/", views.admin_ticket_dashboard, name="admin_tickets"),
     path('manage/ticket/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
-    # Personnel views
-    path("personnel/submit_ticket/", views.submit_ticket, name="submit_ticket"),
 
 
 
@@ -55,5 +54,22 @@ urlpatterns = [
     path('users/add/', views.add_user, name='add_user'),
     path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
     path('users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
+
+    path('tickets/chat/<int:ticket_id>/', views.get_ticket_chat, name='get_ticket_chat'),
+    path('tickets/chat/<int:ticket_id>/send/', views.send_ticket_message, name='send_ticket_message'),
+    path('send-message/<int:ticket_id>/', views.send_message, name='send_message'),
+    path('update-ticket-status/<int:ticket_id>/', views.update_ticket_status, name='update_ticket_status'),
+    path('delete-ticket/<int:ticket_id>/', views.delete_ticket, name='delete_ticket'),
+
+
+    # Personnel URL
+    path('personnel/submit-ticket/', views.handle_ticket_submission, 
+         {'template_path': 'core/Personnel/submit_ticket.html'}, name='submit_ticket'),
+
+    # Commander URL
+    path('command_submit_ticket/', views.handle_ticket_submission, 
+         {'template_path': 'core/Commander/command_tickets.html'}, name='command_submit_ticket'),
+
+    path('commander/command_tickets/', views.command_submit_ticket, name='command_submit_ticket'),
 
 ]

@@ -299,10 +299,16 @@
             <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
             </a>
+            {% if request.user.groups.all.0.name == 'Personnel' %}
+            <a href="{% url 'submit_ticket' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'submit_ticket' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
+            </a>
+            {% endif %}
             {% if request.user.groups.all.0.name == 'Admin' %}
             <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
             </a>
+
             <a href="{% url 'admin_tickets' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'admin_tickets' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
             </a>

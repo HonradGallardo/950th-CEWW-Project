@@ -1,4 +1,4 @@
-{% extends "core/Personnel/personnel_dashboard.html" %}
+{% extends "core/Commander/commander_dashboard.html" %}
 
 {% block content %}
 <div class="h-screen bg-[#f1f5f9] dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans">
@@ -202,41 +202,49 @@
 
     // CREATE TICKET (The Logic Fix)
     async function submitTicket() {
-        const form = document.getElementById('ajaxTicketForm');
-        const formData = new FormData(form);
-        const submitBtn = document.getElementById('submitBtn');
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const form = document.getElementById('ajaxTicketForm');
+    const formData = new FormData(form);
+    const submitBtn = document.getElementById('submitBtn');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        submitBtn.disabled = true;
-        submitBtn.innerText = "PROCESSING...";
+    submitBtn.disabled = true;
+    submitBtn.innerText = "PROCESSING...";
 
-        try {
-            const response = await fetch('/personnel/submit_ticket/', { 
-                method: 'POST',
-                body: formData,
-                headers: { 
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken 
-                },
-                redirect: 'follow'
-            });
-
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                const data = await response.json();
-                if (data.status === 'success') {
-                    appendBotMessage("Ticket Created! Syncing with Admin...");
-                    setTimeout(() => { location.reload(); }, 1000);
-                } else {
-                    appendBotMessage("Error: " + data.message);
-                    submitBtn.disabled = false;
-                }
+    try {
+        // FIX: Use window.location.pathname instead of a hardcoded string
+        const response = await fetch(window.location.pathname, { 
+            method: 'POST',
+            body: formData,
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken 
             }
-        } catch (err) {
-            console.error(err);
-            submitBtn.disabled = false;
+        });
+
+        // Add a check to see if the response is actually OK
+        if (!response.ok) {
+            throw new Error('Server returned ' + response.status);
         }
+
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            const data = await response.json();
+            if (data.status === 'success') {
+                appendBotMessage("Ticket Created! Syncing with Admin...");
+                setTimeout(() => { location.reload(); }, 1000);
+            } else {
+                appendBotMessage("Error: " + (data.message || "Failed to create ticket"));
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Create Ticket";
+            }
+        }
+    } catch (err) {
+        console.error("Submission Error:", err);
+        appendBotMessage("Connection Error. Please try again.");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Create Ticket";
     }
+}
 
     // LOAD EXISTING CHAT (From Code 1)
     async function loadChat(ticketId, subject, description) {

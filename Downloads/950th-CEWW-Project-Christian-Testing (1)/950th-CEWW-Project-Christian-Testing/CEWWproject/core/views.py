@@ -1,5 +1,6 @@
 from multiprocessing import context
 from urllib import request
+import json
 import calendar
 from django.db.models.functions import ExtractMonth, ExtractWeekDay
 from django.http import JsonResponse
@@ -13,6 +14,7 @@ from django.contrib import messages
 from .models import Asset, IncidentComment, Maintenance, Incident
 from .forms import AssetForm, MaintenanceForm, UserForm
 from django.core.paginator import Paginator
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.db.models.functions import TruncDay
 from django.db.models.functions import TruncMonth
@@ -23,12 +25,82 @@ from .models import Ticket, TicketMessage
 
 ####################################################################TICKETING MODULE####################################################################
 @login_required
+# In your personnel views.py
+@login_required
 def submit_ticket(request):
     """View for Personnel/Users to submit and see their own tickets"""
     if request.method == 'POST':
         subject = request.POST.get('subject')
         category = request.POST.get('category')
-        priority = request.POST.get('priority')
+        priority = request.POST.get('priority', 'Low') # Default to Low if missing
+        description = request.POST.get('description')
+        
+        # Create the ticket
+        Ticket.objects.create(
+            subject=subject,
+            category=category,
+            priority=priority,
+            description=description,
+            user=request.user
+        )
+        
+        # For AJAX requests (from the chatbot), return JSON
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({'status': 'success'})
+            
+        return redirect('submit_ticket')
+
+    # Get tickets for the logged-in user
+    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
+    
+    return render(request, 'core/Personnel/submit_ticket.html', {
+        'user_tickets': user_tickets
+    })
+
+@login_required
+def command_submit_ticket(request):
+    """View for Personnel/Users to submit and see their own tickets"""
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        category = request.POST.get('category')
+        priority = request.POST.get('priority', 'Low') # Default to Low if missing
+        description = request.POST.get('description')
+        
+        # Create the ticket
+        Ticket.objects.create(
+            subject=subject,
+            category=category,
+            priority=priority,
+            description=description,
+            user=request.user
+        )
+        
+        # Check for AJAX (ensure lowercase 'x-requested-with' for compatibility)
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true'
+        
+        if is_ajax:
+            return JsonResponse({'status': 'success', 'message': 'Ticket created successfully'})
+            
+        return redirect('command_submit_ticket') # Use the actual name of this view in urls.py
+
+    # Get tickets for the logged-in user
+    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Ensure this template path exists
+    return render(request, 'core/Commander/command_tickets.html', {
+        'user_tickets': user_tickets
+    })
+
+@login_required
+def handle_ticket_submission(request, template_path):
+    """
+    A single view that handles ticket creation and display.
+    The template_path is passed in from the URL configuration.
+    """
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        category = request.POST.get('category')
+        priority = request.POST.get('priority', 'Low')
         description = request.POST.get('description')
         
         Ticket.objects.create(
@@ -38,13 +110,114 @@ def submit_ticket(request):
             description=description,
             user=request.user
         )
-        return redirect('submit_ticket')
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({'status': 'success', 'message': 'Ticket created successfully'})
+            
+        # Redirect back to whatever URL the user is currently on
+        return redirect(request.path)
 
     user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'core/Personnel/submit_ticket.html', {
+    
+    return render(request, template_path, {
         'user_tickets': user_tickets
     })
 
+def get_messages(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    messages = ticket.messages.all().order_by('created_at')
+    
+    data = []
+    for msg in messages:
+        data.append({
+            "sender": msg.sender.username,
+            "message": msg.message,  # This matches the model field 'message'
+            "time": msg.created_at.strftime("%b %d, %H:%M")
+        })
+    return JsonResponse({"messages": data})
+
+def send_message(request, ticket_id):
+    if request.method == "POST":
+        text = request.POST.get('text')
+        if not text:
+            return JsonResponse({"status": "error", "message": "Empty message"}, status=400)
+            
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        
+        # Use TicketMessage and set 'message=text' to match your model field
+        msg = TicketMessage.objects.create(
+            ticket=ticket, 
+            sender=request.user, 
+            message=text 
+        )
+        
+        return JsonResponse({
+            "status": "sent", 
+            "text": msg.message,
+            "sender": msg.sender.username,
+            "created_at": msg.created_at.strftime("%b %d, %H:%M")
+        })
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+@login_required
+def get_ticket_chat(request, ticket_id):
+    # Ensure the user owns the ticket or is an admin/assigned staff
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    if not request.user.is_staff and ticket.user != request.user:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    messages = ticket.messages.all().select_related('sender')
+    message_data = [{
+        'sender': msg.sender.username,
+        'message': msg.message,
+        'is_me': msg.sender == request.user,
+        'created_at': msg.created_at.strftime("%b %d, %H:%M"),
+        'avatar_char': msg.sender.username[0].upper()
+    } for msg in messages]
+
+    return JsonResponse({'messages': message_data})
+
+@login_required
+def send_ticket_message(request, ticket_id):
+    if request.method == "POST":
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        content = request.POST.get('message')
+        
+        if content:
+            msg = TicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=content
+            )
+            return JsonResponse({'status': 'sent'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def update_ticket_status(request, ticket_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            new_status = data.get('status')
+            
+            ticket = Ticket.objects.get(id=ticket_id)
+            ticket.status = new_status
+            
+            # This saves the current admin as the technician permanently
+            ticket.technician = request.user 
+            
+            ticket.save()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+def delete_ticket(request, ticket_id):
+    try:
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        ticket.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 # --- ADMIN VIEWS ---
 
 def is_admin(user):
