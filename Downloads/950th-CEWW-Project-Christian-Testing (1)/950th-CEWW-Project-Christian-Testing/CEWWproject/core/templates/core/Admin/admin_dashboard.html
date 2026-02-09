@@ -303,6 +303,9 @@
             <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
             </a>
+            <a href="{% url 'admin_tickets' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'admin_tickets' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
+            </a>
             <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                 <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
             </a>

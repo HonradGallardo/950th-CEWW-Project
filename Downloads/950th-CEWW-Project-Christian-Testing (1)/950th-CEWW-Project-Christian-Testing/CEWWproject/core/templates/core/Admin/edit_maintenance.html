@@ -1,88 +1,73 @@
 {% extends "core/Admin/admin_dashboard.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto min-h-full flex flex-col space-y-4 sm:space-y-6 p-2 sm:p-6 bg-slate-50/30">
+<div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
     
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
+    <div class="flex items-center justify-between border-b pb-4">
         <div>
-            <h1 class="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tight">Update Service Log</h1>
-            <p class="text-slate-500 text-[10px] font-bold uppercase mt-1">Editing Record for: {{ maintenance.asset.assets_id }}</p>
+            <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Edit Maintenance Log</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Update Service Record for {{ maintenance.asset.assets_id }}</p>
         </div>
-        <a href="{% url 'maintenance_list' %}" class="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase tracking-widest flex items-center self-start sm:self-center transition-colors">
-            <i class="fas fa-times mr-2"></i> Cancel
+        <a href="{% url 'maintenance_list' %}" class="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase tracking-widest transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i> Back
         </a>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+    <form method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {% csrf_token %}
         
-        <div class="bg-slate-800 rounded-2xl p-5 sm:p-6 text-white shadow-xl shadow-slate-200/50 order-1 lg:order-1">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Currently Editing</label>
-            <h2 class="text-xl sm:text-2xl font-black mt-1 break-words">{{ maintenance.asset.assets_name }}</h2>
+        <div class="space-y-4">
+            <div class="bg-slate-900 rounded-2xl p-6 text-white shadow-xl">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Asset under repair</label>
+                <h2 class="text-xl font-black mb-4">{{ maintenance.asset.assets_name }}</h2>
+                
+                <div class="space-y-3 pt-4 border-t border-white/10">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">System ID</span>
+                        <span class="text-xs font-mono font-bold">{{ maintenance.asset.assets_id }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">Opened By</span>
+                        <span class="text-xs font-bold">{{ maintenance.technician.username }}</span>
+                    </div>
+                </div>
+            </div>
             
-            <div class="mt-6 sm:mt-8 space-y-4">
-                <div class="flex justify-between border-b border-white/10 pb-2">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Asset ID</span>
-                    <span class="text-xs font-bold">{{ maintenance.asset.assets_id }}</span>
-                </div>
-                <div class="flex justify-between border-b border-white/10 pb-2">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Technician</span>
-                    <span class="text-xs font-bold">{{ maintenance.technician.username }}</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Log Created</span>
-                    <span class="text-xs font-bold">{{ maintenance.date|date:"d M Y" }}</span>
-                </div>
+            <div class="hidden">
+                {{ form.asset }}
             </div>
         </div>
 
-                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-8 order-2 lg:order-2">
-            <form method="POST" class="space-y-6">
-                {% csrf_token %}
-                
-                <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Locked Asset ID</label>
-                    <div class="[&_select]:w-full [&_select]:bg-slate-100 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:p-3 [&_select]:text-sm [&_select]:font-bold [&_select]:text-slate-400 [&_select]:cursor-not-allowed">
-                        {{ form.asset }}
-                        <p class="text-[9px] text-slate-400 font-bold mt-1 italic uppercase tracking-tighter">Note: Asset identity cannot be changed once a log is created.</p>
-                    </div>
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+            
+            <div class="space-y-3">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Update Service Status</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
+                        <input type="radio" name="status" value="In Progress" {% if form.status.value == 'In Progress' %}checked{% endif %} class="hidden">
+                        <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-blue-600 uppercase">In Progress</span>
+                    </label>
+                    <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50">
+                        <input type="radio" name="status" value="Completed" {% if form.status.value == 'Completed' %}checked{% endif %} class="hidden">
+                        <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-emerald-600 uppercase">Completed</span>
+                    </label>
                 </div>
+            </div>
 
-                <div class="space-y-3">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Status</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50/50">
-                            <input type="radio" name="status" value="In Progress" {% if log.status == 'In Progress' %}checked{% endif %} class="hidden">
-                            <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-blue-600">In Progress</span>
-                        </label>
-                        <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-all group border-slate-100 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50">
-                            <input type="radio" name="status" value="Completed" {% if log.status == 'Completed' %}checked{% endif %} class="hidden">
-                            <span class="text-xs font-bold text-slate-600 group-has-[:checked]:text-emerald-600">Mark Completed</span>
-                        </label>
-                    </div>
-                </div>
+            <div class="space-y-2 [&_select]:w-full [&_select]:bg-slate-50 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:p-3 [&_select]:text-sm [&_select]:font-bold">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Maintenance Type</label>
+                {{ form.maintenance_type }}
+            </div>
 
-                <div class="space-y-2 [&_select]:w-full [&_select]:bg-slate-50 [&_select]:border-slate-200 [&_select]:rounded-xl [&_select]:p-3 [&_select]:text-sm [&_select]:font-bold [&_select]:text-slate-700">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Maintenance Type</label>
-                    {{ form.maintenance_type }}
-                </div>
+            <div class="space-y-2 [&_textarea]:w-full [&_textarea]:bg-slate-50 [&_textarea]:border-slate-200 [&_textarea]:rounded-xl [&_textarea]:p-4 [&_textarea]:text-sm [&_textarea]:min-h-[150px] [&_textarea]:outline-none">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Technical Description & Progress</label>
+                {{ form.notes }}
+            </div>
 
-                <div class="space-y-2 [&_textarea]:w-full [&_textarea]:bg-slate-50 [&_textarea]:border-slate-200 [&_textarea]:rounded-xl [&_textarea]:p-4 [&_textarea]:text-sm [&_textarea]:min-h-[120px] [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-blue-500/20 [&_textarea]:outline-none [&_textarea]:transition-all">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Notes & Progress</label>
-                    {{ form.notes }}
-                </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-100 transition-all transform active:scale-[0.97]">
-                    Save and Apply Changes
-                </button>
-            </form>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-transform active:scale-[0.98]">
+                Update Service Record
+            </button>
         </div>
-    </div>
+    </form>
 </div>
-
-<style>
-    /* Ensures Django-rendered inputs never break the mobile container width */
-    input, select, textarea {
-        max-width: 100% !important;
-    }
-</style>
 {% endblock %}

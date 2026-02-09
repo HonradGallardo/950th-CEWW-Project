@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.contrib import messages
@@ -17,7 +17,81 @@ from django.db.models import Q
 from django.db.models.functions import TruncDay
 from django.db.models.functions import TruncMonth
 from django.utils.timezone import localtime
+from .models import Ticket, TicketMessage
 
+
+
+####################################################################TICKETING MODULE####################################################################
+@login_required
+def submit_ticket(request):
+    """View for Personnel/Users to submit and see their own tickets"""
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        category = request.POST.get('category')
+        priority = request.POST.get('priority')
+        description = request.POST.get('description')
+        
+        Ticket.objects.create(
+            subject=subject,
+            category=category,
+            priority=priority,
+            description=description,
+            user=request.user
+        )
+        return redirect('submit_ticket')
+
+    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'core/Personnel/submit_ticket.html', {
+        'user_tickets': user_tickets
+    })
+
+# --- ADMIN VIEWS ---
+
+def is_admin(user):
+    return user.is_staff or user.groups.filter(name='Admin').exists()
+
+@login_required
+@user_passes_test(is_admin)
+def admin_ticket_dashboard(request):
+    """View for Admins to manage all system tickets"""
+    tickets = Ticket.objects.all().order_by('-updated_at')
+    pending_count = tickets.filter(status='Pending').count()
+    ticket_detail_url = lambda ticket: redirect('ticket_detail', ticket_id=ticket.id)
+    
+    return render(request, 'core/Admin/admin_tickets.html', {
+        'tickets': tickets,
+        'pending_count': pending_count,
+        'ticket_detail_url': ticket_detail_url
+    })
+
+
+
+@login_required
+def ticket_detail(request, ticket_id):
+    """View to see the conversation and update status (shared or admin only)"""
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    # Security: Only ticket owner or admin can see the detail
+    if not request.user.is_staff and ticket.user != request.user:
+        return redirect('submit_ticket')
+
+    if request.method == 'POST':
+        # Logic for adding a reply/message
+        reply_text = request.POST.get('message')
+        if reply_text:
+            TicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=reply_text
+            )
+            # If admin replies, automatically set to 'In Progress'
+            if request.user.is_staff and ticket.status == 'Pending':
+                ticket.status = 'In Progress'
+                ticket.save()
+                
+        return redirect('ticket_detail', ticket_id=ticket.id)
+
+    return render(request, 'core/Admin/ticket_detail.html', {'ticket': ticket})
 
 # --- LANDING & REDIRECT ---
 def landing(request):
@@ -50,6 +124,7 @@ def dashboard(request):
         'open_incidents_count': open_incidents_count,
         'critical_threats': critical_threats,
         'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')),
+        'incident_counts': Incident.objects.values('severity').annotate(total=Count('id')),
     }
 
     user_groups = request.user.groups.values_list('name', flat=True)
@@ -269,70 +344,82 @@ def command_maintenance(request):
         'asset_types': asset_types,
     })
 
+def get_maintenance_initial(asset_id):
+    """Helper to prep data from Asset to Maintenance"""
+    from .models import Asset
+    asset = get_object_or_404(Asset, assets_id=asset_id)
+    return {
+        'asset': asset,
+        'notes': asset.maintenance_reason, # Transfers the 'Why' to the 'Notes'
+        'status': 'In Progress'            # Default starting status
+    }
+
 @login_required
 def add_maintenance(request):
     asset_id = request.GET.get('asset_id')
     initial_data = {}
-    
+
     if asset_id:
-        asset = get_object_or_404(Asset, assets_id=asset_id)
-        initial_data['asset'] = asset
-        initial_data['notes'] = asset.maintenance_reason
+        initial_data = get_maintenance_initial(asset_id)
 
     if request.method == 'POST':
         form = MaintenanceForm(request.POST)
         if form.is_valid():
-            log = form.save(commit=False)
-            log.technician = request.user
-            log.save()
-
-            # PUSH TO ASSET: Update the Asset status based on this log
-            asset = log.asset
-            if log.status == 'Completed':
-                asset.status = 'Active'
-                asset.maintenance_reason = "" # Clear the problem description
-            else:
-                # If 'In Progress', ensure the asset is still marked as 'Maintenance'
-                asset.status = 'Maintenance'
+            maintenance = form.save(commit=False)
+            maintenance.technician = request.user
+            maintenance.save()
             
+            # Sync Asset status
+            asset = maintenance.asset
+            asset.status = 'Maintenance'
             asset.save()
-
-            messages.success(request, f"Service log for {asset.assets_id} saved!")
             return redirect('maintenance_list')
     else:
         form = MaintenanceForm(initial=initial_data)
+        # Filter dropdown to show only Queued/Broken assets
+        form.fields['asset'].queryset = Asset.objects.filter(status='Maintenance')
+        
+        if asset_id:
+            form.fields['asset'].disabled = True
 
     return render(request, 'core/Admin/add_maintenance.html', {'form': form})
+
 
 @login_required
 def edit_maintenance(request, pk):
     log = get_object_or_404(Maintenance, pk=pk)
-    
+
     if request.method == 'POST':
         form = MaintenanceForm(request.POST, instance=log)
-        # We re-disable it here because POST data doesn't include disabled fields
+        # Lock Asset ID - it cannot be changed during edit
         form.fields['asset'].disabled = True 
-        
+
         if form.is_valid():
             updated_log = form.save()
-            # Sync the Asset status with the Maintenance status
-            asset = updated_log.asset
-            asset.status = 'Active' if updated_log.status == 'Completed' else 'Maintenance'
-            asset.save()
             
-            messages.success(request, "Service log updated.")
+            # Update Asset Status based on the Maintenance Status
+            asset = updated_log.asset
+            if updated_log.status == 'Completed':
+                asset.status = 'Active'
+                asset.maintenance_reason = "" 
+            else:
+                asset.status = 'Maintenance'
+            asset.save()
+
+            messages.success(request, f"Maintenance for {asset.assets_id} updated successfully.")
             return redirect('maintenance_list')
     else:
         form = MaintenanceForm(instance=log)
-        # Disable the field so it renders as read-only in the template
         form.fields['asset'].disabled = True
 
-    return render(request, 'core/Admin/add_maintenance.html', {
-        'form': form, 
-        'maintenance': log, # Passing the object for the sidebar info
-        'edit_mode': True
+    # Note: Pointing to edit_maintenance.html instead of add_maintenance.html
+    return render(request, 'core/Admin/edit_maintenance.html', {
+        'form': form,
+        'maintenance': log
     })
 
+
+    
 @login_required
 def delete_maintenance(request, pk):
     maintenance = get_object_or_404(Maintenance, pk=pk)
