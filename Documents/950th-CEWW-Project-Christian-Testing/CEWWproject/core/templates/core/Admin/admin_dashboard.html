@@ -1,0 +1,692 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | IT Asset & Cyber</title>
+
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Critical: Configure Tailwind to use the 'class' strategy
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* 2. IMMEDIATE DARK BACKGROUND: Forces the browser to use dark background instantly if .dark is present */
+        html.dark {
+            background-color: #0f172a !important;
+        }
+        html.dark body {
+            background-color: #0f172a !important;
+        }
+
+        :root { 
+            --sb-width: 260px; 
+            --sb-collapsed: 80px; 
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body, html { 
+            height: 100vh; 
+            margin: 0; 
+            overflow-x: hidden;
+            background-color: #f8fafc; 
+            transition: background-color var(--transition);
+        }
+
+        /* --- DARK MODE OVERRIDES (KEEPING YOUR ORIGINAL STYLES) --- */
+        body.dark-mode {
+            background-color: #0f172a; 
+            color: #f1f5f9;
+        }
+        body.dark-mode #main-content header {
+            background-color: #1e293b;
+            border-color: #334155;
+            box-shadow: none;
+        }
+        body.dark-mode #main-content header h1, 
+        body.dark-mode #main-content header span,
+        body.dark-mode #main-content header i {
+            color: #f1f5f9;
+        }
+        body.dark-mode .bg-white {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+        }
+        body.dark-mode .text-slate-800, 
+        body.dark-mode .text-slate-700,
+        body.dark-mode h1 {
+            color: #f1f5f9 !important;
+        }
+        body.dark-mode .text-slate-400 {
+            color: #94a3b8 !important;
+        }
+        body.dark-mode .table-wrapper {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        body.dark-mode thead, 
+        body.dark-mode .bg-slate-50\/50,
+        body.dark-mode thead tr {
+            background-color: #0f172a !important;
+        }
+        body.dark-mode .divide-y > :not([hidden]) ~ :not([hidden]),
+        body.dark-mode .divide-slate-50 > :not([hidden]) ~ :not([hidden]) {
+            border-color: #334155 !important;
+        }
+
+        body.dark-mode tr.hover\:bg-slate-50\/50:hover,
+        body.dark-mode .hover\:bg-slate-50:hover {
+            background-color: rgba(51, 65, 85, 0.6) !important;
+        }
+
+        body.dark-mode .shadow-sm {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5) !important;
+        }
+
+        body.dark-mode input, 
+        body.dark-mode select, 
+        body.dark-mode textarea {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+            border-color: #334155 !important;
+            box-shadow: none !important;
+        }
+        body.dark-mode input::placeholder {
+            color: #64748b !important;
+        }
+
+        body.dark-mode .border-slate-100,
+        body.dark-mode .border-slate-200 {
+            border-color: #334155 !important;
+        }
+        body.dark-mode .text-slate-500 {
+            color: #cbd5e1 !important;
+        }
+        
+        body.dark-mode #userDropdown {
+            background-color: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        body.dark-mode #userDropdown a {
+            color: #cbd5e1;
+        }
+        body.dark-mode #userDropdown a:hover {
+            background-color: #334155;
+        }
+
+        /* --- THEME TOGGLE UI --- */
+        .theme-switch-container {
+            padding: 0 1rem;
+            margin-bottom: 1.5rem;
+            transition: opacity 0.2s;
+        }
+        .sidebar-collapsed .theme-switch-container {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50px;
+            padding: 2px;
+            cursor: pointer;
+            position: relative;
+            height: 32px;
+        }
+        .theme-option {
+            flex: 1;
+            z-index: 10;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: #94a3b8;
+            transition: color 0.3s;
+        }
+        .theme-option.active { color: white; }
+        .theme-pill {
+            position: absolute;
+            width: 50%;
+            height: calc(100% - 4px);
+            background: #3b82f6;
+            border-radius: 50px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            left: 2px;
+        }
+        body.dark-mode .theme-pill { transform: translateX(calc(100% - 4px)); }
+        
+        #sidebar {
+            width: var(--sb-width);
+            transition: transform var(--transition), width var(--transition);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            background-color: #1e293b; 
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #main-content { 
+            margin-left: var(--sb-width); 
+            width: calc(100% - var(--sb-width));
+            transition: margin-left var(--transition), width var(--transition); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+        }
+
+        @media (max-width: 1024px) {
+            #sidebar { transform: translateX(-100%); }
+            #main-content { margin-left: 0 !important; width: 100% !important; }
+            body.sidebar-open #sidebar { transform: translateX(0); }
+            body.sidebar-open::after {
+                content: "";
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.5);
+                z-index: 40;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .sidebar-collapsed #sidebar { width: var(--sb-collapsed); }
+            .sidebar-collapsed #main-content { 
+                margin-left: var(--sb-collapsed); 
+                width: calc(100% - var(--sb-collapsed));
+            }
+        }
+
+        .sidebar-text {
+            white-space: nowrap;
+            transition: opacity 0.2s ease;
+            opacity: 1;
+        }
+
+        .sidebar-collapsed .sidebar-text {
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            display: inline-block;
+            overflow: hidden;
+        }
+
+        .sidebar-collapsed .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+        .sidebar-collapsed .nav-item i { margin-right: 0; font-size: 1.25rem; }
+        .sidebar-collapsed .sidebar-header-text { display: none; }
+        .sidebar-collapsed .sidebar-icon-only { display: block !important; }
+        .nav-item i { flex-shrink: 0; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        
+        main { flex: 1; overflow-y: auto; padding: 1rem; }
+        @media (min-width: 768px) { main { padding: 2rem; } }
+        .dashboard-grid { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; }
+        .table-wrapper {
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .scroll-area { overflow-x: auto; max-height: 400px; overflow-y: auto; }
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        @media (min-width: 768px) { .chart-container { height: 300px; } }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans">
+    <script>
+        (function() {
+            // Apply sidebar state
+            if (localStorage.getItem('sidebarState') === 'collapsed') {
+                document.body.classList.add('sidebar-collapsed');
+            }
+            // Apply theme state (Handling both your custom class and Tailwind class)
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+<div class="flex">
+    <div id="sidebar" class="text-white flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-slate-600/50 flex items-center justify-between min-h-[73px]">
+            <h2 class="text-sm font-bold tracking-tight uppercase sidebar-text text-white">950th CEWW System</h2>
+            <i class="fas fa-shield-alt hidden sidebar-icon-only text-xl mx-auto"></i>
+        </div>
+
+        <nav class="flex-1 mt-4 px-2 space-y-1">
+            <a href="{% url 'dashboard' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'dashboard' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-th-large mr-3 w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
+            </a>
+            <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
+            </a>
+            <a href="{% url 'analytics_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
+            </a>
+            <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
+            </a>
+            <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
+            </a>
+            {% if request.user.groups.all.0.name == 'Personnel' %}
+            <a href="{% url 'submit_ticket' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'submit_ticket' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
+            </a>
+            {% endif %}
+            {% if request.user.groups.all.0.name == 'Admin' %}
+            <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
+            </a>
+
+            <a href="{% url 'admin_tickets' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'admin_tickets' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
+            </a>
+            <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="theme-switch-container">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">Appearance</p>
+            <div class="theme-switch" onclick="toggleTheme()">
+                <div class="theme-pill"></div>
+                <div id="lightOpt" class="theme-option active">
+                    <i class="fas fa-sun"></i> <span>Light</span>
+                </div>
+                <div id="darkOpt" class="theme-option">
+                    <i class="fas fa-moon"></i> <span>Dark</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-600/50">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="nav-item w-full text-left p-3 text-slate-400 hover:text-white transition flex items-center">
+                    <i class="fas fa-sign-out-alt mr-2 w-5 text-center"></i> <span class="sidebar-text">Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <header class="bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b border-slate-200 shrink-0 sticky top-0 z-40">
+            <div class="flex items-center">
+                <i id="burgerBtn" class="fas fa-bars text-slate-600 cursor-pointer hover:text-blue-600 transition-colors text-lg p-2 rounded-md hover:bg-slate-50"></i>
+                <h1 class="ml-4 font-bold text-slate-700 md:hidden truncate">950th CEWW</h1>
+            </div>
+
+            <div class="flex items-center space-x-3 md:space-x-6">
+                
+                <div class="relative">
+                    <button id="notifBtn" onclick="toggleNotifDropdown(event)" class="relative p-2 text-slate-600 hover:text-blue-600 transition-colors focus:outline-none">
+                        <i class="fas fa-bell text-lg"></i>
+                        {% if unread_count > 0 %}
+                            <span class="absolute top-1 right-1 flex h-4 w-4">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-[10px] text-white items-center justify-center font-bold">
+                                    {{ unread_count }}
+                                </span>
+                            </span>
+                        {% endif %}
+                    </button>
+
+                    <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Incidents</span>
+                            <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-600 hover:underline font-bold uppercase">Mark all read</a>
+                        </div>
+                        
+                        <div class="max-h-96 overflow-y-auto custom-scrollbar">
+                            {% for n in user.notifications.all|dictsortreversed:"created_at"|slice:":5" %}
+                                <div class="px-4 py-3 border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer">
+                                    <div class="flex items-start gap-3">
+                                        <div class="mt-1">
+                                            {% if "Critical" in n.message %}
+                                                <i class="fas fa-exclamation-circle text-red-500"></i>
+                                            {% else %}
+                                                <i class="fas fa-info-circle text-blue-500"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-xs text-slate-700 dark:text-slate-200 leading-snug">{{ n.message }}</p>
+                                            <p class="text-[10px] text-slate-400 mt-1 uppercase font-bold">{{ n.created_at|timesince }} ago</p>
+                                        </div>
+                                        {% if not n.is_read %}
+                                            <div class="h-2 w-2 rounded-full bg-blue-600 mt-1"></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="px-4 py-8 text-center">
+                                    <p class="text-xs text-slate-400 italic">No recent incident reports</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <a href="{% url 'incident_list' %}" class="block py-3 text-center text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 border-t border-slate-100 dark:border-slate-700 transition-colors">
+                            View All Incident Reports
+                        </a>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <button id="userMenuBtn" onclick="toggleDropdown(event)" class="flex items-center space-x-2 text-slate-700 font-bold focus:outline-none hover:text-blue-600 transition">
+                        <span class="hidden sm:inline">{{ user.username|default:"User" }}</span>
+                        <i class="fas fa-user-circle text-lg sm:hidden"></i>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-xl py-2 border border-slate-200 z-50">
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Profile</a>
+                        <hr class="my-2 border-slate-100 dark:border-slate-700">
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="custom-scrollbar">
+            {% block content %}
+            <div class="dashboard-grid">
+                <h1 class="text-xl font-black text-slate-800 uppercase">Dashboard Overview</h1>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Total Assets</p>
+                        <div class="text-3xl font-black text-slate-800">{{ total_assets|default:"0" }}</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-green-500/70 text-[10px] font-black mb-1 tracking-widest uppercase">Assigned</p>
+                        <div class="text-3xl font-black text-green-600">{{ assigned_assets|default:"0" }}</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Maintenance</p>
+                        <div class="text-3xl font-black text-slate-800">{{ maintenance_assets_count|default:"0" }}</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <p class="text-red-400 text-[10px] font-black mb-1 tracking-widest uppercase">Open Incidents</p>
+                        <div class="text-3xl font-black text-red-600">{{ open_incidents_count|default:"02" }}</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Asset Distribution</h3>
+                        <div class="chart-container"><canvas id="adminAssetChart"></canvas></div>
+                    </div>
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Incident Severity</h3>
+                        <div class="chart-container"><canvas id="adminIncidentPie"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-10">
+                    <div class="table-wrapper">
+                        <div class="px-6 py-4 border-b border-slate-100 font-black text-[10px] text-slate-400 uppercase tracking-widest bg-slate-50/50">Recent Maintenance</div>
+                        <div class="scroll-area custom-scrollbar">
+                            <table class="w-full text-left text-xs border-collapse min-w-[400px]">
+                                <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                    <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                        <th class="px-6 py-3">Asset</th>
+                                        <th class="px-6 py-3">Technician</th>
+                                        <th class="px-6 py-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    {% for maintenance in recent_maintenance %}
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-slate-700">{{ maintenance.asset.assets_name }}</td>
+                                        <td class="px-6 py-4 text-slate-500">{{ maintenance.technician.username }}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2 py-1 {% if maintenance.status == 'Completed' %}bg-emerald-50 text-emerald-600{% else %}bg-amber-50 text-amber-600{% endif %} rounded text-[10px] font-bold uppercase">
+                                                {{ maintenance.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-slate-700">Asus Laptop</td>
+                                        <td class="px-6 py-4 text-slate-500">Admin2</td>
+                                        <td class="px-6 py-4"><span class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[10px] font-bold uppercase">Completed</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <div class="px-6 py-4 border-b border-slate-100 font-black text-[10px] text-slate-400 uppercase tracking-widest bg-slate-50/50">Open Incidents</div>
+                        <div class="scroll-area custom-scrollbar">
+                            <table class="w-full text-left text-xs border-collapse min-w-[400px]">
+                                <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                                    <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                        <th class="px-6 py-3">Incident</th>
+                                        <th class="px-6 py-3">Severity</th>
+                                        <th class="px-6 py-3">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    {% for incident in open_incidents %}
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-slate-700">{{ incident.title }}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="text-[10px] font-black uppercase {% if incident.severity == 'Critical' %}text-red-600{% else %}text-slate-500{% endif %}">
+                                                {{ incident.severity }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold uppercase tracking-wider">{{ incident.status }}</span></td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="3" class="px-6 py-10 text-center italic text-slate-300">No open incidents reported</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endblock %}
+        </main>
+    </div>
+</div>
+
+<script>
+    const burgerBtn = document.getElementById('burgerBtn');
+    const body = document.body;
+    const html = document.documentElement;
+
+    // Add this to your existing script section
+    function toggleNotifDropdown(event) {
+        event.stopPropagation();
+        const notifDropdown = document.getElementById('notifDropdown');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        // Close user dropdown if open
+        if (userDropdown && !userDropdown.classList.contains('hidden')) {
+            userDropdown.classList.add('hidden');
+        }
+        
+        notifDropdown.classList.toggle('hidden');
+    }
+
+    // Update your existing window.onclick to also close the notification dropdown
+    window.onclick = function(event) {
+        const userDropdown = document.getElementById('userDropdown');
+        const notifDropdown = document.getElementById('notifDropdown');
+        
+        if (userDropdown && !event.target.closest('#userMenuBtn') && !userDropdown.classList.contains('hidden')) {
+            userDropdown.classList.add('hidden');
+        }
+        
+        if (notifDropdown && !event.target.closest('#notifBtn') && !notifDropdown.classList.contains('hidden')) {
+            notifDropdown.classList.add('hidden');
+        }
+    }
+
+    burgerBtn.addEventListener('click', () => {
+        if (window.innerWidth <= 1024) {
+            body.classList.toggle('sidebar-open');
+        } else {
+            body.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebarState', body.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded');
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 1024 && body.classList.contains('sidebar-open') && !e.target.closest('#sidebar') && !e.target.closest('#burgerBtn')) {
+            body.classList.remove('sidebar-open');
+        }
+    });
+
+    function toggleDropdown(event) {
+        event.stopPropagation();
+        document.getElementById('userDropdown').classList.toggle('hidden');
+    }
+
+    window.onclick = function(event) {
+        const dropdown = document.getElementById('userDropdown');
+        if (dropdown && !event.target.closest('#userMenuBtn') && !dropdown.classList.contains('hidden')) {
+            dropdown.classList.add('hidden');
+        }
+    }
+
+    // --- ENHANCED THEME LOGIC ---
+    function toggleTheme() {
+        const isDark = body.classList.toggle('dark-mode');
+        
+        // Handle Tailwind strategy
+        if (isDark) {
+            html.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        } else {
+            html.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        }
+
+        updateToggleUI(isDark);
+        updateChartTheme(isDark);
+    }
+
+    function updateToggleUI(isDark) {
+        const lightOpt = document.getElementById('lightOpt');
+        const darkOpt = document.getElementById('darkOpt');
+        if (isDark) {
+            lightOpt?.classList.remove('active');
+            darkOpt?.classList.add('active');
+        } else {
+            lightOpt?.classList.add('active');
+            darkOpt?.classList.remove('active');
+        }
+    }
+
+    function updateChartTheme(isDark) {
+        const newColor = isDark ? '#f1f5f9' : '#94a3b8';
+        [assetChart, incidentChart].forEach(chart => {
+            if (chart) {
+                if (chart.options.scales?.y) chart.options.scales.y.ticks.color = newColor;
+                if (chart.options.scales?.x) chart.options.scales.x.ticks.color = newColor;
+                chart.options.plugins.legend.labels.color = newColor;
+                chart.update();
+            }
+        });
+    }
+
+    // Initial UI Setup
+    updateToggleUI(body.classList.contains('dark-mode'));
+
+    // --- CHART LOGIC ---
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.color = body.classList.contains('dark-mode') ? '#f1f5f9' : '#94a3b8';
+
+    let assetChart, incidentChart;
+
+    if (document.getElementById('adminAssetChart')) {
+        assetChart = new Chart(document.getElementById('adminAssetChart'), {
+            type: 'bar',
+            data: {
+                labels: {{ asset_labels|safe|default:"['Laptops', 'Servers', 'Desktops', 'Printers']" }},
+                datasets: [{
+                    data: {{ asset_totals|safe|default:"[12, 19, 3, 5]" }},
+                    backgroundColor: ['#3b82f6', '#818cf8', '#34d399', '#fbbf24', '#f87171'],
+                    borderRadius: 6,
+                    barThickness: 'flex',
+                    maxBarThickness: 30
+                }]
+            },
+            options: { 
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5], color: 'rgba(148, 163, 184, 0.1)' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    if (document.getElementById('adminIncidentPie')) {
+        incidentChart = new Chart(document.getElementById('adminIncidentPie'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ severity_labels|safe|default:"['Critical', 'High', 'Medium', 'Low']" }},
+                datasets: [{
+                    data: {{ severity_totals|safe|default:"[2, 5, 8, 12]" }},
+                    backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#94a3b8'],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: { 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: window.innerWidth < 768 ? 'bottom' : 'right', 
+                        labels: { 
+                            boxWidth: 12, 
+                            padding: 15,
+                            font: { weight: 'bold', size: 10 } 
+                        } 
+                    } 
+                } 
+            } 
+        });
+    }
+</script>
+</body>
+</html>

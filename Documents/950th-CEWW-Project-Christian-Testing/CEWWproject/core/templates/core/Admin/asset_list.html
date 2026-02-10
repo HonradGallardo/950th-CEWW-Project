@@ -1,0 +1,316 @@
+{% extends 'core/Admin/admin_dashboard.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    /* --- ASSET LIST DARK MODE CONSISTENCY --- */
+    body.dark-mode .bg-slate-50 {
+        background-color: #0f172a !important;
+    }
+    body.dark-mode .bg-white {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    body.dark-mode .text-slate-800,
+    body.dark-mode .text-slate-700,
+    body.dark-mode h2,
+    body.dark-mode h3 {
+        color: #f1f5f9 !important;
+    }
+    body.dark-mode .text-slate-500,
+    body.dark-mode .text-slate-400 {
+        color: #94a3b8 !important;
+    }
+    body.dark-mode .border-slate-200,
+    body.dark-mode .border-slate-100 {
+        border-color: #334155 !important;
+    }
+    /* Table specific overrides */
+    body.dark-mode thead th {
+        background-color: #0f172a !important;
+        color: #94a3b8 !important;
+        border-bottom-color: #334155 !important;
+    }
+    body.dark-mode .asset-row:hover {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+    body.dark-mode #searchInput, 
+    body.dark-mode #typeFilter {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+    body.dark-mode .bg-slate-100 {
+        background-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+</style>
+
+<div class="flex flex-col lg:flex-row gap-6 min-h-screen p-2 md:p-4 bg-slate-50">
+    
+    <div class="flex-1 bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden flex flex-col min-w-0">
+        
+        <div class="p-4 md:p-6 border-b border-slate-100 flex-none">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">IT Asset Inventory</h2>
+            
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="searchInput" placeholder="Search" 
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full md:w-64">
+                    
+                    <select id="typeFilter" 
+                        class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm outline-none w-full sm:w-auto">
+                        <option value="all">All Types</option>
+                        <option value="PC">PC</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="Server">Server</option>
+                        <option value="Router">Router</option>
+                    </select>
+                </div>
+                <a href="{% url 'add_asset' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition text-center">
+                    + Add new Asset
+                </a>
+            </div>
+        </div>
+
+        <div class="flex-grow overflow-x-auto overflow-y-auto max-h-[500px] lg:max-h-[calc(100vh-340px)] scrollbar-thin scrollbar-thumb-slate-300">
+            <table class="w-full text-left text-sm border-separate border-spacing-0" style="table-layout: auto; min-width: 850px;" id="assetTable">
+                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Assets ID</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Assets name</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Assets Type</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Location</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Status</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 whitespace-nowrap">Date</th>
+                        <th class="p-4 border-b border-slate-100 bg-slate-50 text-right whitespace-nowrap">Action</th>
+                    </tr>
+                </thead>
+              <tbody class="divide-y divide-slate-100" id="tableBody">
+                    {% for asset in assets %}
+                    <tr class="hover:bg-slate-50 cursor-pointer asset-row transition-colors" 
+                        data-type="{{ asset.assets_type }}"
+                        onclick="showDetails('{{ asset.assets_id }}', '{{ asset.assets_name }}', '{{ asset.assets_type }}', '{{ asset.location }}', '{{ asset.status }}', '{{ asset.date_added|date:'d-m-Y' }}')">
+                        
+                        <td class="p-4 font-medium text-blue-600 whitespace-nowrap">{{ asset.assets_id }}</td>
+                        <td class="p-4 font-medium text-slate-700 whitespace-nowrap">{{ asset.assets_name }}</td>
+                        
+                        <td class="p-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                {% if asset.assets_type == 'PC' %}
+                                    <i class="fas fa-desktop text-slate-400 w-4"></i>
+                                {% elif asset.assets_type == 'Laptop' %}
+                                    <i class="fas fa-laptop text-slate-400 w-4"></i>
+                                {% elif asset.assets_type == 'Server' %}
+                                    <i class="fas fa-server text-slate-400 w-4"></i>
+                                {% elif asset.assets_type == 'Router' %}
+                                    <i class="fas fa-network-wired text-slate-400 w-4"></i>
+                                {% else %}
+                                    <i class="fas fa-microchip text-slate-400 w-4"></i>
+                                {% endif %}
+                                <span class="text-slate-600">{{ asset.assets_type }}</span>
+                            </div>
+                        </td>
+
+                        <td class="p-4 text-slate-500 whitespace-nowrap">{{ asset.location }}</td>
+                        <td class="p-4">
+                            <div class="flex items-center gap-2">
+                                {% if asset.status == 'Active' %}
+                                    <span class="relative flex h-2 w-2">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-green-100 text-green-700 whitespace-nowrap">
+                                        Active
+                                    </span>
+                                {% elif asset.status == 'Maintenance' %}
+                                    <span class="h-2 w-2 rounded-full bg-yellow-500"></span>
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-yellow-100 text-yellow-700 whitespace-nowrap">
+                                        Maintenance
+                                    </span>
+                                {% else %}
+                                    <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                                    <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 whitespace-nowrap">
+                                        Inactive
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="p-4 text-slate-500 whitespace-nowrap">{{ asset.date_added|date:"d-m-Y" }}</td>
+                        
+                        <td class="p-4 text-right">
+                            <div class="flex justify-end items-center gap-3" onclick="event.stopPropagation();">
+                                <a href="{% url 'edit_asset' asset.pk %}" class="text-slate-400 hover:text-blue-600 transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{% url 'delete_asset' asset.pk %}" method="POST" class="inline m-0 p-0">
+                                    {% csrf_token %}
+                                    <button type="submit" onclick="return confirm('Are you sure?')" class="text-slate-400 hover:text-red-600 transition-colors">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="p-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4 flex-none">
+            <span class="text-xs text-slate-500 font-medium text-center sm:text-left" id="pageInfo">Showing 1 to 10 of {{ assets.count }} entries</span>
+            <div class="flex flex-wrap justify-center gap-1" id="paginationButtons"></div>
+        </div>
+    </div>
+
+    <div class="w-full lg:w-80 space-y-6 flex-none">
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 border-b border-slate-100 font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-info-circle text-blue-500"></i> Asset Quick View
+            </div>
+            <div id="detail-placeholder" class="p-12 text-center text-slate-400 italic">
+                <i class="fas fa-mouse-pointer block text-2xl mb-2 opacity-20"></i>
+                Click an asset to see details
+            </div>
+            <div id="detail-card" class="hidden p-6 space-y-5">
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset ID</label>
+                    <p id="det-id" class="text-xl font-bold text-blue-600"></p>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Asset Info</label>
+                    <div class="flex items-center gap-3 mt-1">
+                        <div id="det-icon-container" class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-500 text-lg">
+                            <i id="det-icon"></i>
+                        </div>
+                        <div>
+                            <p id="det-name" class="font-semibold text-slate-800 leading-tight"></p>
+                            <p id="det-type" class="text-xs text-slate-500"></p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Status</label>
+                    <p id="det-status" class="px-3 py-1 inline-block rounded text-[10px] font-bold uppercase"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            <h3 class="font-bold text-sm mb-4 text-slate-800">IT Asset Distribution</h3>
+            <div class="relative h-48 w-full"><canvas id="statusChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- CHART LOGIC ---
+const ctx = document.getElementById('statusChart').getContext('2d');
+new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: ['Active', 'Inactive', 'Maintenance'],
+        datasets: [{
+            data: [{{ active_assets_count|default:0 }}, {{ inactive_assets_count|default:0 }}, {{ maintenance_assets_count|default:0 }}],
+            backgroundColor: ['#22c55e', '#94a3b8', '#facc15'],
+            borderWidth: 0
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+});
+
+// --- PAGINATION & FILTER LOGIC ---
+let currentPage = 1;
+const rowsPerPage = 10;
+const searchInput = document.getElementById('searchInput');
+const typeFilter = document.getElementById('typeFilter');
+const tableRows = Array.from(document.querySelectorAll('.asset-row'));
+
+function updateTable() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedType = typeFilter.value;
+
+    const filteredRows = tableRows.filter(row => {
+        const text = row.innerText.toLowerCase();
+        const rowType = row.getAttribute('data-type');
+        return text.includes(searchTerm) && (selectedType === 'all' || rowType === selectedType);
+    });
+
+    const totalEntries = filteredRows.length;
+    const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    tableRows.forEach(row => row.style.display = "none");
+    filteredRows.slice(start, end).forEach(row => row.style.display = "table-row");
+
+    document.getElementById('pageInfo').innerText = `Showing ${totalEntries === 0 ? 0 : start + 1} to ${end > totalEntries ? totalEntries : end} of ${totalEntries} entries`;
+    renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+    const container = document.getElementById('paginationButtons');
+    container.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        const isDark = document.body.classList.contains('dark-mode');
+        btn.className = `px-3 py-1 text-xs font-bold rounded ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`;
+        btn.onclick = () => { currentPage = i; updateTable(); };
+        container.appendChild(btn);
+    }
+}
+
+searchInput.addEventListener('input', () => { currentPage = 1; updateTable(); });
+typeFilter.addEventListener('change', () => { currentPage = 1; updateTable(); });
+updateTable();
+
+// --- DETAIL LOGIC ---
+function showDetails(id, name, type, loc, status, date) {
+    document.getElementById('detail-placeholder').classList.add('hidden');
+    document.getElementById('detail-card').classList.remove('hidden');
+    
+    document.getElementById('det-id').innerText = id;
+    document.getElementById('det-name').innerText = name;
+    document.getElementById('det-type').innerText = type;
+
+    // --- Asset Type Icon Logic ---
+    const iconEl = document.getElementById('det-icon');
+    const iconMap = {
+        'PC': 'fa-desktop',
+        'Laptop': 'fa-laptop',
+        'Server': 'fa-server',
+        'Router': 'fa-network-wired'
+    };
+    iconEl.className = `fas ${iconMap[type] || 'fa-microchip'}`;
+
+    // --- Status Icon & Styling Logic ---
+    const statusEl = document.getElementById('det-status');
+    
+    // Create the icon HTML based on status
+    let statusIcon = '';
+    let statusClass = '';
+    
+    if (status === 'Active') {
+        statusIcon = '<i class="fas fa-check-circle mr-1"></i> ';
+        statusClass = 'bg-green-100 text-green-700';
+    } else if (status === 'Maintenance') {
+        statusIcon = '<i class="fas fa-tools mr-1"></i> ';
+        statusClass = 'bg-yellow-100 text-yellow-700';
+    } else {
+        statusIcon = '<i class="fas fa-exclamation-circle mr-1"></i> ';
+        statusClass = 'bg-red-100 text-red-700';
+    }
+
+    statusEl.innerHTML = statusIcon + status;
+    statusEl.className = `px-3 py-1 inline-block rounded text-[10px] font-bold uppercase ${statusClass}`;
+    
+    if (window.innerWidth < 1024) {
+        document.getElementById('detail-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+</script>
+{% endblock %}
