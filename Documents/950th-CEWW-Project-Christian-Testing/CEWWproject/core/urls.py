@@ -1,7 +1,21 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
+router = DefaultRouter()
+router.register(r'assets', views.AssetViewSet)
+router.register(r'maintenance', views.MaintenanceViewSet)
+router.register(r'incidents', views.IncidentViewSet)
+
 urlpatterns = [
+    # --- API ENDPOINTS ---
+    # This creates paths like /api/assets/ and /api/incidents/
+    path('api/', include(router.urls)),
+
+    # --- EXISTING VIEW PATHS ---
+    path('', views.landing, name='landing'),
+    path('role-redirect/', views.role_redirect, name='role_redirect'),
+    path('dashboard/', views.dashboard, name='dashboard'),
     # Public Landing Page
     path('', views.landing, name='landing'),
     
