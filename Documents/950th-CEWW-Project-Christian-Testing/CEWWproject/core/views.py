@@ -23,6 +23,21 @@ from django.db.models.functions import TruncMonth
 from django.utils.timezone import localtime
 from .models import Ticket, TicketMessage
 from django.db import models
+from rest_framework import viewsets
+from .serializers import AssetSerializer, MaintenanceSerializer, IncidentSerializer
+
+# Add these classes at the bottom of your existing views.py
+class AssetViewSet(viewsets.ModelViewSet):
+    queryset = Asset.objects.all()
+    serializer_class = AssetSerializer
+
+class MaintenanceViewSet(viewsets.ModelViewSet):
+    queryset = Maintenance.objects.all()
+    serializer_class = MaintenanceSerializer
+
+class IncidentViewSet(viewsets.ModelViewSet):
+    queryset = Incident.objects.all()
+    serializer_class = IncidentSerializer
 
 #################################################################### NOTIFICATION ####################################################################
 def get_latest_notifications(request):
@@ -970,16 +985,13 @@ def commander_analytics(request):
     return render(request, 'core/Commander/command_analytics.html', context)
 
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .models import Asset, Maintenance, Incident  # Ensure Incident model exists
-from django.db.models import Count
 
 @login_required
 def reports(request):
     report_type = request.GET.get('report_type', 'it_asset')
     category = request.GET.get('category', 'All')
     export_format = request.GET.get('export')
+    page_number = request.GET.get('page', 1)
     
     # 1. FETCH DATA FIRST
     data_list = []
@@ -1005,7 +1017,7 @@ def reports(request):
         status_labels = [s['status'] for s in stats]
         status_counts = [s['total'] for s in stats]
 
-    # 2. EXCEL EXPORT BLOCK (Now data_list is full!)
+    # 2. EXCEL EXPORT BLOCK (Stays the same - exports FULL data_list)
     if export_format == 'excel':
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename={report_type}_report_{timezone.now().date()}.xlsx'
@@ -1018,7 +1030,6 @@ def reports(request):
             headers = ['Asset ID', 'Name', 'Type', 'Location', 'Status', 'Date Added']
             ws.append(headers)
             for obj in data_list:
-                # Use timezone aware date formatting
                 date_str = obj.date_added.strftime('%Y-%m-%d') if obj.date_added else ""
                 ws.append([obj.assets_id, obj.assets_name, obj.assets_type, obj.location, obj.status, date_str])
         
@@ -1039,14 +1050,19 @@ def reports(request):
         wb.save(response)
         return response
 
-    # 3. RENDER HTML
+    # 3. RENDER HTML (Apply Pagination for Preview)
+    total_count = len(data_list) # Keep the true total for the UI counters
+    preview_list = data_list[:6] # Only send the first 6 items to the template
+    page_obj = Paginator(data_list, 6).get_page(page_number)
+
     context = {
         'report_type': report_type,
-        'data_list': data_list,
+        'data_list': page_obj,   # Use the sliced list here
         'asset_types': Asset.ASSET_TYPES,
         'status_labels': status_labels,
         'status_counts': status_counts,
-        'total_count': len(data_list),
+        'total_count': total_count,  # Pass the full count
+        'page_obj': page_obj,
     }
     return render(request, 'core/Admin/reports.html', context)
 
