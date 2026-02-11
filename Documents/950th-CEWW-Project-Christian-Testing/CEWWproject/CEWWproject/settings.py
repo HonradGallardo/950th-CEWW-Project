@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import environ
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,6 +33,28 @@ LOGIN_URL = '/admin/login/'
 LOGOUT_REDIRECT_URL = 'landing'
 STATIC_URL = 'static/'
 LOGIN_REDIRECT_URL = 'role_redirect'
+
+
+# Initialize environ
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Take environment variables from .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# Now use the variables
+SECRET_KEY = env('SECRET_KEY')
+DEBUG = env('DEBUG')
+
+# Example for Database:
+DATABASES = {
+    'default': env.db(),
+}
 
 
 # Application definition
