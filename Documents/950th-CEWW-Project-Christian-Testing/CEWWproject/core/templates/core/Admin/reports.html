@@ -31,13 +31,13 @@
         <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">Select Report Type</label>
         
         <div class="flex overflow-x-auto no-scrollbar sm:flex-wrap gap-3 mb-8 pb-2">
-            <a href="?report_type=it_asset" class="whitespace-nowrap px-6 py-3 rounded-xl text-xs font-black transition border-2 {% if report_type == 'it_asset' %}border-blue-600 text-blue-600 bg-white dark:bg-slate-800 shadow-sm{% else %}border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-500{% endif %}">
+            <a href="?report_type=it_asset&category={{ category }}" class="whitespace-nowrap px-6 py-3 rounded-xl text-xs font-black transition border-2 {% if report_type == 'it_asset' %}border-blue-600 text-blue-600 bg-white dark:bg-slate-800 shadow-sm{% else %}border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-500{% endif %}">
                 IT Asset Report
             </a>
-            <a href="?report_type=maintenance" class="whitespace-nowrap px-6 py-3 rounded-xl text-xs font-black transition border-2 {% if report_type == 'maintenance' %}border-blue-600 text-blue-600 bg-white dark:bg-slate-800 shadow-sm{% else %}border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-500{% endif %}">
+            <a href="?report_type=maintenance&category={{ category }}" class="whitespace-nowrap px-6 py-3 rounded-xl text-xs font-black transition border-2 {% if report_type == 'maintenance' %}border-blue-600 text-blue-600 bg-white dark:bg-slate-800 shadow-sm{% else %}border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-500{% endif %}">
                 Maintenance Report
             </a>
-            <a href="?report_type=incident" class="whitespace-nowrap px-6 py-3 rounded-xl text-xs font-black transition border-2 {% if report_type == 'incident' %}border-blue-600 text-blue-600 bg-white dark:bg-slate-800 shadow-sm{% else %}border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-500{% endif %}">
+            <a href="?report_type=incident&category={{ category }}" class="whitespace-nowrap px-6 py-3 rounded-xl text-xs font-black transition border-2 {% if report_type == 'incident' %}border-blue-600 text-blue-600 bg-white dark:bg-slate-800 shadow-sm{% else %}border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-500{% endif %}">
                 Incident Report
             </a>
         </div>
@@ -123,8 +123,12 @@
 
                 <div class="flex items-center gap-1 flex-wrap justify-end">
                     {% if page_obj.has_previous %}
+                        <a href="?report_type={{ report_type }}&category={{ category }}&page=1" 
+                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition" title="First Page">
+                            <i class="fas fa-angle-double-left text-xs"></i>
+                        </a>
                         <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.previous_page_number }}" 
-                        class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
+                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
                             <i class="fas fa-chevron-left text-xs"></i>
                         </a>
                     {% endif %}
@@ -134,9 +138,9 @@
                             <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-black shadow-sm">
                                 {{ num }}
                             </span>
-                        {% else %}
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                             <a href="?report_type={{ report_type }}&category={{ category }}&page={{ num }}" 
-                            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-white dark:hover:bg-slate-700 text-xs font-bold transition">
+                               class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-white dark:hover:bg-slate-700 text-xs font-bold transition">
                                 {{ num }}
                             </a>
                         {% endif %}
@@ -144,8 +148,12 @@
 
                     {% if page_obj.has_next %}
                         <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.next_page_number }}" 
-                        class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
+                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
                             <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                        <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.paginator.num_pages }}" 
+                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition" title="Last Page">
+                            <i class="fas fa-angle-double-right text-xs"></i>
                         </a>
                     {% endif %}
                 </div>
@@ -189,7 +197,6 @@
 </style>
 
 <script>
-    // 1. CHART INITIALIZATION
     const ctxStatus = document.getElementById('statusChart').getContext('2d');
     const statusChart = new Chart(ctxStatus, {
         type: 'doughnut',
@@ -211,21 +218,19 @@
         }
     });
 
-    // 2. LIVE SYNC LOGIC
     async function syncDataViaAPI() {
         const reportType = "{{ report_type }}";
-        let endpoint = '/api/assets/';
-        if (reportType === 'maintenance') endpoint = '/api/maintenance/';
-        if (reportType === 'incident') endpoint = '/api/incidents/';
+        const category = "{{ category }}";
+        
+        let endpoint = `/api/assets/?category=${category}`;
+        if (reportType === 'maintenance') endpoint = `/api/maintenance/?category=${category}`;
+        if (reportType === 'incident') endpoint = `/api/incidents/?category=${category}`;
 
         try {
             const response = await fetch(endpoint);
             const data = await response.json();
-            const recordList = Array.isArray(data) ? data : data.results;
-
-            document.getElementById('api-total-display').innerText = recordList.length;
-            document.getElementById('total-records-display').innerText = recordList.length;
-            console.log("Sync Complete: " + recordList.length + " records.");
+            const totalRecords = data.count !== undefined ? data.count : (Array.isArray(data) ? data.length : data.results.length);
+            document.getElementById('api-total-display').innerText = totalRecords;
         } catch (error) {
             console.error("API Sync Failed:", error);
         }

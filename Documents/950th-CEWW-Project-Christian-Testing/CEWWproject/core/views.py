@@ -459,10 +459,24 @@ def dashboard(request):
 # --- PERSONNEL CRUD ---
 @login_required
 def user_list(request):
+    # Check permissions
     if not request.user.groups.filter(name__in=['Admin', 'Commander']).exists():
         return redirect('dashboard')
-    all_users = User.objects.all().prefetch_related('groups')
-    return render(request, 'core/Admin/user_list.html', {'users': all_users})
+    
+    # Original query preserved: Get all users with groups prefetched
+    all_users = User.objects.all().prefetch_related('groups').order_by('username')
+    
+    # Pagination Logic
+    items_per_page = 10
+    paginator = Paginator(all_users, items_per_page)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Returning page_obj as 'users' so your existing template loop {% for person in users %} still works
+    return render(request, 'core/Admin/user_list.html', {
+        'users': page_obj,
+        'page_obj': page_obj  # Optional: for additional pagination metadata
+    })
 
 @login_required
 def add_user(request):
@@ -715,6 +729,12 @@ def delete_asset(request, asset_id):
 
 # --- OTHER ---
 # --- INCIDENT MODULE ---
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.paginator import Paginator
+from .models import Incident, IncidentComment # Ensure these imports match your project
+
 @login_required
 def incident_list(request):
     # --- HANDLE COMMENT POST ---
@@ -736,7 +756,6 @@ def incident_list(request):
                 author=request.user,
                 message=message_text
             )
-
         return redirect('incident_list')
 
     # --- HANDLE DELETE ---
@@ -747,18 +766,27 @@ def incident_list(request):
         messages.success(request, "Incident record removed.")
         return redirect('incident_list')
 
+    # --- PAGINATION LOGIC ---
+    all_incidents = Incident.objects.all().order_by('-date')
+    paginator = Paginator(all_incidents, 10) # Set to 10 entries per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # --- LOAD ACTIVE INCIDENT ---
     active_incident = None
     comments = []
 
     active_id = request.session.get('active_incident_id')
     if active_id:
-        active_incident = get_object_or_404(Incident, id=active_id)
-        comments = active_incident.comments.all().order_by('created_at')
+        try:
+            active_incident = Incident.objects.get(id=active_id)
+            comments = active_incident.comments.all().order_by('created_at')
+        except Incident.DoesNotExist:
+            request.session['active_incident_id'] = None
 
     # --- FINAL CONTEXT ---
     context = {
-        'incidents': Incident.objects.all().order_by('-date'),
+        'incidents': page_obj, # Pass the page object
         'incident': active_incident,
         'comments': comments,
     }
@@ -769,10 +797,60 @@ def incident_list(request):
 @login_required
 def command_incident(request):
     # Purely retrieval for the Commander
-    incidents = Incident.objects.all().order_by('-date')
-    return render(request, 'core/Commander/command_incident.html', {
-        'incidents': incidents
-    })
+    if request.method == 'POST' and 'message' in request.POST:
+        incident_id = request.POST.get('incident_id')
+
+        if not incident_id:
+            messages.error(request, "Please select an incident first.")
+            return redirect('incident_list')
+
+        request.session['active_incident_id'] = incident_id
+
+        incident = get_object_or_404(Incident, id=incident_id)
+        message_text = request.POST.get('message', '').strip()
+
+        if message_text:
+            IncidentComment.objects.create(
+                incident=incident,
+                author=request.user,
+                message=message_text
+            )
+        return redirect('incident_list')
+
+    # --- HANDLE DELETE ---
+    if request.method == 'POST' and request.POST.get('action') == 'delete':
+        incident_id = request.POST.get('incident_id')
+        incident = get_object_or_404(Incident, id=incident_id)
+        incident.delete()
+        messages.success(request, "Incident record removed.")
+        return redirect('incident_list')
+
+    # --- PAGINATION LOGIC ---
+    all_incidents = Incident.objects.all().order_by('-date')
+    paginator = Paginator(all_incidents, 10) # Set to 10 entries per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # --- LOAD ACTIVE INCIDENT ---
+    active_incident = None
+    comments = []
+
+    active_id = request.session.get('active_incident_id')
+    if active_id:
+        try:
+            active_incident = Incident.objects.get(id=active_id)
+            comments = active_incident.comments.all().order_by('created_at')
+        except Incident.DoesNotExist:
+            request.session['active_incident_id'] = None
+
+    # --- FINAL CONTEXT ---
+    context = {
+        'incidents': page_obj, # Pass the page object
+        'incident': active_incident,
+        'comments': comments,
+    }
+
+    return render(request, 'core/Commander/command_incident.html', context)
 
 @login_required
 def add_incident(request):
@@ -993,7 +1071,7 @@ def reports(request):
     export_format = request.GET.get('export')
     page_number = request.GET.get('page', 1)
     
-    # 1. FETCH DATA FIRST
+    # 1. FETCH DATA
     data_list = []
     status_labels, status_counts = [], []
 
@@ -1011,13 +1089,15 @@ def reports(request):
 
     else: # it_asset
         data_list = Asset.objects.all()
-        if category != 'All' and category != 'All Assets':
+        # Handle various "All" strings to ensure the filter doesn't break
+        if category not in ['All', 'All Assets', '']:
             data_list = data_list.filter(assets_type=category)
+        
         stats = data_list.values('status').annotate(total=models.Count('id'))
         status_labels = [s['status'] for s in stats]
         status_counts = [s['total'] for s in stats]
 
-    # 2. EXCEL EXPORT BLOCK (Stays the same - exports FULL data_list)
+    # 2. EXCEL EXPORT BLOCK
     if export_format == 'excel':
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename={report_type}_report_{timezone.now().date()}.xlsx'
@@ -1050,19 +1130,20 @@ def reports(request):
         wb.save(response)
         return response
 
-    # 3. RENDER HTML (Apply Pagination for Preview)
-    total_count = len(data_list) # Keep the true total for the UI counters
-    preview_list = data_list[:6] # Only send the first 6 items to the template
-    page_obj = Paginator(data_list, 6).get_page(page_number)
+    # 3. RENDER HTML (Pagination)
+    total_count = data_list.count() if hasattr(data_list, 'count') else len(data_list)
+    paginator = Paginator(data_list, 6) # Show 6 per page
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'report_type': report_type,
-        'data_list': page_obj,   # Use the sliced list here
+        'category': category,      # ESSENTIAL: Pass this back to keep pagination links working
+        'data_list': page_obj,     # Template loops over this
+        'page_obj': page_obj,      # Controls use this
         'asset_types': Asset.ASSET_TYPES,
         'status_labels': status_labels,
         'status_counts': status_counts,
-        'total_count': total_count,  # Pass the full count
-        'page_obj': page_obj,
+        'total_count': total_count,
     }
     return render(request, 'core/Admin/reports.html', context)
 

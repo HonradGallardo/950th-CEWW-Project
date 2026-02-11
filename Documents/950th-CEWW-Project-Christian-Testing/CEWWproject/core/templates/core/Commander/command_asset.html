@@ -251,12 +251,18 @@ function renderPagination(totalPages) {
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.innerText = i;
-        btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
-            i === currentPage 
-            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-            : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-50'
-        }`;
-        btn.onclick = () => { currentPage = i; updateTable(); };
+        
+        // Removed 'shadow-lg' and 'shadow-blue-200' to stop the glowing effect
+        if (i === currentPage) {
+            btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-blue-600 text-white border border-blue-600`;
+        } else {
+            btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600`;
+        }
+        
+        btn.onclick = () => { 
+            currentPage = i; 
+            updateTable(); 
+        };
         container.appendChild(btn);
     }
 }

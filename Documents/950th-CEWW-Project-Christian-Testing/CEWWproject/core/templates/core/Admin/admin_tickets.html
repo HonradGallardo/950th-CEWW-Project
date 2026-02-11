@@ -54,8 +54,13 @@
                                 
                                 <td class="px-4 py-4">
                                     <div class="flex items-start gap-3">
-                                        <div class="w-8 h-8 shrink-0 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold border border-slate-200 dark:border-slate-700">
-                                            {{ ticket.user.username|slice:":1"|upper }}
+                                        <div class="relative shrink-0">
+                                            <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold border border-slate-200 dark:border-slate-700">
+                                                {{ ticket.user.username|slice:":1"|upper }}
+                                            </div>
+                                            <span class="absolute -top-1 -right-1 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-[7px] px-1 rounded-sm font-black tracking-tighter shadow-sm border border-white dark:border-slate-800">
+                                                #{{ ticket.id }}
+                                            </span>
                                         </div>
                                         <div class="min-w-0">
                                             <span class="font-bold text-slate-800 dark:text-slate-200 text-sm block truncate">{{ ticket.subject }}</span>
@@ -252,9 +257,6 @@
         updatePagination();
     }
 
-    // -- KEEP ALL YOUR EXISTING FUNCTIONS BELOW UNCHANGED --
-    // (selectTicket, renderMessages, handleSendMessage, updateTicketStatus, deleteTicket, etc.)
-    
     async function selectTicket(id, subject, user, status, description, datetime) {
         currentTicketId = id;
         setResponsiveView(true);
@@ -365,7 +367,6 @@
                     const pill = row.querySelector('.status-pill');
                     pill.innerText = newStatus;
 
-                    // Reset classes based on status
                     pill.className =
                         "status-pill px-2.5 py-1 rounded-full text-[10px] font-bold border inline-block min-w-[75px] " +
                         (newStatus === 'Pending'

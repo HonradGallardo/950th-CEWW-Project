@@ -30,15 +30,19 @@
                     <table class="w-full text-left border-collapse min-w-[600px] sm:min-w-0" id="userTable">
                         <thead class="sticky top-0 bg-slate-50 dark:bg-slate-800 z-10 shadow-[0_1px_0_0_rgba(226,232,240,1)] dark:shadow-[0_1px_0_0_rgba(30,41,59,1)]">
                             <tr class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                                <th class="px-6 py-4 w-16">ID</th>
                                 <th class="px-6 py-4">Personnel</th>
                                 <th class="px-6 py-4">Assigned Assets</th>
-                                <th class="px-6 py-4 text-center">Actions</th> 
+                                <th class="px-6 py-4">Last Activity</th> <th class="px-6 py-4 text-center">Actions</th> 
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800" id="userTableBody">
                             {% for person in users %}
                             <tr class="user-row hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors cursor-pointer group" 
-                                onclick="showUserDetails('{{ person.id }}', '{{ person.username }}', '{{ person.get_full_name|default:person.username }}', '{{ person.email }}', '{{ person.groups.all.0.name|default:"Unassigned" }}')">
+                                onclick="showUserDetails('{{ person.id }}', '{{ person.username }}', '{{ person.get_full_name|default:person.username }}', '{{ person.email }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}')">
+                                <td class="px-6 py-4">
+                                    <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 tracking-tighter">#{{ person.id }}</span>
+                                </td>
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-sm text-slate-800 dark:text-slate-200">{{ person.get_full_name|default:person.username }}</div>
                                     <div class="text-[9px] mt-1 uppercase font-black tracking-wider px-2 py-0.5 rounded-md border inline-block
@@ -60,6 +64,9 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
+                                    <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">{{ person.last_login|date:"d-m-Y"|default:"Never" }}</span>
+                                </td>
+                                <td class="px-6 py-4">
                                     <div class="flex items-center justify-center space-x-1" onclick="event.stopPropagation();">
                                         <a href="{% url 'edit_user' person.id %}" class="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition">
                                             <i class="fas fa-edit text-sm"></i>
@@ -79,10 +86,30 @@
                 </div>
 
                 <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between shrink-0">
-                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" id="userPageInfo">
-                        Showing 0-0 of 0 users
+                    <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        Showing {{ users.start_index }}-{{ users.end_index }} of {{ users.paginator.count }} personnel
                     </p>
-                    <div class="flex items-center space-x-2" id="userPaginationControls"></div>
+                    <div class="flex items-center space-x-2">
+                        {% if users.has_previous %}
+                            <a href="?page={{ users.previous_page_number }}" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 transition">
+                                <i class="fas fa-chevron-left text-[10px]"></i>
+                            </a>
+                        {% endif %}
+
+                        {% for num in users.paginator.page_range %}
+                            {% if users.number == num %}
+                                <span class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black bg-blue-600 text-white border border-blue-600">{{ num }}</span>
+                            {% elif num > users.number|add:'-3' and num < users.number|add:'3' %}
+                                <a href="?page={{ num }}" class="w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 transition">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if users.has_next %}
+                            <a href="?page={{ users.next_page_number }}" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 transition">
+                                <i class="fas fa-chevron-right text-[10px]"></i>
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -113,7 +140,18 @@
                             </div>
                         </div>
 
-                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Last Login</label>
+                                <p id="detail-last-login" class="text-[10px] font-bold text-slate-700 dark:text-slate-300"></p>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Member Since</label>
+                                <p id="detail-joined" class="text-[10px] font-bold text-slate-700 dark:text-slate-300"></p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-4">
                             <div class="overflow-hidden">
                                 <label class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase">Email Address</label>
                                 <p id="detail-email" class="text-xs font-bold text-slate-700 dark:text-slate-300 break-all"></p>
@@ -141,99 +179,46 @@
 </div>
 
 <script>
-// Logic preserved exactly as requested
-let currentUserPage = 1;
-const usersPerPage = 10;
-let filteredUsers = [];
+function filterUsers() {
+    const input = document.getElementById("userSearch");
+    const filter = input.value.toUpperCase();
+    const rows = document.getElementsByClassName("user-row");
 
-document.addEventListener('DOMContentLoaded', () => {
-    initUserTable();
-});
-
-function initUserTable() {
-    const search = document.getElementById("userSearch").value.toUpperCase();
-    const allRows = Array.from(document.getElementsByClassName("user-row"));
-    
-    filteredUsers = allRows.filter(row => {
-        const personnelName = row.cells[0].innerText.toUpperCase();
-        const matches = (personnelName.includes(search));
-        
-        row.style.display = "none";
-        return matches;
-    });
-
-    const totalEntries = filteredUsers.length;
-    const totalPages = Math.ceil(totalEntries / usersPerPage) || 1;
-    
-    if (currentUserPage > totalPages) currentUserPage = totalPages;
-
-    const start = (currentUserPage - 1) * usersPerPage;
-    const end = Math.min(start + usersPerPage, totalEntries);
-
-    filteredUsers.slice(start, end).forEach(row => row.style.display = "");
-
-    document.getElementById('userPageInfo').innerText = `Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries} personnel`;
-    renderUserPagination(totalPages);
-}
-
-function renderUserPagination(totalPages) {
-    const container = document.getElementById('userPaginationControls');
-    container.innerHTML = '';
-
-    if (totalPages <= 1) return;
-
-    for (let i = 1; i <= totalPages; i++) {
-        const btn = document.createElement('button');
-        btn.innerText = i;
-        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
-            i === currentUserPage 
-            ? 'bg-blue-600 dark:bg-blue-500 text-white shadow-md' 
-            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
-        }`;
-        
-        btn.onclick = () => {
-            currentUserPage = i;
-            initUserTable();
-        };
-        container.appendChild(btn);
+    for (let i = 0; i < rows.length; i++) {
+        const personnelName = rows[i].getElementsByTagName("td")[1];
+        if (personnelName) {
+            const textValue = personnelName.textContent || personnelName.innerText;
+            if (textValue.toUpperCase().indexOf(filter) > -1) {
+                rows[i].style.display = "";
+            } else {
+                rows[i].style.display = "none";
+            }
+        }
     }
 }
 
-function filterUsers() {
-    currentUserPage = 1;
-    initUserTable();
-}
-
-function showUserDetails(id, username, fullName, email, role) {
+// Updated signature to accept login and joined dates
+function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined) {
     document.getElementById('empty-message').classList.add('hidden');
     document.getElementById('user-details').classList.remove('hidden');
-
     document.getElementById('detail-username').innerText = '@' + username;
     document.getElementById('detail-name').innerText = fullName;
     document.getElementById('detail-email').innerText = email;
     document.getElementById('detail-role').innerText = role;
+    document.getElementById('detail-last-login').innerText = lastLogin;
+    document.getElementById('detail-joined').innerText = dateJoined;
     document.getElementById('initials').innerText = (fullName).substring(0, 2).toUpperCase();
-    
     document.getElementById('edit-link').href = "/users/edit/" + id + "/"; 
 
     const roleBadge = document.getElementById('detail-role');
     roleBadge.className = 'text-[10px] font-black px-2 py-1 rounded-md';
-    if (role === 'Admin') roleBadge.classList.add('bg-red-50', 'text-red-600', 'dark:bg-red-900/20', 'dark:text-red-400');
-    else if (role === 'Commander') roleBadge.classList.add('bg-purple-50', 'text-purple-600', 'dark:bg-purple-900/20', 'dark:text-purple-400');
-    else roleBadge.classList.add('bg-slate-100', 'text-slate-500', 'dark:bg-slate-800', 'dark:text-slate-400');
-
-    if (window.innerWidth < 1024) {
-        document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth' });
+    if (role === 'Admin') {
+        roleBadge.classList.add('bg-red-50', 'text-red-600', 'dark:bg-red-900/20', 'dark:text-red-400');
+    } else if (role === 'Commander') {
+        roleBadge.classList.add('bg-purple-50', 'text-purple-600', 'dark:bg-purple-900/20', 'dark:text-purple-400');
+    } else {
+        roleBadge.classList.add('bg-slate-100', 'text-slate-500', 'dark:bg-slate-800', 'dark:text-slate-400');
     }
 }
 </script>
-
-<style>
-    @media (min-width: 1024px) {
-        html, body { overflow: hidden; height: 100%; }
-    }
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-</style>
 {% endblock %}
