@@ -878,16 +878,43 @@ def add_incident(request):
     return render(request, 'core/Admin/add_incident.html')
 
 @login_required
-def edit_incident(request, incident_id):  # Make sure this matches the URL keyword
+def edit_incident(request, incident_id):
     incident = get_object_or_404(Incident, id=incident_id)
-    
-    if request.method == 'POST':
-        incident.status = request.POST.get('status')
-        incident.save()
-        return redirect('incident_list')
-        
-    return render(request, 'core/Admin/edit_incident.html', {'incident': incident})
 
+    guides = {
+        'Malware': 'documents/Guideline-on-Malware-Incident-Response2.pdf',
+        'Phishing': 'documents/Phishing-Protocol.pdf',
+        'Unauthorized Access': 'documents/Access-Control-SOP.pdf',
+    }
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        new_actions = request.POST.get('actions_taken', '').strip()
+
+        # Only log if something new was entered
+        if new_actions:
+            timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
+            technician = request.user.username
+
+            log_entry = f"[{timestamp}] {technician}: {new_actions}"
+
+            if incident.actions_taken:
+                incident.actions_taken += "\n" + log_entry
+            else:
+                incident.actions_taken = log_entry
+
+        incident.status = new_status
+        incident.save()
+
+        return redirect('incident_list')
+
+    selected_guide = guides.get(incident.severity, 'documents/General-SOP.pdf')
+
+    return render(request, 'core/Admin/edit_incident.html', {
+        'incident': incident,
+        'guide_path': selected_guide
+    })
+    
 @login_required
 def delete_incident(request, incident_id):
     incident = get_object_or_404(Incident, id=incident_id)
@@ -1010,6 +1037,24 @@ def analytics_list(request):
     })
     
     return render(request, 'core/Admin/analytics_list.html', context)
+
+def generate_ai_advisory(predicted, current, unresolved, severity_breakdown):
+    advice = []
+
+    if predicted > current:
+        advice.append("Incident trend is rising. Increase proactive monitoring and vulnerability scanning frequency.")
+
+    if unresolved > 5:
+        advice.append("Multiple unresolved maintenance tasks detected. Prioritize patching and hardware diagnostics to reduce system failures.")
+
+    if severity_breakdown.get('High', 0) + severity_breakdown.get('Critical', 0) > 3:
+        advice.append("High severity incidents increasing. Implement stricter access control, MFA enforcement, and real-time endpoint protection.")
+
+    if not advice:
+        advice.append("Security posture remains stable. Maintain current defense strategies and continue continuous monitoring.")
+
+    return " ".join(advice)
+
 
 
 @login_required
