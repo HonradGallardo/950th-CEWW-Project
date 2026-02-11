@@ -1,0 +1,338 @@
+{% extends "core/Commander/commander_dashboard.html" %}
+
+{% block content %}
+<div class="flex flex-col lg:h-[calc(100vh-120px)] space-y-4 sm:space-y-6 overflow-x-hidden p-2 sm:p-0 transition-colors duration-300 dark:bg-slate-900">
+    
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 px-2 gap-2">
+        <div>
+            <h1 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight">Service History</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
+        </div>
+        <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 shadow-sm transition-all focus:outline-none">
+            <i id="theme-icon" class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <div class="flex-1 grid grid-cols-12 gap-4 sm:gap-6 min-h-0 lg:overflow-hidden pb-10 sm:pb-4">
+        
+        <div class="col-span-12 lg:col-span-8 flex flex-col min-h-[450px] lg:min-h-0 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            
+            <div class="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
+                <div class="relative flex-1 sm:max-w-xs">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                    <input type="text" id="assetSearch" onkeyup="resetAndFilter()" placeholder="Search ID or Name..." 
+                           class="text-xs pl-8 pr-4 py-2.5 sm:py-2 rounded-lg border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500/10 w-full outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200">
+                </div>
+                
+                <div class="flex flex-row gap-2">
+                    <select id="typeFilter" onchange="resetAndFilter()" 
+                            class="flex-1 sm:flex-none text-xs px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 font-bold outline-none text-slate-600 dark:text-slate-300 cursor-pointer">
+                        <option value="">All Types</option>
+                        {% for type in asset_types %}<option value="{{ type }}">{{ type }}</option>{% endfor %}
+                    </select>
+
+                    <select id="statusFilter" onchange="resetAndFilter()" 
+                            class="flex-1 sm:flex-none text-xs px-3 py-2.5 sm:py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 font-bold outline-none text-slate-600 dark:text-slate-300 cursor-pointer">
+                        <option value="">All Statuses</option>
+                        <option value="QUEUED">Queued</option>
+                        <option value="IN PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-x-auto lg:overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left border-separate border-spacing-0" id="maintenanceTable" style="min-width: 650px;">
+                    <thead class="sticky top-0 bg-white dark:bg-slate-800 shadow-sm z-10">
+                        <tr class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                            <th class="px-6 py-4 w-[20%] border-b border-slate-100 dark:border-slate-700">Asset ID</th>
+                            <th class="px-6 py-4 w-[35%] border-b border-slate-100 dark:border-slate-700">Asset Name</th>
+                            <th class="px-6 py-4 w-[20%] border-b border-slate-100 dark:border-slate-700">Type</th>
+                            <th class="px-6 py-4 w-[25%] border-b border-slate-100 dark:border-slate-700">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800" id="tableBody">
+                        {% for asset in active_maintenance %}
+                        <tr class="asset-row bg-amber-50/20 dark:bg-amber-900/10 cursor-pointer hover:bg-amber-100/30 dark:hover:bg-amber-900/20 transition-colors" data-type="{{ asset.assets_type }}" data-status="QUEUED" onclick="showDetails({
+                            id: '{{ asset.assets_id }}',
+                            name: '{{ asset.assets_name }}',
+                            date: '{{ asset.date_added|date:'d-m-Y' }}',
+                            time: '{{ asset.date_added|time:'H:i A' }}',
+                            modified: '{{ asset.date_added|date:'d-m-Y H:i A' }}',
+                            tech: 'Unassigned',
+                            status: 'In Queue',
+                            a_type: '{{ asset.assets_type }}',
+                            notes: '{{ asset.maintenance_reason|default:'Initial report pending.'|escapejs }}',
+                            editUrl: '{% url 'add_maintenance' %}?asset_id={{ asset.assets_id }}',
+                            deleteUrl: null
+                        })">
+                            <td class="px-6 py-4 text-xs font-bold text-amber-700 dark:text-amber-500 truncate">
+                                <div class="flex items-center">
+                                    <span class="mr-3 text-amber-600/50 dark:text-amber-500/50 w-4 text-center">
+                                        {% if asset.assets_type|upper == 'LAPTOP' %}<i class="fas fa-laptop"></i>
+                                        {% elif asset.assets_type|upper == 'PC' or asset.assets_type|upper == 'DESKTOP' %}<i class="fas fa-desktop"></i>
+                                        {% elif asset.assets_type|upper == 'ROUTER' %}<i class="fas fa-wifi"></i>
+                                        {% elif asset.assets_type|upper == 'SERVER' %}<i class="fas fa-server"></i>
+                                        {% else %}<i class="fas fa-microchip"></i>{% endif %}
+                                    </span>
+                                    {{ asset.assets_id }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{{ asset.assets_name }}</td>
+                            <td class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase truncate">{{ asset.assets_type }}</td>
+                            <td class="px-6 py-4"><span class="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded text-[10px] font-bold status-tag">QUEUED</span></td>
+                        </tr>
+                        {% endfor %}
+
+                        {% for log in maintenances %}
+                        <tr class="asset-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" 
+                            data-type="{{ log.asset.assets_type }}" 
+                            data-status="{{ log.status|upper }}" 
+                            onclick="showDetails({
+                                id: '{{ log.asset.assets_id }}',
+                                name: '{{ log.asset.assets_name }}',
+                                status: '{{ log.status }}',
+                                tech: '{{ log.technician.username }}',
+                                notes: '{{ log.notes|default:'No technical notes provided.'|escapejs }}',
+                                date: '{{ log.date|date:'d-m-Y' }}',
+                                time: '{{ log.date|time:'H:i A' }}',
+                                modified: '{{ log.last_modified|date:'d-m-Y H:i A' }}',
+                                a_type: '{{ log.asset.assets_type }}',
+                                editUrl: '{% url 'edit_maintenance' log.pk %}',
+                                deleteUrl: '{% url 'delete_maintenance' log.pk %}'
+                            })">
+                            <td class="px-6 py-4 text-xs font-bold text-blue-600 dark:text-blue-400 truncate">
+                                <div class="flex items-center">
+                                    <span class="mr-3 text-slate-400 dark:text-slate-600 w-4 text-center">
+                                        {% if log.asset.assets_type|upper == 'LAPTOP' %}<i class="fas fa-laptop"></i>
+                                        {% elif log.asset.assets_type|upper == 'PC' or log.asset.assets_type|upper == 'DESKTOP' %}<i class="fas fa-desktop"></i>
+                                        {% elif log.asset.assets_type|upper == 'ROUTER' %}<i class="fas fa-wifi"></i>
+                                        {% elif log.asset.assets_type|upper == 'SERVER' %}<i class="fas fa-server"></i>
+                                        {% else %}<i class="fas fa-microchip"></i>{% endif %}
+                                    </span>
+                                    {{ log.asset.assets_id }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{{ log.asset.assets_name }}</td>
+                            <td class="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase truncate">{{ log.asset.assets_type }}</td>
+                            <td class="px-6 py-4">
+                                <span class="status-tag {% if log.status == 'Completed' %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400{% else %}bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400{% endif %} px-2 py-1 rounded text-[10px] font-bold">
+                                    {{ log.status|upper }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest" id="pageInfo">
+                    Showing 0-0 of 0 logs
+                </p>
+                <div class="flex items-center space-x-2" id="paginationControls"></div>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-4 flex flex-col h-full min-h-0">
+            <div id="serviceDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 sm:p-6 flex flex-col h-full lg:overflow-hidden transition-all duration-300">
+                
+                <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center py-10">
+                    <i class="fas fa-file-medical text-slate-200 dark:text-slate-700 text-4xl mb-4"></i>
+                    <p class="text-slate-400 dark:text-slate-500 text-xs font-black uppercase tracking-widest">Activity Analysis</p>
+                    <p class="text-[10px] text-slate-300 dark:text-slate-600 mt-1 uppercase">Select log to view activity</p>
+                </div>
+
+                <div id="detail-content" class="hidden flex-1 flex flex-col min-h-0">
+                    <div class="flex justify-between items-start mb-6 border-b border-slate-100 dark:border-slate-700 pb-4 shrink-0">
+                        <div>
+                            <h3 class="font-black text-sm text-slate-800 dark:text-slate-100 tracking-tight" id="det-id">---</h3>
+                            <p class="text-[9px] text-blue-500 dark:text-blue-400 font-black uppercase tracking-widest" id="det-asset-type">---</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 lg:overflow-y-auto space-y-6 pr-0 lg:pr-2 custom-scrollbar">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                                <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-1">Log Created</label>
+                                <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 leading-tight" id="det-date">---</p>
+                                <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium" id="det-time">---</p>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+                                <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-1">Last Modified</label>
+                                <p class="text-[11px] font-bold text-slate-600 dark:text-slate-300 leading-tight" id="det-modified">---</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 bg-blue-50/30 dark:bg-blue-900/10 p-3 rounded-2xl border border-blue-100/50 dark:border-blue-900/50">
+                            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
+                                <i class="fas fa-user-cog text-sm"></i>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block">Technician</label>
+                                <p class="text-xs font-black text-slate-700 dark:text-slate-100" id="det-tech">---</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-900 dark:bg-slate-950 rounded-xl shadow-lg border dark:border-slate-800">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 text-[10px] uppercase font-black">Current Status:</span> 
+                                <span id="det-status" class="text-xs font-black italic uppercase tracking-wider">---</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-3">Technical Notes</label>
+                            <div class="bg-slate-50/50 dark:bg-slate-900/50 p-5 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic" id="det-notes">---</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (min-width: 1024px) {
+        body { overflow: hidden; }
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+</style>
+
+<script>
+// Logic remains untouched as requested
+let currentPage = 1;
+const rowsPerPage = 10;
+let allRows = [];
+
+// Added Theme Toggle Logic
+function toggleDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    const icon = document.getElementById('theme-icon');
+    if (isDark) {
+        icon.classList.replace('fa-moon', 'fa-sun');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        icon.classList.replace('fa-sun', 'fa-moon');
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Theme
+    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+    }
+
+    sortTableByStatus();
+    allRows = Array.from(document.getElementsByClassName("asset-row"));
+    updatePagination();
+});
+
+function sortTableByStatus() {
+    const tableBody = document.getElementById("tableBody");
+    const rows = Array.from(tableBody.getElementsByClassName("asset-row"));
+    rows.sort((a, b) => {
+        const statusA = a.getAttribute("data-status").toUpperCase();
+        const statusB = b.getAttribute("data-status").toUpperCase();
+        if (statusA === "COMPLETED" && statusB !== "COMPLETED") return 1;
+        if (statusA !== "COMPLETED" && statusB === "COMPLETED") return -1;
+        return 0;
+    });
+    rows.forEach(row => tableBody.appendChild(row));
+}
+
+function resetAndFilter() {
+    currentPage = 1;
+    updatePagination();
+}
+
+function updatePagination() {
+    const search = document.getElementById("assetSearch").value.toUpperCase();
+    const type = document.getElementById("typeFilter").value.toUpperCase();
+    const status = document.getElementById("statusFilter").value.toUpperCase();
+    
+    const filteredRows = allRows.filter(row => {
+        const idText = row.cells[0].innerText.toUpperCase();
+        const nameText = row.cells[1].innerText.toUpperCase();
+        const rowType = row.getAttribute("data-type").toUpperCase();
+        const rowStatus = row.getAttribute("data-status").toUpperCase();
+        
+        return (idText.includes(search) || nameText.includes(search)) &&
+               (type === "" || rowType === type) &&
+               (status === "" || rowStatus === status);
+    });
+
+    const totalEntries = filteredRows.length;
+    const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
+    
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    allRows.forEach(row => row.style.display = 'none');
+    filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+    const displayEnd = Math.min(end, totalEntries);
+    document.getElementById('pageInfo').innerText = `Showing ${totalEntries === 0 ? 0 : start + 1}-${displayEnd} of ${totalEntries} logs`;
+    
+    renderPaginationButtons(totalPages);
+}
+
+function renderPaginationButtons(totalPages) {
+    const container = document.getElementById('paginationControls');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        
+        // Logic for the shadow and hover states to adapt to dark mode
+        const isActive = i === currentPage;
+        const activeClasses = 'bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-blue-900/40';
+        const inactiveClasses = 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600';
+        
+        btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
+            isActive ? activeClasses : inactiveClasses
+        }`;
+        
+        btn.onclick = () => { currentPage = i; updatePagination(); };
+        container.appendChild(btn);
+    }
+}
+
+function showDetails(data) {
+    document.getElementById('placeholder-content').classList.add('hidden');
+    document.getElementById('detail-content').classList.remove('hidden');
+
+    document.getElementById('det-id').innerText = data.id;
+    document.getElementById('det-date').innerText = data.date;
+    document.getElementById('det-time').innerText = data.time || "Pending"; 
+    document.getElementById('det-modified').innerText = data.modified || data.date; 
+    document.getElementById('det-tech').innerText = data.tech;
+    document.getElementById('det-status').innerText = data.status;
+    document.getElementById('det-notes').innerText = data.notes;
+    document.getElementById('det-asset-type').innerText = data.a_type;
+
+    const statusEl = document.getElementById('det-status');
+    if (data.status === 'Completed') {
+        statusEl.className = "text-xs font-black text-emerald-400 italic uppercase";
+    } else if (data.status === 'In Queue') {
+        statusEl.className = "text-xs font-black text-amber-400 italic uppercase";
+    } else {
+        statusEl.className = "text-xs font-black text-blue-400 italic uppercase";
+    }
+
+    if (window.innerWidth < 1024) {
+        document.getElementById('serviceDetailPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+</script>
+{% endblock %}

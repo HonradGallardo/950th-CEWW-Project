@@ -1,0 +1,430 @@
+{% extends "core/Admin/admin_dashboard.html" %}
+
+{% block content %}
+<div class="h-screen bg-[#f8fafc] dark:bg-[#0f172a] p-4 md:p-6 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300 overflow-hidden">
+    
+    <header class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <div>
+            <h1 class="text-xl md:text-2xl font-bold text-slate-800 dark:text-white tracking-tight">Support Desk</h1>
+            <p class="text-[10px] md:text-xs text-slate-500 mt-1">Manage and respond to user inquiries in real-time.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="hidden sm:inline-block px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">Mode: Full Context</span>
+            <button id="mobileBackBtn" onclick="closeDetails()" class="lg:hidden hidden bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 h-[calc(100vh-160px)] relative">
+        
+        <div id="sidePanel" class="col-span-12 lg:col-span-5 xl:col-span-4 flex flex-col gap-4 overflow-hidden h-full transition-all">
+            <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex flex-col h-full overflow-hidden">
+                
+                <div class="p-4 space-y-4 border-b border-slate-100 dark:border-slate-800/60">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </span>
+                        <input type="text" id="ticketSearch" placeholder="Search tickets..." class="w-full bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                    </div>
+
+                    <div class="flex gap-1 p-1 bg-slate-100 dark:bg-[#0f172a] rounded-lg overflow-x-auto no-scrollbar">
+                        <button class="filter-btn flex-1 min-w-[70px] py-1.5 bg-white dark:bg-blue-600 dark:text-white shadow-sm text-slate-600 text-[10px] md:text-xs font-semibold rounded-md transition-all" onclick="filterTable('all', this)">All</button>
+                        <button class="filter-btn flex-1 min-w-[70px] py-1.5 text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-semibold rounded-md hover:bg-white/50 dark:hover:bg-slate-800 transition-all" onclick="filterTable('Pending', this)">Pending</button>
+                        <button class="filter-btn flex-1 min-w-[70px] py-1.5 text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-semibold rounded-md hover:bg-white/50 dark:hover:bg-slate-800 transition-all" onclick="filterTable('mine', this)">My Tasks</button>
+                    </div>
+                </div>
+
+                <div class="overflow-y-auto flex-1 custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-slate-50/50 dark:bg-[#0f172a]/50 text-slate-500 dark:text-slate-400 uppercase sticky top-0 z-10 backdrop-blur-md">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">Ticket Details</th>
+                                <th class="px-4 py-3 font-bold text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/50">
+                            {% for ticket in tickets %}
+                            <tr class="ticket-row hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors cursor-pointer group" 
+                                id="row-{{ ticket.id }}"
+                                data-status="{{ ticket.status }}" 
+                                data-mine="{% if ticket.technician == request.user %}true{% else %}false{% endif %}"
+                                onclick="selectTicket('{{ ticket.id }}', '{{ ticket.subject }}', '{{ ticket.user.username }}', '{{ ticket.status }}', '{{ ticket.description|escapejs }}', '{{ ticket.created_at }}')">
+                                
+                                <td class="px-4 py-4">
+                                    <div class="flex items-start gap-3">
+                                        <div class="relative shrink-0">
+                                            <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold border border-slate-200 dark:border-slate-700">
+                                                {{ ticket.user.username|slice:":1"|upper }}
+                                            </div>
+                                            <span class="absolute -top-1 -right-1 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 text-[7px] px-1 rounded-sm font-black tracking-tighter shadow-sm border border-white dark:border-slate-800">
+                                                #{{ ticket.id }}
+                                            </span>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <span class="font-bold text-slate-800 dark:text-slate-200 text-sm block truncate">{{ ticket.subject }}</span>
+                                            <div class="flex flex-col gap-0.5 mt-0.5">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">@{{ ticket.user.username }}</span>
+                                                    <span class="text-[10px] text-slate-400">• {{ ticket.created_at|date:"M d" }}</span>
+                                                </div>
+                                                <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                                                    Technician: 
+                                                    <span class="tech-name {% if ticket.technician %}text-blue-500{% else %}text-slate-400{% endif %}">
+                                                        {{ ticket.technician.username|default:"N/A" }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="px-4 py-4 text-center">
+                                    <span class="status-pill px-2.5 py-1 rounded-full text-[10px] font-bold border inline-block min-w-[75px]
+                                        {% if ticket.status == 'Pending' %} bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20
+                                        {% elif ticket.status == 'In Progress' %} bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20
+                                        {% else %} bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 {% endif %}">
+                                        {{ ticket.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#0f172a]/50 flex items-center justify-between">
+                    <button id="prevPage" onclick="changePage(-1)" class="px-3 py-1.5 text-[10px] font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-50">Previous</button>
+                    <span id="pageIndicator" class="text-[10px] font-bold text-slate-500">Page 1</span>
+                    <button id="nextPage" onclick="changePage(1)" class="px-3 py-1.5 text-[10px] font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-50">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="detailPanel" class="hidden lg:flex col-span-12 lg:col-span-7 xl:col-span-8 flex-col gap-4 overflow-hidden h-full">
+            
+            <div id="emptyDetailState" class="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-400 p-10 text-center bg-white/50 dark:bg-slate-900/50">
+                <div class="w-16 h-16 mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                </div>
+                <h3 class="text-slate-800 dark:text-slate-200 font-semibold">No Conversation Selected</h3>
+                <p class="text-sm max-w-xs mt-1 text-slate-500">Click on a ticket from the left panel to view the history and respond.</p>
+            </div>
+
+            <div id="ticketDetailPanel" class="hidden flex-1 flex flex-col gap-4 overflow-hidden">
+                <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm p-4 md:p-5">
+                    <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <img id="activeAvatar" src="" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white dark:border-slate-700 shadow-sm">
+                            <div>
+                                <h2 id="activeSubject" class="text-md md:text-lg font-bold text-slate-800 dark:text-white leading-tight"></h2>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <p id="activeUser" class="text-[9px] md:text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-wider"></p>
+                                    <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                    <p id="activeDateTime" class="text-[9px] md:text-[10px] text-slate-500 font-medium"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <select id="statusPicker" class="flex-1 sm:flex-none bg-slate-50 dark:bg-[#0f172a] text-[10px] font-bold px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500/20">
+                                <option value="Pending">Pending</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Denied">Denied</option>
+                            </select>
+
+                            <button onclick="updateTicketStatus()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold shadow-sm">
+                                Save Status
+                            </button>
+
+                            <button onclick="deleteTicket()" class="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 rounded-lg transition-all" title="Delete Ticket">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+
+                            <button onclick="closeDetails()" class="hidden lg:block p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 bg-slate-50 dark:bg-[#0f172a] rounded-xl border border-slate-100 dark:border-slate-800/50 text-xs md:text-sm text-slate-600 dark:text-slate-400 italic">
+                        <span id="activeDescription"></span>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex-1 flex flex-col overflow-hidden">
+                    <div id="chatBox" class="p-4 md:p-6 flex-1 overflow-y-auto space-y-6 bg-slate-50/20 dark:bg-slate-900/20 custom-scrollbar"></div>
+                    
+                    <div class="p-4 bg-white dark:bg-[#1e293b] border-t border-slate-100 dark:border-slate-800">
+                        <form onsubmit="handleSendMessage(event)" class="flex gap-2">
+                            <input type="text" id="chatInput" placeholder="Write a professional response..." class="flex-1 bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-800 dark:text-slate-200 transition-all">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-4 md:px-6 py-2 rounded-xl text-white text-sm font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95">Send</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<script>
+    let currentTicketId = null;
+    const currentAdminUser = "{{ request.user.username }}";
+
+    // Pagination State
+    let currentPage = 1;
+    const itemsPerPage = 5;
+
+    // Helper function to get currently active (non-filtered) rows
+    function getActiveRows() {
+        return Array.from(document.querySelectorAll('.ticket-row')).filter(row => {
+            return row.getAttribute('data-search-hidden') !== 'true' && 
+                   row.getAttribute('data-filter-hidden') !== 'true';
+        });
+    }
+
+    function updatePagination() {
+        const activeRows = getActiveRows();
+        const totalPages = Math.ceil(activeRows.length / itemsPerPage) || 1;
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        // Hide all rows first
+        document.querySelectorAll('.ticket-row').forEach(row => row.style.display = 'none');
+
+        // Show only rows for the current page
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        
+        activeRows.forEach((row, index) => {
+            if (index >= start && index < end) {
+                row.style.display = '';
+            }
+        });
+
+        document.getElementById('pageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage === totalPages;
+    }
+
+    function changePage(direction) {
+        currentPage += direction;
+        updatePagination();
+    }
+
+    // Search logic integrated with pagination
+    document.getElementById('ticketSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.ticket-row').forEach(row => {
+            const match = row.innerText.toLowerCase().includes(term);
+            row.setAttribute('data-search-hidden', !match);
+        });
+        currentPage = 1;
+        updatePagination();
+    });
+
+    // Filter logic integrated with pagination
+    function filterTable(status, btn) {
+        // UI Button state
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.className = 'filter-btn flex-1 min-w-[70px] py-1.5 text-slate-500 dark:text-slate-400 text-[10px] md:text-xs font-semibold rounded-md hover:bg-white/50 dark:hover:bg-slate-800 transition-all';
+        });
+        btn.className = 'filter-btn flex-1 min-w-[70px] py-1.5 bg-white dark:bg-blue-600 dark:text-white shadow-sm text-slate-600 text-[10px] md:text-xs font-semibold rounded-md transition-all';
+        
+        document.querySelectorAll('.ticket-row').forEach(row => {
+            let match = false;
+            if (status === 'all') {
+                match = true;
+            } else if (status === 'mine') {
+                match = (row.getAttribute('data-mine') === 'true');
+            } else {
+                match = (row.getAttribute('data-status') === status);
+            }
+            row.setAttribute('data-filter-hidden', !match);
+        });
+
+        currentPage = 1;
+        updatePagination();
+    }
+
+    async function selectTicket(id, subject, user, status, description, datetime) {
+        currentTicketId = id;
+        setResponsiveView(true);
+        document.getElementById('emptyDetailState').classList.add('hidden');
+        document.getElementById('ticketDetailPanel').classList.remove('hidden');
+        document.getElementById('activeSubject').innerText = subject;
+        document.getElementById('activeUser').innerText = `USER: ${user}`;
+        document.getElementById('activeDateTime').innerText = `CREATED: ${datetime}`;
+        document.getElementById('activeDescription').innerText = description || "No additional details provided.";
+        document.getElementById('statusPicker').value = status;
+        document.getElementById('activeAvatar').src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
+
+        document.querySelectorAll('.ticket-row').forEach(row => {
+            row.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'border-l-4', 'border-blue-500');
+        });
+        const activeRow = document.getElementById(`row-${id}`);
+        if (activeRow) activeRow.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'border-l-4', 'border-blue-500');
+
+        try {
+            const response = await fetch(`/tickets/chat/${id}/`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            
+            const myLastMessage = data.messages.filter(msg => msg.is_me).pop();
+            if (myLastMessage && activeRow) {
+                activeRow.setAttribute('data-mine', 'true');
+                updateTechnicianUI(id, currentAdminUser);
+            }
+            renderMessages(data.messages);
+        } catch (error) {
+            console.error("Failed to load chat:", error);
+        }
+    }
+
+    function updateTechnicianUI(id, username) {
+        const row = document.getElementById(`row-${id}`);
+        if (row) {
+            const techSpan = row.querySelector('.tech-name');
+            techSpan.innerText = username;
+            techSpan.classList.remove('text-slate-400');
+            techSpan.classList.add('text-blue-500', 'dark:text-blue-400');
+        }
+    }
+
+    function renderMessages(messages) {
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML = ''; 
+        messages.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = msg.is_me ? "flex gap-2 md:gap-3 flex-row-reverse" : "flex gap-2 md:gap-3";
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full ${msg.is_me ? 'bg-slate-700' : 'bg-blue-600'} flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white dark:border-slate-800 shadow-sm">
+                    ${msg.avatar_char || (msg.sender ? msg.sender.substring(0,2).toUpperCase() : '??')}
+                </div>
+                <div class="${msg.is_me ? 'max-w-[80%] text-right' : 'max-w-[80%] text-left'}">
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 tracking-tight">${msg.sender}</p>
+                    <div class="p-3 shadow-sm ${msg.is_me ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-none border border-slate-100 dark:border-slate-700'} text-xs md:text-sm leading-relaxed">
+                        ${msg.message || msg.text}
+                    </div>
+                    <p class="text-[9px] text-slate-400 mt-1.5 font-medium">${msg.created_at || msg.time}</p>
+                </div>`;
+            chatBox.appendChild(msgDiv);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function handleSendMessage(event) {
+        event.preventDefault();
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (!message || !currentTicketId) return;
+
+        const formData = new FormData();
+        formData.append('message', message); 
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        const response = await fetch(`/tickets/chat/${currentTicketId}/send/`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            input.value = '';
+            const row = document.getElementById(`row-${currentTicketId}`);
+            if (row) {
+                row.setAttribute('data-mine', 'true');
+                updateTechnicianUI(currentTicketId, currentAdminUser);
+            }
+            const res = await fetch(`/tickets/chat/${currentTicketId}/`);
+            const data = await res.json();
+            renderMessages(data.messages);
+        }
+    }
+
+    async function updateTicketStatus() {
+        const newStatus = document.getElementById('statusPicker').value;
+        if (!currentTicketId) return;
+        try {
+            const response = await fetch(`/update-ticket-status/${currentTicketId}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ status: newStatus })
+            });
+            if (response.ok) {
+                const row = document.getElementById(`row-${currentTicketId}`);
+                if (row) {
+                    row.setAttribute('data-status', newStatus);
+                    const pill = row.querySelector('.status-pill');
+                    pill.innerText = newStatus;
+
+                    pill.className =
+                        "status-pill px-2.5 py-1 rounded-full text-[10px] font-bold border inline-block min-w-[75px] " +
+                        (newStatus === 'Pending'
+                            ? "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20"
+                            : newStatus === 'In Progress'
+                            ? "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20"
+                            : newStatus === 'Denied'
+                            ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/20"
+                            : newStatus === 'Completed'
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20"
+                            : "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-500/10 dark:border-slate-500/20");
+                }
+
+                alert("Saved successfully!");
+            }
+        } catch (e) { alert("Error: " + e); }
+    }
+
+    async function deleteTicket() {
+        if (!currentTicketId || !confirm("Delete this ticket?")) return;
+        const response = await fetch(`/delete-ticket/${currentTicketId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        });
+        if (response.ok) {
+            document.getElementById(`row-${currentTicketId}`).remove();
+            closeDetails();
+            updatePagination();
+        }
+    }
+
+    function setResponsiveView(showDetail) {
+        const side = document.getElementById('sidePanel');
+        const detail = document.getElementById('detailPanel');
+        const backBtn = document.getElementById('mobileBackBtn');
+        if (window.innerWidth < 1024) { 
+            if (showDetail) {
+                side.classList.add('hidden');
+                detail.classList.remove('hidden');
+                detail.classList.add('flex');
+                backBtn.classList.remove('hidden');
+            } else {
+                side.classList.remove('hidden');
+                detail.classList.add('hidden');
+                detail.classList.remove('flex');
+                backBtn.classList.add('hidden');
+            }
+        }
+    }
+
+    function closeDetails() {
+        setResponsiveView(false);
+        document.getElementById('ticketDetailPanel').classList.add('hidden');
+        document.getElementById('emptyDetailState').classList.remove('hidden');
+        currentTicketId = null;
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', updatePagination);
+</script>
+{% endblock %}

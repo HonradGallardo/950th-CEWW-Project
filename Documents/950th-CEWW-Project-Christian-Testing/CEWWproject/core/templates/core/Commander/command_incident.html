@@ -1,0 +1,218 @@
+{% extends "core/Commander/commander_dashboard.html" %}
+
+{% block content %}
+<div class="flex flex-col min-h-screen lg:h-[calc(100vh-2rem)] space-y-4 sm:space-y-6 p-2 sm:p-4 md:p-6 transition-colors duration-300 bg-slate-50 dark:bg-slate-900 lg:overflow-hidden">
+    
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Cybersecurity Incidents</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mt-1 tracking-wider">Strategic Threat Intelligence</p>
+        </div>
+        
+        <div class="flex items-center gap-4 w-full sm:w-auto">
+            <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 shadow-sm transition-all focus:outline-none">
+                <i id="theme-icon" class="fas fa-moon"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4 overflow-y-auto lg:overflow-hidden">
+        
+        <div class="col-span-12 lg:col-span-7 flex flex-col h-[500px] lg:h-full min-w-0">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-full overflow-hidden">
+                <div class="px-4 py-4 sm:px-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between shrink-0">
+                    <span class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
+                </div>
+
+                <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar relative">
+                    <table class="w-full text-left border-collapse table-auto min-w-[700px]">
+                        <thead class="sticky top-0 bg-white dark:bg-slate-800 shadow-sm z-10">
+                            <tr class="text-[10px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700">
+                                <th class="px-6 py-4">Incident Details</th>
+                                <th class="px-4 py-4 w-32 text-center">Severity</th>
+                                <th class="px-4 py-4 w-32 text-center">Status</th>
+                                <th class="px-6 py-4 w-40 text-right">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            {% for inc in incidents %}
+                            <tr onclick="previewIncident('{{ inc.id }}', '{{ inc.title|escapejs }}', '{{ inc.severity }}', '{{ inc.status }}', '{{ inc.description|escapejs }}', '{{ inc.actions_taken|escapejs }}', '{{ inc.date|date:'d-m-Y H:i' }}')" 
+                                class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-shrink-0 w-6 text-center">
+                                            {% if inc.severity == 'Critical' %}<i class="fas fa-biohazard text-red-500 animate-pulse-subtle"></i>
+                                            {% elif inc.severity == 'High' %}<i class="fas fa-exclamation-triangle text-orange-500"></i>
+                                            {% elif inc.severity == 'Medium' %}<i class="fas fa-exclamation-circle text-amber-500"></i>
+                                            {% else %}<i class="fas fa-shield-halved text-emerald-500"></i>{% endif %}
+                                        </div>
+                                        <span class="text-sm font-bold text-slate-700 dark:text-slate-100 truncate max-w-[200px] sm:max-w-none">{{ inc.title }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    <span class="inline-block w-24 py-1 rounded-md border text-[10px] font-black uppercase
+                                        {% if inc.severity == 'Critical' %}bg-red-50 dark:bg-red-900/20 text-red-600 border-red-600
+                                        {% elif inc.severity == 'High' %}bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-600
+                                        {% elif inc.severity == 'Medium' %}bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-600
+                                        {% else %}bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-600{% endif %}">
+                                        {{ inc.severity }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-center">
+                                    <p class="text-xs font-black uppercase tracking-tighter {% if inc.status == 'Open' %}text-red-500{% elif inc.status == 'Investigating' %}text-orange-500{% else %}text-emerald-500{% endif %}">
+                                        {{ inc.status }}
+                                    </p>
+                                </td>
+                                <td class="px-6 py-4 text-[11px] text-slate-400 dark:text-slate-500 font-bold text-right whitespace-nowrap">
+                                    {{ inc.date|date:"d M, H:i" }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 text-sm italic">No incidents recorded.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-4 py-4 sm:px-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between shrink-0">
+                    <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                        Page {{ incidents.number }} of {{ incidents.paginator.num_pages }}
+                    </span>
+                    <div class="flex items-center gap-2">
+                        {% if incidents.has_previous %}
+                            <a href="?page={{ incidents.previous_page_number }}" class="p-2 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition shadow-sm">
+                                <i class="fas fa-chevron-left text-xs"></i>
+                            </a>
+                        {% endif %}
+                        {% if incidents.has_next %}
+                            <a href="?page={{ incidents.next_page_number }}" class="p-2 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition shadow-sm">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-5 flex flex-col h-full min-h-[600px] lg:min-h-0">
+            <div id="incidentDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-8 flex flex-col h-full overflow-hidden">
+                
+                <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-12">
+                    <div class="w-20 h-20 bg-slate-50 dark:bg-slate-700/50 rounded-full flex items-center justify-center">
+                        <i class="fas fa-shield-virus text-slate-300 dark:text-slate-600 text-3xl"></i>
+                    </div>
+                    <p class="text-sm font-black text-slate-400 uppercase tracking-widest">Select an incident to analyze</p>
+                </div>
+
+                <div id="detailContent" class="hidden flex flex-col h-full overflow-hidden">
+                    <div class="flex items-start justify-between mb-6 border-b border-slate-50 dark:border-slate-700 pb-5 shrink-0">
+                        <div class="space-y-2">
+                            <span id="view_id" class="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-md uppercase tracking-wider"></span>
+                            <h3 id="view_title" class="font-black text-lg text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight"></h3>
+                        </div>
+                        <div id="view_severity_badge"></div>
+                    </div>
+
+                    <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <label class="block text-xs font-black text-slate-400 uppercase mb-1">Status</label>
+                                <p id="view_status" class="text-sm font-bold text-slate-700 dark:text-slate-300 italic uppercase"></p>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <label class="block text-xs font-black text-slate-400 uppercase mb-1">Incident Date</label>
+                                <p id="view_date" class="text-sm font-bold text-slate-700 dark:text-slate-300"></p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest">Investigation Summary</label>
+                            <div class="bg-white dark:bg-slate-900/30 border border-slate-100 dark:border-slate-700 rounded-xl p-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed min-h-[80px]" id="view_description"></div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-xs font-black text-slate-400 uppercase tracking-widest">Actions Taken</label>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 rounded-xl p-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic" id="view_actions"></div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col min-h-[300px]">
+                            <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0">
+                                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Resolution Log</h3>
+                                <span class="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-0.5 rounded font-bold">READ ONLY</span>
+                            </div>
+                            <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-900/20" id="chat-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    const icon = document.getElementById('theme-icon');
+    icon.classList.toggle('fa-moon', !isDark);
+    icon.classList.toggle('fa-sun', isDark);
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+(function initTheme() {
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        const icon = document.getElementById('theme-icon');
+        if(icon) icon.classList.replace('fa-moon', 'fa-sun');
+    }
+})();
+
+function previewIncident(id, title, severity, status, desc, actions, date) {
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('detailContent').classList.remove('hidden');
+    
+    if (window.innerWidth < 1024) {
+        document.getElementById('incidentDetailPanel').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('view_id').innerText = "ID: INC-" + String(id).padStart(3, '0');
+    document.getElementById('view_title').innerText = title;
+    document.getElementById('view_status').innerText = status;
+    document.getElementById('view_date').innerText = date;
+    document.getElementById('view_description').innerText = desc || "No description provided.";
+    document.getElementById('view_actions').innerText = actions || "No actions logged.";
+
+    const badgeContainer = document.getElementById('view_severity_badge');
+    let colors = '';
+    if (severity === 'Critical') colors = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100';
+    else if (severity === 'High') colors = 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-100';
+    else if (severity === 'Medium') colors = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100';
+    else colors = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100';
+    badgeContainer.innerHTML = `<span class="px-3 py-1 rounded-md border text-xs font-black uppercase ${colors}">${severity}</span>`;
+
+    const chatContainer = document.getElementById('chat-container');
+    chatContainer.innerHTML = '<p class="text-center py-10 text-xs text-slate-400 font-bold uppercase animate-pulse">Loading Logs...</p>';
+    
+    fetch(`/incidents/${id}/comments/`)
+        .then(res => res.json())
+        .then(data => {
+            chatContainer.innerHTML = '';
+            if (!data.comments || data.comments.length === 0) {
+                chatContainer.innerHTML = '<p class="text-center py-10 text-xs text-slate-400 font-bold uppercase">No logs recorded</p>';
+                return;
+            }
+            data.comments.forEach(c => {
+                const isMe = c.is_current_user;
+                chatContainer.insertAdjacentHTML('beforeend', `
+                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                        <div class="max-w-[90%] ${isMe ? 'bg-blue-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-r-xl rounded-tl-xl'} p-3 shadow-sm">
+                            <p class="text-[10px] font-black ${isMe ? 'text-blue-100' : 'text-slate-400'} uppercase mb-1">${c.author} • ${c.created_at}</p>
+                            <p class="text-sm font-medium">${c.message}</p>
+                        </div>
+                    </div>
+                `);
+            });
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+}
+</script>
+{% endblock %}
