@@ -39,7 +39,7 @@
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800" id="userTableBody">
                             {% for person in users %}
                             <tr class="user-row hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors cursor-pointer group" 
-                                onclick="showUserDetails('{{ person.id }}', '{{ person.username }}', '{{ person.get_full_name|default:person.username }}', '{{ person.email }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}')">
+    onclick="showUserDetails('{{ person.id }}', '{{ person.username }}', '{{ person.get_full_name|default:person.username }}', '{{ person.email }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}', '{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}')">
                                 <td class="px-6 py-4">
                                     <span class="text-[10px] font-black text-slate-400 dark:text-slate-600 tracking-tighter">#{{ person.id }}</span>
                                 </td>
@@ -131,14 +131,15 @@
 
                     <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                         <div class="flex items-center space-x-4">
-                            <div class="w-12 h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-100 dark:shadow-none shrink-0">
-                                <span id="initials"></span>
-                            </div>
-                            <div class="min-w-0">
-                                <p id="detail-name" class="text-sm font-black text-slate-800 dark:text-slate-100 truncate"></p>
-                                <p id="detail-username" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 truncate"></p>
-                            </div>
-                        </div>
+    <div id="detail-image-container" class="w-12 h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-100 dark:shadow-none shrink-0 overflow-hidden">
+        <img id="detail-profile-pic" src="" class="hidden w-full h-full object-cover">
+        <span id="initials"></span>
+    </div>
+    <div class="min-w-0">
+        <p id="detail-name" class="text-sm font-black text-slate-800 dark:text-slate-100 truncate"></p>
+        <p id="detail-username" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 truncate"></p>
+    </div>
+</div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
@@ -198,7 +199,7 @@ function filterUsers() {
 }
 
 // Updated signature to accept login and joined dates
-function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined) {
+function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined, imageUrl) {
     document.getElementById('empty-message').classList.add('hidden');
     document.getElementById('user-details').classList.remove('hidden');
     document.getElementById('detail-username').innerText = '@' + username;
@@ -207,8 +208,21 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     document.getElementById('detail-role').innerText = role;
     document.getElementById('detail-last-login').innerText = lastLogin;
     document.getElementById('detail-joined').innerText = dateJoined;
-    document.getElementById('initials').innerText = (fullName).substring(0, 2).toUpperCase();
     document.getElementById('edit-link').href = "/users/edit/" + id + "/"; 
+
+    // Logic for Profile Image vs Initials
+    const imgElement = document.getElementById('detail-profile-pic');
+    const initialsElement = document.getElementById('initials');
+
+    if (imageUrl && imageUrl.trim() !== "") {
+        imgElement.src = imageUrl;
+        imgElement.classList.remove('hidden');
+        initialsElement.classList.add('hidden');
+    } else {
+        imgElement.classList.add('hidden');
+        initialsElement.classList.remove('hidden');
+        initialsElement.innerText = (fullName).substring(0, 2).toUpperCase();
+    }
 
     const roleBadge = document.getElementById('detail-role');
     roleBadge.className = 'text-[10px] font-black px-2 py-1 rounded-md';

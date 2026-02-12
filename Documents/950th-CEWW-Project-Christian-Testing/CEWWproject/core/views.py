@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.contrib import messages
-from .models import Asset, IncidentComment, Maintenance, Incident, Notification
+from .models import Asset, IncidentComment, Maintenance, Incident, Notification, Profile
 from .forms import AssetForm, MaintenanceForm, UserForm
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
@@ -25,6 +25,9 @@ from .models import Ticket, TicketMessage
 from django.db import models
 from rest_framework import viewsets
 from .serializers import AssetSerializer, MaintenanceSerializer, IncidentSerializer
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
+from django.contrib import messages
 
 # Add these classes at the bottom of your existing views.py
 class AssetViewSet(viewsets.ModelViewSet):
@@ -740,13 +743,11 @@ def incident_list(request):
     # --- HANDLE COMMENT POST ---
     if request.method == 'POST' and 'message' in request.POST:
         incident_id = request.POST.get('incident_id')
-
         if not incident_id:
             messages.error(request, "Please select an incident first.")
             return redirect('incident_list')
 
         request.session['active_incident_id'] = incident_id
-
         incident = get_object_or_404(Incident, id=incident_id)
         message_text = request.POST.get('message', '').strip()
 
@@ -768,14 +769,13 @@ def incident_list(request):
 
     # --- PAGINATION LOGIC ---
     all_incidents = Incident.objects.all().order_by('-date')
-    paginator = Paginator(all_incidents, 10) # Set to 10 entries per page
+    paginator = Paginator(all_incidents, 10) 
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    incidents = paginator.get_page(page_number)
 
     # --- LOAD ACTIVE INCIDENT ---
     active_incident = None
     comments = []
-
     active_id = request.session.get('active_incident_id')
     if active_id:
         try:
@@ -784,14 +784,27 @@ def incident_list(request):
         except Incident.DoesNotExist:
             request.session['active_incident_id'] = None
 
-    # --- FINAL CONTEXT ---
     context = {
-        'incidents': page_obj, # Pass the page object
+        'incidents': incidents, 
         'incident': active_incident,
         'comments': comments,
     }
-
     return render(request, 'core/Admin/incident_list.html', context)
+
+# --- UPDATE YOUR JSON VIEW FOR AM/PM ---
+def get_incident_comments(request, incident_id):
+    incident = get_object_or_404(Incident, id=incident_id)
+    comments = incident.comments.all().order_by('created_at')
+    data = []
+    for c in comments:
+        data.append({
+            'author': c.author.username,
+            'message': c.message,
+            # Updated to AM/PM format: %I:%M %p
+            'created_at': c.created_at.strftime("%d %b, %I:%M %p"), 
+            'is_current_user': c.author == request.user
+        })
+    return JsonResponse({'comments': data})
 
 
 @login_required
@@ -868,6 +881,7 @@ def add_incident(request):
             severity=severity,
             status=status,  # This ensures the choice is saved
             description=f"Area: {affected_area}\n\n{description}",
+            reported_by=request.user  # <--- Add this line
             # date is usually auto_now_add in models.py
         )
         
@@ -893,7 +907,7 @@ def edit_incident(request, incident_id):
 
         # Only log if something new was entered
         if new_actions:
-            timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
+            timestamp = timezone.now().strftime('%Y-%m-%d %I:%M %p')
             technician = request.user.username
 
             log_entry = f"[{timestamp}] {technician}: {new_actions}"
@@ -1195,3 +1209,48 @@ def reports(request):
 @login_required
 def command_reports(request):
     return render(request, 'core/Commander/command_reports.html')
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+# IMPORT THE MODELS HERE TO FIX THE NAMEERROR
+from .models import Incident
+
+@login_required
+def profile_view(request):
+    user = request.user
+    # Get or create the profile for the current user
+    profile, created = Profile.objects.get_or_create(user=user)
+    
+    if request.method == 'POST':
+        # 1. Update User Data
+        user.first_name = request.POST.get('first_name', '')
+        user.last_name = request.POST.get('last_name', '')
+        user.email = request.POST.get('email', '')
+        user.save()
+        
+        # 2. Update Profile Image (Crucial for saving)
+        if 'profile_image' in request.FILES:
+            profile.image = request.FILES['profile_image']
+            profile.save()
+            
+        messages.success(request, "Your profile has been updated!")
+        return redirect('profile')
+
+    # Fix the NameError here by using the correct model (Incident)
+    incidents_reported = Incident.objects.filter(reported_by=user).count()
+
+    context = {
+        'user': user,
+        'profile': profile,
+        'incidents_reported': incidents_reported,
+    }
+    return render(request, 'core/Admin/profile.html', context)
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = 'core/Admin/password_change.html'
+    success_url = reverse_lazy('profile')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Your password was successfully updated!")
+        return super().form_valid(form)
+    

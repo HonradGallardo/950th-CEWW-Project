@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 router = DefaultRouter()
 router.register(r'assets', views.AssetViewSet)
@@ -87,5 +89,9 @@ urlpatterns = [
     path('commander/command_tickets/', views.command_submit_ticket, name='command_submit_ticket'),
 
     path('notifications/read-all/', views.mark_all_as_read, name='mark_all_read'),
+    path('profile/', views.profile_view, name='profile'),
+    path('profile/password/', views.CustomPasswordChangeView.as_view(), name='password_change'),
+    
+    
 
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

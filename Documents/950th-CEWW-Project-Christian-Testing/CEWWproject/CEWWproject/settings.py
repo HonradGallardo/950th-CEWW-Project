@@ -14,6 +14,27 @@ import environ
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Initialize dotenv
+load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+
+# This line tells django-environ WHERE to find the .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# Pull values from .env
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split()
+
+# Media configuration for Profile Pictures
+MEDIA_URL = os.getenv('MEDIA_URL', '/media/')
+MEDIA_ROOT = os.path.join(BASE_DIR, os.getenv('MEDIA_ROOT_PATH', 'media'))
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,6 +49,9 @@ SECRET_KEY = 'django-insecure-f(=h!puee%o8jqo5_o#iu+v%*h7_+9buyik4yd%7##t@m7l$!y
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = '/admin/login/'
 LOGOUT_REDIRECT_URL = 'landing'

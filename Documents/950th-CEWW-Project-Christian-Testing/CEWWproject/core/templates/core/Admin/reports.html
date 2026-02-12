@@ -121,42 +121,42 @@
                     Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ total_count }}
                 </div>
 
-                <div class="flex items-center gap-1 flex-wrap justify-end">
-                    {% if page_obj.has_previous %}
-                        <a href="?report_type={{ report_type }}&category={{ category }}&page=1" 
-                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition" title="First Page">
-                            <i class="fas fa-angle-double-left text-xs"></i>
-                        </a>
-                        <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.previous_page_number }}" 
-                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
-                            <i class="fas fa-chevron-left text-xs"></i>
-                        </a>
-                    {% endif %}
+                <div class="flex items-center gap-2">
+    {% if page_obj.has_previous %}
+        <a href="?report_type={{ report_type }}&category={{ category }}&page=1" 
+           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition" title="First Page">
+            <i class="fas fa-angle-double-left text-xs"></i>
+        </a>
+        <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.previous_page_number }}" 
+           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
+            <i class="fas fa-chevron-left text-xs"></i>
+        </a>
+    {% endif %}
 
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-black shadow-sm">
-                                {{ num }}
-                            </span>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <a href="?report_type={{ report_type }}&category={{ category }}&page={{ num }}" 
-                               class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-white dark:hover:bg-slate-700 text-xs font-bold transition">
-                                {{ num }}
-                            </a>
-                        {% endif %}
-                    {% endfor %}
+    {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white text-xs font-black shadow-lg shadow-blue-500/30">
+                {{ num }}
+            </span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?report_type={{ report_type }}&category={{ category }}&page={{ num }}" 
+               class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 text-xs font-bold transition">
+                {{ num }}
+            </a>
+        {% endif %}
+    {% endfor %}
 
-                    {% if page_obj.has_next %}
-                        <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.next_page_number }}" 
-                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
-                            <i class="fas fa-chevron-right text-xs"></i>
-                        </a>
-                        <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.paginator.num_pages }}" 
-                           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition" title="Last Page">
-                            <i class="fas fa-angle-double-right text-xs"></i>
-                        </a>
-                    {% endif %}
-                </div>
+    {% if page_obj.has_next %}
+        <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.next_page_number }}" 
+           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition">
+            <i class="fas fa-chevron-right text-xs"></i>
+        </a>
+        <a href="?report_type={{ report_type }}&category={{ category }}&page={{ page_obj.paginator.num_pages }}" 
+           class="p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-400 transition" title="Last Page">
+            <i class="fas fa-angle-double-right text-xs"></i>
+        </a>
+    {% endif %}
+</div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 no-print">

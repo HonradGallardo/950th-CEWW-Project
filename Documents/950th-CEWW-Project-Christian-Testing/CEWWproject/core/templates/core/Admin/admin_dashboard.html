@@ -403,20 +403,33 @@
                 </div>
 
                 <div class="relative">
-                    <button id="userMenuBtn" onclick="toggleDropdown(event)" class="flex items-center space-x-2 text-slate-700 font-bold focus:outline-none hover:text-blue-600 transition">
-                        <span class="hidden sm:inline">{{ user.username|default:"User" }}</span>
-                        <i class="fas fa-user-circle text-lg sm:hidden"></i>
-                        <i class="fas fa-chevron-down text-xs"></i>
-                    </button>
-                    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-md shadow-xl py-2 border border-slate-200 z-50">
-                        <a href="#" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Profile</a>
-                        <hr class="my-2 border-slate-100 dark:border-slate-700">
-                        <form action="{% url 'logout' %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Logout</button>
-                        </form>
-                    </div>
-                </div>
+    <button id="userMenuBtn" onclick="toggleDropdown(event)" class="flex items-center space-x-2 text-slate-700 dark:text-slate-200 font-bold focus:outline-none hover:text-blue-600 transition">
+        <span class="hidden sm:inline">{{ user.username|default:"User" }}</span>
+        <i class="fas fa-user-circle text-lg sm:hidden"></i>
+        <i class="fas fa-chevron-down text-xs"></i>
+    </button>
+    
+    <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl py-2 border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700/50 mb-1">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account</p>
+        </div>
+        
+        <a href="{% url 'profile' %}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+            <i class="fas fa-user-shield text-xs text-blue-500"></i>
+            <span>Profile</span>
+        </a>
+
+        <hr class="my-1 border-slate-100 dark:border-slate-700/50">
+        
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left">
+                <i class="fas fa-sign-out-alt text-xs"></i>
+                <span>Logout</span>
+            </button>
+        </form>
+    </div>
+</div>
             </div>
         </header>
 

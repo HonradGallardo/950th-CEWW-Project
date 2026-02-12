@@ -112,6 +112,7 @@ class Incident(models.Model):
     description = models.TextField(blank=True)
     actions_taken = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True) # Changed to DateTime
+    reported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='reported_incidents')
 
     def __str__(self):
         return f"{self.severity} - {self.title}"
@@ -136,3 +137,12 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.recipient.username}"
+    
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
+
+    # Change __clstr__ to __str__
+    def __str__(self):
+        return f'{self.user.username} Profile'
