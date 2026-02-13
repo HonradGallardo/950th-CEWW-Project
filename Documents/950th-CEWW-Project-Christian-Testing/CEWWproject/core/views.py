@@ -11,6 +11,7 @@ from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 from django.db.models import Count
 from django.contrib import messages
 from .models import Asset, IncidentComment, Maintenance, Incident, Notification, Profile
@@ -23,6 +24,8 @@ from django.db.models.functions import TruncMonth
 from django.utils.timezone import localtime
 from .models import Ticket, TicketMessage
 from django.db import models
+from django.core.mail import send_mail
+import random
 from rest_framework import viewsets
 from .serializers import AssetSerializer, MaintenanceSerializer, IncidentSerializer
 from django.contrib.auth.views import PasswordChangeView
@@ -1229,10 +1232,15 @@ def profile_view(request):
         user.email = request.POST.get('email', '')
         user.save()
         
-        # 2. Update Profile Image (Crucial for saving)
+        # 2. Update Rank (Added this line)
+        profile.rank = request.POST.get('rank', 'Private')
+        
+        # 3. Update Profile Image
         if 'profile_image' in request.FILES:
             profile.image = request.FILES['profile_image']
-            profile.save()
+        
+        # Always save the profile here to ensure rank/image changes are committed
+        profile.save()
             
         messages.success(request, "Your profile has been updated!")
         return redirect('profile')
@@ -1246,6 +1254,10 @@ def profile_view(request):
         'incidents_reported': incidents_reported,
     }
     return render(request, 'core/Admin/profile.html', context)
+
+
+
+
 class CustomPasswordChangeView(PasswordChangeView):
     template_name = 'core/Admin/password_change.html'
     success_url = reverse_lazy('profile')
@@ -1253,4 +1265,98 @@ class CustomPasswordChangeView(PasswordChangeView):
     def form_valid(self, form):
         messages.success(self.request, "Your password was successfully updated!")
         return super().form_valid(form)
-    
+
+
+# In views.py
+
+import random
+import requests
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
+from django.conf import settings
+
+def forgot_password_view(request):
+    if request.method == "POST":
+        action = request.POST.get('action')
+        
+        # ACTION 1: INITIAL EMAIL & RECAPTCHA VALIDATION
+        if action == "send_otp":
+            email = request.POST.get('email')
+            recaptcha_response = request.POST.get('g-recaptcha-response')
+            
+            # --- GOOGLE RECAPTCHA SERVER-SIDE VERIFICATION ---
+            if not recaptcha_response:
+                return JsonResponse({'status': 'error', 'message': 'Please complete the reCAPTCHA.'})
+            
+            verify_data = {
+                'secret': settings.RECAPTCHA_SECRET_KEY,
+                'response': recaptcha_response
+            }
+            try:
+                # Contact Google's API to verify the token
+                v_response = requests.post('https://www.google.com/recaptcha/api/siteverify', data=verify_data)
+                v_result = v_response.json()
+                
+                if not v_result.get('success'):
+                    return JsonResponse({'status': 'error', 'message': 'reCAPTCHA verification failed. Try again.'})
+            except Exception:
+                return JsonResponse({'status': 'error', 'message': 'Security service unavailable.'})
+            # -------------------------------------------------
+            
+            if not User.objects.filter(email=email).exists():
+                return JsonResponse({'status': 'error', 'message': 'This email is not registered in the system.'})
+            
+            otp = random.randint(100000, 999999)
+            num3 = random.randint(1, 100)
+            num4 = random.randint(1, 10)
+            
+            request.session['reset_otp'] = otp
+            request.session['reset_email'] = email
+            request.session['step2_captcha'] = num3 + num4
+            
+            try:
+                send_mail(
+                    subject='950th CEWW - Password Reset OTP',
+                    message=f'Your verification code is: {otp}. It expires in 5 minutes.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                return JsonResponse({'status': 'success', 'num3': num3, 'num4': num4})
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': f'Email failed to send: {str(e)}'})
+
+        # ACTION 2: OTP VERIFICATION & PASSWORD RESET
+        elif action == "reset_password":
+            otp_input = request.POST.get('otp')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+            step2_captcha = request.POST.get('step2_captcha_ans')
+
+            if str(otp_input) != str(request.session.get('reset_otp')):
+                return JsonResponse({'status': 'error', 'message': 'Invalid OTP code.'})
+            
+            if str(step2_captcha) != str(request.session.get('step2_captcha')):
+                return JsonResponse({'status': 'error', 'message': 'Incorrect security answer for step 2.'})
+
+            if new_password != confirm_password:
+                return JsonResponse({'status': 'error', 'message': 'Passwords do not match.'})
+
+            try:
+                user_email = request.session.get('reset_email')
+                user = User.objects.get(email=user_email)
+                user.password = make_password(new_password)
+                user.save() # Commit the new password to the database
+                
+                request.session.flush()
+                return JsonResponse({'status': 'success', 'message': 'Personnel Credentials Updated.'})
+            except User.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User session lost. Please try again.'})
+
+    # GET Request: Pass the Site Key to the template
+    return render(request, 'registration/forgot_password.html', {
+        'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY
+    })

@@ -122,48 +122,48 @@
                 <i class="fas fa-shield-alt hidden sidebar-icon-only text-xl mx-auto"></i>
             </div>
 
-            <nav class="flex-1 mt-4 px-2 space-y-1 custom-scrollbar overflow-y-auto">
-                <a href="{% url 'dashboard' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'dashboard' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-th-large mr-3 w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
-                </a>
-                
-                {% if request.user.groups.all.0.name == 'Admin' %}
-                <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
-                </a>
-                <a href="{% url 'analytics_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'analytics_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
-                </a>
-                {% endif %}
+                <nav class="flex-1 mt-4 px-2 space-y-1 custom-scrollbar overflow-y-auto">
+                    {% with current=request.resolver_match.url_name %}
 
-                <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
-                </a>
+                    <a href="{% url 'dashboard' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'dashboard' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                        <i class="fas fa-th-large mr-3 w-5 text-center"></i> <span class="sidebar-text">Dashboard</span>
+                    </a>
+                    
+                    <a href="{% url 'incident_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'incident_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                        <i class="fas fa-exclamation-triangle mr-3 w-5 text-center"></i> <span class="sidebar-text">Incidents</span>
+                    </a>
 
-                {% if request.user.groups.all.0.name == 'Admin' %}
-                <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
-                </a>
-                {% endif %}
+                    <a href="{% url 'analytics_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'analytics_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                        <i class="fas fa-chart-line mr-3 w-5 text-center"></i> <span class="sidebar-text">Analytics</span>
+                    </a>
 
-                {% if request.user.groups.all.0.name == 'Personnel' %}
-                <a href="{% url 'submit_ticket' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'submit_ticket' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
-                </a>
-                {% endif %}
+                    <a href="{% url 'asset_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'asset_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                        <i class="fas fa-laptop mr-3 w-5 text-center"></i> <span class="sidebar-text">IT Assets</span>
+                    </a>
 
-                {% if request.user.groups.all.0.name == 'Admin' %}
-                <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
-                </a>
-                <a href="{% url 'admin_tickets' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'admin_tickets' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
-                </a>
-                <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if request.resolver_match.url_name == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
-                    <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
-                </a>
-                {% endif %}
-            </nav>
+                    <a href="{% url 'maintenance_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'maintenance_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                        <i class="fas fa-tools mr-3 w-5 text-center"></i> <span class="sidebar-text">Maintenance</span>
+                    </a>
+                     {% if request.user.groups.all.0.name == 'Personnel' or request.user.groups.all.1.name == 'Personnel' %}
+                    <a href="{% url 'submit_ticket' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                        <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
+                    </a>
+                    {% endif %}
+
+                    {% if request.user.groups.all.0.name == 'Admin' or request.user.groups.all.1.name == 'Admin' %}
+                    <a href="{% url 'admin_tickets' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'admin_tickets' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                        <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
+                    </a>
+                        <a href="{% url 'user_list' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'user_list' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                            <i class="fas fa-users mr-3 w-5 text-center"></i> <span class="sidebar-text">Users</span>
+                        </a>
+                        <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
+                            <i class="fas fa-chart-pie mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
+                        </a>
+                    {% endif %}
+
+                    {% endwith %}
+                </nav>
 
             <div class="theme-switch-container">
                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 px-2">Appearance</p>
