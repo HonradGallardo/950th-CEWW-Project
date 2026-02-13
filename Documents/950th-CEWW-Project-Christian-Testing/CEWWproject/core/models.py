@@ -142,6 +142,8 @@ class Notification(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     image = models.ImageField(default='default.jpg', upload_to='profile_pics')
+    # Add this line:
+    rank = models.CharField(max_length=50, default='Private')
 
     # Change __clstr__ to __str__
     def __str__(self):

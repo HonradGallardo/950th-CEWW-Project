@@ -53,10 +53,34 @@ ALLOWED_HOSTS = []
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# settings.py
+
+# Step 1: Tell Django to send real emails
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Step 2: Gmail SMTP Server Details
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# Step 3: Your "Master" Sender Email
+EMAIL_HOST_USER = 'honradg71@gmail.com'
+
+# Step 4: The 16-character App Password (NOT your login password)
+# This fixes the 'BadCredentials' error in your screenshot.
+EMAIL_HOST_PASSWORD = 'nsvj nrsw zdod zurb'
+
+# Step 5: How the email appears in the user's inbox
+DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+
 LOGIN_URL = '/admin/login/'
 LOGOUT_REDIRECT_URL = 'landing'
 STATIC_URL = 'static/'
 LOGIN_REDIRECT_URL = 'role_redirect'
+
+
+RECAPTCHA_SITE_KEY = '6LfbKmosAAAAAMMdysYicw8nrIOeCuJOKztLG0l8'
+RECAPTCHA_SECRET_KEY = '6LfbKmosAAAAAOslqrG6rGsJmUApXH8FZZeolfu_'
 
 
 # Initialize environ

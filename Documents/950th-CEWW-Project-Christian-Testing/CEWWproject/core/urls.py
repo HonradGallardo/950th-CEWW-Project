@@ -91,6 +91,7 @@ urlpatterns = [
     path('notifications/read-all/', views.mark_all_as_read, name='mark_all_read'),
     path('profile/', views.profile_view, name='profile'),
     path('profile/password/', views.CustomPasswordChangeView.as_view(), name='password_change'),
+    path('forgot_password/', views.forgot_password_view, name='forgot_password'),
     
     
 
