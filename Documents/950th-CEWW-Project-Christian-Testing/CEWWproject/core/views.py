@@ -31,6 +31,7 @@ from .serializers import AssetSerializer, MaintenanceSerializer, IncidentSeriali
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 
 # Add these classes at the bottom of your existing views.py
 class AssetViewSet(viewsets.ModelViewSet):
@@ -63,7 +64,6 @@ def mark_all_as_read(request):
 
 
 ####################################################################TICKETING MODULE####################################################################
-@login_required
 # In your personnel views.py
 @login_required
 def submit_ticket(request):
@@ -95,6 +95,30 @@ def submit_ticket(request):
     return render(request, 'core/Personnel/submit_ticket.html', {
         'user_tickets': user_tickets
     })
+    
+@login_required
+@require_POST
+def edit_ticket_details(request, ticket_id):
+    """Functional view to save edited details from the Details tab"""
+    try:
+        data = json.loads(request.body)
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        
+        # Check permissions: User who created it or Admin
+        user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+        if not user_is_admin and ticket.user != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+        # Update fields
+        ticket.subject = data.get('subject', ticket.subject)
+        ticket.status = data.get('status', ticket.status)
+        ticket.priority = data.get('priority', ticket.priority)
+        ticket.description = data.get('description', ticket.description)
+        
+        ticket.save()
+        return JsonResponse({'status': 'success', 'message': 'Ticket details updated successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @login_required
 def command_submit_ticket(request):
@@ -239,16 +263,23 @@ def update_ticket_status(request, ticket_id):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            new_status = data.get('status')
+            ticket = get_object_or_404(Ticket, id=ticket_id)
             
-            ticket = Ticket.objects.get(id=ticket_id)
-            ticket.status = new_status
+            # Update all fields sent from the Details tab
+            if 'status' in data:
+                ticket.status = data.get('status')
+            if 'subject' in data:
+                ticket.subject = data.get('subject')
+            if 'priority' in data:
+                ticket.priority = data.get('priority')
+            if 'description' in data:
+                ticket.description = data.get('description')
             
-            # This saves the current admin as the technician permanently
+            # Set the current user as the technician handling the change
             ticket.technician = request.user 
             
             ticket.save()
-            return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'success', 'message': 'Ticket updated successfully'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
@@ -283,15 +314,18 @@ def admin_ticket_dashboard(request):
 
 @login_required
 def ticket_detail(request, ticket_id):
-    """View to see the conversation and update status (shared or admin only)"""
+    """View to see the conversation and update status"""
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
-    # Security: Only ticket owner or admin can see the detail
-    if not request.user.is_staff and ticket.user != request.user:
-        return redirect('submit_ticket')
+    # Check if user is staff OR in the Admin group
+    is_admin_user = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+    
+    # Allow access if the user is an admin OR if they are the one who created the ticket
+    if not is_admin_user and ticket.user != request.user:
+        # Redirect to dashboard instead of submit_ticket to avoid confusion
+        return redirect('dashboard')
 
     if request.method == 'POST':
-        # Logic for adding a reply/message
         reply_text = request.POST.get('message')
         if reply_text:
             TicketMessage.objects.create(
@@ -299,8 +333,8 @@ def ticket_detail(request, ticket_id):
                 sender=request.user,
                 message=reply_text
             )
-            # If admin replies, automatically set to 'In Progress'
-            if request.user.is_staff and ticket.status == 'Pending':
+            # Auto-update status if admin replies
+            if is_admin_user and ticket.status == 'Pending':
                 ticket.status = 'In Progress'
                 ticket.save()
                 
