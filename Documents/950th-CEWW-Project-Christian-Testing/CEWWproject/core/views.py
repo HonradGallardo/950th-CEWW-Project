@@ -71,7 +71,7 @@ def role_redirect(request):
         return redirect('dashboard')
     return redirect('login')
 
-# --- DASHBOARD ---
+################################################################################# --- DASHBOARD ---##############################################################################
 @login_required
 def dashboard(request):
     # Global Metrics
@@ -220,6 +220,7 @@ def dashboard(request):
         asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
         context['asset_labels'] = [item['assets_type'] for item in asset_qs]
         context['asset_totals'] = [item['total'] for item in asset_qs]
+        context['maintenance_assets_count'] = Maintenance.objects.count()
 
         severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
         context['severity_labels'] = [item['severity'] for item in severity_qs]
@@ -1018,8 +1019,59 @@ def reports(request):
     return render(request, 'core/Admin/reports.html', context)
 
 @login_required
+@login_required
 def command_reports(request):
-    return render(request, 'core/Commander/command_reports.html')
+    report_type = request.GET.get('report_type', 'it_asset')
+    category = request.GET.get('category', 'All')
+    
+    # 1. Base Querysets & Logic Mapping
+    if report_type == 'maintenance':
+        queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
+        filter_field = 'status' # Filter by Maintenance Status
+        chart_group_by = 'status'
+        # Dropdown options: Unique statuses from Maintenance
+        filter_options = Maintenance.objects.values_list('status', 'status').distinct()
+        
+    elif report_type == 'incident':
+        queryset = Incident.objects.all().select_related('asset').order_by('-date')
+        filter_field = 'severity' # Filter by Incident Severity
+        chart_group_by = 'severity'
+        # Dropdown options: Unique severities from Incidents
+        filter_options = Incident.objects.values_list('severity', 'severity').distinct()
+        
+    else: # it_asset
+        queryset = Asset.objects.all().order_by('assets_id')
+        filter_field = 'assets_type' # Filter by Asset Category
+        chart_group_by = 'status'
+        # Dropdown options: Unique asset types
+        filter_options = Asset.objects.values_list('assets_type', 'assets_type').distinct()
+
+    # 2. Apply the Filter
+    if category and category != 'All':
+        queryset = queryset.filter(**{filter_field: category})
+
+    # 3. Pagination (Set to 6)
+    paginator = Paginator(queryset, 6) 
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 4. Chart Logic
+    stats = queryset.values(chart_group_by).annotate(count=Count('id'))
+    status_labels = [str(item[chart_group_by]) for item in stats]
+    status_counts = [item['count'] for item in stats]
+
+    context = {
+        'report_type': report_type,
+        'category': category,
+        'data_list': page_obj,
+        'page_obj': page_obj,
+        'total_count': queryset.count(),
+        'status_labels': status_labels,
+        'status_counts': status_counts,
+        'filter_options': filter_options,
+    }
+    return render(request, 'core/Commander/command_reports.html', context)
+
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
