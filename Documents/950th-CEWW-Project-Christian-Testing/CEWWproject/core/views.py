@@ -2,10 +2,14 @@ from multiprocessing import context
 from urllib import request
 import openpyxl
 import json
+import random
+import requests
+from django.core.mail import send_mail
+from django.core.paginator import Paginator
+from django.conf import settings
 import calendar
-from django.http import HttpResponse
-from django.db.models.functions import ExtractMonth, ExtractWeekDay
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
+from django.db.models.functions import ExtractMonth, ExtractWeekDay, TruncDay, TruncMonth
 from django.utils import timezone
 from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,21 +20,15 @@ from django.db.models import Count
 from django.contrib import messages
 from .models import Asset, IncidentComment, Maintenance, Incident, Notification, Profile
 from .forms import AssetForm, MaintenanceForm, UserForm
-from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
-from django.db.models.functions import TruncDay
-from django.db.models.functions import TruncMonth
 from django.utils.timezone import localtime
 from .models import Ticket, TicketMessage
 from django.db import models
-from django.core.mail import send_mail
-import random
 from rest_framework import viewsets
 from .serializers import AssetSerializer, MaintenanceSerializer, IncidentSerializer
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
-from django.contrib import messages
 from django.views.decorators.http import require_POST
 
 # Add these classes at the bottom of your existing views.py
@@ -61,286 +59,6 @@ def mark_all_as_read(request):
     Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
-
-
-####################################################################TICKETING MODULE####################################################################
-# In your personnel views.py
-@login_required
-def submit_ticket(request):
-    """View for Personnel/Users to submit and see their own tickets"""
-    if request.method == 'POST':
-        subject = request.POST.get('subject')
-        category = request.POST.get('category')
-        priority = request.POST.get('priority', 'Low') # Default to Low if missing
-        description = request.POST.get('description')
-        
-        # Create the ticket
-        Ticket.objects.create(
-            subject=subject,
-            category=category,
-            priority=priority,
-            description=description,
-            user=request.user
-        )
-        
-        # For AJAX requests (from the chatbot), return JSON
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-            return JsonResponse({'status': 'success'})
-            
-        return redirect('submit_ticket')
-
-    # Get tickets for the logged-in user
-    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
-    
-    return render(request, 'core/Personnel/submit_ticket.html', {
-        'user_tickets': user_tickets
-    })
-    
-@login_required
-@require_POST
-def edit_ticket_details(request, ticket_id):
-    """Functional view to save edited details from the Details tab"""
-    try:
-        data = json.loads(request.body)
-        ticket = get_object_or_404(Ticket, id=ticket_id)
-        
-        # Check permissions: User who created it or Admin
-        user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
-        if not user_is_admin and ticket.user != request.user:
-            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
-
-        # Update fields
-        ticket.subject = data.get('subject', ticket.subject)
-        ticket.status = data.get('status', ticket.status)
-        ticket.priority = data.get('priority', ticket.priority)
-        ticket.description = data.get('description', ticket.description)
-        
-        ticket.save()
-        return JsonResponse({'status': 'success', 'message': 'Ticket details updated successfully'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-@login_required
-def command_submit_ticket(request):
-    """View for Personnel/Users to submit and see their own tickets"""
-    if request.method == 'POST':
-        subject = request.POST.get('subject')
-        category = request.POST.get('category')
-        priority = request.POST.get('priority', 'Low') # Default to Low if missing
-        description = request.POST.get('description')
-        
-        # Create the ticket
-        Ticket.objects.create(
-            subject=subject,
-            category=category,
-            priority=priority,
-            description=description,
-            user=request.user
-        )
-        
-        # Check for AJAX (ensure lowercase 'x-requested-with' for compatibility)
-        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true'
-        
-        if is_ajax:
-            return JsonResponse({'status': 'success', 'message': 'Ticket created successfully'})
-            
-        return redirect('command_submit_ticket') # Use the actual name of this view in urls.py
-
-    # Get tickets for the logged-in user
-    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
-    
-    # Ensure this template path exists
-    return render(request, 'core/Commander/command_tickets.html', {
-        'user_tickets': user_tickets
-    })
-
-@login_required
-def handle_ticket_submission(request, template_path):
-    """
-    A single view that handles ticket creation and display.
-    The template_path is passed in from the URL configuration.
-    """
-    if request.method == 'POST':
-        subject = request.POST.get('subject')
-        category = request.POST.get('category')
-        priority = request.POST.get('priority', 'Low')
-        description = request.POST.get('description')
-        
-        Ticket.objects.create(
-            subject=subject,
-            category=category,
-            priority=priority,
-            description=description,
-            user=request.user
-        )
-        
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
-            return JsonResponse({'status': 'success', 'message': 'Ticket created successfully'})
-            
-        # Redirect back to whatever URL the user is currently on
-        return redirect(request.path)
-
-    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
-    
-    return render(request, template_path, {
-        'user_tickets': user_tickets
-    })
-
-def get_messages(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
-    messages = ticket.messages.all().order_by('created_at')
-    
-    data = []
-    for msg in messages:
-        data.append({
-            "sender": msg.sender.username,
-            "message": msg.message,  # This matches the model field 'message'
-            "time": msg.created_at.strftime("%b %d, %H:%M")
-        })
-    return JsonResponse({"messages": data})
-
-def send_message(request, ticket_id):
-    if request.method == "POST":
-        text = request.POST.get('text')
-        if not text:
-            return JsonResponse({"status": "error", "message": "Empty message"}, status=400)
-            
-        ticket = get_object_or_404(Ticket, id=ticket_id)
-        
-        # Use TicketMessage and set 'message=text' to match your model field
-        msg = TicketMessage.objects.create(
-            ticket=ticket, 
-            sender=request.user, 
-            message=text 
-        )
-        
-        return JsonResponse({
-            "status": "sent", 
-            "text": msg.message,
-            "sender": msg.sender.username,
-            "created_at": msg.created_at.strftime("%b %d, %H:%M")
-        })
-    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
-
-@login_required
-def get_ticket_chat(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
-    
-    # IMPROVED CHECK: Use your existing is_admin logic
-    user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
-    
-    if not user_is_admin and ticket.user != request.user:
-        return JsonResponse({'error': 'Unauthorized'}, status=403)
-
-    messages = ticket.messages.all().select_related('sender').order_by('created_at')
-    
-    message_data = [{
-        'sender': msg.sender.username,
-        'message': msg.message,
-        'is_me': msg.sender == request.user,
-        'created_at': msg.created_at.strftime("%b %d, %H:%M"),
-    } for msg in messages]
-
-    return JsonResponse({'messages': message_data})
-
-@login_required
-def send_ticket_message(request, ticket_id):
-    if request.method == "POST":
-        ticket = get_object_or_404(Ticket, id=ticket_id)
-        content = request.POST.get('message')
-        
-        if content:
-            msg = TicketMessage.objects.create(
-                ticket=ticket,
-                sender=request.user,
-                message=content
-            )
-            return JsonResponse({'status': 'sent'})
-    return JsonResponse({'status': 'error'}, status=400)
-
-@login_required
-def update_ticket_status(request, ticket_id):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            ticket = get_object_or_404(Ticket, id=ticket_id)
-            
-            # Update all fields sent from the Details tab
-            if 'status' in data:
-                ticket.status = data.get('status')
-            if 'subject' in data:
-                ticket.subject = data.get('subject')
-            if 'priority' in data:
-                ticket.priority = data.get('priority')
-            if 'description' in data:
-                ticket.description = data.get('description')
-            
-            # Set the current user as the technician handling the change
-            ticket.technician = request.user 
-            
-            ticket.save()
-            return JsonResponse({'status': 'success', 'message': 'Ticket updated successfully'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-@login_required
-def delete_ticket(request, ticket_id):
-    try:
-        ticket = get_object_or_404(Ticket, id=ticket_id)
-        ticket.delete()
-        return JsonResponse({'status': 'success'})
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-# --- ADMIN VIEWS ---
-
-def is_admin(user):
-    return user.is_staff or user.groups.filter(name='Admin').exists()
-
-@login_required
-@user_passes_test(is_admin)
-def admin_ticket_dashboard(request):
-    """View for Admins to manage all system tickets"""
-    tickets = Ticket.objects.all().order_by('-updated_at')
-    pending_count = tickets.filter(status='Pending').count()
-    ticket_detail_url = lambda ticket: redirect('ticket_detail', ticket_id=ticket.id)
-    
-    return render(request, 'core/Admin/admin_tickets.html', {
-        'tickets': tickets,
-        'pending_count': pending_count,
-        'ticket_detail_url': ticket_detail_url
-    })
-
-
-
-@login_required
-def ticket_detail(request, ticket_id):
-    """View to see the conversation and update status"""
-    ticket = get_object_or_404(Ticket, id=ticket_id)
-    
-    # Check if user is staff OR in the Admin group
-    is_admin_user = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
-    
-    # Allow access if the user is an admin OR if they are the one who created the ticket
-    if not is_admin_user and ticket.user != request.user:
-        # Redirect to dashboard instead of submit_ticket to avoid confusion
-        return redirect('dashboard')
-
-    if request.method == 'POST':
-        reply_text = request.POST.get('message')
-        if reply_text:
-            TicketMessage.objects.create(
-                ticket=ticket,
-                sender=request.user,
-                message=reply_text
-            )
-            # Auto-update status if admin replies
-            if is_admin_user and ticket.status == 'Pending':
-                ticket.status = 'In Progress'
-                ticket.save()
-                
-        return redirect('ticket_detail', ticket_id=ticket.id)
-
-    return render(request, 'core/Admin/ticket_detail.html', {'ticket': ticket})
 
 # --- LANDING & REDIRECT ---
 def landing(request):
@@ -415,52 +133,67 @@ def dashboard(request):
     
     
     elif 'Personnel' in user_groups:
-        # --- GET SEARCH QUERIES ---
-        q_incident = request.GET.get('q_incident', '').strip()
-        q_asset = request.GET.get('q_asset', '').strip()
-        q_task = request.GET.get('q_task', '').strip()
 
-        # --- 1. INCIDENTS SEARCH ---
+        last_seven_days = timezone.now() - timedelta(days=6)
+        # Get counts per day for the last 7 days
+        trends_data = (
+            Incident.objects.filter(date__gte=last_seven_days)
+            .annotate(day=TruncDay('date'))
+            .values('day')
+            .annotate(count=Count('id'))
+            .order_by('day')
+        )
+
+        # Prepare labels and data for Chart.js
+        # This creates a list of dates and matches the counts (filling 0 if no incidents that day)
+        day_map = {item['day'].strftime('%a'): item['count'] for item in trends_data}
+        chart_labels = []
+        chart_values = []
+        
+        for i in range(6, -1, -1):
+            day = (timezone.now() - timedelta(days=i)).strftime('%a')
+            chart_labels.append(day)
+            chart_values.append(day_map.get(day, 0))
+            # --- GET SEARCH QUERIES ---
+            q_incident = request.GET.get('q_incident', '').strip()
+            q_asset = request.GET.get('q_asset', '').strip()
+            q_task = request.GET.get('q_task', '').strip()
+
+        # --- 1. INCIDENTS SEARCH (ID, Type, Severity, Status, Date) ---
         incident_list = Incident.objects.all().order_by('-date')
         if q_incident:
-            # If searching for status specifically, use exact match to avoid "Active" matching "Inactive"
-            if q_incident.lower() in ['active', 'inactive', 'resolved', 'pending']:
-                incident_list = incident_list.filter(
-                    Q(status__iexact=q_incident) | Q(title__icontains=q_incident)
-                )
-            else:
-                incident_list = incident_list.filter(
-                    Q(title__icontains=q_incident) | Q(id__icontains=q_incident)
-                )
+            # We search across all requested fields
+            incident_list = incident_list.filter(
+                Q(id__icontains=q_incident) |
+                Q(title__icontains=q_incident) |
+                Q(severity__icontains=q_incident) |
+                Q(status__icontains=q_incident) |
+                Q(date__icontains=q_incident)
+            )
         
         incident_paginator = Paginator(incident_list, 10)
         page_obj = incident_paginator.get_page(request.GET.get('page'))
 
-        # --- 2. ASSETS SEARCH ---
+        # --- 2. ASSETS SEARCH (Name, Status, Date) ---
         asset_list = Asset.objects.filter(assigned_to=request.user).order_by('-date_added')
         if q_asset:
-            if q_asset.lower() in ['active', 'inactive', 'maintenance', 'retired']:
-                asset_list = asset_list.filter(
-                    Q(status__iexact=q_asset) | Q(assets_name__icontains=q_asset)
-                )
-            else:
-                asset_list = asset_list.filter(assets_name__icontains=q_asset)
+            asset_list = asset_list.filter(
+                Q(assets_name__icontains=q_asset) |
+                Q(status__icontains=q_asset) |
+                Q(date_added__icontains=q_asset)
+            )
 
         asset_paginator = Paginator(asset_list, 10)
         asset_page_obj = asset_paginator.get_page(request.GET.get('asset_page'))
 
-        # --- 3. MAINTENANCE SEARCH ---
+        # --- 3. MAINTENANCE SEARCH (Asset Name, Type, Status) ---
         task_list = Maintenance.objects.filter(technician=request.user, status='In Progress').order_by('id')
         if q_task:
-            # Maintenance tasks usually have statuses like "In Progress" or "Completed"
-            if q_task.lower() in ['in progress', 'completed', 'pending']:
-                task_list = task_list.filter(
-                    Q(status__iexact=q_task) | Q(asset__assets_name__icontains=q_task)
-                )
-            else:
-                task_list = task_list.filter(
-                    Q(asset__assets_name__icontains=q_task) | Q(maintenance_type__icontains=q_task)
-                )
+            task_list = task_list.filter(
+                Q(asset__assets_name__icontains=q_task) |
+                Q(maintenance_type__icontains=q_task) |
+                Q(status__icontains=q_task)
+            )
 
         task_paginator = Paginator(task_list, 10)
         task_page_obj = task_paginator.get_page(request.GET.get('task_page'))
@@ -477,9 +210,12 @@ def dashboard(request):
             'q_incident': q_incident,
             'q_asset': q_asset,
             'q_task': q_task,
+
+            'chart_labels': json.dumps(chart_labels),
+            'chart_values': json.dumps(chart_values),
         }
         return render(request, 'core/Personnel/personnel_dashboard.html', personnel_context)
-    
+        
     elif 'Admin' in user_groups:
         asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
         context['asset_labels'] = [item['assets_type'] for item in asset_qs]
@@ -496,26 +232,51 @@ def dashboard(request):
 
     return render(request, 'core/landing.html', {'error': 'Unauthorized access.'})
 
-# --- PERSONNEL CRUD ---
+
+########################################################## USERS ######################################################
+
+
 @login_required
 def user_list(request):
     # Check permissions
     if not request.user.groups.filter(name__in=['Admin', 'Commander']).exists():
         return redirect('dashboard')
     
-    # Original query preserved: Get all users with groups prefetched
-    all_users = User.objects.all().prefetch_related('groups').order_by('username')
+    # 1. Get query parameters from the URL
+    search_query = request.GET.get('search', '').strip()
+    role_filter = request.GET.get('role', 'ALL').upper()
     
-    # Pagination Logic
+    # 2. Start with the base queryset
+    all_users = User.objects.all().prefetch_related('groups', 'profile').order_by('username')
+    
+    # 3. Apply SEARCH Logic (Server-side search across all records)
+    if search_query:
+        all_users = all_users.filter(
+            Q(username__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(profile__rank__icontains=search_query) | # Searches by rank
+            Q(id__icontains=search_query)              # Searches by ID number
+        ).distinct()
+
+    # 4. Apply ROLE Logic (Server-side filtering)
+    if role_filter != 'ALL':
+        if role_filter == 'UNASSIGNED':
+            all_users = all_users.filter(groups__isnull=True)
+        else:
+            all_users = all_users.filter(groups__name__iexact=role_filter)
+    
+    # 5. Pagination Logic (applied AFTER filtering)
     items_per_page = 10
     paginator = Paginator(all_users, items_per_page)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    # Returning page_obj as 'users' so your existing template loop {% for person in users %} still works
     return render(request, 'core/Admin/user_list.html', {
         'users': page_obj,
-        'page_obj': page_obj  # Optional: for additional pagination metadata
+        'search_query': search_query, # Pass back to template to keep text in input
+        'current_role': role_filter    # Pass back to template to keep button active
     })
 
 @login_required
@@ -563,7 +324,10 @@ def delete_user(request, user_id):
         messages.success(request, "User deleted.")
     return redirect('user_list')
 
-# --- MAINTENANCE MODULE ---
+
+######################################################## MAINTENANCE #####################################################
+
+
 @login_required
 def maintenance_list(request):
     # 1. HISTORY: Get all logs (In Progress & Completed)
@@ -774,6 +538,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from .models import Incident, IncidentComment # Ensure these imports match your project
+
+
+##################################################### INCIDENTS ###############################################################
+
 
 @login_required
 def incident_list(request):
@@ -1007,6 +775,9 @@ def get_incident_comments(request, incident_id):
     return JsonResponse({'comments': data})
 
 
+################################################## ANALYTICS ############################################
+
+
 @login_required
 def analytics_list(request):
     # 1. Setup Time Window using Local Time
@@ -1160,6 +931,9 @@ def commander_analytics(request):
 
 
 
+###################################################### REPORTS ##########################################
+
+
 @login_required
 def reports(request):
     report_type = request.GET.get('report_type', 'it_asset')
@@ -1253,6 +1027,10 @@ from django.contrib import messages
 # IMPORT THE MODELS HERE TO FIX THE NAMEERROR
 from .models import Incident
 
+
+######################################################## PROFILE ##################################################
+
+
 @login_required
 def profile_view(request):
     user = request.user
@@ -1291,7 +1069,7 @@ def profile_view(request):
 
 
 
-
+####################################################### FORGOT PASSWORD ##########################################################
 class CustomPasswordChangeView(PasswordChangeView):
     template_name = 'core/Admin/password_change.html'
     success_url = reverse_lazy('profile')
@@ -1300,17 +1078,6 @@ class CustomPasswordChangeView(PasswordChangeView):
         messages.success(self.request, "Your password was successfully updated!")
         return super().form_valid(form)
 
-
-# In views.py
-
-import random
-import requests
-from django.shortcuts import render
-from django.contrib.auth.models import User
-from django.http import JsonResponse
-from django.contrib.auth.hashers import make_password
-from django.core.mail import send_mail
-from django.conf import settings
 
 def forgot_password_view(request):
     if request.method == "POST":
@@ -1394,3 +1161,290 @@ def forgot_password_view(request):
     return render(request, 'registration/forgot_password.html', {
         'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY
     })
+
+
+#################################################################### TICKETING MODULE ####################################################################
+@login_required
+def submit_ticket(request):
+    """View for Personnel/Users to submit and see their own tickets"""
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        category = request.POST.get('category')
+        priority = request.POST.get('priority', 'Low') # Default to Low if missing
+        description = request.POST.get('description')
+        
+        # Create the ticket
+        Ticket.objects.create(
+            subject=subject,
+            category=category,
+            priority=priority,
+            description=description,
+            user=request.user
+        )
+        
+        # For AJAX requests (from the chatbot), return JSON
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({'status': 'success'})
+            
+        return redirect('submit_ticket')
+
+    # Get tickets for the logged-in user
+    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
+    
+    return render(request, 'core/Personnel/submit_ticket.html', {
+        'user_tickets': user_tickets
+    })
+    
+@login_required
+@require_POST
+def edit_ticket_details(request, ticket_id):
+    """Functional view to save edited details from the Details tab"""
+    try:
+        data = json.loads(request.body)
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        
+        # Check permissions: User who created it or Admin
+        user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+        if not user_is_admin and ticket.user != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+        # Update fields
+        ticket.subject = data.get('subject', ticket.subject)
+        ticket.status = data.get('status', ticket.status)
+        ticket.priority = data.get('priority', ticket.priority)
+        ticket.description = data.get('description', ticket.description)
+        
+        ticket.save()
+        return JsonResponse({'status': 'success', 'message': 'Ticket details updated successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+def command_submit_ticket(request):
+    """View for Personnel/Users to submit and see their own tickets"""
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        category = request.POST.get('category')
+        priority = request.POST.get('priority', 'Low') # Default to Low if missing
+        description = request.POST.get('description')
+        
+        # Create the ticket
+        Ticket.objects.create(
+            subject=subject,
+            category=category,
+            priority=priority,
+            description=description,
+            user=request.user
+        )
+        
+        # Check for AJAX (ensure lowercase 'x-requested-with' for compatibility)
+        is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true'
+        
+        if is_ajax:
+            return JsonResponse({'status': 'success', 'message': 'Ticket created successfully'})
+            
+        return redirect('command_submit_ticket') # Use the actual name of this view in urls.py
+
+    # Get tickets for the logged-in user
+    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Ensure this template path exists
+    return render(request, 'core/Commander/command_tickets.html', {
+        'user_tickets': user_tickets
+    })
+
+@login_required
+def handle_ticket_submission(request, template_path):
+    """
+    A single view that handles ticket creation and display.
+    The template_path is passed in from the URL configuration.
+    """
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        category = request.POST.get('category')
+        priority = request.POST.get('priority', 'Low')
+        description = request.POST.get('description')
+        
+        Ticket.objects.create(
+            subject=subject,
+            category=category,
+            priority=priority,
+            description=description,
+            user=request.user
+        )
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.POST.get('ajax') == 'true':
+            return JsonResponse({'status': 'success', 'message': 'Ticket created successfully'})
+            
+        # Redirect back to whatever URL the user is currently on
+        return redirect(request.path)
+
+    user_tickets = Ticket.objects.filter(user=request.user).order_by('-created_at')
+    
+    return render(request, template_path, {
+        'user_tickets': user_tickets
+    })
+
+def get_messages(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    messages = ticket.messages.all().order_by('created_at')
+    
+    data = []
+    for msg in messages:
+        data.append({
+            "sender": msg.sender.username,
+            "message": msg.message,  # This matches the model field 'message'
+            "time": msg.created_at.strftime("%b %d, %H:%M")
+        })
+    return JsonResponse({"messages": data})
+
+def send_message(request, ticket_id):
+    if request.method == "POST":
+        text = request.POST.get('text')
+        if not text:
+            return JsonResponse({"status": "error", "message": "Empty message"}, status=400)
+            
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        
+        # Use TicketMessage and set 'message=text' to match your model field
+        msg = TicketMessage.objects.create(
+            ticket=ticket, 
+            sender=request.user, 
+            message=text 
+        )
+        
+        return JsonResponse({
+            "status": "sent", 
+            "text": msg.message,
+            "sender": msg.sender.username,
+            "created_at": msg.created_at.strftime("%b %d, %H:%M")
+        })
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+@login_required
+def get_ticket_chat(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    # IMPROVED CHECK: Use your existing is_admin logic
+    user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+    
+    if not user_is_admin and ticket.user != request.user:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+
+    messages = ticket.messages.all().select_related('sender').order_by('created_at')
+    
+    message_data = [{
+        'sender': msg.sender.username,
+        # Fetch the full name (e.g., "John Doe"). 
+        # Falls back to username if First/Last names are empty.
+        'sender_full_name': msg.sender.get_full_name() or msg.sender.username,
+        'message': msg.message,
+        'is_me': msg.sender == request.user,
+        # Updated format: Feb 16, 2026, 06:24 PM
+        'created_at': msg.created_at.strftime("%b %d, %Y, %I:%M %p"),
+        
+        'avatar_char': msg.sender.username[0].upper() if msg.sender.username else "?"
+    } for msg in messages]
+
+    return JsonResponse({'messages': message_data})
+
+
+
+@login_required
+def send_ticket_message(request, ticket_id):
+    if request.method == "POST":
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        content = request.POST.get('message')
+        
+        if content:
+            msg = TicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=content
+            )
+            return JsonResponse({'status': 'sent'})
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def update_ticket_status(request, ticket_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            ticket = get_object_or_404(Ticket, id=ticket_id)
+            
+            # Update all fields sent from the Details tab
+            if 'status' in data:
+                ticket.status = data.get('status')
+            if 'subject' in data:
+                ticket.subject = data.get('subject')
+            if 'priority' in data:
+                ticket.priority = data.get('priority')
+            if 'description' in data:
+                ticket.description = data.get('description')
+            
+            # Set the current user as the technician handling the change
+            ticket.technician = request.user 
+            
+            ticket.save()
+            return JsonResponse({'status': 'success', 'message': 'Ticket updated successfully'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@login_required
+def delete_ticket(request, ticket_id):
+    try:
+        ticket = get_object_or_404(Ticket, id=ticket_id)
+        ticket.delete()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+# --- ADMIN VIEWS ---
+
+def is_admin(user):
+    return user.is_staff or user.groups.filter(name='Admin').exists()
+
+@login_required
+@user_passes_test(is_admin)
+def admin_ticket_dashboard(request):
+    """View for Admins to manage all system tickets"""
+    tickets = Ticket.objects.all().order_by('-updated_at')
+    pending_count = tickets.filter(status='Pending').count()
+    ticket_detail_url = lambda ticket: redirect('ticket_detail', ticket_id=ticket.id)
+    
+    return render(request, 'core/Admin/admin_tickets.html', {
+        'tickets': tickets,
+        'pending_count': pending_count,
+        'ticket_detail_url': ticket_detail_url
+    })
+
+
+
+@login_required
+def ticket_detail(request, ticket_id):
+    """View to see the conversation and update status"""
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    # Check if user is staff OR in the Admin group
+    is_admin_user = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+    
+    # Allow access if the user is an admin OR if they are the one who created the ticket
+    if not is_admin_user and ticket.user != request.user:
+        # Redirect to dashboard instead of submit_ticket to avoid confusion
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        reply_text = request.POST.get('message')
+        if reply_text:
+            TicketMessage.objects.create(
+                ticket=ticket,
+                sender=request.user,
+                message=reply_text
+            )
+            # Auto-update status if admin replies
+            if is_admin_user and ticket.status == 'Pending':
+                ticket.status = 'In Progress'
+                ticket.save()
+                
+        return redirect('ticket_detail', ticket_id=ticket.id)
+
+    return render(request, 'core/Admin/ticket_detail.html', {'ticket': ticket})

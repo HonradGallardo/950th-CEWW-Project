@@ -241,10 +241,16 @@
 
                     <div class="relative">
                         <button id="userMenuBtn" onclick="toggleDropdown(event)" class="flex items-center space-x-2 text-slate-700 font-bold focus:outline-none hover:text-blue-600 transition">
-                            <span class="hidden sm:inline">{{ user.username|default:"User" }}</span>
-                            <i class="fas fa-user-circle text-lg sm:hidden"></i>
-                            <i class="fas fa-chevron-down text-xs"></i>
-                        </button>
+    <span class="hidden sm:inline">
+        {% if user.get_full_name %}
+            {{ user.get_full_name }}
+        {% else %}
+            {{ user.username }}
+        {% endif %}
+    </span>
+    <i class="fas fa-user-circle text-lg sm:hidden"></i>
+    <i class="fas fa-chevron-down text-xs"></i>
+</button>
                         <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl py-2 border border-slate-200 z-50 overflow-hidden">
                             <div class="px-4 py-2 border-b border-slate-100 mb-1">
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account</p>

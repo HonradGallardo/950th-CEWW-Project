@@ -20,7 +20,7 @@
                 
                 <div class="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 shrink-0 space-y-4">
                     <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="setRoleFilter('ALL')" class="role-filter-btn active text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 transition-all">All</button>
+                        <button onclick="setRoleFilter('ALL')" class="role-filter-btn {% if current_role == 'ALL' or not current_role %}active bg-blue-50 text-blue-600{% endif %} active text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 transition-all">All</button>
                         <button onclick="setRoleFilter('ADMIN')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-red-200 hover:text-red-600 transition-all">Admins</button>
                         <button onclick="setRoleFilter('COMMANDER')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-purple-200 hover:text-purple-600 transition-all">Commanders</button>
                         <button onclick="setRoleFilter('PERSONNEL')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-blue-200 hover:text-blue-600 transition-all">Personnel</button>
@@ -29,7 +29,7 @@
 
                     <div class="relative w-full max-w-xs">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[10px]"></i>
-                        <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="Search personnel..." 
+                        <input type="text" id="userSearch" onkeypress="handleSearch(event)" value="{{ search_query }}" placeholder="Search personnel and press Enter..."
                                class="text-xs pl-8 pr-4 py-2.5 sm:py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/10 w-full outline-none transition-colors">
                     </div>
                 </div>
@@ -131,7 +131,7 @@
                         {% endif %}
                         <span class="p-2 min-w-[32px] text-center rounded-lg bg-blue-600 text-white text-[9px] font-black">{{ users.number }}</span>
                         {% if users.has_next %}
-                            <a href="?page={{ users.next_page_number }}" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600">
+                            <a href="?page={{ users.next_page_number }}&search={{ search_query }}&role={{ current_role }}" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600">
                                 <i class="fas fa-chevron-right text-[9px]"></i>
                             </a>
                         {% endif %}
@@ -318,6 +318,30 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     } else {
         roleBadge.classList.add('bg-slate-100', 'text-slate-500', 'dark:bg-slate-800', 'dark:text-slate-400');
     }
+}
+
+// This replaces your old filterUsers() and setRoleFilter()
+function handleSearch(event) {
+    // Only search if User presses Enter
+    if (event.key === "Enter") {
+        performQuery();
+    }
+}
+
+function setRoleFilter(role) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('role', role);
+    urlParams.set('page', '1'); // Reset to page 1 when filter changes
+    window.location.search = urlParams.toString();
+}
+
+function performQuery() {
+    const query = document.getElementById("userSearch").value;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    urlParams.set('search', query);
+    urlParams.set('page', '1'); // Reset to page 1 on new search
+    window.location.search = urlParams.toString();
 }
 </script>
 {% endblock %}
