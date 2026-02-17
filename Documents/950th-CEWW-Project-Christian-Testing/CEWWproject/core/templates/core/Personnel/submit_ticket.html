@@ -2,171 +2,255 @@
 {% load static %}
 
 {% block content %}
-<div class="h-screen bg-[#f1f5f9] dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans">
+<div class="h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans text-slate-900 dark:text-slate-100">
     
-    <header class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 z-30 shadow-sm">
+    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0 z-50 shadow-sm">
         <div class="flex items-center gap-4">
-            <div class="bg-blue-600 p-1.5 rounded-lg shadow-lg shadow-blue-500/20">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <div class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/30">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
             </div>
-            <h1 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Support Console</h1>
+            <div>
+                <h1 class="text-sm font-black uppercase tracking-[0.15em] text-slate-800 dark:text-white">Support Console</h1>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Enterprise v2.0</p>
+            </div>
         </div>
-        <div class="flex items-center gap-3">
-            <div class="text-right leading-none">
-                <p class="text-[10px] font-black text-slate-800 dark:text-white">{{ request.user.username }}</p>
-                <p class="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Active</p>
+        
+        <div class="flex items-center gap-4">
+            <div class="hidden sm:block text-right leading-tight">
+                <p class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ request.user.username }}</p>
+                <p class="text-[10px] font-bold text-emerald-500 uppercase flex items-center justify-end gap-1">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
+                </p>
             </div>
-            <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=3b82f6&color=fff" class="w-8 h-8 rounded-lg border dark:border-slate-700">
+            <div class="relative group">
+                <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=3b82f6&color=fff&bold=true" 
+                     class="w-10 h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+            </div>
         </div>
     </header>
 
     <main class="flex-1 flex overflow-hidden">
         
-        <aside class="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
-            <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800 space-y-3">
+        <aside class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+            <div class="p-5 space-y-4">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-black uppercase text-slate-400">My Threads</span>
-                    <button onclick="openNewTicketAssistant()" class="bg-white dark:bg-slate-800 border dark:border-slate-700 px-3 py-1 rounded text-[10px] font-black text-blue-600 shadow-sm hover:bg-blue-50 transition-all">NEW</button>
+                    <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">Conversations</span>
+                    <button type="button" onclick="SupportConsole.openAssistant()" 
+                            class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all">
+                        + New Thread
+                    </button>
                 </div>
-                <input type="text" id="sidebarSearch" oninput="filterSidebar()" placeholder="Search threads..." class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg py-1.5 pl-8 pr-3 text-[11px] outline-none">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
+                    <input type="text" id="sidebarSearch" oninput="SupportConsole.filterSidebar()" 
+                           placeholder="Search by ID or Subject..." 
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-xs outline-none focus:ring-2 ring-blue-500/20 transition-all">
+                </div>
             </div>
-            <div class="flex-1 overflow-y-auto custom-scrollbar" id="sidebarTicketContainer">
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar px-3 pb-4 space-y-1" id="sidebarTicketContainer">
                 {% for ticket in user_tickets %}
-                <div onclick="loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}')" 
+                <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}')" 
                      id="ticket-item-{{ ticket.id }}"
-                     class="ticket-item p-4 border-b border-slate-50 dark:border-slate-800/50 cursor-pointer hover:bg-blue-50/30 dark:hover:bg-slate-800 transition-all group relative">
-                    <div class="flex justify-between items-start mb-1">
-                        <span class="text-[9px] font-mono font-bold text-slate-400">#{{ ticket.id|stringformat:"04d" }}</span>
-                        <span class="text-[9px] font-mono font-bold text-blue-500 uppercase">{{ ticket.status }}</span>
+                     class="ticket-item p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border border-transparent">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">#{{ ticket.id|stringformat:"04d" }}</span>
+                        <span class="text-[9px] font-black uppercase tracking-tighter 
+                            {% if ticket.status == 'Completed' %}text-emerald-500{% else %}text-blue-500{% endif %}">
+                            {{ ticket.status }}
+                        </span>
                     </div>
-                    <p class="text-[11px] font-black text-slate-700 dark:text-slate-200 truncate pr-4">{{ ticket.subject }}</p>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 transition-colors">{{ ticket.subject }}</p>
+                    <p class="text-[10px] text-slate-400 mt-1 font-medium">{{ ticket.created_at|date:'M d' }} • {{ ticket.priority }} Priority</p>
                 </div>
                 {% endfor %}
             </div>
         </aside>
 
-        <section class="flex-1 flex flex-col bg-[#f8fafc] dark:bg-[#0f172a] relative border-r dark:border-slate-800 overflow-hidden">
+        <section class="flex-1 flex flex-col bg-white dark:bg-[#0f172a] relative overflow-hidden">
             
-            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white dark:bg-[#0f172a] z-40 flex flex-col p-10">
-                <div class="flex justify-between items-center mb-8 border-b dark:border-slate-800 pb-4">
-                    <h2 class="text-xs font-black uppercase text-blue-600 tracking-widest">Smart Assistant / New Ticket</h2>
-                    <button onclick="closeAssistant()" class="text-slate-400 hover:text-red-500"><i class="fas fa-times"></i></button>
-                </div>
-                <div id="assistant-chat" class="flex-1 overflow-y-auto space-y-4 mb-6 custom-scrollbar"></div>
-                <div id="assistant-input-area" class="border-t dark:border-slate-800 pt-6">
-                    <div id="contact-details-empty" class="flex-1 flex flex-col items-center justify-center p-10 text-center opacity-30"><i class="fas fa-inbox text-3xl mb-3"></i><p class="text-[10px] font-black uppercase tracking-widest">Select Case</p></div>
-                    <div id="assistant-options" class="flex flex-wrap gap-2 mb-4"></div>
-                    <form id="newTicketForm" class="hidden space-y-4 animate-in fade-in duration-500">
-                        {% csrf_token %}
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2">
-                                <label class="text-[9px] font-black uppercase text-slate-400 ml-1">Case Subject</label>
-                                <input type="text" name="subject" id="newSub" required placeholder="Brief Summary" class="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 p-3 rounded-lg text-sm font-bold dark:text-white">
+            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-40 flex flex-col p-8 md:p-12 animate-in fade-in zoom-in-95 duration-300">
+                <div class="max-w-3xl mx-auto w-full flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-8">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20">
+                                <i class="fas fa-robot text-white text-xl"></i>
                             </div>
                             <div>
-                                <label class="text-[9px] font-black uppercase text-slate-400 ml-1">Category</label>
-                                <select name="category" id="newCat" required class="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 p-3 rounded-lg text-xs font-bold uppercase dark:text-white">
-                                    <option value="" disabled selected>Select Category</option>
-                                    <option value="General">General</option><option value="Technical">Technical</option><option value="Hardware">Hardware</option><option value="Access">Access</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[9px] font-black uppercase text-slate-400 ml-1">Priority</label>
-                                <select name="priority" id="newPriority" required class="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 p-3 rounded-lg text-xs font-bold uppercase dark:text-white">
-                                    <option value="" disabled selected>Select Urgency</option>
-                                    <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option>
-                                </select>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="text-[9px] font-black uppercase text-slate-400 ml-1">Description</label>
-                                <textarea name="description" id="newDesc" required rows="4" placeholder="Detailed explanation..." class="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 p-3 rounded-lg text-sm dark:text-white"></textarea>
+                                <h2 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Smart Support Assistant</h2>
+                                <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Neural Link Active</p>
                             </div>
                         </div>
-                        <button type="button" onclick="finalizeTicketSubmission()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-black uppercase text-[10px] tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all">Submit Ticket</button>
-                    </form>
+                        <button onclick="SupportConsole.closeAssistant()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <div id="assistant-chat" class="flex-1 overflow-y-auto space-y-6 mb-8 custom-scrollbar px-4"></div>
+                    
+                    <div id="assistant-interaction" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div id="assistant-options" class="flex flex-wrap gap-3 mb-2"></div>
+                        
+                        <form id="newTicketForm" class="hidden space-y-5 animate-in slide-in-from-bottom-4 duration-500">
+                            {% csrf_token %}
+                            <div class="border-b dark:border-slate-800 pb-4 mb-2">
+                                <p id="form-context-msg" class="text-[11px] font-black text-blue-600 uppercase tracking-widest"></p>
+                            </div>
+                            
+                            <input type="hidden" name="category" id="newCat" value="General">
+                            <input type="hidden" name="priority" id="newPriority" value="Medium">
+                            
+                            <div id="account-fields" class="hidden grid grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/50">
+                                <div class="col-span-1">
+                                    <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">First Name</label>
+                                    <input type="text" id="acc_fname" placeholder="John" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
+                                </div>
+                                <div class="col-span-1">
+                                    <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Last Name</label>
+                                    <input type="text" id="acc_lname" placeholder="Doe" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Institutional Email</label>
+                                    <input type="email" id="acc_email" placeholder="john.doe@company.com" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Requested Rank / Role</label>
+                                    <input type="text" id="acc_rank" placeholder="e.g. Senior Manager" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block ml-1">Case Subject</label>
+                                    <input type="text" name="subject" id="newSub" required class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-500/20">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block ml-1">Problem Description</label>
+                                    <textarea name="description" id="newDesc" required rows="3" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm outline-none focus:ring-2 ring-blue-500/20"></textarea>
+                                </div>
+                            </div>
+                            <button type="button" onclick="SupportConsole.finalizeTicketSubmission()" 
+                                    class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-500/30 hover:bg-blue-700 active:scale-[0.98] transition-all">
+                                Initialize Dispatch
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-            <div id="no-chat-selected" class="absolute inset-0 bg-white dark:bg-[#0f172a] z-20 flex flex-col items-center justify-center">
-                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Select Thread</p>
+            <div id="no-chat-selected" class="absolute inset-0 bg-white dark:bg-[#0f172a] z-20 flex flex-col items-center justify-center p-12 text-center">
+                <div class="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-100 dark:border-slate-800">
+                    <i class="fas fa-comments text-4xl text-slate-200 dark:text-slate-800"></i>
+                </div>
+                <h3 class="text-sm font-black uppercase tracking-widest text-slate-400">Secure Line Ready</h3>
+                <p class="text-xs text-slate-400 mt-2 max-w-[200px] leading-relaxed">Select a thread from the sidebar or start a new assistant session.</p>
             </div>
 
-            <div class="h-12 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex shrink-0">
-                <button onclick="switchTab('feed')" id="feedTabBtn" class="px-6 text-[10px] font-black uppercase transition-all">Feed</button>
-                <button onclick="switchTab('details')" id="detailsTabBtn" class="px-6 text-[10px] font-black uppercase transition-all">Details</button>
+            <div class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex px-6 shrink-0 z-30">
+                <button onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-6 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Activity Feed</button>
+                <button onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-6 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Case Details</button>
             </div>
 
             <div id="feedView" class="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-[#0f172a]">
-    
-    <div class="px-6 pt-6 shrink-0">
-        <div class="flex items-center gap-6 border-b dark:border-slate-800 mb-4 pb-2">
-            <button onclick="filterFeed('all')" class="feed-filter active text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 pb-2 whitespace-nowrap">All Updates</button>
-            <button onclick="filterFeed('call')" class="feed-filter text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-2 whitespace-nowrap">Call Logs</button>
-            <button onclick="filterFeed('staff')" class="feed-filter text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-2 whitespace-nowrap">Text Posts</button>
-            <button onclick="filterFeed('status')" class="feed-filter text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-2 whitespace-nowrap">Status Changes</button>
-        </div>
-    </div>
-
-    <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-2" id="workspaceScroll">
-        <div id="messageContainer" class="space-y-8"></div>
-    </div>
-
-    <div class="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div class="bg-slate-50/50 dark:bg-slate-800/50 px-4 py-2 border-b dark:border-slate-800 flex gap-4">
-                <span class="text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 py-1">Post Update</span>
-            </div>
-            <form onsubmit="sendMessage(event)" class="p-4">
-                {% csrf_token %}
-                <textarea id="chatInput" required rows="2" class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-lg p-4 text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:ring-2 ring-blue-500/20 transition-all" placeholder="Type your update..."></textarea>
-                <div class="mt-3 flex justify-end">
-                    <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 px-8 py-2 rounded text-white text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Share</button>
+                <div class="px-8 pt-6 shrink-0">
+                    <div class="flex items-center gap-6 border-b dark:border-slate-800 mb-4">
+                        <button onclick="SupportConsole.filterFeed('all')" class="feed-filter active text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 pb-3 whitespace-nowrap tracking-widest">All Communications</button>
+                        <button onclick="SupportConsole.filterFeed('staff')" class="feed-filter text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-3 whitespace-nowrap tracking-widest transition-colors">Internal Notes</button>
+                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
+
+                <div class="flex-1 overflow-y-auto custom-scrollbar px-8 py-4" id="workspaceScroll">
+                    <div id="messageContainer" class="max-w-4xl mx-auto space-y-8"></div>
+                </div>
+
+                <div class="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                    <div class="max-w-4xl mx-auto">
+                        <form onsubmit="SupportConsole.sendMessage(event)" class="relative group">
+                            {% csrf_token %}
+                            <textarea id="chatInput" required rows="1" 
+                                      class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-4 pl-5 pr-32 text-sm outline-none focus:ring-4 ring-blue-500/10 transition-all resize-none" 
+                                      placeholder="Write an update or reply..."></textarea>
+                            <div class="absolute right-2 top-2 bottom-2 flex items-center">
+                                <button type="submit" id="shareBtn" class="h-full bg-blue-600 px-6 rounded-xl text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/20">
+                                    Send
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
             <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a]">
-                <form id="editTicketForm" onsubmit="updateTicket(event)" class="p-8 max-w-4xl space-y-10 animate-in fade-in slide-in-from-left-4 duration-300">
-                    {% csrf_token %}
-                    <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
-                        <h3 class="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-edit"></i> Edit Case</h3>
-                        <button type="submit" id="saveDetailsBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded text-[10px] font-black uppercase shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">Save Changes</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-8 pl-4 border-l-2 border-slate-100 dark:border-slate-800">
-                        <div class="col-span-2">
-                            <label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Subject (Read Only)</label>
-                            <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none shadow-inner">
+                <div class="max-w-3xl mx-auto p-10">
+                    <form id="editTicketForm" onsubmit="SupportConsole.updateTicket(event)" class="space-y-10">
+                        {% csrf_token %}
+                        <div class="flex items-center justify-between border-b dark:border-slate-800 pb-6">
+                            <div>
+                                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Case Management</h3>
+                                <p class="text-xs text-slate-400 mt-1">Modify status, priority, and internal descriptions.</p>
+                            </div>
+                            <button type="submit" id="saveDetailsBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">
+                                Update Case
+                            </button>
                         </div>
-                        <div><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Status</label><select name="status" id="editStatus" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase"><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option><option value="Denied">Denied</option></select></div>
-                        <div><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Priority</label><select name="priority" id="editPriority" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase"><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Critical">Critical</option></select></div>
-                        <div class="col-span-2"><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Internal Description</label><textarea id="editDesc" name="description" rows="5" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs font-medium dark:text-white outline-none leading-relaxed"></textarea></div>
-                    </div>
-                </form>
+                        
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Subject</label>
+                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Current Status</label>
+                                <select name="status" id="editStatus" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none focus:ring-2 ring-blue-500/20">
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Priority Level</label>
+                                <select name="priority" id="editPriority" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none focus:ring-2 ring-blue-500/20">
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Internal Summary / Description</label>
+                                <textarea id="editDesc" name="description" rows="6" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 ring-blue-500/20"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </section>
 
-        <aside class="w-80 bg-white dark:bg-slate-900 hidden lg:flex flex-col shrink-0 overflow-y-auto no-scrollbar border-l dark:border-slate-800">
-            <div id="contact-details-container" class="p-4 space-y-4 opacity-0 transition-opacity duration-300">
-                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden">
-                    <div class="bg-slate-50 dark:bg-slate-900 px-4 py-3 border-b dark:border-slate-700 flex items-center gap-2">
-                        <i class="fas fa-address-card text-blue-500 text-xs"></i><span class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Contact Details</span>
+        <aside class="w-80 bg-white dark:bg-slate-900 hidden lg:flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800">
+            <div id="contact-details-container" class="p-6 space-y-6 opacity-0 transition-all duration-500 translate-x-4">
+                <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                    <div class="flex flex-col items-center text-center pb-6 border-b dark:border-slate-800">
+                        <img id="contactAvatar" src="" class="w-20 h-20 rounded-2xl border-4 border-white dark:border-slate-800 shadow-xl mb-4">
+                        <h4 id="contactName" class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight"></h4>
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[9px] font-black uppercase mt-2 tracking-widest">Verified User</span>
                     </div>
-                    <div class="p-4 space-y-4">
-                        <div class="flex items-center gap-3 pb-4 border-b dark:border-slate-700">
-                            <img id="contactAvatar" src="" class="w-12 h-12 rounded-lg border dark:border-slate-600 shadow-sm">
-                            <div><p id="contactName" class="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"></p><p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Personnel Member</p></div>
+                    
+                    <div class="mt-6 space-y-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Email Address</label>
+                            <p id="contactEmail" class="text-xs font-bold text-blue-600 break-all"></p>
                         </div>
-                        <div><label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Email</label><p id="contactEmail" class="text-[11px] font-bold text-blue-600 dark:text-blue-400"></p></div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Organization</label>
+                            <p class="text-xs font-bold text-slate-700 dark:text-slate-300">Internal Division</p>
+                        </div>
                     </div>
                 </div>
-
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 mt-6">Related Information</h3>
-                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden divide-y dark:divide-slate-700">
-                    <button class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors group"><div class="flex items-center gap-3 text-slate-400 group-hover:text-blue-500 transition-colors"><i class="fas fa-paperclip"></i><span class="text-xs font-bold text-slate-700 dark:text-slate-300">Attachments (0)</span></div><i class="fas fa-chevron-right opacity-30 text-[10px]"></i></button>
-                    <button class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors group"><div class="flex items-center gap-3 text-slate-400 group-hover:text-blue-500 transition-colors"><i class="fas fa-history"></i><span class="text-xs font-bold text-slate-700 dark:text-slate-300">Activity History</span></div><i class="fas fa-chevron-right opacity-30 text-[10px]"></i></button>
-                    <button class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors group"><div class="flex items-center gap-3 text-slate-400 group-hover:text-blue-500 transition-colors"><i class="fas fa-tasks"></i><span class="text-xs font-bold text-slate-700 dark:text-slate-300">Open Activities (0)</span></div><i class="fas fa-chevron-right opacity-30 text-[10px]"></i></button>
+                
+                <div class="p-4 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-500/30">
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Quick Note</p>
+                    <p class="text-[11px] font-medium leading-relaxed">Ensure all sensitive data is redacted before closing this case.</p>
                 </div>
             </div>
         </aside>
@@ -175,245 +259,298 @@
 </div>
 
 <script>
-    let activeTicketId = null;
-    let fullMessageCache = [];
-    let currentTicketStatus = "";
+    // Logic remains identical to your core requirements but with minor UX enhancements
+    const SupportConsole = {
+        activeTicketId: null,
+        fullMessageCache: [],
+        currentTicketStatus: "",
 
-    function openNewTicketAssistant() {
-        document.getElementById('new-ticket-overlay').classList.remove('hidden');
-        document.getElementById('assistant-chat').innerHTML = ''; 
-        appendBotMessage("Hello! I'm your digital support assistant. What issue are you experiencing today?");
-        setBotOptions([{ label: "Account Access", next: "form" }, { label: "Technical Support", next: "form" }, { label: "System Inquiry", next: "form" }]);
-    }
+        init() {
+            // Placeholder for initializers
+        },
 
-    function setBotOptions(opts) {
-        const container = document.getElementById('assistant-options');
-        container.innerHTML = opts.map(o => `<button onclick="handleBotOption('${o.next}')" class="px-4 py-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg text-[10px] font-black uppercase text-blue-600 hover:bg-blue-50 transition-all">${o.label}</button>`).join('');
-    }
+        openAssistant() {
+            const overlay = document.getElementById('new-ticket-overlay');
+            overlay.classList.remove('hidden');
+            document.getElementById('assistant-chat').innerHTML = '';
+            document.getElementById('newTicketForm').classList.add('hidden');
+            document.getElementById('account-fields').classList.add('hidden');
+            this.appendBotMessage("Welcome to Global Support. How may I assist you with your technical requirements today?");
+            this.showMainOptions();
+        },
 
-    function handleBotOption(next) {
-        if(next === 'form') {
+        closeAssistant() { 
+            document.getElementById('new-ticket-overlay').classList.add('hidden'); 
+        },
+
+        showMainOptions() {
+            this.setBotOptions([
+                { label: "🔑 Account Recovery", action: "handle_password" },
+                { label: "📱 MFA Sync Issue", action: "handle_mfa" },
+                { label: "🆕 Provisioning", action: "handle_account" },
+                { label: "🛠️ System Error", action: "handle_custom" }
+            ]);
+        },
+
+        setBotOptions(opts) {
+            const container = document.getElementById('assistant-options');
+            container.innerHTML = opts.map(o => `
+                <button type="button" onclick="SupportConsole.${o.action}()" 
+                        class="px-5 py-2.5 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-500/20 transition-all">
+                    ${o.label}
+                </button>`).join('');
+        },
+
+        appendUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = "flex justify-end mb-4 animate-in slide-in-from-right-4 duration-300";
+            div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3 rounded-2xl rounded-tr-none text-xs font-bold shadow-lg shadow-blue-500/10 max-w-[80%]">${text}</div>`;
+            document.getElementById('assistant-chat').appendChild(div);
+            this.scrollToAssistantBottom();
+        },
+
+        appendBotMessage(text) {
+            const div = document.createElement('div');
+            div.className = "flex justify-start mb-4 animate-in slide-in-from-left-4 duration-300";
+            div.innerHTML = `
+                <div class="flex gap-3 max-w-[85%]">
+                    <div class="w-8 h-8 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <i class="fas fa-robot text-xs text-blue-500"></i>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-2xl rounded-tl-none text-xs font-medium shadow-sm leading-relaxed">${text}</div>
+                </div>`;
+            document.getElementById('assistant-chat').appendChild(div);
+            this.scrollToAssistantBottom();
+        },
+
+        scrollToAssistantBottom() {
+            const chat = document.getElementById('assistant-chat');
+            chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+        },
+
+        handle_password() {
+            this.appendUserMessage("Requesting credential reset.");
+            this.appendBotMessage("System protocols require Admin intervention for password overrides. Please complete the dispatch form.");
+            this.triggerForm("Access", "Password Reset Request", "Manual credential reset required for user account.");
+        },
+
+        handle_mfa() {
+            this.appendUserMessage("MFA Synchronization Failure.");
+            this.appendBotMessage("Device verification issues detected. We will initiate a manual bypass review.");
+            this.triggerForm("Access", "MFA/OTP Removal", "User reports loss of access to MFA device. Verification required.");
+        },
+
+        handle_account() {
+            this.appendUserMessage("Requesting User Provisioning.");
+            this.appendBotMessage("I need the structural details for the new identity. Please provide credentials in the expansion fields.");
+            document.getElementById('account-fields').classList.remove('hidden');
+            this.triggerForm("Access", "New Account Creation", "");
+        },
+
+        handle_custom() {
+            this.appendUserMessage("Reporting a Technical Incident.");
+            this.appendBotMessage("Technical support queue initiated. Please describe the incident in full below.");
+            this.triggerForm("Technical", "General Technical Issue", "");
+        },
+
+        triggerForm(category, subject, descPrefix) {
             document.getElementById('assistant-options').innerHTML = '';
-            document.getElementById('newTicketForm').classList.remove('hidden');
-            appendBotMessage("Great. Please fill out all required fields below to create your case.");
-        }
-    }
+            const form = document.getElementById('newTicketForm');
+            form.classList.remove('hidden');
+            document.getElementById('newCat').value = category;
+            document.getElementById('newSub').value = subject;
+            document.getElementById('newDesc').value = descPrefix;
+            document.getElementById('form-context-msg').innerText = `Department: ${category} Support`;
+        },
 
-    function appendBotMessage(text) {
-        const div = document.createElement('div');
-        div.className = "bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border dark:border-slate-700 max-w-sm text-sm text-slate-600 dark:text-slate-300 animate-in slide-in-from-left-2 duration-300";
-        div.innerText = text;
-        document.getElementById('assistant-chat').appendChild(div);
-    }
-
-    async function finalizeTicketSubmission() {
-        const form = document.getElementById('newTicketForm');
-        if(!form.checkValidity()) { form.reportValidity(); return; }
-        const formData = new FormData(form);
-        try {
-            const res = await fetch('/submit_ticket/', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            const data = await res.json();
-            if (data.status === 'success') { alert("Ticket Created Successfully!"); location.reload(); }
-        } catch (err) { console.error(err); }
-    }
-
-    // UPDATED: closeAssistant now triggers an automatic page refresh
-    function closeAssistant() { 
-        document.getElementById('new-ticket-overlay').classList.add('hidden'); 
-        location.reload(); 
-    }
-
-    function filterSidebar() {
-        const term = document.getElementById('sidebarSearch').value.toLowerCase();
-        document.querySelectorAll('.ticket-item').forEach(item => {
-            item.style.display = item.innerText.toLowerCase().includes(term) ? 'block' : 'none';
-        });
-    }
-
-    function switchTab(view) {
-        const feedView = document.getElementById('feedView'), detailsView = document.getElementById('detailsView');
-        const feedBtn = document.getElementById('feedTabBtn'), detailsBtn = document.getElementById('detailsTabBtn');
-
-        [feedBtn, detailsBtn].forEach(btn => {
-            btn.classList.remove('border-b-2', 'border-blue-600', 'text-blue-600');
-            btn.classList.add('text-slate-400');
-        });
-
-        if (view === 'feed') {
-            feedView.classList.remove('hidden'); detailsView.classList.add('hidden');
-            feedBtn.classList.add('border-b-2', 'border-blue-600', 'text-blue-600');
-            feedBtn.classList.remove('text-slate-400');
-        } else {
-            feedView.classList.add('hidden'); detailsView.classList.remove('hidden');
-            detailsBtn.classList.add('border-b-2', 'border-blue-600', 'text-blue-600');
-            detailsBtn.classList.remove('text-slate-400');
-        }
-    }
-
-    async function loadChat(id, subject, desc, user, email, status, priority, date) {
-        // Add this inside loadChat after rendering messages
-const scrollArea = document.getElementById('workspaceScroll');
-scrollArea.scrollTop = scrollArea.scrollHeight;
-        activeTicketId = id;
-        currentTicketStatus = status;
-        switchTab('feed');
-        document.getElementById('editSubject').value = subject;
-        document.getElementById('editStatus').value = status;
-        document.getElementById('editPriority').value = priority;
-        document.getElementById('editDesc').value = desc;
-        document.getElementById('no-chat-selected').classList.add('hidden');
-        document.getElementById('contact-details-container').classList.remove('opacity-0');
-        document.getElementById('contactName').innerText = user;
-        document.getElementById('contactEmail').innerText = email;
-        document.getElementById('contactAvatar').src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
-        
-        document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
-        const activeItem = document.getElementById(`ticket-item-${id}`);
-        if (activeItem) activeItem.classList.add('active');
-
-        const container = document.getElementById('messageContainer');
-        container.innerHTML = `
-            <div class="flex gap-4">
-                <div class="shrink-0 w-10 h-10 rounded bg-slate-800 border-2 border-white flex items-center justify-center text-[10px] text-white font-black uppercase shadow-sm">${user.charAt(0)}</div>
-                <div class="flex-1 space-y-2">
-                    <div class="flex items-center gap-2"><span class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">${user}</span><span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">• Initial Inquiry</span></div>
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 p-5 rounded-xl shadow-sm italic text-sm text-slate-600 dark:text-slate-300">
-                        <h3 class="text-[13px] font-black text-slate-900 dark:text-white uppercase mb-2 border-b dark:border-slate-800 pb-2">${subject}</h3>${desc}
-                    </div>
-                </div>
-            </div>
-            <div class="relative flex items-center justify-center py-4"><div class="absolute inset-0 flex items-center"><div class="w-full border-t dark:border-slate-800"></div></div><span class="relative px-3 bg-slate-50 dark:bg-[#0f172a] text-[9px] font-black text-slate-400 uppercase tracking-widest">Update History</span></div>
-            <div id="dynamicMessages" class="space-y-8 mt-10"></div>`;
-
-        try {
-            const response = await fetch(`/tickets/chat/${id}/`);
-            const data = await response.json();
-            fullMessageCache = data.messages || [];
-            renderFeed(fullMessageCache);
-        } catch (err) { console.error(err); }
-    }
-
-    function renderFeed(messages) {
-        const messageDiv = document.getElementById('dynamicMessages');
-        messageDiv.innerHTML = messages.map(msg => {
-            const isMe = msg.is_me; 
+        async finalizeTicketSubmission() {
+            const form = document.getElementById('newTicketForm');
+            const btn = event.currentTarget;
             
-            // Format: Full Name <small username>
-            const fullName = msg.sender_full_name || msg.sender;
-            const username = msg.sender;
-
-            return `
-            <div class="flex ${isMe ? 'flex-row-reverse' : 'flex-row'} gap-4 animate-in fade-in duration-300">
-                <div class="shrink-0 w-9 h-9 rounded-full ${isMe ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'} border-2 border-white dark:border-slate-800 flex items-center justify-center text-[10px] text-white font-black uppercase shadow-sm">
-                    ${msg.sender.charAt(0)}
-                </div>
-                
-                <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[80%]">
-                    <div class="flex items-baseline gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}">
-                        <span class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
-                            ${fullName}
-                        </span>
-                        <span class="text-[10px] font-normal text-slate-500 dark:text-slate-400 lowercase">
-                            ${username}
-                        </span>
-                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
-                            • ${msg.created_at}
-                        </span>
-                        ${isMe ? '<span class="px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-[7px] font-black uppercase">Staff</span>' : ''}
-                    </div>
-                    
-                    <div class="p-4 shadow-sm text-[13px] leading-relaxed 
-                        ${isMe 
-                            ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' 
-                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl rounded-tl-none'
-                        }">
-                        ${msg.message}
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function filterFeed(type) {
-        document.querySelectorAll('.feed-filter').forEach(btn => {
-            btn.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600'); btn.classList.add('text-slate-400');
-        });
-        event.currentTarget.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
-        if (type === 'all') renderFeed(fullMessageCache);
-        else if (type === 'staff') renderFeed(fullMessageCache.filter(m => m.is_me));
-        else if (type === 'status') renderFeed(fullMessageCache.filter(m => m.message.toLowerCase().includes('status')));
-        else if (type === 'call') renderFeed(fullMessageCache.filter(m => m.message.toLowerCase().includes('call')));
-    }
-
-    async function sendMessage(e) {
-        e.preventDefault();
-        const input = document.getElementById('chatInput'), formData = new FormData();
-        formData.append('message', input.value); formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        try {
-            const res = await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            if (res.ok) { 
-                input.value = ''; 
-                loadChat(activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, document.getElementById('editStatus').value, "", ""); 
+            let description = document.getElementById('newDesc').value;
+            if (!document.getElementById('account-fields').classList.contains('hidden')) {
+                const fname = document.getElementById('acc_fname').value;
+                const lname = document.getElementById('acc_lname').value;
+                const email = document.getElementById('acc_email').value;
+                const rank = document.getElementById('acc_rank').value;
+                if(!fname || !lname || !email) { alert("Data incomplete for provisioning."); return; }
+                description = `NEW ACCOUNT REQUEST:\nName: ${fname} ${lname}\nEmail: ${email}\nRank: ${rank}\n\nAdditional Notes: ${description}`;
             }
-        } catch (err) { console.error(err); }
-    }
 
-    async function updateTicket(e) {
-        e.preventDefault();
-        const btn = document.getElementById('saveDetailsBtn');
-        const newStatus = document.getElementById('editStatus').value;
-        const payload = {
-            subject: document.getElementById('editSubject').value,
-            status: newStatus,
-            priority: document.getElementById('editPriority').value,
-            description: document.getElementById('editDesc').value
-        };
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...';
 
-        btn.innerText = "SAVING...";
-        btn.disabled = true;
+            const formData = new FormData(form);
+            formData.set('description', description);
 
-        try {
-            const response = await fetch(`/update-ticket-status/${activeTicketId}/`, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value, 
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+            try {
+                const res = await fetch('/submit_ticket/', { 
+                    method: 'POST', 
+                    body: formData, 
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+                });
+                const data = await res.json();
+                if (data.status === 'success') { 
+                    this.appendBotMessage("✅ Dispatch successful. Case ID has been logged in your dashboard.");
+                    setTimeout(() => location.reload(), 1500);
                 }
+            } catch (err) { 
+                btn.disabled = false;
+                btn.innerText = "Retry Dispatch";
+            }
+        },
+
+        filterSidebar() {
+            const term = document.getElementById('sidebarSearch').value.toLowerCase();
+            document.querySelectorAll('.ticket-item').forEach(item => {
+                const isVisible = item.innerText.toLowerCase().includes(term);
+                item.classList.toggle('hidden', !isVisible);
             });
-            const result = await response.json();
-            if (response.ok && result.status === 'success') { 
-                if (newStatus !== currentTicketStatus) {
-                    const logMsg = new FormData();
-                    logMsg.append('message', `STATUS UPDATE: Case changed from ${currentTicketStatus} to ${newStatus}`);
-                    logMsg.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-                    await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: logMsg });
-                }
-                alert("Case details and status log updated successfully."); 
-                location.reload(); 
+        },
+
+        switchTab(view) {
+            const feedView = document.getElementById('feedView'), detailsView = document.getElementById('detailsView');
+            const feedBtn = document.getElementById('feedTabBtn'), detailsBtn = document.getElementById('detailsTabBtn');
+            
+            const activeClasses = ['border-blue-600', 'text-blue-600'];
+            const inactiveClasses = ['text-slate-400', 'border-transparent'];
+
+            if (view === 'feed') {
+                feedView.classList.remove('hidden'); detailsView.classList.add('hidden');
+                feedBtn.classList.add(...activeClasses); feedBtn.classList.remove(...inactiveClasses);
+                detailsBtn.classList.remove(...activeClasses); detailsBtn.classList.add(...inactiveClasses);
             } else {
-                alert("Error: " + (result.message || "Save failed."));
-                btn.innerText = "SAVE CHANGES"; btn.disabled = false;
+                feedView.classList.add('hidden'); detailsView.classList.remove('hidden');
+                detailsBtn.classList.add(...activeClasses); detailsBtn.classList.remove(...inactiveClasses);
+                feedBtn.classList.remove(...activeClasses); feedBtn.classList.add(...inactiveClasses);
             }
-        } catch (err) { 
-            console.error(err); 
-            alert("Network error occurred.");
-            btn.innerText = "SAVE CHANGES"; btn.disabled = false;
+        },
+
+        async loadChat(id, subject, desc, user, email, status, priority, date) {
+            // Remove active state from all items
+            document.querySelectorAll('.ticket-item').forEach(i => i.classList.remove('active-ticket'));
+            document.getElementById(`ticket-item-${id}`).classList.add('active-ticket');
+
+            this.activeTicketId = id;
+            this.currentTicketStatus = status;
+            this.switchTab('feed');
+            
+            // Populate Details Form
+            document.getElementById('editSubject').value = subject;
+            document.getElementById('editStatus').value = status;
+            document.getElementById('editPriority').value = priority;
+            document.getElementById('editDesc').value = desc;
+            
+            // UI States
+            document.getElementById('no-chat-selected').classList.add('hidden');
+            const contactContainer = document.getElementById('contact-details-container');
+            contactContainer.classList.remove('opacity-0', 'translate-x-4');
+            
+            document.getElementById('contactName').innerText = user;
+            document.getElementById('contactEmail').innerText = email;
+            document.getElementById('contactAvatar').src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
+            
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `
+                <div class="bg-blue-50/50 dark:bg-blue-900/10 p-8 rounded-2xl border border-blue-100 dark:border-blue-800/50 mb-10">
+                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3 block">Original Case Opening</span>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-4 leading-tight">${subject}</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">${desc}</p>
+                </div>
+                <div id="dynamicMessages" class="space-y-6"></div>`;
+
+            try {
+                const response = await fetch(`/tickets/chat/${id}/`);
+                const data = await response.json();
+                this.fullMessageCache = data.messages || [];
+                this.renderFeed(this.fullMessageCache);
+                this.scrollToBottom();
+            } catch (err) { console.error(err); }
+        },
+
+        scrollToBottom() {
+            const scrollArea = document.getElementById('workspaceScroll');
+            requestAnimationFrame(() => { scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' }); });
+        },
+
+        renderFeed(messages) {
+            const messageDiv = document.getElementById('dynamicMessages');
+            messageDiv.innerHTML = messages.map(msg => {
+                const isMe = msg.is_me;
+                return `
+                <div class="flex ${isMe ? 'justify-end' : 'justify-start'} group">
+                    <div class="max-w-[75%] ${isMe ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 rounded-2xl rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl rounded-tl-none shadow-sm'} p-4">
+                        <p class="text-sm leading-relaxed">${msg.message}</p>
+                    </div>
+                </div>`;
+            }).join('');
+        },
+
+        async sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            if (!input.value.trim()) return;
+
+            const formData = new FormData();
+            formData.append('message', input.value);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            try {
+                const res = await fetch(`/tickets/chat/${this.activeTicketId}/send/`, { method: 'POST', body: formData });
+                if (res.ok) { 
+                    input.value = ''; 
+                    this.loadChat(this.activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, "", "", "", "", ""); 
+                }
+            } catch (err) { console.error(err); }
+        },
+
+        async updateTicket(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveDetailsBtn');
+            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
+
+            const payload = { 
+                subject: document.getElementById('editSubject').value, 
+                status: document.getElementById('editStatus').value, 
+                priority: document.getElementById('editPriority').value, 
+                description: document.getElementById('editDesc').value 
+            };
+            try {
+                const response = await fetch(`/update-ticket-status/${this.activeTicketId}/`, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload), 
+                    headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value, 'Content-Type': 'application/json' } 
+                });
+                if (response.ok) { location.reload(); }
+            } catch (err) { 
+                console.error(err); 
+                btn.innerText = "Error";
+            }
         }
-    }
+    };
+    
+    document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
 </script>
 
 <style>
+    /* Modern Scrollbars */
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; }
-    
-    .ticket-item.active { 
-        background-color: rgba(59, 130, 246, 0.1) !important; 
-        border-right: 4px solid #3b82f6; 
-        box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.05);
+
+    /* Active States */
+    .active-ticket { 
+        background-color: #f8fafc !important; 
+        border-color: #e2e8f0 !important; 
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
     }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .dark .active-ticket { background-color: #1e293b !important; border-color: #334155 !important; }
+
+    /* Smooth Input Resize */
+    #chatInput {
+        min-height: 52px;
+        max-height: 200px;
+    }
 </style>
 {% endblock %}

@@ -71,7 +71,7 @@ def role_redirect(request):
         return redirect('dashboard')
     return redirect('login')
 
-################################################################################# --- DASHBOARD ---##############################################################################
+# --- DASHBOARD ---
 @login_required
 def dashboard(request):
     # Global Metrics
@@ -220,7 +220,6 @@ def dashboard(request):
         asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
         context['asset_labels'] = [item['assets_type'] for item in asset_qs]
         context['asset_totals'] = [item['total'] for item in asset_qs]
-        context['maintenance_assets_count'] = Maintenance.objects.count()
 
         severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
         context['severity_labels'] = [item['severity'] for item in severity_qs]
@@ -1019,59 +1018,8 @@ def reports(request):
     return render(request, 'core/Admin/reports.html', context)
 
 @login_required
-@login_required
 def command_reports(request):
-    report_type = request.GET.get('report_type', 'it_asset')
-    category = request.GET.get('category', 'All')
-    
-    # 1. Base Querysets & Logic Mapping
-    if report_type == 'maintenance':
-        queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
-        filter_field = 'status' # Filter by Maintenance Status
-        chart_group_by = 'status'
-        # Dropdown options: Unique statuses from Maintenance
-        filter_options = Maintenance.objects.values_list('status', 'status').distinct()
-        
-    elif report_type == 'incident':
-        queryset = Incident.objects.all().select_related('asset').order_by('-date')
-        filter_field = 'severity' # Filter by Incident Severity
-        chart_group_by = 'severity'
-        # Dropdown options: Unique severities from Incidents
-        filter_options = Incident.objects.values_list('severity', 'severity').distinct()
-        
-    else: # it_asset
-        queryset = Asset.objects.all().order_by('assets_id')
-        filter_field = 'assets_type' # Filter by Asset Category
-        chart_group_by = 'status'
-        # Dropdown options: Unique asset types
-        filter_options = Asset.objects.values_list('assets_type', 'assets_type').distinct()
-
-    # 2. Apply the Filter
-    if category and category != 'All':
-        queryset = queryset.filter(**{filter_field: category})
-
-    # 3. Pagination (Set to 6)
-    paginator = Paginator(queryset, 6) 
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    # 4. Chart Logic
-    stats = queryset.values(chart_group_by).annotate(count=Count('id'))
-    status_labels = [str(item[chart_group_by]) for item in stats]
-    status_counts = [item['count'] for item in stats]
-
-    context = {
-        'report_type': report_type,
-        'category': category,
-        'data_list': page_obj,
-        'page_obj': page_obj,
-        'total_count': queryset.count(),
-        'status_labels': status_labels,
-        'status_counts': status_counts,
-        'filter_options': filter_options,
-    }
-    return render(request, 'core/Commander/command_reports.html', context)
-
+    return render(request, 'core/Commander/command_reports.html')
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -1352,13 +1300,19 @@ def get_messages(request, ticket_id):
 
 def send_message(request, ticket_id):
     if request.method == "POST":
-        text = request.POST.get('text')
+        # Check for both 'message' and 'text'
+        text = request.POST.get('text') or request.POST.get('message')
         if not text:
             return JsonResponse({"status": "error", "message": "Empty message"}, status=400)
             
         ticket = get_object_or_404(Ticket, id=ticket_id)
         
-        # Use TicketMessage and set 'message=text' to match your model field
+        # Assign technician if not set
+        if not ticket.technician:
+            ticket.technician = request.user
+            ticket.status = 'In Progress'
+            ticket.save()
+            
         msg = TicketMessage.objects.create(
             ticket=ticket, 
             sender=request.user, 
@@ -1406,15 +1360,37 @@ def get_ticket_chat(request, ticket_id):
 def send_ticket_message(request, ticket_id):
     if request.method == "POST":
         ticket = get_object_or_404(Ticket, id=ticket_id)
-        content = request.POST.get('message')
+        content = request.POST.get('message', '').strip()
         
         if content:
-            msg = TicketMessage.objects.create(
+            # 1. Identify if this is a system-generated log
+            is_admin_log = "ADMIN STATUS UPDATE" in content
+
+            # 2. Assign ownership ONLY for real messages
+            if not is_admin_log:
+                # This ensures the sender becomes the technician, 
+                # even if the ticket was previously N/A or owned by someone else.
+                ticket.technician = request.user
+                
+                # Automatically move from Pending to In Progress
+                if ticket.status == 'Pending':
+                    ticket.status = 'In Progress'
+                
+                ticket.save()
+
+            # 3. Create the actual message
+            TicketMessage.objects.create(
                 ticket=ticket,
                 sender=request.user,
                 message=content
             )
-            return JsonResponse({'status': 'sent'})
+            
+            return JsonResponse({
+                'status': 'sent',
+                'new_status': ticket.status,
+                'technician': ticket.technician.username if ticket.technician else "N/A"
+            })
+            
     return JsonResponse({'status': 'error'}, status=400)
 
 @login_required
@@ -1424,21 +1400,27 @@ def update_ticket_status(request, ticket_id):
             data = json.loads(request.body)
             ticket = get_object_or_404(Ticket, id=ticket_id)
             
-            # Update all fields sent from the Details tab
-            if 'status' in data:
-                ticket.status = data.get('status')
-            if 'subject' in data:
-                ticket.subject = data.get('subject')
-            if 'priority' in data:
-                ticket.priority = data.get('priority')
-            if 'description' in data:
-                ticket.description = data.get('description')
+            new_status = data.get('status')
             
-            # Set the current user as the technician handling the change
-            ticket.technician = request.user 
+            if new_status:
+                ticket.status = new_status
+                
+                # If changed to Pending, remove the technician
+                if new_status == 'Pending':
+                    ticket.technician = None
+                else:
+                    # If changed to In Progress/Resolved and no tech is assigned, assign current user
+                    if not ticket.technician:
+                        ticket.technician = request.user
             
+            # (Keep your other priority/description logic here)
             ticket.save()
-            return JsonResponse({'status': 'success', 'message': 'Ticket updated successfully'})
+            
+            return JsonResponse({
+                'status': 'success', 
+                'new_status': ticket.status,
+                'technician': ticket.technician.username if ticket.technician else "N/A"
+            })
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 

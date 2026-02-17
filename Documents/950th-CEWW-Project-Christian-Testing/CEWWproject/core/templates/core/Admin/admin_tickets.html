@@ -47,10 +47,10 @@
                         <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/50">
                             {% for ticket in tickets %}
                             <tr class="ticket-row hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors cursor-pointer group" 
-                              id="row-{{ ticket.id }}"
+                                id="row-{{ ticket.id }}"
                                 data-status="{{ ticket.status }}" 
-                                data-mine="{% if ticket.technician_id == request.user.id %}true{% else %}false{% endif %}"
-                                onclick="selectTicket('{{ ticket.id }}', '{{ ticket.user.get_full_name|default:ticket.user.username|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.status }}', '{{ ticket.description|escapejs }}', '{{ ticket.created_at|date:'M d, Y H:i' }}')">
+                                data-mine="{% if ticket.technician == request.user %}true{% else %}false{% endif %}"
+                                onclick="selectTicket('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.status }}', '{{ ticket.description|escapejs }}', '{{ ticket.created_at|date:'M d, Y H:i' }}')">
                                 
                                 <td class="px-4 py-4">
                                     <div class="flex items-start gap-3">
@@ -65,9 +65,8 @@
                                         <div class="min-w-0">
                                             <span class="font-bold text-slate-800 dark:text-slate-200 text-sm block truncate">{{ ticket.subject }}</span>
                                             <div class="flex flex-col gap-0.5 mt-0.5">
-                                                <div class="flex items-center gap-1.5">
-                                                    <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold">{{ ticket.user.get_full_name|default:ticket.user.username }}</span>
-                                                    <span class="text-[9px] text-slate-400 font-normal">@{{ ticket.user.username }}</span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">@{{ ticket.user.username }}</span>
                                                     <span class="text-[10px] text-slate-400">• {{ ticket.created_at|date:"M d" }}</span>
                                                 </div>
                                                 <div class="text-[9px] font-bold uppercase tracking-wider text-slate-400">
@@ -82,9 +81,11 @@
                                 </td>
 
                                 <td class="px-4 py-4 text-center">
-                                    <span class="status-pill px-2.5 py-1 rounded-full text-[10px] font-bold border inline-block min-w-[75px]
+                                    <span id="list-status-{{ ticket.id }}" class="status-pill px-2.5 py-1 rounded-full text-[10px] font-bold border inline-block min-w-[75px]
                                         {% if ticket.status == 'Pending' %} bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20
                                         {% elif ticket.status == 'In Progress' %} bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20
+                                        {% elif ticket.status == 'Under Review' %} bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20
+                                        {% elif ticket.status == 'Unresolved' %} bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/20
                                         {% else %} bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 {% endif %}">
                                         {{ ticket.status }}
                                     </span>
@@ -120,11 +121,8 @@
                             <img id="activeAvatar" src="" class="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white dark:border-slate-700 shadow-sm">
                             <div>
                                 <h2 id="activeSubject" class="text-md md:text-lg font-bold text-slate-800 dark:text-white leading-tight"></h2>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <div id="activeUserContainer" class="flex items-center gap-1.5">
-                                        <p id="activeFullName" class="text-[10px] md:text-[11px] text-blue-600 dark:text-blue-400 font-bold tracking-tight"></p>
-                                        <p id="activeUsername" class="text-[9px] md:text-[10px] text-slate-400 font-normal"></p>
-                                    </div>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <p id="activeUser" class="text-[9px] md:text-[10px] text-blue-600 dark:text-blue-400 font-bold tracking-wider"></p>
                                     <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
                                     <p id="activeDateTime" class="text-[9px] md:text-[10px] text-slate-500 font-medium"></p>
                                 </div>
@@ -179,10 +177,10 @@
 </style>
 
 <script>
-    
     let currentTicketId = null;
     const currentAdminUser = "{{ request.user.username }}";
 
+    // Pagination State
     let currentPage = 1;
     const itemsPerPage = 5;
 
@@ -192,6 +190,21 @@
                    row.getAttribute('data-filter-hidden') !== 'true';
         });
     }
+
+    // Example of how your Save button logic should call the UI update
+async function saveTicketDetails(id, newStatus) {
+    const response = await fetch(`/update-ticket-status/${id}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ status: newStatus })
+    });
+    
+    const result = await response.json();
+    if (result.status === 'success') {
+        // This updates the sidebar list in real-time!
+        updateListRowUI(id, result.new_status, result.technician);
+    }
+}
 
     function updatePagination() {
         const activeRows = getActiveRows();
@@ -249,28 +262,25 @@
         updatePagination();
     }
 
-    async function selectTicket(id, fullName, username, status, description, datetime) {
+    async function selectTicket(id, subject, user, status, description, datetime) {
         currentTicketId = id;
         setResponsiveView(true);
         document.getElementById('emptyDetailState').classList.add('hidden');
         document.getElementById('ticketDetailPanel').classList.remove('hidden');
-        
-        const activeRow = document.getElementById(`row-${id}`);
-        const subjectText = activeRow.querySelector('.font-bold.text-sm').innerText;
-        document.getElementById('activeSubject').innerText = subjectText;
-
-        document.getElementById('activeFullName').innerText = fullName;
-        document.getElementById('activeUsername').innerText = `@${username}`;
-        
+        document.getElementById('activeSubject').innerText = subject;
+        document.getElementById('activeUser').innerText = `USER: ${user}`;
         document.getElementById('activeDateTime').innerText = `CREATED: ${datetime}`;
         document.getElementById('activeDescription').innerText = description || "No additional details provided.";
         
+        // DYNAMIC LINK: Correct path for ticket details
         document.getElementById('fullDetailLink').href = `/manage/ticket/${id}/`;
-        document.getElementById('activeAvatar').src = `https://ui-avatars.com/api/?name=${fullName}&background=3b82f6&color=fff&bold=true`;
+
+        document.getElementById('activeAvatar').src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
 
         document.querySelectorAll('.ticket-row').forEach(row => {
             row.classList.remove('bg-blue-50', 'dark:bg-blue-900/20', 'border-l-4', 'border-blue-500');
         });
+        const activeRow = document.getElementById(`row-${id}`);
         if (activeRow) activeRow.classList.add('bg-blue-50', 'dark:bg-blue-900/20', 'border-l-4', 'border-blue-500');
 
         try {
@@ -278,11 +288,11 @@
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             
-            // Sync UI only if the technician is already set in the database
-            if (data.technician_username === currentAdminUser) {
-                activeRow.setAttribute('data-mine', 'true');
-                updateTechnicianUI(id, currentAdminUser);
-            }
+            // const myLastMessage = data.messages.filter(msg => msg.is_me).pop();
+            // if (myLastMessage && activeRow) {
+            //     activeRow.setAttribute('data-mine', 'true');
+            //     updateTechnicianUI(id, currentAdminUser);
+            // }
             renderMessages(data.messages);
         } catch (error) {
             console.error("Failed to load chat:", error);
@@ -295,45 +305,62 @@
             const techSpan = row.querySelector('.tech-name');
             techSpan.innerText = username;
             techSpan.classList.remove('text-slate-400');
-            techSpan.classList.add('text-blue-500', 'dark:text-blue-400');
+            techSpan.classList.add('text-blue-50', 'dark:text-blue-400');
         }
     }
+
+    // Add this function to Code 1 to allow real-time list updates
+function updateListRowUI(ticketId, newStatus, technicianName = null) {
+    const row = document.getElementById(`row-${ticketId}`);
+    const statusPill = document.getElementById(`list-status-${ticketId}`);
+    
+    if (row && statusPill) {
+        // 1. Update Status Text and Filter Data
+        row.setAttribute('data-status', newStatus);
+        statusPill.innerText = newStatus;
+        
+        // 2. Handle Technician Display
+        const techSpan = row.querySelector('.tech-name');
+        if (techSpan) {
+            if (newStatus === 'Pending') {
+                techSpan.innerText = "N/A";
+                techSpan.classList.replace('text-blue-500', 'text-slate-400');
+                row.setAttribute('data-mine', 'false'); // No longer "mine" if pending
+            } else if (technicianName) {
+                techSpan.innerText = technicianName;
+                techSpan.classList.replace('text-slate-400', 'text-blue-500');
+            }
+        }
+
+        // 3. Update Status Pill Colors
+        statusPill.className = "status-pill px-2.5 py-1 rounded-full text-[10px] font-bold border inline-block min-w-[75px]";
+        if (newStatus === 'Pending') {
+            statusPill.classList.add('bg-amber-50', 'text-amber-600', 'border-amber-200', 'dark:bg-amber-500/10');
+        } else if (newStatus === 'In Progress') {
+            statusPill.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'dark:bg-blue-500/10');
+        } else {
+            statusPill.classList.add('bg-emerald-50', 'text-emerald-600', 'border-emerald-200', 'dark:bg-emerald-500/10');
+        }
+    }
+}
 
     function renderMessages(messages) {
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = ''; 
-        
         messages.forEach(msg => {
             const msgDiv = document.createElement('div');
-            const isStatusUpdate = msg.message.includes("STATUS UPDATE:");
-            
-            if (isStatusUpdate) {
-                msgDiv.className = "flex justify-center my-4";
-                msgDiv.innerHTML = `
-                    <div class="px-4 py-1.5 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                        ${msg.message}
-                    </div>`;
-            } else {
-                msgDiv.className = msg.is_me ? "flex gap-2 md:gap-3 flex-row-reverse" : "flex gap-2 md:gap-3";
-                msgDiv.innerHTML = `
-                    <div class="w-8 h-8 rounded-full ${msg.is_me ? 'bg-slate-700' : 'bg-blue-600'} shrink-0 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white dark:border-slate-800 shadow-sm">
-                        ${msg.avatar_char}
+            msgDiv.className = msg.is_me ? "flex gap-2 md:gap-3 flex-row-reverse" : "flex gap-2 md:gap-3";
+            msgDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full ${msg.is_me ? 'bg-slate-700' : 'bg-blue-600'} flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white border-2 border-white dark:border-slate-800 shadow-sm">
+                    ${msg.avatar_char || (msg.sender ? msg.sender.substring(0,2).toUpperCase() : '??')}
+                </div>
+                <div class="${msg.is_me ? 'max-w-[80%] text-right' : 'max-w-[80%] text-left'}">
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 tracking-tight">${msg.sender}</p>
+                    <div class="p-3 shadow-sm ${msg.is_me ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-none border border-slate-100 dark:border-slate-700'} text-xs md:text-sm leading-relaxed">
+                        ${msg.message || msg.text}
                     </div>
-                    <div class="${msg.is_me ? 'max-w-[80%] text-right' : 'max-w-[80%] text-left'}">
-                        <div class="flex items-center gap-1.5 mb-1 ${msg.is_me ? 'justify-end' : ''}">
-                            <span class="text-[10px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-tight">
-                                ${msg.sender_full_name}
-                            </span>
-                            <span class="text-[9px] font-normal text-slate-400">
-                                @${msg.sender_username}
-                            </span>
-                        </div>
-                        <div class="p-3 shadow-sm ${msg.is_me ? 'bg-blue-600 text-white rounded-2xl rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-none border border-slate-100 dark:border-slate-700'} text-xs md:text-sm leading-relaxed">
-                            ${msg.message}
-                        </div>
-                        <p class="text-[9px] text-slate-400 mt-1.5 font-medium">${msg.created_at}</p>
-                    </div>`;
-            }
+                    <p class="text-[9px] text-slate-400 mt-1.5 font-medium">${msg.created_at || msg.time}</p>
+                </div>`;
             chatBox.appendChild(msgDiv);
         });
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -349,48 +376,54 @@
     formData.append('message', message); 
     formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-    // Make sure this URL matches your urls.py exactly!
     const response = await fetch(`/tickets/chat/${currentTicketId}/send/`, {
         method: 'POST',
         body: formData
     });
 
     if (response.ok) {
-        const result = await response.json(); 
+        const result = await response.json(); // The server returns the new tech (You)
         input.value = '';
-        
-        const row = document.getElementById(`row-${currentTicketId}`);
-        if (row && result.technician) {
-            // Update the 'data-mine' attribute for the "My Tasks" filter
-            // We compare the technician username from the server to the current user
-            const currentAdmin = "{{ request.user.username }}";
-            if (result.technician === currentAdmin) {
-                row.setAttribute('data-mine', 'true');
-            }
-            
-            // Update the technician name in the sidebar
-            const techSpan = row.querySelector('.tech-name');
-            if (techSpan) {
-                techSpan.innerText = result.technician;
-                techSpan.classList.remove('text-slate-400');
-                techSpan.classList.add('text-blue-500', 'dark:text-blue-400');
-            }
 
-            // Update status to In Progress
-            row.setAttribute('data-status', 'In Progress');
-            const statusPill = row.querySelector('.status-pill');
-            if (statusPill) {
-                statusPill.innerText = 'In Progress';
-                statusPill.className = "status-pill px-2.5 py-1 rounded-full text-[10px] font-bold border inline-block min-w-[75px] bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20";
-            }
+        // --- REAL-TIME OWNERSHIP UPDATE ---
+        const activeRow = document.getElementById(`row-${currentTicketId}`);
+        if (activeRow) {
+            // 1. Set data-mine to true so it appears in "My Tasks"
+            activeRow.setAttribute('data-mine', 'true');
+            
+            // 2. Update the technician name in the sidebar list
+            updateTechnicianUI(currentTicketId, currentAdminUser);
+            
+            // 3. Update the status pill to In Progress
+            updateListRowUI(currentTicketId, 'In Progress', currentAdminUser);
         }
-        
-        // Refresh chat messages
+        // ----------------------------------
+
         const res = await fetch(`/tickets/chat/${currentTicketId}/`);
         const data = await res.json();
         renderMessages(data.messages);
     }
 }
+
+    // Function to refresh ONLY the status of the active ticket from the server
+async function refreshActiveTicketStatus() {
+    if (!currentTicketId) return;
+
+    try {
+        // We use the chat endpoint because it's already there, 
+        // but ideally, you'd have a small /ticket-status/<id>/ endpoint.
+        const response = await fetch(`/tickets/chat/${currentTicketId}/`);
+        if (response.ok) {
+            const data = await response.json();
+            // Assuming your backend logic: if messages exist and tech is assigned, status is In Progress
+            // To be more precise, you could update your get_ticket_chat view 
+            // to also return the current status of the ticket.
+        }
+    } catch (e) { console.log("Status sync failed"); }
+}
+
+// Check for status updates every 10 seconds if a ticket is open
+setInterval(refreshActiveTicketStatus, 10000);
 
     async function deleteTicket() {
         if (!currentTicketId || !confirm("Delete this ticket?")) return;
@@ -431,13 +464,6 @@
         currentTicketId = null;
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-    // Reset filters on fresh load to show all tickets
-    document.querySelectorAll('.ticket-row').forEach(row => {
-        row.setAttribute('data-filter-hidden', 'false');
-        row.setAttribute('data-search-hidden', 'false');
-    });
-    updatePagination();
-});
+    window.addEventListener('DOMContentLoaded', updatePagination);
 </script>
 {% endblock %}

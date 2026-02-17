@@ -37,11 +37,21 @@
                     <div class="grid grid-cols-1 gap-4">
                         <div>
                             <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
-                            <span class="inline-block mt-1 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] font-black border border-blue-100 dark:border-blue-800">{{ ticket.status }}</span>
+                            <span id="sidebarStatusBadge" 
+                                class="inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase
+                                {% if ticket.status == 'In Progress' or ticket.status == 'Under Review' %}
+                                    bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800
+                                {% elif ticket.status == 'Resolved' or ticket.status == 'Completed' %}
+                                    bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800
+                                {% else %}
+                                    bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800
+                                {% endif %}">
+                                {{ ticket.status }}
+                            </span>
                         </div>
                         <div>
                             <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Priority</label>
-                            <p class="text-[11px] font-bold {% if ticket.priority == 'High' or ticket.priority == 'Critical' %}text-red-500{% else %}text-slate-700 dark:text-slate-200{% endif %} uppercase mt-0.5">{{ ticket.priority|default:"Medium" }}</p>
+                            <p id="sidebarPriorityText" class="text-[11px] font-bold {% if ticket.priority == 'High' or ticket.priority == 'Critical' %}text-red-500{% else %}text-slate-700 dark:text-slate-200{% endif %} uppercase mt-0.5">{{ ticket.priority|default:"Medium" }}</p>
                         </div>
                     </div>
                 </section>
@@ -125,9 +135,12 @@
                             <div>
                                 <label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Status Flag</label>
                                 <select name="status" id="editStatus" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-blue-500">
-                                    {% for code, label in ticket.STATUS_CHOICES %}
-                                    <option value="{{ code }}" {% if ticket.status == code %}selected{% endif %}>{{ label }}</option>
-                                    {% endfor %}
+                                    <option value="Pending" {% if ticket.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="In Progress" {% if ticket.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="Under Review" {% if ticket.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                                    <option value="Unresolved" {% if ticket.status == 'Unresolved' %}selected{% endif %}>Unresolved</option>
+                                    <option value="Completed" {% if ticket.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    <option value="Resolved" {% if ticket.status == 'Resolved' %}selected{% endif %}>Resolved</option>
                                 </select>
                             </div>
                             <div>
@@ -174,14 +187,13 @@
 </div>
 
 <script>
-    // Scroll to bottom of chat on load
     window.onload = () => {
         const chatBox = document.getElementById('chatBox');
         chatBox.scrollTop = chatBox.scrollHeight;
     };
 
     const activeTicketId = "{{ ticket.id }}";
-    const currentTicketStatus = "{{ ticket.status }}";
+    let currentTicketStatus = "{{ ticket.status }}"; 
 
     function switchTab(tab) {
         const feedView = document.getElementById('feedView'), detailsView = document.getElementById('detailsView');
@@ -202,12 +214,19 @@
     async function updateTicketAdmin(e) {
         e.preventDefault();
         const btn = document.getElementById('saveDetailsBtn');
-        const newStatus = document.getElementById('editStatus').value;
+        const statusSelect = document.getElementById('editStatus');
+        const prioritySelect = document.getElementById('editPriority');
+        
+        const statusValue = statusSelect.value;
+        const statusLabel = statusSelect.options[statusSelect.selectedIndex].text;
+        const priorityLabel = prioritySelect.options[prioritySelect.selectedIndex].text;
+        const newDesc = document.getElementById('editDesc').value;
+
         const payload = {
             subject: document.getElementById('editSubject').value,
-            status: newStatus,
-            priority: document.getElementById('editPriority').value,
-            description: document.getElementById('editDesc').value
+            status: statusValue,
+            priority: prioritySelect.value,
+            description: newDesc
         };
 
         btn.innerText = "SAVING...";
@@ -223,16 +242,70 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
-            if (response.ok) { 
-                if (newStatus !== currentTicketStatus) {
-                    const logMsg = new FormData();
-                    logMsg.append('message', `ADMIN STATUS UPDATE: Case changed to ${newStatus}`);
-                    logMsg.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-                    await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: logMsg });
+
+            if (response.ok) {
+                // Update Sidebar Status Badge with color logic
+                const statusBadge = document.getElementById('sidebarStatusBadge');
+                if (statusBadge) {
+                    statusBadge.innerText = statusLabel;
+                    
+                    // Logic to set Amber for both In Progress and Under Review
+                    if (statusValue === "In Progress" || statusValue === "Under Review") {
+                        statusBadge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800";
+                    } else if (statusValue === "Resolved" || statusValue === "Completed") {
+                        statusBadge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800";
+                    } else {
+                        statusBadge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800";
+                    }
                 }
-                location.reload(); 
+
+                // Update Sidebar Priority Text
+                const priorityText = document.getElementById('sidebarPriorityText');
+                if (priorityText) {
+                    priorityText.innerText = priorityLabel;
+                    if (payload.priority === 'High' || payload.priority === 'Critical') {
+                        priorityText.classList.add('text-red-500');
+                    } else {
+                        priorityText.classList.remove('text-red-500');
+                    }
+                }
+
+                // Log change in chat if status changed
+                if (statusValue !== currentTicketStatus) {
+                    const logMsg = new FormData();
+                    logMsg.append('message', `ADMIN STATUS UPDATE: Case changed to ${statusLabel}`);
+                    logMsg.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                    
+                    await fetch(`/tickets/chat/${activeTicketId}/send/`, { 
+                        method: 'POST', 
+                        body: logMsg 
+                    });
+                    currentTicketStatus = statusValue;
+                }
+
+                btn.innerText = "SUCCESS ✓";
+                btn.classList.replace('bg-emerald-600', 'bg-green-700');
+                
+                setTimeout(() => {
+                    btn.innerText = "Save System Updates";
+                    btn.classList.replace('bg-green-700', 'bg-emerald-600');
+                    btn.disabled = false;
+                    location.reload(); 
+                }, 1000);
+
+            } else {
+                throw new Error("Server rejected update");
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { 
+            console.error(err);
+            btn.innerText = "ERROR";
+            btn.style.backgroundColor = "#dc2626";
+            setTimeout(() => {
+                btn.innerText = "Save System Updates";
+                btn.style.backgroundColor = "";
+                btn.disabled = false;
+            }, 3000);
+        }
     }
 </script>
 
