@@ -2,10 +2,15 @@
 {% load static %}
 
 {% block content %}
+<div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden backdrop-blur-sm"></div>
+
 <div class="h-screen bg-[#f1f5f9] dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans">
     
     <header class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 z-30 shadow-sm">
         <div class="flex items-center gap-4">
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1 text-slate-600 dark:text-slate-400">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
             <div class="bg-blue-600 p-1.5 rounded-lg shadow-lg shadow-blue-500/20">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
@@ -20,9 +25,9 @@
         </div>
     </header>
 
-    <main class="flex-1 flex overflow-hidden">
+    <main class="flex-1 flex overflow-hidden relative">
         
-        <aside class="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+        <aside id="sidebar-container" class="fixed lg:relative inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="p-4 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800 space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-[10px] font-black uppercase text-slate-400">My Threads</span>
@@ -47,7 +52,7 @@
 
         <section class="flex-1 flex flex-col bg-[#f8fafc] dark:bg-[#0f172a] relative border-r dark:border-slate-800 overflow-hidden">
             
-            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white dark:bg-[#0f172a] z-40 flex flex-col p-10">
+            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white dark:bg-[#0f172a] z-40 flex flex-col p-6 lg:p-10">
                 <div class="flex justify-between items-center mb-8 border-b dark:border-slate-800 pb-4">
                     <h2 class="text-xs font-black uppercase text-blue-600 tracking-widest">Smart Assistant / New Ticket</h2>
                     <button onclick="closeAssistant()" class="text-slate-400 hover:text-red-500"><i class="fas fa-times"></i></button>
@@ -62,14 +67,14 @@
                                 <label class="text-[9px] font-black uppercase text-slate-400 ml-1">Case Subject</label>
                                 <input type="text" name="subject" id="newSub" required placeholder="Brief Summary" class="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 p-3 rounded-lg text-sm font-bold dark:text-white">
                             </div>
-                            <div>
+                            <div class="col-span-2 lg:col-span-1">
                                 <label class="text-[9px] font-black uppercase text-slate-400 ml-1">Category</label>
                                 <select name="category" id="newCat" required class="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 p-3 rounded-lg text-xs font-bold uppercase dark:text-white">
                                     <option value="" disabled selected>Select Category</option>
                                     <option value="General">General</option><option value="Technical">Technical</option><option value="Hardware">Hardware</option><option value="Access">Access</option>
                                 </select>
                             </div>
-                            <div>
+                            <div class="col-span-2 lg:col-span-1">
                                 <label class="text-[9px] font-black uppercase text-slate-400 ml-1">Priority</label>
                                 <select name="priority" id="newPriority" required class="w-full bg-slate-50 dark:bg-slate-900 border dark:border-slate-800 p-3 rounded-lg text-xs font-bold uppercase dark:text-white">
                                     <option value="" disabled selected>Select Urgency</option>
@@ -92,13 +97,13 @@
 
             <div class="h-12 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex shrink-0">
                 <button onclick="switchTab('feed')" id="feedTabBtn" class="px-6 text-[10px] font-black uppercase transition-all">Feed</button>
-                <button onclick="switchTab('details')" id="detailsTabBtn" class="px-6 text-[10px] font-black uppercase transition-all">Details</button>
+                <button onclick="switchTab('details')" id="detailsTabBtn" class="px-4 lg:px-6 text-[10px] font-black uppercase transition-all">Details</button>
             </div>
 
             <div id="feedView" class="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-[#0f172a]">
     
-    <div class="px-6 pt-6 shrink-0">
-        <div class="flex items-center gap-6 border-b dark:border-slate-800 mb-4 pb-2">
+    <div class="px-4 lg:px-6 pt-6 shrink-0">
+        <div class="flex items-center gap-4 lg:gap-6 border-b dark:border-slate-800 mb-4 pb-2 overflow-x-auto no-scrollbar">
             <button onclick="filterFeed('all')" class="feed-filter active text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 pb-2 whitespace-nowrap">All Updates</button>
             <button onclick="filterFeed('call')" class="feed-filter text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-2 whitespace-nowrap">Call Logs</button>
             <button onclick="filterFeed('staff')" class="feed-filter text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-2 whitespace-nowrap">Text Posts</button>
@@ -106,11 +111,11 @@
         </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-2" id="workspaceScroll">
+    <div class="flex-1 overflow-y-auto custom-scrollbar px-4 lg:px-6 py-2" id="workspaceScroll">
         <div id="messageContainer" class="space-y-8"></div>
     </div>
 
-    <div class="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+    <div class="p-4 lg:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div class="bg-slate-50/50 dark:bg-slate-800/50 px-4 py-2 border-b dark:border-slate-800 flex gap-4">
                 <span class="text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 py-1">Post Update</span>
@@ -120,7 +125,7 @@
                 <textarea id="chatInput" required rows="2" class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-lg p-4 text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:ring-2 ring-blue-500/20 transition-all" placeholder="Type your update..."></textarea>
                 <div class="mt-3 flex justify-end gap-2">
                     <button type="button" onclick="logCall()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-4 py-2 rounded text-slate-600 dark:text-slate-300 text-[10px] font-black uppercase tracking-widest transition-all">Log Call</button>
-                    <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 px-8 py-2 rounded text-white text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Share</button>
+                    <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 px-6 lg:px-8 py-2 rounded text-white text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Share</button>
                 </div>
             </form>
         </div>
@@ -128,7 +133,7 @@
 </div>
 
             <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a]">
-                <form id="editTicketForm" onsubmit="updateTicket(event)" class="p-8 max-w-4xl space-y-10 animate-in fade-in slide-in-from-left-4 duration-300">
+                <form id="editTicketForm" onsubmit="updateTicket(event)" class="p-6 lg:p-8 max-w-4xl space-y-10 animate-in fade-in slide-in-from-left-4 duration-300">
                     {% csrf_token %}
                     <div class="flex items-center justify-between border-b dark:border-slate-800 pb-4">
                         <h3 class="text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2"><i class="fas fa-edit"></i> Edit Case</h3>
@@ -139,8 +144,8 @@
                             <label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Subject (Read Only)</label>
                             <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none shadow-inner">
                         </div>
-                        <div><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Status</label><select name="status" id="editStatus" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase"><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option><option value="Denied">Denied</option></select></div>
-                        <div><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Priority</label><select name="priority" id="editPriority" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase"><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option></select></div>
+                        <div class="col-span-2 lg:col-span-1"><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Status</label><select name="status" id="editStatus" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase"><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option><option value="Denied">Denied</option></select></div>
+                        <div class="col-span-2 lg:col-span-1"><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Priority</label><select name="priority" id="editPriority" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase"><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option></select></div>
                         <div class="col-span-2"><label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Internal Description</label><textarea id="editDesc" name="description" rows="5" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs font-medium dark:text-white outline-none leading-relaxed"></textarea></div>
                     </div>
                 </form>
@@ -175,6 +180,20 @@
 </div>
 
 <script>
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('sidebar-container');
+        const overlay = document.getElementById('sidebar-overlay');
+        const isOpen = !sidebar.classList.contains('-translate-x-full');
+        
+        if (isOpen) {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        } else {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+    }
+
     let activeTicketId = null;
     let fullMessageCache = [];
     let currentTicketStatus = "";
@@ -184,6 +203,7 @@
         document.getElementById('assistant-chat').innerHTML = ''; 
         appendBotMessage("Hello! I'm your digital support assistant. What issue are you experiencing today?");
         setBotOptions([{ label: "Account Access", next: "form" }, { label: "Technical Support", next: "form" }, { label: "System Inquiry", next: "form" }]);
+        if (window.innerWidth < 1024) toggleMobileSidebar();
     }
 
     function setBotOptions(opts) {
@@ -267,7 +287,7 @@
         switchTab('feed');
         document.getElementById('editSubject').value = subject;
         document.getElementById('editStatus').value = status;
-        document.getElementById('editPriority').value = priority;
+        document.getElementById('editPriority').value = priority; // FIXED: Maps current priority to edit field
         document.getElementById('editDesc').value = desc;
         document.getElementById('no-chat-selected').classList.add('hidden');
         document.getElementById('contact-details-container').classList.remove('opacity-0');
@@ -278,6 +298,8 @@
         document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('active'));
         const activeItem = document.getElementById(`ticket-item-${id}`);
         if (activeItem) activeItem.classList.add('active');
+
+        if (window.innerWidth < 1024) toggleMobileSidebar();
 
         const container = document.getElementById('messageContainer');
         container.innerHTML = `
@@ -331,7 +353,6 @@
         }).join('');
     }
 
-    // UPDATED FILTERING LOGIC
     function filterFeed(type) {
         document.querySelectorAll('.feed-filter').forEach(btn => {
             btn.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600'); 
@@ -342,7 +363,7 @@
         let filtered = [];
         if (type === 'all') {
             filtered = fullMessageCache;
-        } else if (type === 'staff') { // Now correctly used as "Text Posts"
+        } else if (type === 'staff') {
             filtered = fullMessageCache.filter(m => {
                 const msg = m.message.toUpperCase();
                 return !msg.includes('STATUS UPDATE:') && !msg.includes('CALL LOG:');
@@ -364,7 +385,7 @@
         try {
             const res = await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (res.ok) {
-                loadChat(activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, document.getElementById('editStatus').value, "", "");
+                loadChat(activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, document.getElementById('editStatus').value, document.getElementById('editPriority').value, "");
             }
         } catch (err) { console.error(err); }
     }
@@ -379,7 +400,7 @@
             const res = await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             if (res.ok) { 
                 input.value = ''; 
-                loadChat(activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, document.getElementById('editStatus').value, "", ""); 
+                loadChat(activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, document.getElementById('editStatus').value, document.getElementById('editPriority').value, ""); 
             }
         } catch (err) { console.error(err); }
     }
@@ -388,10 +409,11 @@
         e.preventDefault();
         const btn = document.getElementById('saveDetailsBtn');
         const newStatus = document.getElementById('editStatus').value;
+        const newPriority = document.getElementById('editPriority').value;
         const payload = {
             subject: document.getElementById('editSubject').value,
             status: newStatus,
-            priority: document.getElementById('editPriority').value,
+            priority: newPriority,
             description: document.getElementById('editDesc').value
         };
         btn.innerText = "SAVING..."; btn.disabled = true;

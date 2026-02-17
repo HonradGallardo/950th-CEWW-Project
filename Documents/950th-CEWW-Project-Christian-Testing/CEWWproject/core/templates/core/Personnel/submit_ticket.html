@@ -2,10 +2,14 @@
 {% load static %}
 
 {% block content %}
-<div class="h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans text-slate-900 dark:text-slate-100">
+<div class="h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans text-slate-900 dark:text-slate-100">
     
-    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0 z-50 shadow-sm">
+    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shrink-0 z-30 shadow-sm">
         <div class="flex items-center gap-4">
+            <button onclick="SupportConsole.toggleSidebar()" class="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+            
             <div class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/30">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -31,9 +35,9 @@
         </div>
     </header>
 
-    <main class="flex-1 flex overflow-hidden">
+    <main class="flex-1 flex overflow-hidden relative">
         
-        <aside class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+        <aside id="mainSidebar" class="fixed top-[73px] lg:top-0 bottom-0 left-0 z-40 w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
             <div class="p-5 space-y-4">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">Conversations</span>
@@ -54,7 +58,7 @@
                 {% for ticket in user_tickets %}
                 <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}')" 
                      id="ticket-item-{{ ticket.id }}"
-                     class="ticket-item p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border border-transparent">
+                     class="ticket-item p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-transparent">
                     <div class="flex justify-between items-start mb-2">
                         <span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">#{{ ticket.id|stringformat:"04d" }}</span>
                         <span class="text-[9px] font-black uppercase tracking-tighter 
@@ -69,9 +73,11 @@
             </div>
         </aside>
 
+        <div id="sidebarOverlay" onclick="SupportConsole.toggleSidebar()" class="hidden fixed top-[73px] inset-0 bg-slate-900/60 backdrop-blur-sm z-[35] lg:hidden"></div>
+
         <section class="flex-1 flex flex-col bg-white dark:bg-[#0f172a] relative overflow-hidden">
             
-            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-40 flex flex-col p-8 md:p-12 animate-in fade-in zoom-in-95 duration-300">
+            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-[70] flex flex-col p-8 md:p-12 animate-in fade-in zoom-in-95 duration-300">
                 <div class="max-w-3xl mx-auto w-full flex flex-col h-full">
                     <div class="flex justify-between items-center mb-8">
                         <div class="flex items-center gap-4">
@@ -87,21 +93,16 @@
                             <i class="fas fa-times text-xl"></i>
                         </button>
                     </div>
-
                     <div id="assistant-chat" class="flex-1 overflow-y-auto space-y-6 mb-8 custom-scrollbar px-4"></div>
-                    
                     <div id="assistant-interaction" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div id="assistant-options" class="flex flex-wrap gap-3 mb-2"></div>
-                        
                         <form id="newTicketForm" class="hidden space-y-5 animate-in slide-in-from-bottom-4 duration-500">
                             {% csrf_token %}
                             <div class="border-b dark:border-slate-800 pb-4 mb-2">
                                 <p id="form-context-msg" class="text-[11px] font-black text-blue-600 uppercase tracking-widest"></p>
                             </div>
-                            
                             <input type="hidden" name="category" id="newCat" value="General">
                             <input type="hidden" name="priority" id="newPriority" value="Medium">
-                            
                             <div id="account-fields" class="hidden grid grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/50">
                                 <div class="col-span-1">
                                     <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">First Name</label>
@@ -120,7 +121,6 @@
                                     <input type="text" id="acc_rank" placeholder="e.g. Senior Manager" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
                                 </div>
                             </div>
-
                             <div class="space-y-4">
                                 <div>
                                     <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block ml-1">Case Subject</label>
@@ -128,7 +128,7 @@
                                 </div>
                                 <div>
                                     <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block ml-1">Problem Description</label>
-                                    <textarea name="description" id="newDesc" required rows="3" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm outline-none focus:ring-2 ring-blue-500/20"></textarea>
+                                    <textarea name="description" id="newDescInput" required rows="3" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm outline-none focus:ring-2 ring-blue-500/20"></textarea>
                                 </div>
                             </div>
                             <button type="button" onclick="SupportConsole.finalizeTicketSubmission()" 
@@ -148,32 +148,33 @@
                 <p class="text-xs text-slate-400 mt-2 max-w-[200px] leading-relaxed">Select a thread from the sidebar or start a new assistant session.</p>
             </div>
 
-            <div class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex px-6 shrink-0 z-30">
-                <button onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-6 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Activity Feed</button>
-                <button onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-6 text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Case Details</button>
+            <div class="h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex px-2 md:px-6 shrink-0 z-30">
+                <button onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-4 md:px-6 text-[10px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Activity Feed</button>
+                <button onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-4 md:px-6 text-[10px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Case Details</button>
             </div>
 
             <div id="feedView" class="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-[#0f172a]">
-                <div class="px-8 pt-6 shrink-0">
-                    <div class="flex items-center gap-6 border-b dark:border-slate-800 mb-4">
-                        <button onclick="SupportConsole.filterFeed('all')" class="feed-filter active text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 pb-3 whitespace-nowrap tracking-widest">All Communications</button>
-                        <button onclick="SupportConsole.filterFeed('staff')" class="feed-filter text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-3 whitespace-nowrap tracking-widest transition-colors">Internal Notes</button>
+                <div class="px-4 md:px-8 pt-6 shrink-0">
+                    <div class="flex items-center gap-4 md:gap-6 border-b dark:border-slate-800 mb-4 overflow-x-auto no-scrollbar">
+                        <button onclick="SupportConsole.filterFeed('all')" class="feed-filter active text-[9px] md:text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 pb-3 whitespace-nowrap tracking-widest">All Comms</button>
+                        <button onclick="SupportConsole.filterFeed('text')" class="feed-filter text-[9px] md:text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-3 whitespace-nowrap tracking-widest transition-colors">Text</button>
+                        <button onclick="SupportConsole.filterFeed('status')" class="feed-filter text-[9px] md:text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-3 whitespace-nowrap tracking-widest transition-colors">Status</button>
                     </div>
                 </div>
 
-                <div class="flex-1 overflow-y-auto custom-scrollbar px-8 py-4" id="workspaceScroll">
+                <div class="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 py-4" id="workspaceScroll">
                     <div id="messageContainer" class="max-w-4xl mx-auto space-y-8"></div>
                 </div>
 
-                <div class="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                <div class="p-4 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                     <div class="max-w-4xl mx-auto">
                         <form onsubmit="SupportConsole.sendMessage(event)" class="relative group">
                             {% csrf_token %}
                             <textarea id="chatInput" required rows="1" 
-                                      class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-4 pl-5 pr-32 text-sm outline-none focus:ring-4 ring-blue-500/10 transition-all resize-none" 
-                                      placeholder="Write an update or reply..."></textarea>
+                                      class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-4 pl-5 pr-24 md:pr-32 text-sm outline-none focus:ring-4 ring-blue-500/10 transition-all resize-none" 
+                                      placeholder="Reply..."></textarea>
                             <div class="absolute right-2 top-2 bottom-2 flex items-center">
-                                <button type="submit" id="shareBtn" class="h-full bg-blue-600 px-6 rounded-xl text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/20">
+                                <button type="submit" id="shareBtn" class="h-full bg-blue-600 px-4 md:px-6 rounded-xl text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-500/20">
                                     Send
                                 </button>
                             </div>
@@ -183,42 +184,42 @@
             </div>
 
             <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a]">
-                <div class="max-w-3xl mx-auto p-10">
+                <div class="max-w-3xl mx-auto p-6 md:p-10">
                     <form id="editTicketForm" onsubmit="SupportConsole.updateTicket(event)" class="space-y-10">
                         {% csrf_token %}
-                        <div class="flex items-center justify-between border-b dark:border-slate-800 pb-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between border-b dark:border-slate-800 pb-6 gap-4">
                             <div>
                                 <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Case Management</h3>
-                                <p class="text-xs text-slate-400 mt-1">Modify status, priority, and internal descriptions.</p>
+                                <p class="text-xs text-slate-400 mt-1">Modify status and priority.</p>
                             </div>
                             <button type="submit" id="saveDetailsBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">
                                 Update Case
                             </button>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-8">
-                            <div class="col-span-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="md:col-span-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Subject</label>
                                 <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-500 cursor-not-allowed">
                             </div>
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Current Status</label>
                                 <select name="status" id="editStatus" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none focus:ring-2 ring-blue-500/20">
-                                    <option value="Pending">Pending</option>
+                                    <option value="Open">Open</option>
                                     <option value="In Progress">In Progress</option>
                                     <option value="Completed">Completed</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Priority Level</label>
-                                <select name="priority" id="editPriority" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none focus:ring-2 ring-blue-500/20">
+                                <select name="priority" id="editPriority" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none focus:ring-2 ring-blue-500/20">
                                     <option value="Low">Low</option>
                                     <option value="Medium">Medium</option>
                                     <option value="High">High</option>
                                 </select>
                             </div>
-                            <div class="col-span-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Internal Summary / Description</label>
+                            <div class="md:col-span-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Internal Summary</label>
                                 <textarea id="editDesc" name="description" rows="6" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm outline-none focus:ring-2 ring-blue-500/20"></textarea>
                             </div>
                         </div>
@@ -259,14 +260,25 @@
 </div>
 
 <script>
-    // Logic remains identical to your core requirements but with minor UX enhancements
     const SupportConsole = {
         activeTicketId: null,
         fullMessageCache: [],
         currentTicketStatus: "",
 
-        init() {
-            // Placeholder for initializers
+        init() { },
+
+        toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isOpen = !sidebar.classList.contains('-translate-x-full');
+            
+            if (isOpen) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            }
         },
 
         openAssistant() {
@@ -277,10 +289,14 @@
             document.getElementById('account-fields').classList.add('hidden');
             this.appendBotMessage("Welcome to Global Support. How may I assist you with your technical requirements today?");
             this.showMainOptions();
+            if(window.innerWidth < 1024 && !document.getElementById('mainSidebar').classList.contains('-translate-x-full')) {
+                this.toggleSidebar();
+            }
         },
 
         closeAssistant() { 
             document.getElementById('new-ticket-overlay').classList.add('hidden'); 
+            location.reload(); 
         },
 
         showMainOptions() {
@@ -359,15 +375,14 @@
             form.classList.remove('hidden');
             document.getElementById('newCat').value = category;
             document.getElementById('newSub').value = subject;
-            document.getElementById('newDesc').value = descPrefix;
+            document.getElementById('newDescInput').value = descPrefix;
             document.getElementById('form-context-msg').innerText = `Department: ${category} Support`;
         },
 
         async finalizeTicketSubmission() {
             const form = document.getElementById('newTicketForm');
             const btn = event.currentTarget;
-            
-            let description = document.getElementById('newDesc').value;
+            let description = document.getElementById('newDescInput').value;
             if (!document.getElementById('account-fields').classList.contains('hidden')) {
                 const fname = document.getElementById('acc_fname').value;
                 const lname = document.getElementById('acc_lname').value;
@@ -376,28 +391,18 @@
                 if(!fname || !lname || !email) { alert("Data incomplete for provisioning."); return; }
                 description = `NEW ACCOUNT REQUEST:\nName: ${fname} ${lname}\nEmail: ${email}\nRank: ${rank}\n\nAdditional Notes: ${description}`;
             }
-
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...';
-
             const formData = new FormData(form);
             formData.set('description', description);
-
             try {
-                const res = await fetch('/submit_ticket/', { 
-                    method: 'POST', 
-                    body: formData, 
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' } 
-                });
+                const res = await fetch('/submit_ticket/', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                 const data = await res.json();
                 if (data.status === 'success') { 
                     this.appendBotMessage("✅ Dispatch successful. Case ID has been logged in your dashboard.");
                     setTimeout(() => location.reload(), 1500);
                 }
-            } catch (err) { 
-                btn.disabled = false;
-                btn.innerText = "Retry Dispatch";
-            }
+            } catch (err) { btn.disabled = false; btn.innerText = "Retry Dispatch"; }
         },
 
         filterSidebar() {
@@ -411,10 +416,8 @@
         switchTab(view) {
             const feedView = document.getElementById('feedView'), detailsView = document.getElementById('detailsView');
             const feedBtn = document.getElementById('feedTabBtn'), detailsBtn = document.getElementById('detailsTabBtn');
-            
             const activeClasses = ['border-blue-600', 'text-blue-600'];
             const inactiveClasses = ['text-slate-400', 'border-transparent'];
-
             if (view === 'feed') {
                 feedView.classList.remove('hidden'); detailsView.classList.add('hidden');
                 feedBtn.classList.add(...activeClasses); feedBtn.classList.remove(...inactiveClasses);
@@ -427,37 +430,45 @@
         },
 
         async loadChat(id, subject, desc, user, email, status, priority, date) {
-            // Remove active state from all items
-            document.querySelectorAll('.ticket-item').forEach(i => i.classList.remove('active-ticket'));
-            document.getElementById(`ticket-item-${id}`).classList.add('active-ticket');
+            if(window.innerWidth < 1024 && !document.getElementById('mainSidebar').classList.contains('-translate-x-full')) {
+                this.toggleSidebar();
+            }
+
+            document.querySelectorAll('.ticket-item').forEach(i => {
+                i.classList.remove('active-ticket-item');
+            });
+            const activeItem = document.getElementById(`ticket-item-${id}`);
+            if(activeItem) activeItem.classList.add('active-ticket-item');
 
             this.activeTicketId = id;
             this.currentTicketStatus = status;
-            this.switchTab('feed');
             
-            // Populate Details Form
+            this.switchTab('feed');
+
             document.getElementById('editSubject').value = subject;
             document.getElementById('editStatus').value = status;
             document.getElementById('editPriority').value = priority;
             document.getElementById('editDesc').value = desc;
-            
-            // UI States
             document.getElementById('no-chat-selected').classList.add('hidden');
             const contactContainer = document.getElementById('contact-details-container');
             contactContainer.classList.remove('opacity-0', 'translate-x-4');
-            
             document.getElementById('contactName').innerText = user;
             document.getElementById('contactEmail').innerText = email;
             document.getElementById('contactAvatar').src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
             
             const container = document.getElementById('messageContainer');
             container.innerHTML = `
-                <div class="bg-blue-50/50 dark:bg-blue-900/10 p-8 rounded-2xl border border-blue-100 dark:border-blue-800/50 mb-10">
-                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3 block">Original Case Opening</span>
-                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-4 leading-tight">${subject}</h3>
-                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">${desc}</p>
+                <div class="flex justify-start animate-in fade-in duration-300">
+                    <div class="max-w-[85%] md:max-w-[75%] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl rounded-tl-none shadow-sm p-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[8px] font-black uppercase tracking-widest text-blue-600">${user}</span>
+                            <span class="text-[8px] font-bold opacity-60 uppercase">ORIGINAL INQUIRY</span>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800 dark:text-white mb-1 uppercase tracking-tight">${subject}</p>
+                        <p class="text-sm leading-relaxed">${desc}</p>
+                    </div>
                 </div>
-                <div id="dynamicMessages" class="space-y-6"></div>`;
+                <div id="dynamicMessages" class="space-y-6 mt-6"></div>`;
 
             try {
                 const response = await fetch(`/tickets/chat/${id}/`);
@@ -477,29 +488,54 @@
             const messageDiv = document.getElementById('dynamicMessages');
             messageDiv.innerHTML = messages.map(msg => {
                 const isMe = msg.is_me;
+                const isStatus = msg.message.toUpperCase().includes('STATUS UPDATE');
+                if (isStatus) {
+                    return `
+                    <div class="flex items-center justify-center py-2 animate-in fade-in duration-500">
+                        <div class="flex items-center gap-3 px-4 py-1.5 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full">
+                            <i class="fas fa-sync-alt text-[9px] text-blue-500"></i>
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">${msg.message}</span>
+                        </div>
+                    </div>`;
+                }
                 return `
-                <div class="flex ${isMe ? 'justify-end' : 'justify-start'} group">
-                    <div class="max-w-[75%] ${isMe ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 rounded-2xl rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl rounded-tl-none shadow-sm'} p-4">
+                <div class="flex ${isMe ? 'justify-end' : 'justify-start'} group animate-in fade-in duration-300">
+                    <div class="max-w-[85%] md:max-w-[75%] ${isMe ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 rounded-2xl rounded-tr-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl rounded-tl-none shadow-sm'} p-4">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[8px] font-black uppercase tracking-widest ${isMe ? 'text-blue-100' : 'text-blue-600'}">${msg.sender}</span>
+                            <span class="text-[8px] font-bold opacity-60 uppercase">${msg.created_at}</span>
+                        </div>
                         <p class="text-sm leading-relaxed">${msg.message}</p>
                     </div>
                 </div>`;
             }).join('');
         },
 
+        filterFeed(type) {
+            document.querySelectorAll('.feed-filter').forEach(btn => {
+                btn.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600'); 
+                btn.classList.add('text-slate-400');
+            });
+            event.currentTarget.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+            let filtered = [];
+            if (type === 'all') filtered = this.fullMessageCache;
+            else if (type === 'text') filtered = this.fullMessageCache.filter(m => !m.message.toUpperCase().includes('STATUS UPDATE'));
+            else if (type === 'status') filtered = this.fullMessageCache.filter(m => m.message.toUpperCase().includes('STATUS UPDATE'));
+            this.renderFeed(filtered);
+        },
+
         async sendMessage(e) {
             e.preventDefault();
             const input = document.getElementById('chatInput');
             if (!input.value.trim()) return;
-
             const formData = new FormData();
             formData.append('message', input.value);
             formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-            
             try {
                 const res = await fetch(`/tickets/chat/${this.activeTicketId}/send/`, { method: 'POST', body: formData });
                 if (res.ok) { 
                     input.value = ''; 
-                    this.loadChat(this.activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, "", "", "", "", ""); 
+                    this.loadChat(this.activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, this.currentTicketStatus, document.getElementById('editPriority').value, ""); 
                 }
             } catch (err) { console.error(err); }
         },
@@ -507,50 +543,73 @@
         async updateTicket(e) {
             e.preventDefault();
             const btn = document.getElementById('saveDetailsBtn');
-            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
-
+            const newStatus = document.getElementById('editStatus').value;
+            const newPriority = document.getElementById('editPriority').value;
+            const newDesc = document.getElementById('editDesc').value;
+            const currentSub = document.getElementById('editSubject').value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
             const payload = { 
-                subject: document.getElementById('editSubject').value, 
-                status: document.getElementById('editStatus').value, 
-                priority: document.getElementById('editPriority').value, 
-                description: document.getElementById('editDesc').value 
+                subject: currentSub, 
+                status: newStatus, 
+                priority: newPriority, 
+                description: newDesc 
             };
+
+            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> Updating...';
+            btn.disabled = true;
+
             try {
                 const response = await fetch(`/update-ticket-status/${this.activeTicketId}/`, { 
                     method: 'POST', 
                     body: JSON.stringify(payload), 
-                    headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value, 'Content-Type': 'application/json' } 
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' } 
                 });
-                if (response.ok) { location.reload(); }
+
+                if (response.ok) { 
+                    if (newStatus !== this.currentTicketStatus) {
+                        const logMsg = new FormData();
+                        logMsg.append('message', `STATUS UPDATE: Case changed from ${this.currentTicketStatus} to ${newStatus}`);
+                        logMsg.append('csrfmiddlewaretoken', csrfToken);
+                        await fetch(`/tickets/chat/${this.activeTicketId}/send/`, { method: 'POST', body: logMsg });
+                    }
+
+                    this.currentTicketStatus = newStatus;
+                    await this.loadChat(this.activeTicketId, currentSub, newDesc, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, newStatus, newPriority, "");
+                    this.switchTab('feed');
+                    btn.innerHTML = 'Update Case';
+                    btn.disabled = false;
+                }
             } catch (err) { 
-                console.error(err); 
-                btn.innerText = "Error";
+                console.error(err);
+                btn.innerText = "Error"; 
+                btn.disabled = false; 
             }
         }
     };
-    
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
 </script>
 
 <style>
-    /* Modern Scrollbars */
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Active States */
-    .active-ticket { 
-        background-color: #f8fafc !important; 
-        border-color: #e2e8f0 !important; 
+    .active-ticket-item { 
+        background-color: #f1f5f9 !important; 
+        border-color: #cbd5e1 !important; 
+        border-left: 4px solid #2563eb !important;
         box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
     }
-    .dark .active-ticket { background-color: #1e293b !important; border-color: #334155 !important; }
-
-    /* Smooth Input Resize */
-    #chatInput {
-        min-height: 52px;
-        max-height: 200px;
+    .dark .active-ticket-item { 
+        background-color: #1e293b !important; 
+        border-color: #334155 !important; 
+        border-left: 4px solid #3b82f6 !important; 
     }
+    #chatInput { min-height: 52px; max-height: 200px; }
 </style>
 {% endblock %}

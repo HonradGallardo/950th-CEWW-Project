@@ -1400,20 +1400,24 @@ def update_ticket_status(request, ticket_id):
             data = json.loads(request.body)
             ticket = get_object_or_404(Ticket, id=ticket_id)
             
-            new_status = data.get('status')
+            # Authorization check (Peer-to-peer style: ensures only owners or staff can edit)
+            user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+            if not user_is_admin and ticket.user != request.user:
+                return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+            # Update ALL fields from the payload
+            ticket.status = data.get('status', ticket.status)
+            ticket.priority = data.get('priority', ticket.priority)
+            ticket.description = data.get('description', ticket.description)
+            # ticket.subject is usually readonly in your HTML, but we save it if you allow it
+            # ticket.subject = data.get('subject', ticket.subject) 
+
+            # Logic for technician assignment
+            if ticket.status == 'Pending':
+                ticket.technician = None
+            elif not ticket.technician:
+                ticket.technician = request.user
             
-            if new_status:
-                ticket.status = new_status
-                
-                # If changed to Pending, remove the technician
-                if new_status == 'Pending':
-                    ticket.technician = None
-                else:
-                    # If changed to In Progress/Resolved and no tech is assigned, assign current user
-                    if not ticket.technician:
-                        ticket.technician = request.user
-            
-            # (Keep your other priority/description logic here)
             ticket.save()
             
             return JsonResponse({
