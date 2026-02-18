@@ -81,35 +81,37 @@
                         </div>
                     </div>
 
-                    {% for msg in ticket.messages.all %}
-                    <div class="flex gap-4 {% if msg.sender == request.user %}flex-row-reverse{% endif %}">
-                        <div class="shrink-0 w-9 h-9 rounded-full {% if msg.sender.is_staff %}bg-blue-600{% else %}bg-slate-300 dark:bg-slate-700{% endif %} flex items-center justify-center text-[10px] text-white font-black uppercase border-2 border-white dark:border-slate-800 shadow-sm">
-                            {{ msg.sender.username|slice:":1" }}
-                        </div>
-                        <div class="flex-1 {% if msg.sender == request.user %}text-right{% endif %}">
-                            <div class="flex items-center gap-2 mb-1 {% if msg.sender == request.user %}justify-end{% endif %}">
-                                <span class="text-xs font-black text-slate-800 dark:text-white uppercase">{{ msg.sender.get_full_name|default:msg.sender.username }}</span>
-                                <span class="text-[9px] text-slate-400 font-normal">@{{ msg.sender.username }}</span>
-                                <span class="text-[9px] text-slate-400 font-bold uppercase">{{ msg.created_at|date:"M d, H:i" }}</span>
+                    <div id="dynamicMessages" class="space-y-6">
+                        {% for msg in ticket.messages.all %}
+                        <div class="flex gap-4 {% if msg.sender == request.user %}flex-row-reverse{% endif %}">
+                            <div class="shrink-0 w-9 h-9 rounded-full {% if msg.sender.is_staff %}bg-blue-600{% else %}bg-slate-300 dark:bg-slate-700{% endif %} flex items-center justify-center text-[10px] text-white font-black uppercase border-2 border-white dark:border-slate-800 shadow-sm">
+                                {{ msg.sender.username|slice:":1" }}
                             </div>
-                            <div class="inline-block p-3 rounded-2xl text-sm shadow-sm leading-relaxed 
-                                {% if msg.sender == request.user %}bg-blue-600 text-white rounded-tr-none{% else %}bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none{% endif %}">
-                                {{ msg.message }}
+                            <div class="flex-1 {% if msg.sender == request.user %}text-right{% endif %}">
+                                <div class="flex items-center gap-2 mb-1 {% if msg.sender == request.user %}justify-end{% endif %}">
+                                    <span class="text-xs font-black text-slate-800 dark:text-white uppercase">{{ msg.sender.get_full_name|default:msg.sender.username }}</span>
+                                    <span class="text-[9px] text-slate-400 font-normal">@{{ msg.sender.username }}</span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase">{{ msg.created_at|date:"M d, H:i" }}</span>
+                                </div>
+                                <div class="inline-block p-3 rounded-2xl text-sm shadow-sm leading-relaxed 
+                                    {% if msg.sender == request.user %}bg-blue-600 text-white rounded-tr-none{% else %}bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none{% endif %}">
+                                    {{ msg.message }}
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
 
                 <div class="p-4 bg-white dark:bg-[#1e293b] border-t dark:border-slate-700 shrink-0">
-                    <form method="POST" class="max-w-4xl mx-auto flex gap-3">
+                    <form id="adminChatForm" method="POST" class="max-w-4xl mx-auto flex gap-3">
                         {% csrf_token %}
                         <div class="flex-1">
-                            <textarea name="message" required rows="1" 
+                            <textarea name="message" id="chatInput" required rows="1" 
                                 class="w-full bg-slate-50 dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"
                                 placeholder="Type a professional update..."></textarea>
                         </div>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-md text-white text-[10px] font-black uppercase shadow-lg active:scale-95 transition-all self-end">
+                        <button type="submit" id="sendBtn" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-md text-white text-[10px] font-black uppercase shadow-lg active:scale-95 transition-all self-end">
                             Send
                         </button>
                     </form>
@@ -197,48 +199,90 @@
 </div>
 
 <script>
-    window.onload = () => {
-        const chatBox = document.getElementById('chatBox');
-        chatBox.scrollTop = chatBox.scrollHeight;
-    };
-
     const activeTicketId = "{{ ticket.id }}";
     let currentTicketStatus = "{{ ticket.status }}"; 
 
-    function switchTab(tab) {
-        const feedView = document.getElementById('feedView'), detailsView = document.getElementById('detailsView');
-        const feedBtn = document.getElementById('feedTabBtn'), detailsBtn = document.getElementById('detailsTabBtn');
-        if (tab === 'feed') {
-            feedView.classList.remove('hidden'); feedView.classList.add('flex');
-            detailsView.classList.add('hidden');
-            feedBtn.classList.add('border-b-2', 'border-blue-600', 'text-blue-600'); feedBtn.classList.remove('text-slate-400');
-            detailsBtn.classList.remove('border-b-2', 'border-blue-600', 'text-blue-600'); detailsBtn.classList.add('text-slate-400');
-        } else {
-            feedView.classList.add('hidden'); feedView.classList.remove('flex');
-            detailsView.classList.remove('hidden');
-            detailsBtn.classList.add('border-b-2', 'border-blue-600', 'text-blue-600'); detailsBtn.classList.remove('text-slate-400');
-            feedBtn.classList.remove('border-b-2', 'border-blue-600', 'text-blue-600'); feedBtn.classList.add('text-slate-400');
-        }
+    $(document).ready(function() {
+        const $chatBox = $('#chatBox');
+        $chatBox.scrollTop($chatBox[0].scrollHeight);
+
+        // --- 1. JQUERY AJAX: CHAT SUBMISSION ---
+        $('#adminChatForm').on('submit', function(e) {
+            e.preventDefault();
+            const $btn = $('#sendBtn');
+            const message = $('#chatInput').val().trim();
+            if (!message) return;
+
+            $btn.prop('disabled', true).text('...');
+
+            $.ajax({
+                url: window.location.href, // Current detail view handles POST
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function() {
+                    $('#chatInput').val('');
+                    // Refresh chat content via API
+                    fetchChatHistory();
+                },
+                error: function() { alert("Transmission Error: Connection unstable."); },
+                complete: function() { $btn.prop('disabled', false).text('Send'); }
+            });
+        });
+    });
+
+    // --- 2. VANILLA API: FETCH CHAT HISTORY ---
+    async function fetchChatHistory() {
+        try {
+            const response = await fetch(`/tickets/chat/${activeTicketId}/`);
+            if (response.ok) {
+                const data = await response.json();
+                renderChat(data.messages);
+            }
+        } catch (e) { console.error("Telemetry Sync Failed."); }
     }
 
+    function renderChat(messages) {
+        const container = document.getElementById('dynamicMessages');
+        container.innerHTML = '';
+        messages.forEach(msg => {
+            const isMe = msg.is_me;
+            const msgHtml = `
+                <div class="flex gap-4 ${isMe ? 'flex-row-reverse' : ''}">
+                    <div class="shrink-0 w-9 h-9 rounded-full ${isMe ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'} flex items-center justify-center text-[10px] text-white font-black uppercase border-2 border-white dark:border-slate-800 shadow-sm">
+                        ${msg.avatar_char}
+                    </div>
+                    <div class="flex-1 ${isMe ? 'text-right' : ''}">
+                        <div class="flex items-center gap-2 mb-1 ${isMe ? 'justify-end' : ''}">
+                            <span class="text-xs font-black text-slate-800 dark:text-white uppercase">${msg.sender_full_name}</span>
+                            <span class="text-[9px] text-slate-400 font-normal">@${msg.sender}</span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase">${msg.created_at}</span>
+                        </div>
+                        <div class="inline-block p-3 rounded-2xl text-sm shadow-sm leading-relaxed 
+                            ${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none'}">
+                            ${msg.message}
+                        </div>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', msgHtml);
+        });
+        const chatBox = document.getElementById('chatBox');
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // --- 3. VANILLA API: UPDATE TICKET DETAILS ---
     async function updateTicketAdmin(e) {
         e.preventDefault();
         const btn = document.getElementById('saveDetailsBtn');
+        const techDisplay = document.getElementById('activeTechnicianDisplay');
         const statusSelect = document.getElementById('editStatus');
         const prioritySelect = document.getElementById('editPriority');
-        const techDisplay = document.getElementById('activeTechnicianDisplay'); // Ref to new field
         
-        const statusValue = statusSelect.value;
-        const priorityValue = prioritySelect.value;
-        const statusLabel = statusSelect.options[statusSelect.selectedIndex].text;
-        const priorityLabel = prioritySelect.options[prioritySelect.selectedIndex].text;
-        const newDesc = document.getElementById('editDesc').value;
-
         const payload = {
             subject: document.getElementById('editSubject').value,
-            status: statusValue,
-            priority: priorityValue,
-            description: newDesc
+            status: statusSelect.value,
+            priority: prioritySelect.value,
+            description: document.getElementById('editDesc').value
         };
 
         btn.innerText = "SAVING...";
@@ -257,60 +301,61 @@
 
             if (response.ok) {
                 const result = await response.json();
-                
-                // Update Technician Display based on server response
-                if (result.technician && techDisplay) {
-                    techDisplay.value = result.technician;
-                }
+                if (result.technician && techDisplay) techDisplay.value = result.technician;
 
-                // Update Sidebar UI
-                const statusBadge = document.getElementById('sidebarStatusBadge');
-                if (statusBadge) {
-                    statusBadge.innerText = statusLabel;
-                    if (statusValue === "In Progress" || statusValue === "Under Review") {
-                        statusBadge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800";
-                    } else if (statusValue === "Resolved" || statusValue === "Completed") {
-                        statusBadge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800";
-                    } else {
-                        statusBadge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800";
-                    }
-                }
+                // Sync Sidebar
+                updateSidebarBadge(payload.status, payload.priority);
 
-                const priorityText = document.getElementById('sidebarPriorityText');
-                if (priorityText) {
-                    priorityText.innerText = priorityLabel;
-                    if (priorityValue === 'High' || priorityValue === 'Critical') {
-                        priorityText.classList.add('text-red-500');
-                    } else {
-                        priorityText.classList.remove('text-red-500');
-                    }
-                }
-
-                if (statusValue !== currentTicketStatus) {
-                    const logMsg = new FormData();
-                    logMsg.append('message', `ADMIN STATUS UPDATE: Case changed to ${statusLabel}`);
-                    logMsg.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-                    await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: logMsg });
-                    currentTicketStatus = statusValue;
+                // Log system message if status changed
+                if (payload.status !== currentTicketStatus) {
+                    await sendSystemLog(`ADMIN STATUS UPDATE: Case changed to ${payload.status}`);
+                    currentTicketStatus = payload.status;
                 }
 
                 btn.innerText = "SUCCESS ✓";
-                setTimeout(() => {
-                    btn.innerText = "Save System Updates";
-                    btn.disabled = false;
-                    location.reload(); 
-                }, 1000);
-
-            } else {
-                throw new Error("Server rejected update");
+                setTimeout(() => { btn.innerText = "Save System Updates"; btn.disabled = false; }, 1500);
             }
         } catch (err) { 
-            console.error(err);
-            btn.innerText = "ERROR";
-            setTimeout(() => {
-                btn.innerText = "Save System Updates";
-                btn.disabled = false;
-            }, 3000);
+            btn.innerText = "ERROR"; 
+            setTimeout(() => { btn.innerText = "Save System Updates"; btn.disabled = false; }, 3000);
+        }
+    }
+
+    async function sendSystemLog(text) {
+        const fd = new FormData();
+        fd.append('message', text);
+        fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: fd });
+        fetchChatHistory();
+    }
+
+    function updateSidebarBadge(status, priority) {
+        const badge = document.getElementById('sidebarStatusBadge');
+        const pText = document.getElementById('sidebarPriorityText');
+        
+        badge.innerText = status;
+        badge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase ";
+        if (status === 'Resolved' || status === 'Completed') badge.classList.add('bg-emerald-50', 'text-emerald-600', 'border-emerald-100');
+        else if (status === 'Pending') badge.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-100');
+        else badge.classList.add('bg-amber-50', 'text-amber-600', 'border-amber-100');
+
+        pText.innerText = priority;
+        pText.className = "text-[11px] font-bold uppercase mt-0.5 " + (priority === 'Critical' || priority === 'High' ? 'text-red-500' : 'text-slate-700');
+    }
+
+    function switchTab(tab) {
+        const feedView = document.getElementById('feedView'), detailsView = document.getElementById('detailsView');
+        const feedBtn = document.getElementById('feedTabBtn'), detailsBtn = document.getElementById('detailsTabBtn');
+        if (tab === 'feed') {
+            feedView.classList.remove('hidden'); feedView.classList.add('flex');
+            detailsView.classList.add('hidden');
+            feedBtn.classList.add('border-b-2', 'border-blue-600', 'text-blue-600'); feedBtn.classList.remove('text-slate-400');
+            detailsBtn.classList.remove('border-b-2', 'border-blue-600', 'text-blue-600'); detailsBtn.classList.add('text-slate-400');
+        } else {
+            feedView.classList.add('hidden'); feedView.classList.remove('flex');
+            detailsView.classList.remove('hidden');
+            detailsBtn.classList.add('border-b-2', 'border-blue-600', 'text-blue-600'); detailsBtn.classList.remove('text-slate-400');
+            feedBtn.classList.remove('border-b-2', 'border-blue-600', 'text-blue-600'); feedBtn.classList.add('text-slate-400');
         }
     }
 </script>
@@ -319,6 +364,5 @@
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
 </style>
 {% endblock %}

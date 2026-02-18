@@ -10,19 +10,19 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 my-6">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Total Assets</p>
-            <div class="text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</div>
+            <div id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-green-500/70 text-[10px] font-black mb-1 tracking-widest uppercase">Assigned</p>
-            <div class="text-3xl font-black text-green-600">{{ assigned_assets|default:"0" }}</div>
+            <div id="stat-assigned-assets" class="text-3xl font-black text-green-600">{{ assigned_assets|default:"0" }}</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Maintenance</p>
-            <div class="text-3xl font-black text-slate-800 dark:text-white">{{ maintenance_assets_count|default:"0" }}</div>
+            <div id="stat-maintenance-count" class="text-3xl font-black text-slate-800 dark:text-white">{{ maintenance_assets_count|default:"0" }}</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-red-400 text-[10px] font-black mb-1 tracking-widest uppercase">Open Incidents</p>
-            <div class="text-3xl font-black text-red-600">{{ open_incidents_count|default:"0" }}</div>
+            <div id="stat-open-incidents" class="text-3xl font-black text-red-600">{{ open_incidents_count|default:"0" }}</div>
         </div>
     </div>
 
@@ -38,7 +38,6 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-10 mt-8">
-        
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden transition-colors">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <span class="font-black text-[10px] text-slate-400 uppercase tracking-widest">Recent Maintenance</span>
@@ -52,31 +51,19 @@
                             <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50 dark:divide-slate-700">
+                    <tbody class="divide-y divide-slate-50 dark:divide-slate-700" id="maintenanceTableBody">
                         {% for maintenance in recent_maintenance %}
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">
-                                {# FIX: Using assets_name as confirmed by your error log #}
-                                {{ maintenance.asset.assets_name }}
-                            </td>
-                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400">
-                                {{ maintenance.technician.username }}
-                            </td>
+                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{{ maintenance.asset.assets_name }}</td>
+                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400">{{ maintenance.technician.username }}</td>
                             <td class="px-6 py-4 text-right">
-                                <span class="text-[10px] font-black uppercase tracking-wider 
-                                    {% if maintenance.status == 'Completed' %}text-green-500
-                                    {% elif maintenance.status == 'In Progress' %}text-orange-400
-                                    {% else %}text-slate-400{% endif %}">
+                                <span class="text-[10px] font-black uppercase tracking-wider {% if maintenance.status == 'Completed' %}text-green-500{% elif maintenance.status == 'In Progress' %}text-orange-400{% else %}text-slate-400{% endif %}">
                                     {{ maintenance.status|upper }}
                                 </span>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">
-                                No maintenance records found.
-                            </td>
-                        </tr>
+                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records found.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -96,34 +83,20 @@
                             <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
                         {% for incident in open_incidents %}
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{{ incident.title }}</td>
-                            <td class="px-6 py-4">
-                                <span class="text-[10px] font-black uppercase tracking-wider
-                                    {% if incident.severity == 'Critical' %} text-red-600
-                                    {% elif incident.severity == 'High' %} text-slate-800 dark:text-slate-200
-                                    {% else %} text-slate-400 {% endif %}">
-                                    {{ incident.severity|upper }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span>
-                            </td>
+                            <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider {% if incident.severity == 'Critical' %} text-red-600{% elif incident.severity == 'High' %} text-slate-800 dark:text-slate-200{% else %} text-slate-400 {% endif %}">{{ incident.severity|upper }}</span></td>
+                            <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">
-                                No open incidents reported.
-                            </td>
-                        </tr>
+                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents reported.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -154,15 +127,8 @@
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            y: { 
-                                beginAtZero: true, 
-                                grid: { color: gridColor, drawBorder: false },
-                                ticks: { color: textColor }
-                            },
-                            x: { 
-                                grid: { display: false },
-                                ticks: { color: textColor }
-                            }
+                            y: { beginAtZero: true, grid: { color: gridColor, drawBorder: false }, ticks: { color: textColor } },
+                            x: { grid: { display: false }, ticks: { color: textColor } }
                         }
                     }
                 });
@@ -187,12 +153,7 @@
                         plugins: { 
                             legend: { 
                                 position: 'right', 
-                                labels: { 
-                                    usePointStyle: true,
-                                    padding: 20,
-                                    color: textColor,
-                                    font: { weight: 'bold', size: 11 }
-                                } 
+                                labels: { usePointStyle: true, padding: 20, color: textColor, font: { weight: 'bold', size: 11 } } 
                             } 
                         } 
                     } 
@@ -200,8 +161,50 @@
             }
         }
 
+        /**
+         * IMPLEMENTATION: JQUERY AJAX
+         * Periodically fetches global counts to keep dashboard live.
+         */
+        function refreshDashboardStats() {
+            $.ajax({
+                url: '/api/dashboard-stats/', // Assumes you have an API endpoint
+                type: 'GET',
+                success: function(data) {
+                    $('#stat-total-assets').text(data.total_assets);
+                    $('#stat-assigned-assets').text(data.assigned_assets);
+                    $('#stat-maintenance-count').text(data.maintenance_count);
+                    $('#stat-open-incidents').text(data.open_incidents);
+                },
+                error: function(err) {
+                    console.error("Dashboard Sync Error:", err);
+                }
+            });
+        }
+
+        /**
+         * IMPLEMENTATION: VANILLA JS (Reference)
+         * Shows how to fetch data without jQuery.
+         */
+        /*
+        async function fetchStatsVanilla() {
+            try {
+                const response = await fetch('/api/dashboard-stats/');
+                const data = await response.json();
+                document.getElementById('stat-total-assets').innerText = data.total_assets;
+            } catch (e) { console.log(e); }
+        }
+        */
+
         initCharts();
+        setInterval(refreshDashboardStats, 30000); // Sync every 30 seconds
         document.addEventListener('themeChanged', initCharts);
     });
 </script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
 {% endblock %}

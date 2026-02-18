@@ -1,8 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div id="deleteModal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
+            <div class="px-6 pt-6 pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Confirm Delete
+                </button>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="flex flex-col min-h-screen lg:h-[calc(100vh-120px)] lg:overflow-hidden space-y-4 p-2 sm:p-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-    
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
         <div>
             <h1 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Service History</h1>
@@ -17,9 +46,7 @@
     </div>
 
     <div class="flex-1 grid grid-cols-12 gap-6 lg:min-h-0 lg:overflow-hidden pb-10 sm:pb-4">
-        
         <div class="col-span-12 lg:col-span-8 flex flex-col h-fit lg:h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
                 <div class="flex items-center space-x-3 flex-1 overflow-x-auto no-scrollbar">
                     <div class="relative flex-1 min-w-[150px] max-w-xs">
@@ -100,7 +127,8 @@
                                 modified: '{{ log.last_modified|date:'d-m-Y H:i A' }}',
                                 a_type: '{{ log.asset.assets_type }}',
                                 editUrl: '{% url 'edit_maintenance' log.pk %}',
-                                deleteUrl: '{% url 'delete_maintenance' log.pk %}'
+                                deleteUrl: '{% url 'delete_maintenance' log.pk %}',
+                                logId: '{{ log.pk }}'
                             })">
                             <td class="px-6 py-4 text-xs font-bold text-blue-600 dark:text-blue-400 truncate">
                                 <div class="flex items-center">
@@ -228,23 +256,56 @@
     </div>
 </div>
 
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-</style>
-
 <script>
 let currentPage = 1;
 const rowsPerPage = 10;
 let filteredRows = [];
+let currentOpenLogId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+$(document).ready(function() {
     sortTableByStatus();
     initTable(); 
+
+    // --- 1. JQUERY AJAX: DELETE HANDLER ---
+    $('#confirmDeleteBtn').on('click', function() {
+        const actionUrl = $('#delete-log-form').attr('action');
+        if (!actionUrl) return;
+
+        $.ajax({
+            url: actionUrl,
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(response) {
+                closeDeleteModal();
+                location.reload(); // Refresh to update list and chart
+            },
+            error: function() { alert("Transmission Error: System refused deletion."); }
+        });
+    });
+
+    // --- 2. VANILLA API SYNC: PERIODIC STATUS CHECK ---
+    async function syncActiveLogStatus() {
+        if (!currentOpenLogId) return;
+        try {
+            // Assumes a REST API endpoint exists for single maintenance detail
+            const response = await fetch(`/api/maintenance/${currentOpenLogId}/`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                $('#det-status').text(data.status);
+            }
+        } catch (e) { console.log("Telemetry check failed."); }
+    }
+    setInterval(syncActiveLogStatus, 15000); // Check status every 15s
 });
 
+/**
+ * CORE LOGIC PRESERVED
+ */
 function sortTableByStatus() {
     const tableBody = document.getElementById("tableBody");
     const rows = Array.from(tableBody.getElementsByClassName("asset-row"));
@@ -302,6 +363,7 @@ function renderPagination(totalPages) {
 function filterTable() { currentPage = 1; initTable(); }
 
 function showDetails(data) {
+    currentOpenLogId = data.logId; // Tracking for API sync
     document.getElementById('placeholder-content').classList.add('hidden');
     document.getElementById('detail-content').classList.remove('hidden');
     document.getElementById('det-id').innerText = data.id;
@@ -336,9 +398,15 @@ function showDetails(data) {
 
 function openDeleteModal() {
     document.getElementById('deleteModal').classList.remove('hidden');
-    document.getElementById('confirmDeleteBtn').onclick = () => document.getElementById('delete-log-form').submit();
 }
 
 function closeDeleteModal() { document.getElementById('deleteModal').classList.add('hidden'); }
 </script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
 {% endblock %}

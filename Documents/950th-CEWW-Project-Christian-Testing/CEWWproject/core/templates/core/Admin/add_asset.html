@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="flex justify-center items-center min-h-[80vh] px-4 py-8 bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300 content-bg">
@@ -67,7 +68,7 @@
                 </div>
             </div>
 
-            <div id="maintenance-logic-container" class="hidden overflow-hidden transition-all duration-300">
+            <div id="maintenance-logic-container" class="hidden overflow-hidden">
                 <div class="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30 space-y-2 mb-2 maintenance-box">
                     <div class="flex items-center gap-2 text-amber-700 dark:text-amber-500 maintenance-text">
                         <i class="fas fa-tools text-xs"></i>
@@ -83,7 +84,7 @@
                 <div class="hidden">{{ form.date_added }}</div>
             {% endif %}
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 sm:py-3 rounded-xl shadow-md transition-all text-xs uppercase tracking-widest active:scale-95">
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 sm:py-3 rounded-xl shadow-md transition-all text-xs uppercase tracking-widest active:scale-95">
                 Save Asset Entry
             </button>
         </form>
@@ -91,40 +92,91 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const radios = document.querySelectorAll('input[name="status"]');
-    const container = document.getElementById('maintenance-logic-container');
+$(document).ready(function() {
+    const $maintenanceContainer = $('#maintenance-logic-container');
+    const $statusRadios = $('input[name="status"]');
+    const $assetForm = $('#assetForm');
+    const $submitBtn = $('#submitBtn');
 
-    function updateVisibility() {
-        let isMaintenance = false;
-        radios.forEach(radio => {
-            if (radio.checked && radio.value === 'Maintenance') {
-                isMaintenance = true;
-            }
-        });
+    // 1. DYNAMIC VISIBILITY (jQuery Style)
+    function updateMaintenanceVisibility() {
+        const selectedStatus = $statusRadios.filter(':checked').val();
 
-        if (isMaintenance) {
-            container.classList.remove('hidden');
-            setTimeout(() => { 
-                container.style.opacity = "1"; 
-                container.style.maxHeight = "200px";
-            }, 10);
+        if (selectedStatus === 'Maintenance') {
+            $maintenanceContainer.removeClass('hidden').hide().slideDown(300);
         } else {
-            container.style.opacity = "0";
-            container.style.maxHeight = "0px";
-            setTimeout(() => { 
-                if (!isMaintenance) container.classList.add('hidden'); 
-            }, 300);
+            $maintenanceContainer.slideUp(300, function() {
+                $(this).addClass('hidden');
+            });
         }
     }
 
-    radios.forEach(radio => radio.addEventListener('change', updateVisibility));
-    updateVisibility();
+    $statusRadios.on('change', updateMaintenanceVisibility);
+    updateMaintenanceVisibility(); // Initial check
+
+    // 2. AJAX FORM SUBMISSION (No Reload)
+    $assetForm.on('submit', function(e) {
+        e.preventDefault(); // Stop standard redirect
+        
+        const originalText = $submitBtn.html();
+        
+        // UI Feedback
+        $submitBtn.prop('disabled', true)
+                 .addClass('opacity-70 cursor-not-allowed')
+                 .html('<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...');
+
+        // AJAX Request
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: $(this).serialize(),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                // Success Scenario
+                $submitBtn.html('<i class="fas fa-check mr-2"></i> Success!');
+                $submitBtn.removeClass('bg-blue-600').addClass('bg-green-600');
+                
+                setTimeout(() => {
+                    window.location.href = "{% url 'asset_list' %}";
+                }, 1000);
+            },
+            error: function(xhr) {
+                // Error Scenario
+                $submitBtn.prop('disabled', false)
+                         .removeClass('opacity-70 cursor-not-allowed')
+                         .html(originalText);
+                
+                alert("Error saving asset. Please ensure all required fields are filled correctly.");
+                console.error("Server Response:", xhr.responseText);
+            }
+        });
+    });
 });
+
+/* --- VANILLA JAVASCRIPT ALTERNATIVE (Visibility only) ---
+   document.addEventListener('DOMContentLoaded', function() {
+       const radios = document.querySelectorAll('input[name="status"]');
+       const container = document.getElementById('maintenance-logic-container');
+       
+       const checkStatus = () => {
+           const active = document.querySelector('input[name="status"]:checked');
+           if (active && active.value === 'Maintenance') {
+               container.classList.remove('hidden');
+           } else {
+               container.classList.add('hidden');
+           }
+       };
+       
+       radios.forEach(r => r.addEventListener('change', checkStatus));
+       checkStatus();
+   });
+*/
 </script>
 
 <style>
-    /* 1. Base Styles (Light Mode Defaults) */
+    /* Base Styles */
     #assetForm input:not([type="radio"]), 
     #assetForm select, 
     #assetForm textarea {
@@ -139,10 +191,10 @@ document.addEventListener('DOMContentLoaded', function() {
         color: #1e293b;
     }
 
-    /* 2. Dark Mode Styles */
+    /* Dark Mode Overrides */
     body.dark-mode .content-bg { background-color: #0f172a !important; }
     body.dark-mode .registration-card { 
-        background-color: #1e293b !important; /* Adjusted to match Sidebar dark color */
+        background-color: #1e293b !important; 
         border-color: #334155 !important; 
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
     }
@@ -152,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     body.dark-mode .dark-mode-text { color: #f9fafb !important; }
 
-    /* Input Overrides */
     body.dark-mode #assetForm input:not([type="radio"]), 
     body.dark-mode #assetForm select, 
     body.dark-mode #assetForm textarea {
@@ -161,28 +212,21 @@ document.addEventListener('DOMContentLoaded', function() {
         color: #f1f5f9 !important;
     }
 
-    /* Info Badges and Status Containers */
     body.dark-mode .info-badge, 
     body.dark-mode .status-container {
         background-color: #0f172a !important;
         border-color: #334155 !important;
     }
 
-    body.dark-mode .status-label {
-        color: #94a3b8 !important;
-    }
+    body.dark-mode .status-label { color: #94a3b8 !important; }
 
     body.dark-mode .maintenance-box {
         background-color: rgba(251, 191, 36, 0.05) !important;
         border-color: #44403c !important;
     }
 
-    body.dark-mode .maintenance-text {
-        color: #fbbf24 !important;
-    }
+    body.dark-mode .maintenance-text { color: #fbbf24 !important; }
 
-    input[type="radio"] {
-        accent-color: #2563eb;
-    }
+    input[type="radio"] { accent-color: #2563eb; }
 </style>
 {% endblock %}

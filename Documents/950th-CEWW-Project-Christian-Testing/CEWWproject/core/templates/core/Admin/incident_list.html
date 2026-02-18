@@ -74,7 +74,7 @@
                                 <td class="px-4 sm:px-6 py-4">
                                     <div class="flex items-center gap-2">
                                         <div class="flex-shrink-0 w-4 text-center">
-                                            {% if inc.severity == 'Critical' %}<i class="fas fa-biohazard text-red-500 animate-pulse-subtle text-xxs"></i>
+                                            {% if inc.severity == 'Critical' %}<i class="fas fa-biohazard text-red-500 text-xxs"></i>
                                             {% elif inc.severity == 'High' %}<i class="fas fa-exclamation-triangle text-orange-500 text-xxs"></i>
                                             {% elif inc.severity == 'Medium' %}<i class="fas fa-exclamation-circle text-amber-500 text-xxs"></i>
                                             {% else %}<i class="fas fa-shield-halved text-emerald-500 text-xxs"></i>{% endif %}
@@ -100,18 +100,14 @@
                                     </p>
                                 </td>
                                 <td class="hidden md:table-cell px-4 py-4 text-center">
-                                    <div class="flex items-center justify-center gap-2">
-                                        <span class="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase truncate">
-                                            {{ inc.reported_by.username|default:"System" }}
-                                        </span>
-                                    </div>
+                                    <span class="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase truncate">
+                                        {{ inc.reported_by.username|default:"System" }}
+                                    </span>
                                 </td>
                                 <td class="px-4 sm:px-6 py-4 text-[9px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-bold text-right whitespace-nowrap">
                                     {{ inc.date|date:"d M, H:i" }}
                                 </td>
                             </tr>
-                            {% empty %}
-                            <tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 text-sm italic">No incidents recorded.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -206,7 +202,7 @@
                                 <input type="hidden" name="incident_id" id="incident_id">
                                 <div class="relative">
                                     <textarea name="message" id="chat-message" placeholder="Update logs..." class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl p-3 pr-12 text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-blue-500" rows="2"></textarea>
-                                    <button type="submit" class="absolute right-2 bottom-2 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                    <button type="submit" id="chatSubmitBtn" class="absolute right-2 bottom-2 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors">
                                         <i class="fas fa-paper-plane text-xs"></i>
                                     </button>
                                 </div>
@@ -233,122 +229,143 @@
 </div>
 
 <script>
-// --- GLOBAL ROLE FLAG ---
+/**
+ * IMPLEMENTATION: JQUERY AJAX & VANILLA API SYNC
+ */
 const IS_COMMANDER = {{ is_commander|yesno:"true,false" }};
 
 // --- MODAL LOGIC ---
-const deleteModal = document.getElementById('deleteModal');
+const $deleteModal = $('#deleteModal');
 function openDeleteModal() {
-    deleteModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    $deleteModal.removeClass('hidden');
+    $('body').css('overflow', 'hidden');
 }
 function closeDeleteModal() {
-    deleteModal.classList.add('hidden');
-    document.body.style.overflow = 'auto';
+    $deleteModal.addClass('hidden');
+    $('body').css('overflow', 'auto');
 }
 
-// --- DARK MODE LOGIC ---
-(function initTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-        document.documentElement.classList.add('dark');
-    }
-})();
-
-// --- INCIDENT PREVIEW LOGIC ---
+// --- INCIDENT PREVIEW & API LOGIC ---
 function previewIncident(id, title, severity, status, desc, actions, date, deleteUrl, reporter) {
-    document.getElementById('emptyState').classList.add('hidden');
-    document.getElementById('detailContent').classList.remove('hidden');
+    // UI Visibility
+    $('#emptyState').addClass('hidden');
+    $('#detailContent').removeClass('hidden');
     
     if (window.innerWidth < 1024) {
-        document.getElementById('incidentDetailPanel').scrollIntoView({ behavior: 'smooth' });
+        $('#incidentDetailPanel')[0].scrollIntoView({ behavior: 'smooth' });
     }
 
-    const idInput = document.getElementById('incident_id');
-    if(idInput) idInput.value = id;
+    // Assign hidden ID
+    $('#incident_id').val(id);
 
-    document.getElementById('view_id').innerText = "ID: INC-" + String(id).padStart(3, '0');
-    document.getElementById('view_title').innerText = title;
-    document.getElementById('view_status').innerText = status;
-    document.getElementById('view_reporter').innerText = reporter;
-    document.getElementById('view_date').innerText = date;
-    document.getElementById('view_description').innerText = desc || "No description provided.";
-    document.getElementById('view_actions').innerText = actions || "No actions logged.";
+    // Populate Fields
+    $('#view_id').text("ID: INC-" + String(id).padStart(3, '0'));
+    $('#view_title').text(title);
+    $('#view_status').text(status);
+    $('#view_reporter').text(reporter);
+    $('#view_date').text(date);
+    $('#view_description').text(desc || "No description provided.");
+    $('#view_actions').text(actions || "No actions logged.");
     
-    // Edit Link Logic
-    const editBtn = document.getElementById('editLink');
-    if (editBtn) editBtn.href = `/incidents/edit/${id}/`;
+    // Update Action Link
+    if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${id}/`);
 
-    // Severity Badge
-    const badgeContainer = document.getElementById('view_severity_badge');
-    let colors = '';
-    if (severity === 'Critical') colors = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100';
-    else if (severity === 'High') colors = 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-100';
-    else if (severity === 'Medium') colors = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100';
-    else colors = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100';
-    badgeContainer.innerHTML = `<span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${colors}">${severity}</span>`;
+    // Dynamic Badge Color
+    const $badge = $('#view_severity_badge');
+    let colorClass = '';
+    if (severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100';
+    else if (severity === 'High') colorClass = 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-100';
+    else if (severity === 'Medium') colorClass = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100';
+    else colorClass = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100';
+    $badge.html(`<span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${colorClass}">${severity}</span>`);
 
-    // Delete Form Visibility
-    const deleteForm = document.getElementById('delete-incident-form');
-    if (deleteForm && !IS_COMMANDER) {
+    // Manage Delete Access
+    const $deleteForm = $('#delete-incident-form');
+    if (!IS_COMMANDER && $deleteForm.length) {
         if (status === 'Resolved' && deleteUrl) {
-            deleteForm.classList.remove('hidden');
-            document.getElementById('confirmDeleteBtn').onclick = function() {
-                deleteForm.action = deleteUrl;
-                deleteForm.submit();
-            };
+            $deleteForm.removeClass('hidden');
+            $('#confirmDeleteBtn').off('click').on('click', function() {
+                $deleteForm.attr('action', deleteUrl).submit();
+            });
         } else { 
-            deleteForm.classList.add('hidden'); 
+            $deleteForm.addClass('hidden'); 
         }
     }
 
-    // Fetch Comments
-    const chatContainer = document.getElementById('chat-container');
-    chatContainer.innerHTML = '<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Loading Logs...</p>';
-    
-    fetch(`/incidents/${id}/comments/`)
-        .then(res => res.json())
-        .then(data => {
-            chatContainer.innerHTML = '';
-            if (!data.comments || data.comments.length === 0) {
-                chatContainer.innerHTML = '<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase">No logs recorded</p>';
-                return;
-            }
-            data.comments.forEach(c => {
-                const isMe = c.is_current_user;
-                chatContainer.insertAdjacentHTML('beforeend', `
-                    <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                        <div class="max-w-[90%] ${isMe ? 'bg-blue-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-r-xl rounded-tl-xl'} p-3 shadow-sm">
-                            <p class="text-[9px] font-black ${isMe ? 'text-blue-100' : 'text-slate-400'} uppercase mb-1">${c.author} • ${c.created_at}</p>
-                            <p class="text-xs font-medium">${c.message}</p>
-                        </div>
+    // API: Fetch Logs via AJAX
+    fetchLogs(id);
+}
+
+// VANILLA FETCH FOR LOGS
+async function fetchLogs(id) {
+    const $container = $('#chat-container');
+    $container.html('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Synchronizing Logs...</p>');
+
+    try {
+        const response = await fetch(`/incidents/${id}/comments/`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        
+        $container.empty();
+        if (!data.comments || data.comments.length === 0) {
+            $container.append('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase">No logs recorded</p>');
+            return;
+        }
+
+        data.comments.forEach(c => {
+            const sideClass = c.is_current_user ? 'items-end' : 'items-start';
+            const bubbleClass = c.is_current_user 
+                ? 'bg-blue-600 text-white rounded-l-xl rounded-tr-xl' 
+                : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-r-xl rounded-tl-xl';
+            const authorClass = c.is_current_user ? 'text-blue-100' : 'text-slate-400';
+
+            $container.append(`
+                <div class="flex flex-col ${sideClass}">
+                    <div class="max-w-[90%] ${bubbleClass} p-3 shadow-sm">
+                        <p class="text-[9px] font-black ${authorClass} uppercase mb-1">${c.author} • ${c.created_at}</p>
+                        <p class="text-xs font-medium">${c.message}</p>
                     </div>
-                `);
-            });
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+                </div>
+            `);
         });
+        $container.scrollTop($container[0].scrollHeight);
+    } catch (e) { console.error("Telemetry Error", e); }
 }
 
-// --- CHAT FORM SUBMISSION ---
-const chatForm = document.getElementById('chat-form');
-if (chatForm) {
-    chatForm.onsubmit = function(e) {
+// JQUERY AJAX FOR LOG SUBMISSION
+$(document).ready(function() {
+    $('#chat-form').on('submit', function(e) {
         e.preventDefault();
-        const msgInput = document.getElementById('chat-message');
-        const id = document.getElementById('incident_id').value;
-        if (!msgInput.value.trim() || !id) return;
+        const $msg = $('#chat-message');
+        const id = $('#incident_id').val();
+        if (!$msg.val().trim() || !id) return;
 
-        fetch("{% url 'incident_list' %}", {
-            method: "POST",
-            headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ message: msgInput.value, incident_id: id })
-        }).then(() => {
-            msgInput.value = '';
-            // Refresh detail view
-            previewIncident(id, document.getElementById('view_title').innerText, '', '', '', '', '', '', document.getElementById('view_reporter').innerText);
+        $.ajax({
+            url: "{% url 'incident_list' %}", // Current view handles POST comments
+            type: "POST",
+            data: {
+                message: $msg.val(),
+                incident_id: id,
+                csrfmiddlewaretoken: "{{ csrf_token }}"
+            },
+            success: function() {
+                $msg.val('');
+                fetchLogs(id); // Reload log container
+            },
+            error: function() { alert("Transmission Failure: Terminal disconnected."); }
         });
-    };
-}
+    });
+});
 </script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .animate-pulse-subtle { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    .text-xxs { font-size: 0.6rem; }
+</style>
 {% endblock %}

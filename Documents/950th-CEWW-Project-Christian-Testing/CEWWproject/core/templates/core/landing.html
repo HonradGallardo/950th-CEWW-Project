@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Asset & Cybersecurity System</title>
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -22,14 +25,12 @@
             background-color: #ffffff;
         }
 
-        /* Sophisticated Background */
         .hero-bg {
             background: 
                 radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
                 radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
         }
 
-        /* Glassmorphism Navbar */
         .glass-nav {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
@@ -37,7 +38,6 @@
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
 
-        /* Enhanced Floating Animation */
         .hero-image-container {
             position: relative;
             perspective: 1000px;
@@ -54,7 +54,6 @@
             50% { transform: translateY(-20px) rotateX(2deg); }
         }
 
-        /* Interactive Feature Cards */
         .feature-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid #f1f5f9;
@@ -66,7 +65,6 @@
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
         }
 
-        /* Smooth Button Gradient */
         .btn-gradient {
             background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
             transition: all 0.3s ease;
@@ -93,9 +91,9 @@
         </div>
         
         <div class="flex items-center space-x-6">
-            <div class="hidden lg:flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
-                Secure Network Active
+            <div id="network-status" class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest transition-opacity duration-500">
+                <span id="status-dot" class="w-2 h-2 bg-slate-300 rounded-full mr-2"></span>
+                <span id="status-text">Network Sync...</span>
             </div>
             <a href="{% url 'login' %}" class="btn-gradient text-white px-7 py-2.5 rounded-full font-bold text-sm flex items-center shadow-lg">
                 <i class="fas fa-lock-open mr-2 text-xs"></i> Portal Login
@@ -130,7 +128,7 @@
         </div>
 
         <div class="w-full lg:w-2/5 hero-image-container">
-            <img src="static/image_2.png" 
+            <img src="{% static 'image_2.png' %}" 
                  alt="System Infographic" 
                  class="w-full h-auto floating-laptop rounded-3xl">
             
@@ -193,6 +191,52 @@
             </p>
         </div>
     </footer>
+
+    <script>
+        /**
+         * 1. VANILLA JS API CONFIG
+         * Global utilities for the system landing page
+         */
+        const SystemStatus = {
+            async checkConnection() {
+                try {
+                    // This hits your server just to confirm availability
+                    const response = await fetch('/role-redirect/', { 
+                        method: 'HEAD',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    return response.ok;
+                } catch (e) {
+                    return false;
+                }
+            }
+        };
+
+        /**
+         * 2. JQUERY AJAX: NETWORK HEARTBEAT
+         * Checks the "Secure Network Active" status every 30 seconds
+         */
+        $(document).ready(function() {
+            function updateNetworkUI() {
+                $.ajax({
+                    url: '/', // Head request to landing
+                    type: 'HEAD',
+                    success: function() {
+                        $('#status-dot').removeClass('bg-slate-300 bg-red-500').addClass('bg-emerald-500 animate-pulse');
+                        $('#status-text').text('Secure Network Active').removeClass('text-red-500').addClass('text-slate-400');
+                    },
+                    error: function() {
+                        $('#status-dot').removeClass('bg-emerald-500 animate-pulse').addClass('bg-red-500');
+                        $('#status-text').text('Network Offline').addClass('text-red-500');
+                    }
+                });
+            }
+
+            // Initial trigger and interval
+            updateNetworkUI();
+            setInterval(updateNetworkUI, 30000);
+        });
+    </script>
 
 </body>
 </html>

@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}950th CEWW System{% endblock %}</title>
     
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
@@ -33,12 +35,20 @@
 
     <style>
         body { transition: background-color 0.3s ease, color 0.3s ease; }
+        /* Custom scrollbar for API-loaded content */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
 
-    <div class="fixed top-5 right-5 z-50">
+    <div class="fixed top-5 right-5 z-50 flex items-center gap-3">
+        <div id="global-api-indicator" class="hidden flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl">
+            <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+            <span class="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400">Secure Link</span>
+        </div>
+
         <button id="theme-toggle" class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl hover:scale-110 transition-all group">
             <i id="theme-toggle-dark-icon" class="fas fa-moon text-slate-600 hidden group-hover:text-blue-600"></i>
             <i id="theme-toggle-light-icon" class="fas fa-sun text-yellow-400 hidden"></i>
@@ -52,6 +62,9 @@
     </div>
 
     <script>
+        /**
+         * 1. THEME ENGINE (PRESERVED)
+         */
         const themeToggleBtn = document.getElementById('theme-toggle');
         const darkIcon = document.getElementById('theme-toggle-dark-icon');
         const lightIcon = document.getElementById('theme-toggle-light-icon');
@@ -66,7 +79,6 @@
             }
         }
 
-        // Run on load
         updateToggleIcons();
 
         themeToggleBtn.addEventListener('click', function() {
@@ -78,7 +90,49 @@
                 localStorage.setItem('color-theme', 'dark');
             }
             updateToggleIcons();
+            // Dispatch event for components that need to re-render (like Charts)
+            document.dispatchEvent(new Event('themeChanged'));
         });
+
+        /**
+         * 2. JQUERY AJAX: SYSTEM NOTIFICATION SYNC
+         * Checks for new system messages/notifications every 2 minutes
+         */
+        $(document).ready(function() {
+            function syncGlobalNotifications() {
+                $.ajax({
+                    url: '/notifications/latest/', // Assumed API Endpoint
+                    type: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function(data) {
+                        $('#global-api-indicator').removeClass('hidden');
+                        // Logic to show toast notifications can go here
+                    },
+                    error: function() {
+                        console.log("System API Connectivity: Offline");
+                        $('#global-api-indicator').addClass('hidden');
+                    }
+                });
+            }
+            setInterval(syncGlobalNotifications, 120000);
+        });
+
+        /**
+         * 3. VANILLA JS API: GLOBAL UTILITIES
+         * Used for quick data fetching across all sub-templates
+         */
+        const SystemAPI = {
+            async fetchJson(url) {
+                try {
+                    const response = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error("API Protocol Breach:", error);
+                }
+            }
+        };
     </script>
     {% block extra_js %}{% endblock %}
 </body>

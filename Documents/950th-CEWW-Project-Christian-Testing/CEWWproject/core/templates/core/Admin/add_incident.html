@@ -32,7 +32,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
                     <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Threat:</label>
                     <div class="md:col-span-3">
-                        <input type="text" name="title" required placeholder="e.g. Unauthorized Access Attempt"
+                        <input type="text" name="title" id="id_title" required placeholder="e.g. Unauthorized Access Attempt"
                             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition custom-input">
                     </div>
                 </div>
@@ -40,7 +40,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
                     <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Severity:</label>
                     <div class="md:col-span-3">
-                        <select name="severity" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
+                        <select name="severity" id="id_severity" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
                             <option value="Low">Low</option>
                             <option value="Medium">Medium</option>
                             <option value="High">High</option>
@@ -52,7 +52,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
                     <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Affected Area:</label>
                     <div class="md:col-span-3">
-                        <input type="text" name="affected_area" placeholder="e.g. Server Room / HR Department"
+                        <input type="text" name="affected_area" id="id_affected_area" placeholder="e.g. Server Room / HR Department"
                             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 custom-input">
                     </div>
                 </div>
@@ -60,7 +60,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
                     <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Status:</label>
                     <div class="md:col-span-3">
-                        <select name="status" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
+                        <select name="status" id="id_status" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
                             <option value="Open">Open</option>
                             <option value="Investigating">Investigating</option>
                             <option value="Resolved">Resolved</option>
@@ -70,13 +70,13 @@
 
                 <div class="space-y-2 pt-2">
                     <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Detailed Description:</label>
-                    <textarea name="description" rows="5" placeholder="Provide full details of the incident and initial findings..."
+                    <textarea name="description" id="id_description" rows="5" placeholder="Provide full details of the incident and initial findings..."
                         class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition resize-none min-h-[120px] custom-input"></textarea>
                 </div>
             </div>
 
             <div class="pt-4">
-                <button type="submit" 
+                <button type="submit" id="submitBtn"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase text-[10px] sm:text-xs tracking-widest py-4 rounded-xl transition-all active:scale-[0.98] adaptive-button">
                     Submit Incident Report
                 </button>
@@ -90,56 +90,97 @@
     </div>
 </div>
 
+<script>
+    /**
+     * 1. JQUERY AJAX IMPLEMENTATION
+     * Best for browser compatibility and cleaner syntax with Django.
+     */
+    $(document).ready(function() {
+        $('#incidentForm').on('submit', function(e) {
+            e.preventDefault(); // Stop page reload
+
+            const $form = $(this);
+            const $btn = $('#submitBtn');
+            const originalText = $btn.html();
+
+            // UI Loading State
+            $btn.prop('disabled', true).html('<i class="fas fa-circle-notch animate-spin mr-2"></i> PROCESSING REPORT...');
+
+            $.ajax({
+                url: window.location.href, // Sends to the current View API endpoint
+                type: 'POST',
+                data: $form.serialize(), // Encodes form elements for submission
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest' // Helps Django identify AJAX request
+                },
+                success: function(response) {
+                    // Assuming API returns success
+                    $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').html('<i class="fas fa-check mr-2"></i> REPORT SUBMITTED');
+                    
+                    setTimeout(() => {
+                        window.location.href = "{% url 'incident_list' %}";
+                    }, 1500);
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html(originalText);
+                    alert("System Error: Failed to submit incident. Please check required fields.");
+                }
+            });
+        });
+    });
+
+    /**
+     * 2. VANILLA JAVASCRIPT ALTERNATIVE (Commented Out)
+     * Use this if you want zero dependencies.
+     */
+    /*
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('#incidentForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const btn = document.querySelector('#submitBtn');
+            
+            btn.disabled = true;
+            btn.innerText = "PROCESSING...";
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (response.ok) { window.location.href = "/incidents/"; }
+            } catch (err) { 
+                btn.disabled = false;
+                console.error("Fetch Error:", err); 
+            }
+        });
+    });
+    */
+</script>
+
 <style>
     /* --- ADAPTIVE BUTTON SHADOW --- */
     .adaptive-button {
-        /* Light Mode Shadow (Glowy Blue) */
         box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
     }
 
     body.dark-mode .adaptive-button {
-        /* Dark Mode Shadow (Deep Black/Subtle) */
         box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.6) !important;
     }
 
     /* --- DARK MODE OVERRIDES --- */
-    body.dark-mode .content-bg { 
-        background-color: #0f172a !important; 
-    }
-
+    body.dark-mode .content-bg { background-color: #0f172a !important; }
     body.dark-mode .registration-card { 
         background-color: #111827 !important; 
         border-color: #1f2937 !important; 
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
     }
-
-    body.dark-mode .card-header-bg { 
-        background-color: #1f2937 !important; 
-        border-bottom-color: #374151 !important; 
-    }
-
-    body.dark-mode .dark-mode-text { 
-        color: #f9fafb !important; 
-    }
-
-    body.dark-mode .info-badge {
-        background-color: #1f2937 !important;
-        border-color: #374151 !important;
-        color: #e5e7eb !important;
-    }
-
-    body.dark-mode .custom-input {
-        background-color: #1f2937 !important;
-        border-color: #374151 !important;
-        color: #f1f5f9 !important;
-    }
-
-    body.dark-mode .custom-input::placeholder {
-        color: #6b7280 !important;
-    }
-
-    body.dark-mode .info-badge {
-        color: #f3f4f6 !important;
-    }
+    body.dark-mode .card-header-bg { background-color: #1f2937 !important; border-bottom-color: #374151 !important; }
+    body.dark-mode .dark-mode-text { color: #f9fafb !important; }
+    body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; color: #f3f4f6 !important; }
+    body.dark-mode .custom-input { background-color: #1f2937 !important; border-color: #374151 !important; color: #f1f5f9 !important; }
+    body.dark-mode .custom-input::placeholder { color: #6b7280 !important; }
 </style>
 {% endblock %}

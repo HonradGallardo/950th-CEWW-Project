@@ -159,18 +159,53 @@
             <div class="relative h-48 w-full"><canvas id="statusChart"></canvas></div>
             <div class="mt-6 text-[10px] font-black text-slate-500 pt-4 flex justify-between items-center uppercase">
                 <p>Total Assets</p>
-                <span class="text-slate-900 dark:text-slate-100 text-base">{{ assets.count }}</span>
+                <span id="total-asset-badge" class="text-slate-900 dark:text-slate-100 text-base">{{ assets.count }}</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// (All JS logic remains the same as provided previously)
 let currentPage = 1;
 const rowsPerPage = 10;
 let tableRows = [];
 let myChart;
+
+/**
+ * 1. JQUERY AJAX: LIVE DATA REFRESH
+ * Periodically syncs chart and total count from API
+ */
+function refreshAssetData() {
+    $.ajax({
+        url: '/api/assets-summary/', // Targeted API endpoint
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+            // Update Total Count Badge
+            $('#total-asset-badge').text(data.total);
+            
+            // Update Doughnut Chart Data
+            if (myChart) {
+                myChart.data.datasets[0].data = [data.active, data.inactive, data.maintenance];
+                myChart.update();
+            }
+        },
+        error: function(err) { console.error("Asset Sync Failed", err); }
+    });
+}
+
+/**
+ * 2. VANILLA FETCH ALTERNATIVE (Reference)
+ */
+/*
+async function refreshAssetVanilla() {
+    const response = await fetch('/api/assets-summary/');
+    if (response.ok) {
+        const data = await response.json();
+        document.getElementById('total-asset-badge').innerText = data.total;
+    }
+}
+*/
 
 function toggleDarkMode() {
     const isDark = document.documentElement.classList.toggle('dark');
@@ -242,6 +277,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; updateTable(); });
     document.getElementById('typeFilter').addEventListener('change', () => { currentPage = 1; updateTable(); });
+    
+    // Initial Sync and interval setup (every 5 minutes)
+    setInterval(refreshAssetData, 300000);
 });
 
 function updateTable() {

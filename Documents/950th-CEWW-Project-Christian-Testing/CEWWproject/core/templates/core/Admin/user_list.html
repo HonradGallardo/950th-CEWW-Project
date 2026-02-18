@@ -8,9 +8,15 @@
             <h1 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">User Access Control & RBAC</h1>
             <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-wider">Manage system personnel and permissions</p>
         </div>
-        <a href="{% url 'add_user' %}" class="w-full sm:w-auto bg-blue-600 dark:bg-blue-500 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-md shadow-blue-200 dark:shadow-none flex items-center justify-center shrink-0">
-            <i class="fas fa-user-plus mr-2"></i> Add New User
-        </a>
+        <div class="flex items-center gap-3">
+             <div id="api-indicator" class="hidden sm:flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg">
+                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse mr-2"></div>
+                <span class="text-[9px] font-black text-blue-600 uppercase">Directory Sync</span>
+            </div>
+            <a href="{% url 'add_user' %}" class="w-full sm:w-auto bg-blue-600 dark:bg-blue-500 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-md shadow-blue-200 dark:shadow-none flex items-center justify-center shrink-0">
+                <i class="fas fa-user-plus mr-2"></i> Add New User
+            </a>
+        </div>
     </div>
 
     <div class="flex-1 grid grid-cols-12 gap-4 lg:gap-6 lg:min-h-0 pb-10 sm:pb-4">
@@ -20,7 +26,7 @@
                 
                 <div class="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 shrink-0 space-y-4">
                     <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="setRoleFilter('ALL')" class="role-filter-btn {% if current_role == 'ALL' or not current_role %}active bg-blue-50 text-blue-600{% endif %} active text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 transition-all">All</button>
+                        <button onclick="setRoleFilter('ALL')" class="role-filter-btn {% if current_role == 'ALL' or not current_role %}active bg-blue-50 text-blue-600{% endif %} text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 transition-all">All</button>
                         <button onclick="setRoleFilter('ADMIN')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-red-200 hover:text-red-600 transition-all">Admins</button>
                         <button onclick="setRoleFilter('COMMANDER')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-purple-200 hover:text-purple-600 transition-all">Commanders</button>
                         <button onclick="setRoleFilter('PERSONNEL')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-blue-200 hover:text-blue-600 transition-all">Personnel</button>
@@ -35,88 +41,87 @@
                 </div>
 
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
-    <table class="w-full text-left border-collapse" id="userTable">
-        <thead class="hidden sm:table-header-group sticky top-0 bg-slate-50 dark:bg-slate-800 z-10 shadow-sm">
-            <tr class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
-                <th class="px-6 py-4 w-20 text-center">ID</th>
-                <th class="px-4 py-4 w-24 text-center">Insignia</th>
-                <th class="px-4 py-4">Rank</th>
-                <th class="px-6 py-4">Personnel</th>
-                <th class="px-6 py-4">Users</th> 
-                <th class="px-6 py-4">Last Activity</th> 
-                <th class="px-6 py-4 text-center">Actions</th> 
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 block sm:table-row-group" id="userTableBody">
-            {% for person in users %}
-            <tr class="user-row block sm:table-row hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors cursor-pointer group p-4 sm:p-0 mb-2 sm:mb-0 bg-white dark:bg-slate-900 sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-slate-100 dark:border-slate-800" 
-                data-role="{{ person.groups.all.0.name|default:'Unassigned'|upper }}"
-                onclick="showUserDetails('{{ person.id }}', '{{ person.username }}', '{{ person.get_full_name|default:person.username }}', '{{ person.email }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}', '{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}', '{{ person.profile.rank|default:'Airman' }}')">
-                
-                <td class="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 text-center">
-                    <span class="text-[10px] font-black text-slate-400">#{{ person.id }}</span>
-                </td>
+                    <table class="w-full text-left border-collapse" id="userTable">
+                        <thead class="hidden sm:table-header-group sticky top-0 bg-slate-50 dark:bg-slate-800 z-10 shadow-sm">
+                            <tr class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                                <th class="px-6 py-4 w-20 text-center">ID</th>
+                                <th class="px-4 py-4 w-24 text-center">Insignia</th>
+                                <th class="px-4 py-4">Rank</th>
+                                <th class="px-6 py-4">Personnel</th>
+                                <th class="px-6 py-4">Users</th> 
+                                <th class="px-6 py-4">Last Activity</th> 
+                                <th class="px-6 py-4 text-center">Actions</th> 
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 block sm:table-row-group" id="userTableBody">
+                            {% for person in users %}
+                            <tr class="user-row block sm:table-row hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors cursor-pointer group p-4 sm:p-0 mb-2 sm:mb-0 bg-white dark:bg-slate-900 sm:bg-transparent rounded-2xl sm:rounded-none border sm:border-0 border-slate-100 dark:border-slate-800" 
+                                data-role="{{ person.groups.all.0.name|default:'Unassigned'|upper }}"
+                                onclick="showUserDetails('{{ person.id }}', '{{ person.username|escapejs }}', '{{ person.get_full_name|default:person.username|escapejs }}', '{{ person.email|escapejs }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}', '{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}', '{{ person.profile.rank|default:'Airman' }}')">
+                                
+                                <td class="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 text-center">
+                                    <span class="text-[10px] font-black text-slate-400">#{{ person.id }}</span>
+                                </td>
 
-                <td class="block sm:table-cell px-0 sm:px-4 py-2 sm:py-4">
-                    <div class="flex justify-center">
-                        <div class="w-16 h-14 sm:w-11 sm:h-10 rounded-lg bg-slate-50 dark:bg-slate-800/80 p-1.5 ">
-                            <img src="/static/core/images/badge/{{ person.profile.rank|default:'Airman' }}.png" 
-                                 class="w-full h-full object-contain"
-                                 onerror="this.src='/static/core/images/badge/Airman.png';">
-                        </div>
-                        
-                    </div>
-                </td>
+                                <td class="block sm:table-cell px-0 sm:px-4 py-2 sm:py-4">
+                                    <div class="flex justify-center">
+                                        <div class="w-16 h-14 sm:w-11 sm:h-10 rounded-lg bg-slate-50 dark:bg-slate-800/80 p-1.5 ">
+                                            <img src="/static/core/images/badge/{{ person.profile.rank|default:'Airman' }}.png" 
+                                                 class="w-full h-full object-contain"
+                                                 onerror="this.src='/static/core/images/badge/Airman.png';">
+                                        </div>
+                                    </div>
+                                </td>
 
-                <td class="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 text-center sm:text-left">
-            <div class="flex flex-col">
-                <span class="hidden sm:block text-[8px] font-medium text-slate-400 uppercase text-center">
-                    {{ person.profile.rank|default:"Airman" }}
-                </span>
-            </div>
-        </td>
+                                <td class="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 text-center sm:text-left">
+                                    <div class="flex flex-col">
+                                        <span class="hidden sm:block text-[8px] font-medium text-slate-400 uppercase text-center">
+                                            {{ person.profile.rank|default:"Airman" }}
+                                        </span>
+                                    </div>
+                                </td>
 
-                <td class="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 text-center sm:text-left">
-                    <div class="flex flex-col">
-                        <span class="sm:hidden text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-0.5">{{ person.profile.rank|default:"Airman" }}</span>
-                        <span class="font-bold text-sm sm:text-xs text-slate-800 dark:text-slate-200">{{ person.get_full_name|default:person.username }}</span>
-                    </div>
-                </td>
+                                <td class="block sm:table-cell px-0 sm:px-6 py-1 sm:py-4 text-center sm:text-left">
+                                    <div class="flex flex-col">
+                                        <span class="sm:hidden text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-0.5">{{ person.profile.rank|default:"Airman" }}</span>
+                                        <span class="font-bold text-sm sm:text-xs text-slate-800 dark:text-slate-200">{{ person.get_full_name|default:person.username }}</span>
+                                    </div>
+                                </td>
 
-                <td class="block sm:table-cell px-0 sm:px-6 py-2 sm:py-4">
-                    <div class="flex items-center justify-between sm:block border-t border-slate-50 dark:border-slate-800/50 mt-2 pt-2 sm:mt-0 sm:pt-0 sm:border-0">
-                        <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Username</span>
-                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 font-mono">{{ person.username }}</span>
-                    </div>
-                </td>
+                                <td class="block sm:table-cell px-0 sm:px-6 py-2 sm:py-4">
+                                    <div class="flex items-center justify-between sm:block border-t border-slate-50 dark:border-slate-800/50 mt-2 pt-2 sm:mt-0 sm:pt-0 sm:border-0">
+                                        <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Username</span>
+                                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 font-mono">{{ person.username }}</span>
+                                    </div>
+                                </td>
 
-                <td class="block sm:table-cell px-0 sm:px-6 py-2 sm:py-4">
-                    <div class="flex items-center justify-between sm:block border-t border-slate-50 dark:border-slate-800/50 pt-2 sm:pt-0 sm:border-0">
-                        <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Activity</span>
-                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ person.last_login|date:"d-m-y"|default:"Never" }}</span>
-                    </div>
-                </td>
+                                <td class="block sm:table-cell px-0 sm:px-6 py-2 sm:py-4">
+                                    <div class="flex items-center justify-between sm:block border-t border-slate-50 dark:border-slate-800/50 pt-2 sm:pt-0 sm:border-0">
+                                        <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Activity</span>
+                                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400">{{ person.last_login|date:"d-m-y"|default:"Never" }}</span>
+                                    </div>
+                                </td>
 
-                <td class="block sm:table-cell px-0 sm:px-6 py-3 sm:py-4">
-                    <div class="flex items-center justify-center gap-3 sm:gap-2" onclick="event.stopPropagation();">
-                        <a href="{% url 'edit_user' person.id %}" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 sm:p-2 bg-slate-50 dark:bg-slate-800/50 sm:bg-transparent rounded-xl text-slate-500 hover:text-blue-600 transition border border-slate-100 dark:border-slate-700/50 sm:border-0">
-                            <i class="fas fa-edit text-[11px]"></i>
-                            <span class="sm:hidden text-[10px] font-bold uppercase tracking-widest">Edit</span>
-                        </a>
-                        <form action="{% url 'delete_user' person.id %}" method="POST" onsubmit="return confirm('Delete {{ person.username }}?');" class="flex-1 sm:flex-none">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2 sm:p-2 bg-red-50/50 dark:bg-red-900/10 sm:bg-transparent rounded-xl text-red-400 hover:text-red-600 transition border border-red-100 dark:border-red-900/20 sm:border-0">
-                                <i class="fas fa-trash-alt text-[11px]"></i>
-                                <span class="sm:hidden text-[10px] font-bold uppercase tracking-widest">Delete</span>
-                            </button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+                                <td class="block sm:table-cell px-0 sm:px-6 py-3 sm:py-4">
+                                    <div class="flex items-center justify-center gap-3 sm:gap-2" onclick="event.stopPropagation();">
+                                        <a href="{% url 'edit_user' person.id %}" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 sm:p-2 bg-slate-50 dark:bg-slate-800/50 sm:bg-transparent rounded-xl text-slate-500 hover:text-blue-600 transition border border-slate-100 dark:border-slate-700/50 sm:border-0">
+                                            <i class="fas fa-edit text-[11px]"></i>
+                                            <span class="sm:hidden text-[10px] font-bold uppercase tracking-widest">Edit</span>
+                                        </a>
+                                        <form action="{% url 'delete_user' person.id %}" method="POST" onsubmit="return confirm('Delete {{ person.username }}?');" class="flex-1 sm:flex-none">
+                                            {% csrf_token %}
+                                            <button type="submit" class="w-full flex items-center justify-center gap-2 px-4 py-2 sm:p-2 bg-red-50/50 dark:bg-red-900/10 sm:bg-transparent rounded-xl text-red-400 hover:text-red-600 transition border border-red-100 dark:border-red-900/20 sm:border-0">
+                                                <i class="fas fa-trash-alt text-[11px]"></i>
+                                                <span class="sm:hidden text-[10px] font-bold uppercase tracking-widest">Delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
                 {% if users.has_other_pages %}
                 <div class="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/50 flex items-center justify-between shrink-0">
@@ -212,9 +217,53 @@
 </div>
 
 <script>
-// Logic preserved exactly as provided
-let currentRoleFilter = 'ALL';
+let currentRoleFilter = '{{ current_role|default:"ALL" }}';
+let activeUserId = null;
 
+/**
+ * 1. JQUERY AJAX: LIVE DIRECTORY SYNC
+ * Fetches latest counts or directory changes from the API
+ */
+$(document).ready(function() {
+    window.refreshUserTable = function() {
+        $.ajax({
+            url: '/api/users/stats/', // Assumed endpoint
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                // Update indicator or specific badges if they existed
+                $('#api-indicator').removeClass('hidden');
+            },
+            error: function() { console.log("API Sync Offline"); }
+        });
+    };
+    
+    // Auto sync every 2 minutes
+    setInterval(refreshUserTable, 120000);
+});
+
+/**
+ * 2. VANILLA API: SYNC ACTIVE USER DETAILS
+ */
+async function syncUserDetails(id) {
+    if (!id) return;
+    try {
+        const response = await fetch(`/api/users/${id}/`, {
+             headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            // Silently update fields if user is currently looking at this specific ID
+            if(activeUserId == id) {
+                 document.getElementById('detail-last-login').innerText = data.last_login_formatted || 'Never';
+            }
+        }
+    } catch (e) { }
+}
+
+/**
+ * CORE LOGIC PRESERVED
+ */
 function slugifyRank(text) {
     return text.toString().toLowerCase().trim()
         .replace(/\s+/g, '-')     
@@ -222,61 +271,8 @@ function slugifyRank(text) {
         .replace(/\-\-+/g, '-');  
 }
 
-function filterUsers() {
-    const input = document.getElementById("userSearch");
-    const searchFilter = input.value.toLowerCase().trim();
-    const rows = document.querySelectorAll(".user-row");
-
-    rows.forEach(row => {
-        // 1. Get the ID (targeting the #ID span)
-        const idText = row.querySelector("td span.text-slate-400")?.textContent.toLowerCase() || "";
-        
-        // 2. Get the Rank (targeting the rank span)
-        const rankText = row.querySelector(".sm\\:block.text-\\[8px\\]")?.textContent.toLowerCase() || "";
-        
-        // 3. Get Name and Username
-        const fullName = row.querySelector(".text-slate-800")?.textContent.toLowerCase() || "";
-        const username = row.querySelector(".font-mono")?.textContent.toLowerCase() || "";
-        
-        const rowRole = row.getAttribute("data-role");
-
-        // Comprehensive Match Check
-        const matchesSearch = 
-            idText.includes(searchFilter) ||   // Matches "#1" or "1"
-            rankText.includes(searchFilter) || // Matches "First", "Sergeant", "General"
-            fullName.includes(searchFilter) || // Matches "John Doe"
-            username.includes(searchFilter);   // Matches "@admin"
-
-        // Sync with Role Buttons
-        let matchesRole = true;
-        if (currentRoleFilter !== 'ALL') {
-            matchesRole = (rowRole === currentRoleFilter);
-        }
-
-        // Apply Visibility
-        if (matchesSearch && matchesRole) {
-            row.style.setProperty('display', '', 'important');
-        } else {
-            row.style.setProperty('display', 'none', 'important');
-        }
-    });
-}
-
-function setRoleFilter(role) {
-    currentRoleFilter = role;
-    const buttons = document.querySelectorAll('.role-filter-btn');
-    buttons.forEach(btn => {
-        btn.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'active');
-        btn.classList.add('bg-white', 'text-slate-500', 'border-slate-200', 'dark:bg-slate-800');
-    });
-
-    event.currentTarget.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-200', 'active');
-    event.currentTarget.classList.remove('bg-white', 'text-slate-500', 'border-slate-200');
-
-    filterUsers();
-}
-
 function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined, imageUrl, rank) {
+    activeUserId = id; // Track for API sync
     document.getElementById('empty-message').classList.add('hidden');
     document.getElementById('user-details').classList.remove('hidden');
     document.getElementById('detail-username').innerText = '@' + username;
@@ -288,7 +284,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     document.getElementById('detail-rank').innerText = rank;
     
     const rankIcon = document.getElementById('detail-rank-icon');
-    rankIcon.src = `/static/img/ranks/${slugifyRank(rank)}.png`;
+    rankIcon.src = `/static/core/images/badge/${rank}.png`;
     rankIcon.classList.remove('hidden');
     rankIcon.onerror = function() { this.classList.add('hidden'); };
 
@@ -318,30 +314,35 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     } else {
         roleBadge.classList.add('bg-slate-100', 'text-slate-500', 'dark:bg-slate-800', 'dark:text-slate-400');
     }
+    
+    // Background sync this specific user's latest telemetry
+    syncUserDetails(id);
 }
 
-// This replaces your old filterUsers() and setRoleFilter()
 function handleSearch(event) {
-    // Only search if User presses Enter
-    if (event.key === "Enter") {
-        performQuery();
-    }
+    if (event.key === "Enter") performQuery();
 }
 
 function setRoleFilter(role) {
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.set('role', role);
-    urlParams.set('page', '1'); // Reset to page 1 when filter changes
+    urlParams.set('page', '1'); 
     window.location.search = urlParams.toString();
 }
 
 function performQuery() {
     const query = document.getElementById("userSearch").value;
     const urlParams = new URLSearchParams(window.location.search);
-    
     urlParams.set('search', query);
-    urlParams.set('page', '1'); // Reset to page 1 on new search
+    urlParams.set('page', '1'); 
     window.location.search = urlParams.toString();
 }
 </script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
 {% endblock %}

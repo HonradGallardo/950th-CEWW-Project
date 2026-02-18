@@ -30,8 +30,8 @@
                             </button>
                             <div class="dropdown-list hidden absolute z-[110] mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-2xl max-h-[200px] overflow-y-auto">
                             {% for value, label in form.asset.field.choices %}
-                                {% if value %} {# This hides the "---------" empty choice from appearing as a clickable item #}
-                                <div class="dropdown-item px-4 py-2.5 ..." data-value="{{ value }}">
+                                {% if value %}
+                                <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-slate-50 last:border-0" data-value="{{ value }}">
                                     {{ label }}
                                 </div>
                                 {% endif %}
@@ -80,7 +80,7 @@
             </div>
 
             <div class="pt-4">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 sm:py-3 rounded-lg transition active:scale-[0.98] adaptive-button">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 sm:py-3 rounded-lg transition active:scale-[0.98] adaptive-button">
                     Submit
                 </button>
             </div>
@@ -106,28 +106,15 @@
     }
 
     #serviceLogForm textarea { min-height: 120px; resize: none; }
-
-    .adaptive-button {
-        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
-    }
+    .adaptive-button { box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
 
     /* 2. Dark Mode Overrides */
     body.dark-mode .content-bg { background-color: #0f172a !important; }
-    
-    body.dark-mode .registration-card { 
-        background-color: #111827 !important; 
-        border-color: #1f2937 !important; 
-    }
-
-    body.dark-mode .card-header-bg { 
-        background-color: #1f2937 !important; 
-        border-bottom-color: #374151 !important; 
-    }
-
+    body.dark-mode .registration-card { background-color: #111827 !important; border-color: #1f2937 !important; }
+    body.dark-mode .card-header-bg { background-color: #1f2937 !important; border-bottom-color: #374151 !important; }
     body.dark-mode .dark-mode-text { color: #f9fafb !important; }
     body.dark-mode .dark-mode-subtext { color: #94a3b8 !important; }
 
-    /* Custom Dropdown & Input Dark Mode */
     body.dark-mode #serviceLogForm input, 
     body.dark-mode #serviceLogForm select, 
     body.dark-mode #serviceLogForm textarea,
@@ -138,67 +125,94 @@
         color: #f1f5f9 !important;
     }
 
-    body.dark-mode .dropdown-item {
-        color: #94a3b8;
-        border-bottom-color: #374151;
-    }
-
-    body.dark-mode .dropdown-item:hover {
-        background-color: #374151 !important;
-        color: #ffffff !important;
-    }
-
-    body.dark-mode .adaptive-button {
-        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.6) !important;
-    }
-
-    /* Scrollbar Styling */
+    body.dark-mode .dropdown-item { color: #94a3b8; border-bottom-color: #374151; }
+    body.dark-mode .dropdown-item:hover { background-color: #374151 !important; color: #ffffff !important; }
+    body.dark-mode .adaptive-button { box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.6) !important; }
     .dropdown-list::-webkit-scrollbar { width: 5px; }
     .dropdown-list::-webkit-scrollbar-track { background: transparent; }
     .dropdown-list::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dropdowns = document.querySelectorAll('.custom-dropdown');
+/**
+ * IMPLEMENTATION: JQUERY & AJAX
+ */
+$(document).ready(function() {
+    const $dropdowns = $('.custom-dropdown');
 
-    dropdowns.forEach(dropdown => {
-        const toggle = dropdown.querySelector('.dropdown-toggle');
-        const list = dropdown.querySelector('.dropdown-list');
-        const label = dropdown.querySelector('.selected-label');
-        const realSelect = dropdown.querySelector('select');
-        const items = dropdown.querySelectorAll('.dropdown-item');
+    // Custom Dropdown Logic (jQuery)
+    $dropdowns.each(function() {
+        const $dropdown = $(this);
+        const $toggle = $dropdown.find('.dropdown-toggle');
+        const $list = $dropdown.find('.dropdown-list');
+        const $label = $dropdown.find('.selected-label');
+        const $realSelect = $dropdown.find('select');
+        const $items = $dropdown.find('.dropdown-item');
 
-        toggle.addEventListener('click', (e) => {
+        $toggle.on('click', function(e) {
             e.stopPropagation();
-            document.querySelectorAll('.dropdown-list').forEach(l => {
-                if(l !== list) l.classList.add('hidden');
-            });
-            list.classList.toggle('hidden');
+            $('.dropdown-list').not($list).addClass('hidden');
+            $list.toggleClass('hidden');
         });
 
-        items.forEach(item => {
-            item.addEventListener('click', () => {
-                const val = item.getAttribute('data-value');
-                const txt = item.innerText;
+        $items.on('click', function() {
+            const val = $(this).data('value');
+            const txt = $(this).text().trim();
 
-                label.innerText = txt;
-                // Add class to ensure text remains visible in dark mode
-                label.style.color = "inherit"; 
-                
-                if (realSelect) {
-                    realSelect.value = val;
-                }
-                list.classList.add('hidden');
-            });
+            $label.text(txt);
+            $realSelect.val(val).trigger('change');
+            $list.addClass('hidden');
         });
     });
 
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.dropdown-list').forEach(list => {
-            list.classList.add('hidden');
+    $(document).on('click', function() {
+        $('.dropdown-list').addClass('hidden');
+    });
+
+    // AJAX Form Submission
+    $('#serviceLogForm').on('submit', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $('#submitBtn');
+
+        $btn.prop('disabled', true).html('<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...');
+
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: $form.serialize(),
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            success: function(response) {
+                $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').text('Success!');
+                setTimeout(() => window.location.href = "{% url 'maintenance_list' %}", 1000);
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).text('Submit');
+                alert("Error: Please check if all fields are valid.");
+            }
         });
     });
 });
+
+/**
+ * IMPLEMENTATION: VANILLA JS (Reference Only)
+ */
+/*
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#serviceLogForm');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest'}
+            });
+            if (response.ok) window.location.href = "/maintenance/";
+        } catch (err) { console.error(err); }
+    });
+});
+*/
 </script>
 {% endblock %}

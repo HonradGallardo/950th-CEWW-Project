@@ -9,13 +9,13 @@
         </a>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="px-6 py-6 bg-[#3d5171] dark:bg-slate-800 text-white border-b dark:border-slate-700">
             <h2 class="text-xl font-black uppercase tracking-tight">{{ title }}</h2>
             <p class="text-slate-300 dark:text-slate-400 text-[10px] sm:text-xs mt-0.5">Enter the details for the system user below.</p>
         </div>
         
-        <form method="POST" class="p-4 sm:p-8 space-y-6">
+        <form method="POST" id="userPersonnelForm" class="p-4 sm:p-8 space-y-6">
             {% csrf_token %}
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
@@ -33,15 +33,17 @@
                             <p class="text-slate-400 dark:text-slate-500 text-[9px] sm:text-[10px] italic leading-tight px-1">{{ field.help_text }}</p>
                         {% endif %}
                         
-                        {% if field.errors %}
-                            <div class="space-y-1 px-1 mt-1">
-                                {% for error in field.errors %}
-                                    <p class="text-red-500 dark:text-red-400 text-[10px] font-bold flex items-center">
-                                        <i class="fas fa-exclamation-circle mr-1"></i> {{ error }}
-                                    </p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                        <div id="error-{{ field.name }}" class="field-error-container">
+                            {% if field.errors %}
+                                <div class="space-y-1 px-1 mt-1">
+                                    {% for error in field.errors %}
+                                        <p class="text-red-500 dark:text-red-400 text-[10px] font-bold flex items-center">
+                                            <i class="fas fa-exclamation-circle mr-1"></i> {{ error }}
+                                        </p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -50,13 +52,97 @@
                 <a href="{% url 'user_list' %}" class="w-full sm:w-auto text-center text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-xs px-4 py-3 sm:py-2 transition">
                     Cancel
                 </a>
-                <button type="submit" class="w-full sm:w-auto bg-blue-600 dark:bg-blue-500 text-white px-8 py-3.5 sm:py-2.5 rounded-xl font-bold hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center text-sm active:scale-[0.98]">
-                    <i class="fas fa-save mr-2 text-xs"></i> Save Personnel
+                <button type="submit" id="saveUserBtn" class="w-full sm:w-auto bg-blue-600 dark:bg-blue-500 text-white px-8 py-3.5 sm:py-2.5 rounded-xl font-bold hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center text-sm active:scale-[0.98]">
+                    <i id="saveIcon" class="fas fa-save mr-2 text-xs"></i> <span id="btnText">Save Personnel</span>
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    const $form = $('#userPersonnelForm');
+    const $btn = $('#saveUserBtn');
+    const $icon = $('#saveIcon');
+    const $text = $('#btnText');
+
+    // --- 1. JQUERY AJAX: ASYNC USER CREATION ---
+    $form.on('submit', function(e) {
+        e.preventDefault(); // Stop standard reload
+
+        // Clear previous AJAX errors
+        $('.field-error-container').empty();
+        
+        // UI Loading State
+        const originalText = $text.text();
+        $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
+        $icon.removeClass('fa-save').addClass('fa-circle-notch fa-spin');
+        $text.text('VALIDATING...');
+
+        $.ajax({
+            url: window.location.href, // Add or Edit URL
+            type: 'POST',
+            data: $form.serialize(),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                // Success visual confirmation
+                $icon.removeClass('fa-circle-notch fa-spin').addClass('fa-check');
+                $text.text('ACCESS GRANTED');
+                $btn.removeClass('bg-blue-600').addClass('bg-emerald-600');
+                
+                setTimeout(() => {
+                    window.location.href = "{% url 'user_list' %}";
+                }, 1000);
+            },
+            error: function(xhr) {
+                // Revert UI
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
+                $icon.removeClass('fa-circle-notch fa-spin').addClass('fa-save');
+                $text.text(originalText);
+
+                // Handle Django Form Errors returned as JSON
+                if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.errors) {
+                    const errors = xhr.responseJSON.errors;
+                    for (let fieldName in errors) {
+                        const errorHtml = errors[fieldName].map(err => `
+                            <p class="text-red-500 dark:text-red-400 text-[10px] font-bold flex items-center mt-1">
+                                <i class="fas fa-exclamation-circle mr-1"></i> ${err}
+                            </p>
+                        `).join('');
+                        $(`#error-${fieldName}`).html(errorHtml);
+                    }
+                } else {
+                    alert("System Error: Failed to commit user record to database.");
+                }
+            }
+        });
+    });
+});
+
+/**
+ * 2. VANILLA JAVASCRIPT ALTERNATIVE (Commented Reference)
+ */
+/*
+document.addEventListener('DOMContentLoaded', function() {
+    const userForm = document.querySelector('#userPersonnelForm');
+    userForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(userForm);
+        try {
+            const response = await fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (response.ok) window.location.href = "/users/";
+        } catch (err) { console.error("API error:", err); }
+    });
+});
+*/
+</script>
 
 <style>
     /* Django-rendered Input Theming */
@@ -72,11 +158,10 @@
         outline: none !important;
     }
 
-    /* Dark Mode Overrides for Inputs */
     .dark input, .dark select, .dark textarea {
-        background-color: #0f172a !important; /* Slate-950 */
-        border-color: #1e293b !important; /* Slate-800 */
-        color: #f1f5f9 !important; /* Slate-100 */
+        background-color: #0f172a !important;
+        border-color: #1e293b !important;
+        color: #f1f5f9 !important;
     }
 
     input:focus, select:focus, textarea:focus {
@@ -91,7 +176,6 @@
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
     }
 
-    /* Fix for checkbox fields */
     input[type="checkbox"] {
         width: auto !important;
         padding: 0 !important;
