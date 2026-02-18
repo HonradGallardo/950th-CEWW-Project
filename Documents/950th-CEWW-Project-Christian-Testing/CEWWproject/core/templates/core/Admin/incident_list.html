@@ -40,10 +40,11 @@
         </div>
         
         <div class="flex items-center gap-4 w-full sm:w-auto">
-
+            {% if not is_commander %}
             <a href="{% url 'add_incident' %}" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center group">
                 <i class="fas fa-plus-circle mr-2 group-hover:rotate-90 transition-transform"></i> Log New Incident
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -73,10 +74,10 @@
                                 <td class="px-4 sm:px-6 py-4">
                                     <div class="flex items-center gap-2">
                                         <div class="flex-shrink-0 w-4 text-center">
-                                            {% if inc.severity == 'Critical' %}<i class="fas fa-biohazard text-red-500 animate-pulse-subtle text-xs"></i>
-                                            {% elif inc.severity == 'High' %}<i class="fas fa-exclamation-triangle text-orange-500 text-xs"></i>
-                                            {% elif inc.severity == 'Medium' %}<i class="fas fa-exclamation-circle text-amber-500 text-xs"></i>
-                                            {% else %}<i class="fas fa-shield-halved text-emerald-500 text-xs"></i>{% endif %}
+                                            {% if inc.severity == 'Critical' %}<i class="fas fa-biohazard text-red-500 animate-pulse-subtle text-xxs"></i>
+                                            {% elif inc.severity == 'High' %}<i class="fas fa-exclamation-triangle text-orange-500 text-xxs"></i>
+                                            {% elif inc.severity == 'Medium' %}<i class="fas fa-exclamation-circle text-amber-500 text-xxs"></i>
+                                            {% else %}<i class="fas fa-shield-halved text-emerald-500 text-xxs"></i>{% endif %}
                                         </div>
                                         <div class="flex flex-col min-w-0">
                                             <span class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-100 truncate">{{ inc.title }}</span>
@@ -94,7 +95,7 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-center">
-                                    <p class="text-[9px] sm:text-xs font-black uppercase tracking-tighter {% if inc.status == 'Open' %}text-red-500{% elif inc.status == 'Investigating' %}text-orange-500{% else %}text-emerald-500{% endif %}">
+                                    <p class="text-[9px] sm:text-xxs font-black uppercase tracking-tighter {% if inc.status == 'Open' %}text-red-500{% elif inc.status == 'Investigating' %}text-orange-500{% else %}text-emerald-500{% endif %}">
                                         {{ inc.status }}
                                     </p>
                                 </td>
@@ -120,14 +121,12 @@
                     <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
                         Page {{ incidents.number }} / {{ incidents.paginator.num_pages }}
                     </span>
-                    
                     <div class="flex items-center gap-2">
                         {% if incidents.has_previous %}
                             <a href="?page={{ incidents.previous_page_number }}" class="p-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition shadow-sm">
                                 <i class="fas fa-chevron-left text-[10px]"></i>
                             </a>
                         {% endif %}
-
                         {% if incidents.has_next %}
                             <a href="?page={{ incidents.next_page_number }}" class="p-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition shadow-sm">
                                 <i class="fas fa-chevron-right text-[10px]"></i>
@@ -157,6 +156,7 @@
                         <div class="flex items-center space-x-2 shrink-0">
                             <div id="view_severity_badge"></div>
                             
+                            {% if not is_commander %}
                             <form id="delete-incident-form" method="POST" action="" class="hidden">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="delete">
@@ -164,6 +164,7 @@
                                     <i class="fas fa-trash-alt text-xs group-hover:scale-110 transition-transform"></i>
                                 </button>
                             </form>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -198,6 +199,8 @@
                                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Resolution Log</h3>
                             </div>
                             <div class="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/50 dark:bg-slate-900/20" id="chat-container"></div>
+                            
+                            {% if not is_commander %}
                             <form id="chat-form" class="p-3 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
                                 {% csrf_token %}
                                 <input type="hidden" name="incident_id" id="incident_id">
@@ -208,14 +211,21 @@
                                     </button>
                                 </div>
                             </form>
+                            {% else %}
+                            <div class="p-4 text-center text-[10px] font-black text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/30">
+                                Read-Only Mode: Log updates disabled
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
+                    {% if not is_commander %}
                     <div class="mt-4 pt-4 border-t border-slate-50 dark:border-slate-700 flex gap-3 shrink-0">
                         <a id="editLink" href="#" class="w-full px-4 py-3 bg-slate-900 dark:bg-slate-700 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center">
                             Modify Report <i class="fas fa-external-link-alt ml-2"></i>
                         </a>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -223,47 +233,26 @@
 </div>
 
 <script>
+// --- GLOBAL ROLE FLAG ---
+const IS_COMMANDER = {{ is_commander|yesno:"true,false" }};
+
 // --- MODAL LOGIC ---
 const deleteModal = document.getElementById('deleteModal');
-
 function openDeleteModal() {
     deleteModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }
-
 function closeDeleteModal() {
     deleteModal.classList.add('hidden');
     document.body.style.overflow = 'auto';
 }
 
-// --- DARK MODE LOGIC (FIXED) ---
-function toggleDarkMode() {
-    const html = document.documentElement;
-    const icon = document.getElementById('theme-icon');
-    
-    if (html.classList.contains('dark')) {
-        html.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        if(icon) icon.classList.replace('fa-sun', 'fa-moon');
-    } else {
-        html.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        if(icon) icon.classList.replace('fa-moon', 'fa-sun');
-    }
-}
-
-// Separate Initialization to ensure it runs immediately
+// --- DARK MODE LOGIC ---
 (function initTheme() {
     const savedTheme = localStorage.getItem('theme');
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const icon = document.getElementById('theme-icon');
-
     if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
         document.documentElement.classList.add('dark');
-        if(icon) icon.classList.replace('fa-moon', 'fa-sun');
-    } else {
-        document.documentElement.classList.remove('dark');
-        if(icon) icon.classList.replace('fa-sun', 'fa-moon');
     }
 })();
 
@@ -276,7 +265,9 @@ function previewIncident(id, title, severity, status, desc, actions, date, delet
         document.getElementById('incidentDetailPanel').scrollIntoView({ behavior: 'smooth' });
     }
 
-    document.getElementById('incident_id').value = id;
+    const idInput = document.getElementById('incident_id');
+    if(idInput) idInput.value = id;
+
     document.getElementById('view_id').innerText = "ID: INC-" + String(id).padStart(3, '0');
     document.getElementById('view_title').innerText = title;
     document.getElementById('view_status').innerText = status;
@@ -284,8 +275,12 @@ function previewIncident(id, title, severity, status, desc, actions, date, delet
     document.getElementById('view_date').innerText = date;
     document.getElementById('view_description').innerText = desc || "No description provided.";
     document.getElementById('view_actions').innerText = actions || "No actions logged.";
-    document.getElementById('editLink').href = `/incidents/edit/${id}/`;
+    
+    // Edit Link Logic
+    const editBtn = document.getElementById('editLink');
+    if (editBtn) editBtn.href = `/incidents/edit/${id}/`;
 
+    // Severity Badge
     const badgeContainer = document.getElementById('view_severity_badge');
     let colors = '';
     if (severity === 'Critical') colors = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100';
@@ -294,17 +289,21 @@ function previewIncident(id, title, severity, status, desc, actions, date, delet
     else colors = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100';
     badgeContainer.innerHTML = `<span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${colors}">${severity}</span>`;
 
+    // Delete Form Visibility
     const deleteForm = document.getElementById('delete-incident-form');
-    if (status === 'Resolved' && deleteUrl) {
-        deleteForm.classList.remove('hidden');
-        document.getElementById('confirmDeleteBtn').onclick = function() {
-            deleteForm.action = deleteUrl;
-            deleteForm.submit();
-        };
-    } else { 
-        deleteForm.classList.add('hidden'); 
+    if (deleteForm && !IS_COMMANDER) {
+        if (status === 'Resolved' && deleteUrl) {
+            deleteForm.classList.remove('hidden');
+            document.getElementById('confirmDeleteBtn').onclick = function() {
+                deleteForm.action = deleteUrl;
+                deleteForm.submit();
+            };
+        } else { 
+            deleteForm.classList.add('hidden'); 
+        }
     }
 
+    // Fetch Comments
     const chatContainer = document.getElementById('chat-container');
     chatContainer.innerHTML = '<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Loading Logs...</p>';
     
@@ -331,21 +330,25 @@ function previewIncident(id, title, severity, status, desc, actions, date, delet
         });
 }
 
-// --- CHAT FORM LOGIC ---
-document.getElementById('chat-form').onsubmit = function(e) {
-    e.preventDefault();
-    const msgInput = document.getElementById('chat-message');
-    const id = document.getElementById('incident_id').value;
-    if (!msgInput.value.trim() || !id) return;
+// --- CHAT FORM SUBMISSION ---
+const chatForm = document.getElementById('chat-form');
+if (chatForm) {
+    chatForm.onsubmit = function(e) {
+        e.preventDefault();
+        const msgInput = document.getElementById('chat-message');
+        const id = document.getElementById('incident_id').value;
+        if (!msgInput.value.trim() || !id) return;
 
-    fetch("{% url 'incident_list' %}", {
-        method: "POST",
-        headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ message: msgInput.value, incident_id: id })
-    }).then(() => {
-        msgInput.value = '';
-        previewIncident(id, document.getElementById('view_title').innerText, '', '', '', '', '', '', document.getElementById('view_reporter').innerText);
-    });
-};
+        fetch("{% url 'incident_list' %}", {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ message: msgInput.value, incident_id: id })
+        }).then(() => {
+            msgInput.value = '';
+            // Refresh detail view
+            previewIncident(id, document.getElementById('view_title').innerText, '', '', '', '', '', '', document.getElementById('view_reporter').innerText);
+        });
+    };
+}
 </script>
 {% endblock %}

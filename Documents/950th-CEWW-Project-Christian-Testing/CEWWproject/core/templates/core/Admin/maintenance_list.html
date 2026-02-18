@@ -8,9 +8,12 @@
             <h1 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Service History</h1>
             <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
         </div>
+        
+        {% if not request.user.groups.all.0.name == "Commander" %}
         <a href="{% url 'add_maintenance' %}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center group">
             <i class="fas fa-tools mr-2 group-hover:rotate-12 transition-transform"></i> Create Service Log
         </a>
+        {% endif %}
     </div>
 
     <div class="flex-1 grid grid-cols-12 gap-6 lg:min-h-0 lg:overflow-hidden pb-10 sm:pb-4">
@@ -145,12 +148,15 @@
                         </div>
                         <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter" id="det-asset-type">---</p>
                     </div>
+                    
+                    {% if not request.user.groups.all.0.name == "Commander" %}
                     <form id="delete-log-form" method="POST" action="" class="hidden">
                         {% csrf_token %}
                         <button type="button" onclick="openDeleteModal()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-red-400 dark:text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
                             <i class="fas fa-trash-alt text-[10px]"></i>
                         </button>
                     </form>
+                    {% endif %}
                 </div>
                 
                 <div class="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
@@ -191,11 +197,13 @@
                     </div>
                 </div>
 
+                {% if not request.user.groups.all.0.name == "Commander" %}
                 <div class="mt-4 pt-4 shrink-0 border-t dark:border-slate-800">
                     <a id="det-edit-link" href="#" class="w-full py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center shadow-lg transition-all bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600">
                         <i class="fas fa-edit mr-2"></i> Update Service Log
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
