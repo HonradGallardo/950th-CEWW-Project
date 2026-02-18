@@ -378,7 +378,7 @@ def get_maintenance_initial(asset_id):
     return {
         'asset': asset,
         'notes': asset.maintenance_reason, # Transfers the 'Why' to the 'Notes'
-        'status': 'In Progress'            # Default starting status
+        'status': 'Pending'  # Change 'In Progress' to 'Pending'  # Default starting status
     }
 
 @login_required
@@ -485,7 +485,6 @@ def asset_list(request):
 def command_asset(request):
     assets = Asset.objects.all() 
     
-    # Add these lines to calculate the counts for the Pie Chart
     context = {
         'assets': assets,
         'active_assets_count': assets.filter(status='Active').count(),
@@ -498,6 +497,11 @@ def command_asset(request):
 
 @login_required
 def add_asset(request):
+    # BLOCK COMMANDER ROLE
+    if request.user.groups.filter(name='Commander').exists():
+        messages.error(request, "You do not have permission to add assets.")
+        return redirect('asset_list')
+
     if request.method == 'POST':
         form = AssetForm(request.POST)
         if form.is_valid():
@@ -512,6 +516,11 @@ def add_asset(request):
 
 @login_required
 def edit_asset(request, asset_id):
+    # BLOCK COMMANDER ROLE
+    if request.user.groups.filter(name='Commander').exists():
+        messages.error(request, "You do not have permission to edit assets.")
+        return redirect('asset_list')
+
     asset = get_object_or_404(Asset, pk=asset_id)
     if request.method == "POST":
         form = AssetForm(request.POST, instance=asset)
@@ -525,6 +534,11 @@ def edit_asset(request, asset_id):
 
 @login_required
 def delete_asset(request, asset_id):
+    # BLOCK COMMANDER ROLE
+    if request.user.groups.filter(name='Commander').exists():
+        messages.error(request, "You do not have permission to delete assets.")
+        return redirect('asset_list')
+
     asset = get_object_or_404(Asset, pk=asset_id)
     if request.method == "POST":
         asset.delete()
@@ -545,8 +559,16 @@ from .models import Incident, IncidentComment # Ensure these imports match your 
 
 @login_required
 def incident_list(request):
+    # Check if user is a Commander
+    is_commander = request.user.groups.filter(name='Commander').exists()
+
     # --- HANDLE COMMENT POST ---
     if request.method == 'POST' and 'message' in request.POST:
+        # SECURITY BLOCK: Commanders cannot post comments
+        if is_commander:
+            messages.error(request, "Access Denied: Commanders have read-only permissions.")
+            return redirect('incident_list')
+
         incident_id = request.POST.get('incident_id')
         if not incident_id:
             messages.error(request, "Please select an incident first.")
@@ -566,6 +588,11 @@ def incident_list(request):
 
     # --- HANDLE DELETE ---
     if request.method == 'POST' and request.POST.get('action') == 'delete':
+        # SECURITY BLOCK: Commanders cannot delete
+        if is_commander:
+            messages.error(request, "Access Denied: Commanders cannot delete records.")
+            return redirect('incident_list')
+
         incident_id = request.POST.get('incident_id')
         incident = get_object_or_404(Incident, id=incident_id)
         incident.delete()
@@ -593,6 +620,7 @@ def incident_list(request):
         'incidents': incidents, 
         'incident': active_incident,
         'comments': comments,
+        'is_commander': is_commander, # Used in HTML
     }
     return render(request, 'core/Admin/incident_list.html', context)
 
@@ -672,34 +700,39 @@ def command_incident(request):
 
 @login_required
 def add_incident(request):
+    # Restriction: Commanders cannot report new incidents
+    if request.user.groups.filter(name='Commander').exists():
+        messages.error(request, "Access Denied: Commanders have read-only access.")
+        return redirect('incident_list')
+
     if request.method == 'POST':
-        # 1. Get the data from the POST request
         title = request.POST.get('title')
         severity = request.POST.get('severity')
-        status = request.POST.get('status') # This captures "Investigating"
+        status = request.POST.get('status')
         description = request.POST.get('description')
         affected_area = request.POST.get('affected_area')
 
-        # 2. Save it to the database
         Incident.objects.create(
             title=title,
             severity=severity,
-            status=status,  # This ensures the choice is saved
+            status=status,
             description=f"Area: {affected_area}\n\n{description}",
-            reported_by=request.user  # <--- Add this line
-            # date is usually auto_now_add in models.py
+            reported_by=request.user 
         )
         
         messages.success(request, "Incident reported successfully!")
         return redirect('incident_list')
 
-    # If GET, just show the form
     return render(request, 'core/Admin/add_incident.html')
 
 @login_required
 def edit_incident(request, incident_id):
-    incident = get_object_or_404(Incident, id=incident_id)
+    # Restriction: Commanders cannot edit
+    if request.user.groups.filter(name='Commander').exists():
+        messages.error(request, "Access Denied: Commanders cannot edit incident details.")
+        return redirect('incident_list')
 
+    incident = get_object_or_404(Incident, id=incident_id)
     guides = {
         'Malware': 'documents/Guideline-on-Malware-Incident-Response2.pdf',
         'Phishing': 'documents/Phishing-Protocol.pdf',
@@ -710,11 +743,9 @@ def edit_incident(request, incident_id):
         new_status = request.POST.get('status')
         new_actions = request.POST.get('actions_taken', '').strip()
 
-        # Only log if something new was entered
         if new_actions:
             timestamp = timezone.now().strftime('%Y-%m-%d %I:%M %p')
             technician = request.user.username
-
             log_entry = f"[{timestamp}] {technician}: {new_actions}"
 
             if incident.actions_taken:
@@ -724,11 +755,9 @@ def edit_incident(request, incident_id):
 
         incident.status = new_status
         incident.save()
-
         return redirect('incident_list')
 
     selected_guide = guides.get(incident.severity, 'documents/General-SOP.pdf')
-
     return render(request, 'core/Admin/edit_incident.html', {
         'incident': incident,
         'guide_path': selected_guide
@@ -736,6 +765,11 @@ def edit_incident(request, incident_id):
     
 @login_required
 def delete_incident(request, incident_id):
+    # Restriction: Commanders cannot use the direct delete URL
+    if request.user.groups.filter(name='Commander').exists():
+        messages.error(request, "Access Denied.")
+        return redirect('incident_list')
+
     incident = get_object_or_404(Incident, id=incident_id)
     incident.delete()
     return redirect('incident_list')
@@ -1307,11 +1341,13 @@ def send_message(request, ticket_id):
             
         ticket = get_object_or_404(Ticket, id=ticket_id)
         
-        # Assign technician if not set
-        if not ticket.technician:
-            ticket.technician = request.user
-            ticket.status = 'In Progress'
-            ticket.save()
+        # FIX: Only assign as technician if the sender is NOT the ticket creator
+        # and the sender has staff/admin permissions.
+        if not ticket.technician and request.user != ticket.user:
+            if request.user.is_staff or request.user.is_superuser:
+                ticket.technician = request.user
+                ticket.status = 'In Progress'
+                ticket.save()
             
         msg = TicketMessage.objects.create(
             ticket=ticket, 
@@ -1366,17 +1402,20 @@ def send_ticket_message(request, ticket_id):
             # 1. Identify if this is a system-generated log
             is_admin_log = "ADMIN STATUS UPDATE" in content
 
-            # 2. Assign ownership ONLY for real messages
+            # 2. Assign ownership ONLY for real messages from ADMINS
             if not is_admin_log:
-                # This ensures the sender becomes the technician, 
-                # even if the ticket was previously N/A or owned by someone else.
-                ticket.technician = request.user
+                # FIX: Check if the user is staff or in the Admin group
+                user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
                 
-                # Automatically move from Pending to In Progress
-                if ticket.status == 'Pending':
-                    ticket.status = 'In Progress'
-                
-                ticket.save()
+                # Only change technician if the sender is an Admin and NOT the ticket creator
+                if user_is_admin and request.user != ticket.user:
+                    ticket.technician = request.user
+                    
+                    # Automatically move from Pending to In Progress
+                    if ticket.status == 'Pending':
+                        ticket.status = 'In Progress'
+                    
+                    ticket.save()
 
             # 3. Create the actual message
             TicketMessage.objects.create(
