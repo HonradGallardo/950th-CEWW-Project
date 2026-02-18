@@ -37,11 +37,7 @@
 
     <main class="flex-1 flex overflow-hidden relative">
         
-<<<<<<< HEAD
         <aside id="mainSidebar" class="fixed top-[73px] lg:top-0 bottom-0 left-0 z-40 w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
-=======
-        <aside class="w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 overflow-hidden">
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
             <div class="p-5 space-y-4">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">Conversations</span>
@@ -60,7 +56,7 @@
 
             <div class="flex-1 overflow-y-auto custom-scrollbar px-3 pb-4 space-y-1" id="sidebarTicketContainer">
                 {% for ticket in user_tickets %}
-                <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}')" 
+                <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}', '{{ ticket.technician.username|default:'Unassigned' }}')" 
                      id="ticket-item-{{ ticket.id }}"
                      class="ticket-item p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-transparent">
                     <div class="flex justify-between items-start mb-2">
@@ -81,15 +77,9 @@
 
         <section class="flex-1 flex flex-col bg-white dark:bg-[#0f172a] relative overflow-hidden">
             
-<<<<<<< HEAD
             <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-[70] flex flex-col p-8 md:p-12 animate-in fade-in zoom-in-95 duration-300">
                 <div class="max-w-3xl mx-auto w-full flex flex-col h-full">
                     <div class="flex justify-between items-center mb-8">
-=======
-            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-40 flex flex-col p-8 md:p-12 animate-in fade-in zoom-in-95 duration-300">
-                <div class="max-w-3xl mx-auto w-full flex flex-col h-full overflow-hidden">
-                    <div class="flex justify-between items-center mb-8 shrink-0">
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20">
                                 <i class="fas fa-robot text-white text-xl"></i>
@@ -104,7 +94,6 @@
                         </button>
                     </div>
                     <div id="assistant-chat" class="flex-1 overflow-y-auto space-y-6 mb-8 custom-scrollbar px-4"></div>
-<<<<<<< HEAD
                     <div id="assistant-interaction" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                         <div id="assistant-options" class="flex flex-wrap gap-3 mb-2"></div>
                         <form id="newTicketForm" class="hidden space-y-5 animate-in slide-in-from-bottom-4 duration-500">
@@ -118,70 +107,11 @@
                                 <div class="col-span-1">
                                     <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">First Name</label>
                                     <input type="text" id="acc_fname" placeholder="John" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
-=======
-                    
-                    <div id="assistant-interaction" class="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm shrink-0">
-                        <div id="assistant-options" class="flex flex-wrap gap-3 mb-2"></div>
-                        
-                        <div class="max-h-[40vh] overflow-y-auto custom-scrollbar">
-                            <form id="newTicketForm" class="hidden space-y-5 animate-in slide-in-from-bottom-4 duration-500">
-                                {% csrf_token %}
-                                <div class="border-b dark:border-slate-800 pb-4 mb-2">
-                                    <p id="form-context-msg" class="text-[11px] font-black text-blue-600 uppercase tracking-widest"></p>
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
                                 </div>
-                                
-                                <input type="hidden" name="category" id="newCat" value="General">
-                                <input type="hidden" name="priority" id="newPriority" value="Medium">
-                                
-                                <div id="account-fields" class="hidden grid grid-cols-2 gap-4 p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/50">
-                                    <div class="col-span-1">
-                                        <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">First Name</label>
-                                        <input type="text" id="acc_fname" placeholder="John" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
-                                    </div>
-                                    <div class="col-span-1">
-                                        <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Last Name</label>
-                                        <input type="text" id="acc_lname" placeholder="Doe" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
-                                    </div>
-                                    <div class="col-span-2">
-                                        <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Institutional Email</label>
-                                        <input type="email" id="acc_email" placeholder="john.doe@company.com" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
-                                    </div>
-                                    <div class="col-span-2">
-                                        <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Requested Rank / Role</label>
-                                        <select name="rank" id="rank_select"
-                                        class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                                            <optgroup label="Enlisted">
-                                                <option value="Airman">Airman</option>
-                                                <option value="Airman Second Class">Airman Second Class</option>
-                                                <option value="Airman First Class">Airman First Class</option>
-                                                <option value="Sergeant">Sergeant</option>
-                                            </optgroup>
-                                            <optgroup label="Non-Commissioned Officers">
-                                                <option value="Staff Sergeant">Staff Sergeant</option>
-                                                <option value="Technical Sergeant">Technical Sergeant</option>
-                                                <option value="Master Sergeant">Master Sergeant</option>
-                                                <option value="Senior Master Sergeant">Senior Master Sergeant</option>
-                                                <option value="Chief Master Sergeant">Chief Master Sergeant</option>
-                                            </optgroup>
-                                            <optgroup label="Officers">
-                                                <option value="Second Lieutenant">Second Lieutenant</option>
-                                                <option value="First Lieutenant">First Lieutenant</option>
-                                                <option value="Captain">Captain</option>
-                                                <option value="Major">Major</option>
-                                                <option value="Lieutenant Colonel">Lieutenant Colonel</option>
-                                                <option value="Colonel">Colonel</option>
-                                            </optgroup>
-                                            <optgroup label="General Officers">
-                                                <option value="Brigadier General">Brigadier General</option>
-                                                <option value="Major General">Major General</option>
-                                                <option value="Lieutenant General">Lieutenant General</option>
-                                                <option value="General">General</option>
-                                            </optgroup>
-                                        </select>
-                                    </div>
+                                <div class="col-span-1">
+                                    <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Last Name</label>
+                                    <input type="text" id="acc_lname" placeholder="Doe" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
                                 </div>
-<<<<<<< HEAD
                                 <div class="col-span-2">
                                     <label class="text-[9px] font-black uppercase text-blue-600 mb-1 block">Institutional Email</label>
                                     <input type="email" id="acc_email" placeholder="john.doe@company.com" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg text-xs outline-none focus:ring-2 ring-blue-500/20">
@@ -206,25 +136,6 @@
                                 Initialize Dispatch
                             </button>
                         </form>
-=======
-
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block ml-1">Case Subject</label>
-                                        <input type="text" name="subject" id="newSub" required class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm font-bold outline-none focus:ring-2 ring-blue-500/20">
-                                    </div>
-                                    <div>
-                                        <label class="text-[10px] font-black uppercase text-slate-400 mb-1 block ml-1">Problem Description</label>
-                                        <textarea name="description" id="newDesc" required rows="3" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm outline-none focus:ring-2 ring-blue-500/20"></textarea>
-                                    </div>
-                                </div>
-                                <button type="button" onclick="SupportConsole.finalizeTicketSubmission()" 
-                                        class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] shadow-xl shadow-blue-500/30 hover:bg-blue-700 active:scale-[0.98] transition-all">
-                                    Initialize Dispatch
-                                </button>
-                            </form>
-                        </div>
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
                     </div>
                 </div>
             </div>
@@ -243,27 +154,19 @@
             </div>
 
             <div id="feedView" class="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-[#0f172a]">
-<<<<<<< HEAD
-                <div class="px-4 md:px-8 pt-6 shrink-0">
+                <div class="px-8 pt-6 shrink-0">
                     <div class="flex items-center gap-4 md:gap-6 border-b dark:border-slate-800 mb-4 overflow-x-auto no-scrollbar">
                         <button onclick="SupportConsole.filterFeed('all')" class="feed-filter active text-[9px] md:text-[10px] font-black text-blue-600 uppercase border-b-2 border-blue-600 pb-3 whitespace-nowrap tracking-widest">All Comms</button>
                         <button onclick="SupportConsole.filterFeed('text')" class="feed-filter text-[9px] md:text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-3 whitespace-nowrap tracking-widest transition-colors">Text</button>
                         <button onclick="SupportConsole.filterFeed('status')" class="feed-filter text-[9px] md:text-[10px] font-bold text-slate-400 uppercase hover:text-slate-600 pb-3 whitespace-nowrap tracking-widest transition-colors">Status</button>
                     </div>
                 </div>
-=======
-
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
 
                 <div class="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 py-4" id="workspaceScroll">
                     <div id="messageContainer" class="max-w-4xl mx-auto space-y-8"></div>
                 </div>
 
-<<<<<<< HEAD
-                <div class="p-4 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-=======
-                <div class="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
+                <div class="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                     <div class="max-w-4xl mx-auto">
                         <form onsubmit="SupportConsole.sendMessage(event)" class="relative group">
                             {% csrf_token %}
@@ -287,37 +190,43 @@
                         <div class="flex flex-col md:flex-row md:items-center justify-between border-b dark:border-slate-800 pb-6 gap-4">
                             <div>
                                 <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Case Management</h3>
-                                <p class="text-xs text-slate-400 mt-1">Modify status and priority.</p>
+                                <p class="text-xs text-slate-400 mt-1">Modify internal descriptions.</p>
                             </div>
                             <button type="submit" id="saveDetailsBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 transition-all">
                                 Update Case
                             </button>
                         </div>
-<<<<<<< HEAD
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div class="md:col-span-2">
-=======
-                        <div class="grid grid-cols-2 gap-8">
-                            <div class="col-span-2">
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Subject</label>
-                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-500 cursor-not-allowed">
+                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm font-bold text-slate-500 cursor-not-allowed">
                             </div>
+
+                            <div class="md:col-span-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Assigned Technician (Locked)</label>
+                                <input type="text" id="editTechnician" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-sm font-bold text-blue-600 dark:text-blue-400 cursor-default outline-none shadow-inner tracking-tight">
+                            </div>
+
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Current Status</label>
-                                <select name="status" id="editStatus" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none focus:ring-2 ring-blue-500/20">
-                                    <option value="Open">Open</option>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Current Status (Locked)</label>
+                                <select name="status" id="editStatus" tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none pointer-events-none cursor-default opacity-80 shadow-inner">
+                                    <option value="Pending">Pending</option>
                                     <option value="In Progress">In Progress</option>
                                     <option value="Completed">Completed</option>
+                                    <option value="Under Review">Under Review</option>
+                                    <option value="Unresolved">Unresolved</option>
+                                    <option value="Resolved">Resolved</option>
+                                    <option value="Denied">Denied</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Priority Level</label>
-                                <select name="priority" id="editPriority" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none focus:ring-2 ring-blue-500/20">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Priority Level (Locked)</label>
+                                <select name="priority" id="editPriority" tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-xs font-black uppercase tracking-wider outline-none pointer-events-none cursor-default opacity-80 shadow-inner">
                                     <option value="Low">Low</option>
                                     <option value="Medium">Medium</option>
                                     <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
                                 </select>
                             </div>
                             <div class="md:col-span-2">
@@ -330,8 +239,8 @@
             </div>
         </section>
 
-        <aside class="w-80 bg-white dark:bg-slate-900 hidden lg:flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div id="contact-details-container" class="p-6 space-y-6 opacity-0 transition-all duration-500 translate-x-4 overflow-y-auto custom-scrollbar">
+        <aside class="w-80 bg-white dark:bg-slate-900 hidden lg:flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800">
+            <div id="contact-details-container" class="p-6 space-y-6 opacity-0 transition-all duration-500 translate-x-4">
                 <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
                     <div class="flex flex-col items-center text-center pb-6 border-b dark:border-slate-800">
                         <img id="contactAvatar" src="" class="w-20 h-20 rounded-2xl border-4 border-white dark:border-slate-800 shadow-xl mb-4">
@@ -344,7 +253,16 @@
                             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Email Address</label>
                             <p id="contactEmail" class="text-xs font-bold text-blue-600 break-all"></p>
                         </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Organization</label>
+                            <p class="text-xs font-bold text-slate-700 dark:text-slate-300">Internal Division</p>
+                        </div>
                     </div>
+                </div>
+                
+                <div class="p-4 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-500/30">
+                    <p class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Quick Note</p>
+                    <p class="text-[11px] font-medium leading-relaxed">Ensure all sensitive data is redacted before closing this case.</p>
                 </div>
             </div>
         </aside>
@@ -395,8 +313,6 @@
         showMainOptions() {
             this.setBotOptions([
                 { label: "🔑 Account Recovery", action: "handle_password" },
-                { label: "📱 MFA Sync Issue", action: "handle_mfa" },
-                { label: "🆕 Provisioning", action: "handle_account" },
                 { label: "🛠️ System Error", action: "handle_custom" }
             ]);
         },
@@ -439,26 +355,11 @@
 
         handle_password() {
             this.appendUserMessage("Requesting credential reset.");
-            this.appendBotMessage("System protocols require Admin intervention for password overrides. Please complete the dispatch form.");
-            this.triggerForm("Access", "Password Reset Request", "Manual credential reset required for user account.");
-        },
-
-        handle_mfa() {
-            this.appendUserMessage("MFA Synchronization Failure.");
-            this.appendBotMessage("Device verification issues detected. We will initiate a manual bypass review.");
-            this.triggerForm("Access", "MFA/OTP Removal", "User reports loss of access to MFA device. Verification required.");
-        },
-
-        handle_account() {
-            this.appendUserMessage("Requesting User Provisioning.");
-            this.appendBotMessage("I need the structural details for the new identity. Please provide credentials in the expansion fields.");
-            document.getElementById('account-fields').classList.remove('hidden');
-            this.triggerForm("Access", "New Account Creation", "");
+            this.triggerForm("Access", "Password Reset Request", "Manual credential reset required.");
         },
 
         handle_custom() {
             this.appendUserMessage("Reporting a Technical Incident.");
-            this.appendBotMessage("Technical support queue initiated. Please describe the incident in full below.");
             this.triggerForm("Technical", "General Technical Issue", "");
         },
 
@@ -476,15 +377,6 @@
             const form = document.getElementById('newTicketForm');
             const btn = event.currentTarget;
             let description = document.getElementById('newDescInput').value;
-            if (!document.getElementById('account-fields').classList.contains('hidden')) {
-                const fname = document.getElementById('acc_fname').value;
-                const lname = document.getElementById('acc_lname').value;
-                const email = document.getElementById('acc_email').value;
-                const rank = document.getElementById('rank_select').value; // Changed from 'acc_rank' to 'rank_select'
-        
-        if(!fname || !lname || !email) { alert("Data incomplete for provisioning."); return; }
-        description = `NEW ACCOUNT REQUEST:\nName: ${fname} ${lname}\nEmail: ${email}\nRank: ${rank}\n\nAdditional Notes: ${description}`;
-            }
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...';
             const formData = new FormData(form);
@@ -523,11 +415,7 @@
             }
         },
 
-        async loadChat(id, subject, desc, user, email, status, priority, date) {
-            if(window.innerWidth < 1024 && !document.getElementById('mainSidebar').classList.contains('-translate-x-full')) {
-                this.toggleSidebar();
-            }
-
+        async loadChat(id, subject, desc, user, email, status, priority, date, technician) {
             document.querySelectorAll('.ticket-item').forEach(i => {
                 i.classList.remove('active-ticket-item');
             });
@@ -536,13 +424,15 @@
 
             this.activeTicketId = id;
             this.currentTicketStatus = status;
-            
             this.switchTab('feed');
-
+            
+            // Populating form fields including the new Technician field
             document.getElementById('editSubject').value = subject;
             document.getElementById('editStatus').value = status;
             document.getElementById('editPriority').value = priority;
             document.getElementById('editDesc').value = desc;
+            document.getElementById('editTechnician').value = technician || "Unassigned";
+
             document.getElementById('no-chat-selected').classList.add('hidden');
             const contactContainer = document.getElementById('contact-details-container');
             contactContainer.classList.remove('opacity-0', 'translate-x-4');
@@ -629,7 +519,7 @@
                 const res = await fetch(`/tickets/chat/${this.activeTicketId}/send/`, { method: 'POST', body: formData });
                 if (res.ok) { 
                     input.value = ''; 
-                    this.loadChat(this.activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, this.currentTicketStatus, document.getElementById('editPriority').value, ""); 
+                    this.loadChat(this.activeTicketId, document.getElementById('editSubject').value, document.getElementById('editDesc').value, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, this.currentTicketStatus, document.getElementById('editPriority').value, "", document.getElementById('editTechnician').value); 
                 }
             } catch (err) { console.error(err); }
         },
@@ -669,7 +559,7 @@
                     }
 
                     this.currentTicketStatus = newStatus;
-                    await this.loadChat(this.activeTicketId, currentSub, newDesc, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, newStatus, newPriority, "");
+                    await this.loadChat(this.activeTicketId, currentSub, newDesc, document.getElementById('contactName').innerText, document.getElementById('contactEmail').innerText, newStatus, newPriority, "", document.getElementById('editTechnician').value);
                     this.switchTab('feed');
                     btn.innerHTML = 'Update Case';
                     btn.disabled = false;
@@ -704,15 +594,6 @@
         border-color: #334155 !important; 
         border-left: 4px solid #3b82f6 !important; 
     }
-<<<<<<< HEAD
     #chatInput { min-height: 52px; max-height: 200px; }
-=======
-    #rank_select optgroup {
-        font-size: 12px;
-    }
-    #rank_select {
-        font-size: 12px;
-    }
->>>>>>> d62aa7040303f1d903980d90dccc82e363c7e880
 </style>
 {% endblock %}

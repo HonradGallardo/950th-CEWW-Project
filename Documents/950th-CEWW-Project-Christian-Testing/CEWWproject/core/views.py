@@ -79,6 +79,7 @@ def dashboard(request):
     assigned_assets = Asset.objects.exclude(status='Inactive').count() 
     open_incidents_count = Incident.objects.filter(status='Open').count()
     critical_threats = Incident.objects.filter(severity='Critical', status='Open').count()
+    all_maintenance = Maintenance.objects.all()
 
     # Calculate Readiness Rate for Commander
     readiness_rate = (assigned_assets / total_assets * 100) if total_assets > 0 else 0
@@ -92,6 +93,7 @@ def dashboard(request):
         'critical_threats': critical_threats,
         'asset_counts': Asset.objects.values('assets_type').annotate(total=Count('id')),
         'incident_counts': Incident.objects.values('severity').annotate(total=Count('id')),
+        'maintenance_assets_count': all_maintenance.filter(status='In Progress').count()
     }
 
     user_groups = request.user.groups.values_list('name', flat=True)
@@ -224,6 +226,7 @@ def dashboard(request):
         severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
         context['severity_labels'] = [item['severity'] for item in severity_qs]
         context['severity_totals'] = [item['total'] for item in severity_qs]
+        context['maintenance_assets_count'] = Maintenance.objects.filter(status='In Progress').count()
 
         context['recent_maintenance'] = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
         context['open_incidents'] = Incident.objects.filter(status='Open').order_by('-date')[:5]

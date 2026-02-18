@@ -166,11 +166,13 @@
                     <a href="{% url 'submit_ticket' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                         <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
                     </a>
-                    {% endif %}
-
+                                       
                     <a href="{% url 'reports' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'reports' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                         <i class="fas fa-chart-pie mr-3 w-5 text-center"></i> <span class="sidebar-text">Reports</span>
                     </a>
+                    {% endif %}
+
+
                     {% if request.user.groups.all.0.name == 'Admin' or request.user.groups.all.1.name == 'Admin' %}
                     <a href="{% url 'admin_tickets' %}" class="nav-item flex items-center p-3 rounded-lg transition {% if current == 'admin_tickets' %} bg-white/10 text-white font-bold {% else %} text-slate-300 hover:bg-white/5 {% endif %}">
                         <i class="fas fa-file-alt mr-3 w-5 text-center"></i> <span class="sidebar-text">Tickets</span>
