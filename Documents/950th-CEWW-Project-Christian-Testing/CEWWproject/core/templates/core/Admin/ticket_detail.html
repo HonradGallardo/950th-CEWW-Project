@@ -132,6 +132,16 @@
                                 <label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Technical Subject (Read Only)</label>
                                 <input type="text" id="editSubject" value="{{ ticket.subject }}" readonly class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs font-bold text-slate-500 cursor-not-allowed outline-none shadow-inner">
                             </div>
+
+                            <div class="col-span-2">
+                                <label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Assigned Technician</label>
+                                <div class="relative">
+                                    <input type="text" id="activeTechnicianDisplay" value="{{ ticket.technician.username|default:'Unassigned' }}" readonly 
+                                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs font-bold text-blue-600 dark:text-blue-400 cursor-default outline-none shadow-inner">
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-400 uppercase">SYSTEM LOGGED</span>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-[9px] font-black text-slate-400 uppercase mb-2">Status Flag</label>
                                 <select name="status" id="editStatus" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-blue-500">
@@ -216,8 +226,10 @@
         const btn = document.getElementById('saveDetailsBtn');
         const statusSelect = document.getElementById('editStatus');
         const prioritySelect = document.getElementById('editPriority');
+        const techDisplay = document.getElementById('activeTechnicianDisplay'); // Ref to new field
         
         const statusValue = statusSelect.value;
+        const priorityValue = prioritySelect.value;
         const statusLabel = statusSelect.options[statusSelect.selectedIndex].text;
         const priorityLabel = prioritySelect.options[prioritySelect.selectedIndex].text;
         const newDesc = document.getElementById('editDesc').value;
@@ -225,7 +237,7 @@
         const payload = {
             subject: document.getElementById('editSubject').value,
             status: statusValue,
-            priority: prioritySelect.value,
+            priority: priorityValue,
             description: newDesc
         };
 
@@ -244,12 +256,17 @@
             });
 
             if (response.ok) {
-                // Update Sidebar Status Badge with color logic
+                const result = await response.json();
+                
+                // Update Technician Display based on server response
+                if (result.technician && techDisplay) {
+                    techDisplay.value = result.technician;
+                }
+
+                // Update Sidebar UI
                 const statusBadge = document.getElementById('sidebarStatusBadge');
                 if (statusBadge) {
                     statusBadge.innerText = statusLabel;
-                    
-                    // Logic to set Amber for both In Progress and Under Review
                     if (statusValue === "In Progress" || statusValue === "Under Review") {
                         statusBadge.className = "inline-block mt-1 px-2.5 py-0.5 rounded-md text-[9px] font-black border uppercase bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800";
                     } else if (statusValue === "Resolved" || statusValue === "Completed") {
@@ -259,36 +276,27 @@
                     }
                 }
 
-                // Update Sidebar Priority Text
                 const priorityText = document.getElementById('sidebarPriorityText');
                 if (priorityText) {
                     priorityText.innerText = priorityLabel;
-                    if (payload.priority === 'High' || payload.priority === 'Critical') {
+                    if (priorityValue === 'High' || priorityValue === 'Critical') {
                         priorityText.classList.add('text-red-500');
                     } else {
                         priorityText.classList.remove('text-red-500');
                     }
                 }
 
-                // Log change in chat if status changed
                 if (statusValue !== currentTicketStatus) {
                     const logMsg = new FormData();
                     logMsg.append('message', `ADMIN STATUS UPDATE: Case changed to ${statusLabel}`);
                     logMsg.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-                    
-                    await fetch(`/tickets/chat/${activeTicketId}/send/`, { 
-                        method: 'POST', 
-                        body: logMsg 
-                    });
+                    await fetch(`/tickets/chat/${activeTicketId}/send/`, { method: 'POST', body: logMsg });
                     currentTicketStatus = statusValue;
                 }
 
                 btn.innerText = "SUCCESS ✓";
-                btn.classList.replace('bg-emerald-600', 'bg-green-700');
-                
                 setTimeout(() => {
                     btn.innerText = "Save System Updates";
-                    btn.classList.replace('bg-green-700', 'bg-emerald-600');
                     btn.disabled = false;
                     location.reload(); 
                 }, 1000);
@@ -299,10 +307,8 @@
         } catch (err) { 
             console.error(err);
             btn.innerText = "ERROR";
-            btn.style.backgroundColor = "#dc2626";
             setTimeout(() => {
                 btn.innerText = "Save System Updates";
-                btn.style.backgroundColor = "";
                 btn.disabled = false;
             }, 3000);
         }
