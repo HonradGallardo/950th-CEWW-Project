@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Personnel Dashboard | 950th CEWW{% endblock %}
+
+{% block content %}
+<div class="flex-1 p-4 md:p-6 flex flex-col gap-6 overflow-y-auto">
+    <div class="flex justify-between items-center shrink-0">
+        <h1 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white tracking-tight uppercase">
+            Dashboard Overview
+        </h1>
+        <div id="sync-indicator" class="hidden flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-100 dark:border-emerald-800">
+            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></div>
+            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Telemetry Live</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
+        <div class="lg:col-span-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col order-2 lg:order-1">
+            <div class="px-5 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">Recent Incident Reports</span>
+                <div class="w-full sm:w-auto relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                    <input type="text" id="incidentAjaxSearch" placeholder="Search ID, Type, Severity..." 
+                           class="w-full sm:w-64 pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+                           value="{{ q_incident|default:'' }}">
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto flex-1">
+                <table class="w-full text-left text-[13px]" id="incidentTable">
+                    <thead class="bg-slate-50/50 dark:bg-slate-900/20 text-slate-500 dark:text-slate-400 uppercase text-[11px] tracking-wider border-b dark:border-slate-700">
+                        <tr>
+                            <th class="px-6 py-4">ID</th>
+                            <th class="px-6 py-4">Incident Type</th>
+                            <th class="px-6 py-4 text-center">Severity</th>
+                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4">Date Reported</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
+                        {% for incident in page_obj %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer" onclick="window.location.href='{% url 'incident_list' %}'">
+                            <td class="px-6 py-4 font-mono text-slate-400">#{{ incident.id }}</td>
+                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{{ incident.title }}</td>
+                            <td class="px-6 py-4 text-center">
+                                {% if incident.severity == 'Critical' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-black uppercase border border-red-200 dark:border-red-800">
+                                        <i class="fas fa-skull-crossbones mr-1.5 animate-pulse"></i> {{ incident.severity }}
+                                    </span>
+                                {% elif incident.severity == 'High' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-black uppercase border border-orange-200 dark:border-orange-800">
+                                        <i class="fas fa-exclamation-triangle mr-1.5"></i> {{ incident.severity }}
+                                    </span>
+                                {% elif incident.severity == 'Medium' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-black uppercase border border-yellow-200 dark:border-yellow-800">
+                                        <i class="fas fa-bolt mr-1.5"></i> {{ incident.severity }}
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-200 dark:border-emerald-800">
+                                        <i class="fas fa-shield-virus mr-1.5"></i> {{ incident.severity|default:"Low" }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase border border-blue-100 dark:border-blue-800/30">
+                                    {{ incident.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ incident.date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="p-10 text-center text-slate-400 italic">No incident reports available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="px-5 py-3 border-t dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/20 flex justify-between items-center">
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}&q_incident={{ q_incident }}" class="px-3 py-1 text-xs font-bold rounded border dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700 transition">Prev</a>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-1">
+                    {% for i in page_obj.paginator.page_range %}
+                        <a href="?page={{ i }}&q_incident={{ q_incident }}" class="px-2.5 py-1 text-xs rounded {% if page_obj.number == i %}bg-blue-600 text-white{% else %}hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">{{ i }}</a>
+                    {% endfor %}
+                </div>
+                <div class="flex gap-2">
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&q_incident={{ q_incident }}" class="px-3 py-1 text-xs font-bold rounded border dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700 transition">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="flex flex-col gap-4 order-1 lg:order-2">
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Assets</p>
+                <p id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">My Tasks</p>
+                <p id="stat-my-tasks" class="text-3xl font-black text-emerald-500">{{ my_maintenance_count|default:"0" }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border-l-4 border-l-red-500 border-y border-r border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Alerts</p>
+                <p id="stat-alerts" class="text-3xl font-black text-red-500">{{ reported_incidents_count|default:"0" }}</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex-1">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">Incident Trends</p>
+                <div class="relative h-32">
+                    <canvas id="incidentTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
+            <div class="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex justify-between items-center">
+                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">My Assigned Assets</span>
+                <div class="relative">
+                    <input type="text" id="assetAjaxSearch" placeholder="Search Assets..." class="px-2 py-1 text-xs bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-md outline-none focus:border-blue-500" value="{{ q_asset|default:'' }}">
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-[12px]">
+                    <thead class="text-slate-500 uppercase text-[10px] tracking-wider border-b dark:border-slate-700">
+                        <tr>
+                            <th class="px-5 py-3">Asset</th>
+                            <th class="px-5 py-3 text-center">Status</th>
+                            <th class="px-5 py-3">Added</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="assetTableBody">
+                        {% for asset in asset_page_obj %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='{% url 'asset_list' %}'">
+                            <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">{{ asset.assets_name }}</td>
+                            <td class="px-5 py-4 text-center">
+                                {% if asset.status == 'Active' %}
+                                    <span class="text-emerald-500 font-black uppercase text-[10px] bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">Active</span>
+                                {% elif asset.status == 'Maintenance' %}
+                                    <span class="text-amber-500 font-black uppercase text-[10px] bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg">Maintenance</span>
+                                {% else %}
+                                    <span class="text-red-500 font-black uppercase text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg">{{ asset.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-5 py-4 text-slate-400">{{ asset.date_added|date:"d-m-Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="p-8 text-center text-slate-400">No assets found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
+            <div class="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex justify-between items-center">
+                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">Maintenance Tasks</span>
+                <div class="relative">
+                    <input type="text" id="taskAjaxSearch" placeholder="Search Tasks..." class="px-2 py-1 text-xs bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-md outline-none focus:border-blue-500" value="{{ q_task|default:'' }}">
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-[12px]">
+                    <thead class="text-slate-500 uppercase text-[10px] tracking-wider border-b dark:border-slate-700">
+                        <tr>
+                            <th class="px-5 py-3">Asset</th>
+                            <th class="px-5 py-3">Task Type</th>
+                            <th class="px-5 py-3 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="taskTableBody">
+                        {% for task in task_page_obj %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='{% url 'maintenance_list' %}'">
+                            <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">{{ task.asset.assets_name }}</td>
+                            <td class="px-5 py-4 text-slate-500">{{ task.maintenance_type }}</td>
+                            <td class="px-5 py-4 text-center">
+                                <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black uppercase">{{ task.status }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="p-8 text-center text-slate-400">No active tasks.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    /**
+     * IMPLEMENTATION: JQUERY AJAX & VANILLA API
+     */
+    $(document).ready(function() {
+        // --- 1. LIVE COUNTER SYNC (AJAX) ---
+        window.syncPersonnelStats = function() {
+            $('#sync-indicator').removeClass('hidden');
+            $.ajax({
+                url: '/api/personnel/stats/', // Target API Endpoint
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $('#stat-total-assets').text(data.total_assets);
+                    $('#stat-my-tasks').text(data.my_tasks);
+                    $('#stat-alerts').text(data.alerts);
+                },
+                complete: function() {
+                    setTimeout(() => $('#sync-indicator').addClass('hidden'), 2000);
+                }
+            });
+        };
+
+        // --- 2. AJAX SEARCH: DEBOUNCED TABLE FILTERING ---
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        const handleTableSearch = debounce(function(inputId, tableId) {
+            const query = $(inputId).val();
+            // In a real app, this would hit an API and replace the <tbody> HTML
+            // For now, we simulate by filtering local rows as a fallback
+            const rows = $(tableId).find('tr');
+            rows.each(function() {
+                const text = $(this).text().toLowerCase();
+                $(this).toggle(text.indexOf(query.toLowerCase()) > -1);
+            });
+        }, 300);
+
+        $('#incidentAjaxSearch').on('input', () => handleTableSearch('#incidentAjaxSearch', '#incidentTableBody'));
+        $('#assetAjaxSearch').on('input', () => handleTableSearch('#assetAjaxSearch', '#assetTableBody'));
+        $('#taskAjaxSearch').on('input', () => handleTableSearch('#taskAjaxSearch', '#taskTableBody'));
+
+        // Initialize Stats Sync
+        setInterval(syncPersonnelStats, 45000); // Update every 45s
+    });
+
+    /**
+     * CORE: CHART LOGIC (VANILLA JS)
+     */
+    function initIncidentChart() {
+        const chartEl = document.getElementById('incidentTrendChart');
+        if (!chartEl) return;
+        
+        const ctx = chartEl.getContext('2d');
+        const labels = JSON.parse('{{ chart_labels|safe }}');
+        const dataValues = JSON.parse('{{ chart_values|safe }}');
+        
+        if (window.myTrendChart) window.myTrendChart.destroy();
+        
+        window.myTrendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Incidents',
+                    data: dataValues,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#ef4444'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                    y: { display: false, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', initIncidentChart);
+    document.addEventListener('themeChanged', initIncidentChart);
+</script>
+{% endblock %}

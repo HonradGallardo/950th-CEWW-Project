@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col min-h-screen lg:h-[calc(100vh-140px)] space-y-4 sm:space-y-6 lg:overflow-hidden p-2 sm:p-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-4 px-2">
+        <div>
+            <h1 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">User Access Control & RBAC</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-wider">Manage system personnel and permissions</p>
+        </div>
+        <div class="flex items-center gap-3">
+             <div id="api-indicator" class="hidden sm:flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg">
+                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse mr-2"></div>
+                <span class="text-[9px] font-black text-blue-600 uppercase">Directory Sync</span>
+            </div>
+            <a href="{% url 'add_user' %}" class="w-full sm:w-auto bg-blue-600 dark:bg-blue-500 text-white px-5 py-3 sm:py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow-md shadow-blue-200 dark:shadow-none flex items-center justify-center shrink-0">
+                <i class="fas fa-user-plus mr-2"></i> Add New User
+            </a>
+        </div>
+    </div>
+
+    <div class="flex-1 grid grid-cols-12 gap-4 lg:gap-6 lg:min-h-0 pb-10 sm:pb-4">
+        
+        <div class="col-span-12 lg:col-span-7 flex flex-col h-fit lg:h-full min-h-0">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+                
+                <div class="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 shrink-0 space-y-4">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="setRoleFilter('ALL')" class="role-filter-btn active bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 transition-all">All</button>
+                        <button onclick="setRoleFilter('ADMIN')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-red-200 hover:text-red-600 transition-all">Admins</button>
+                        <button onclick="setRoleFilter('COMMANDER')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-purple-200 hover:text-purple-600 transition-all">Commanders</button>
+                        <button onclick="setRoleFilter('PERSONNEL')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-blue-200 hover:text-blue-600 transition-all">Personnel</button>
+                        <button onclick="setRoleFilter('UNASSIGNED')" class="role-filter-btn text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 hover:border-blue-200 hover:text-blue-600 transition-all">Others</button>
+                    </div>
+
+                    <div class="relative w-full max-w-xs">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-50 text-[10px]"></i>
+                        <input type="text" id="userSearch" onkeyup="handleLiveSearch()" placeholder="Search personnel name or username..."
+                               class="text-xs pl-8 pr-10 py-2.5 sm:py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/10 w-full outline-none transition-colors">
+                        
+                        <button id="clearSearch" onclick="resetSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                            <i class="fas fa-times-circle text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse" id="userTable">
+                        <thead class="hidden sm:table-header-group sticky top-0 bg-slate-50 dark:bg-slate-800 z-10 shadow-sm">
+                            <tr class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">
+                                <th class="px-6 py-4 w-20 text-center">ID</th>
+                                <th class="px-4 py-4 w-24 text-center">Insignia</th>
+                                <th class="px-4 py-4">Rank</th>
+                                <th class="px-6 py-4">Personnel</th>
+                                <th class="px-6 py-4">Users</th> 
+                                <th class="px-6 py-4">Last Activity</th> 
+                                <th class="px-6 py-4 text-center">Actions</th> 
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 block sm:table-row-group" id="userTableBody">
+                            {% for person in users %}
+                            <tr class="user-row block sm:table-row hover:bg-blue-50/40 dark:hover:bg-blue-900/10 transition-colors cursor-pointer p-4 sm:p-0 mb-2 bg-white dark:bg-slate-900 border sm:border-0" 
+                                onclick="showUserDetails('{{ person.id }}', '{{ person.username|escapejs }}', '{{ person.get_full_name|default:person.username|escapejs }}', '{{ person.email|escapejs }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}', '{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}', '{{ person.profile.rank|default:'Airman' }}')">
+                                <td class="px-6 py-4 text-center"><span class="text-[10px] font-black text-slate-400">#{{ person.id }}</span></td>
+                                <td class="px-4 py-4"><div class="w-11 h-10 rounded-lg bg-slate-50 dark:bg-slate-800/80 p-1.5 mx-auto"><img src="/static/core/images/badge/{{ person.profile.rank|default:'Airman' }}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';"></div></td>
+                                <td class="px-4 py-4 text-center sm:text-left"><span class="text-[8px] font-medium text-slate-400 uppercase">{{ person.profile.rank|default:"Airman" }}</span></td>
+                                <td class="px-6 py-4 font-bold text-sm text-slate-800 dark:text-slate-200">{{ person.get_full_name|default:person.username }}</td>
+                                <td class="px-6 py-4 font-bold text-blue-600 dark:text-blue-400 font-mono text-[10px]">@{{ person.username }}</td>
+                                <td class="px-6 py-4 text-[10px] text-slate-500">{{ person.last_login|date:"d-m-y"|default:"Never" }}</td>
+                                <td class="px-6 py-4 text-center"><a href="{% url 'edit_user' person.id %}" class="text-slate-500 hover:text-blue-600"><i class="fas fa-edit"></i></a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-5 flex flex-col h-full min-h-0">
+            <div id="detail-panel" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col h-full overflow-hidden">
+                <div id="empty-message" class="flex-1 flex flex-col items-center justify-center text-center space-y-4 py-10 lg:py-0">
+                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center">
+                        <i class="fas fa-id-card text-slate-200 dark:text-slate-700 text-2xl"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Select a user to view full profile</p>
+                </div>
+
+                <div id="user-details" class="hidden flex-1 flex flex-col min-h-0">
+                    <div class="flex items-center justify-between mb-8 border-b border-slate-50 dark:border-slate-800 pb-4 shrink-0">
+                        <h3 class="font-black uppercase text-xs text-slate-800 dark:text-slate-100 tracking-widest">Personnel Profile</h3>
+                        <span id="detail-role" class="text-[10px] font-black px-2 py-1 rounded-md"></span>
+                    </div>
+
+                    <div class="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="flex items-center space-x-4">
+                            <div id="detail-image-container" class="w-12 h-12 bg-blue-600 dark:bg-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-blue-100 dark:shadow-none shrink-0 overflow-hidden">
+                                <img id="detail-profile-pic" src="" class="hidden w-full h-full object-cover">
+                                <span id="initials"></span>
+                            </div>
+                            <div class="min-w-0">
+                                <p id="detail-name" class="text-sm font-black text-slate-800 dark:text-slate-100 truncate"></p>
+                                <div class="flex items-center gap-2">
+                                    <img id="detail-rank-icon" src="" class="w-4 h-4 object-contain filter dark:brightness-110">
+                                    <p id="detail-rank" class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest"></p>
+                                    <span class="text-slate-300 dark:text-slate-700">|</span>
+                                    <p id="detail-username" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 truncate"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Last Login</label>
+                                <p id="detail-last-login" class="text-[10px] font-bold text-slate-700 dark:text-slate-300"></p>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase mb-1">Member Since</label>
+                                <p id="detail-joined" class="text-[10px] font-bold text-slate-700 dark:text-slate-300"></p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-4">
+                            <div class="overflow-hidden">
+                                <label class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase">Email Address</label>
+                                <p id="detail-email" class="text-xs font-bold text-slate-700 dark:text-slate-300 break-all"></p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">System Access</label>
+                            <div class="flex items-center space-x-2 p-3 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-xl">
+                                <i class="fas fa-check-circle text-emerald-500 dark:text-emerald-400"></i>
+                                <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">Active Account</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-slate-50 dark:border-slate-800 flex gap-3 shrink-0">
+                         <a id="edit-link" href="#" class="flex-1 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white py-4 sm:py-3 rounded-xl text-xs font-black transition shadow-sm text-center">
+                            Edit Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRole = 'ALL';
+let activeUserId = null;
+let searchTimeout;
+
+$(document).ready(function() {
+    // 1. Stats Sync
+    window.refreshUserTable = function() {
+        $.ajax({
+            url: '/api/core/users/stats/', 
+            type: 'GET',
+            success: function(data) { $('#api-indicator').removeClass('hidden'); },
+            error: function() { console.log("Stats API Offline"); }
+        });
+    };
+    setInterval(refreshUserTable, 120000);
+});
+
+/**
+ * Enhanced Live Search Logic
+ * Detects input and toggles Clear (X) button visibility.
+ */
+function handleLiveSearch() {
+    const q = $('#userSearch').val().trim();
+    const clearBtn = $('#clearSearch');
+    
+    // Toggle (X) visibility
+    if (q.length > 0) {
+        clearBtn.removeClass('hidden');
+    } else {
+        clearBtn.addClass('hidden');
+    }
+
+    clearTimeout(searchTimeout);
+
+    if (q.length === 0) {
+        // Immediate reset when bar is cleared
+        performAjaxSearch(""); 
+    } else {
+        // Debounce typing to save server bandwidth
+        searchTimeout = setTimeout(() => {
+            performAjaxSearch(q);
+        }, 300);
+    }
+}
+
+/**
+ * Resets search input and immediately repopulates full list.
+ */
+function resetSearch() {
+    $('#userSearch').val('');
+    $('#clearSearch').addClass('hidden');
+    performAjaxSearch(""); 
+}
+
+function setRoleFilter(role) {
+    currentRole = role;
+    $('.role-filter-btn').removeClass('active bg-blue-50 text-blue-600');
+    $(event.target).addClass('active bg-blue-50 text-blue-600');
+    performAjaxSearch();
+}
+
+function performAjaxSearch(query) {
+    const q = query !== undefined ? query : $('#userSearch').val().trim();
+    $('#api-indicator').removeClass('hidden');
+
+    $.ajax({
+        url: `/api/core/users/live_search/?q=${q}&role=${currentRole}`,
+        type: 'GET',
+        success: function(data) {
+            updateUserTable(data);
+            $('#api-indicator').addClass('hidden');
+        },
+        error: function(err) {
+            console.error("API Error:", err);
+            $('#api-indicator').addClass('hidden');
+        }
+    });
+}
+
+function updateUserTable(users) {
+    const container = document.getElementById('userTableBody');
+    container.innerHTML = ''; 
+
+    if (users.length === 0) {
+        container.innerHTML = '<tr><td colspan="7" class="py-10 text-center italic text-slate-400">No matching personnel found.</td></tr>';
+        return;
+    }
+
+    users.forEach(u => {
+        const row = `
+            <tr class="user-row block sm:table-row hover:bg-blue-50/40 transition-colors cursor-pointer p-4 sm:p-0 mb-2 bg-white dark:bg-slate-900 border sm:border-0" 
+                onclick="showUserDetails('${u.id}', '${u.username}', '${u.full_name}', '${u.email}', '${u.role}', '${u.last_login}', '${u.date_joined}', '${u.image_url || ''}', '${u.rank}')">
+                <td class="block sm:table-cell px-6 py-4 text-center"><span class="text-[10px] font-black text-slate-400">#${u.id}</span></td>
+                <td class="block sm:table-cell px-4 py-4 text-center">
+                    <div class="w-11 h-10 rounded-lg bg-slate-50 dark:bg-slate-800/80 p-1.5 mx-auto">
+                        <img src="/static/core/images/badge/${u.rank}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';">
+                    </div>
+                </td>
+                <td class="block sm:table-cell px-4 py-4 text-center sm:text-left"><span class="text-[8px] font-medium text-slate-400 uppercase">${u.rank}</span></td>
+                <td class="block sm:table-cell px-6 py-4 font-bold text-sm text-slate-800 dark:text-slate-200">${u.full_name}</td>
+                <td class="block sm:table-cell px-6 py-4 font-bold text-blue-600 dark:text-blue-400 font-mono text-[10px]">@${u.username}</td>
+                <td class="block sm:table-cell px-6 py-4 text-[10px] text-slate-500">${u.last_login}</td>
+                <td class="block sm:table-cell px-6 py-4 text-center">
+                    <a href="/users/edit/${u.id}/" class="text-slate-500 hover:text-blue-600"><i class="fas fa-edit"></i></a>
+                </td>
+            </tr>`;
+        container.insertAdjacentHTML('beforeend', row);
+    });
+}
+
+function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined, imageUrl, rank) {
+    activeUserId = id;
+    document.getElementById('empty-message').classList.add('hidden');
+    document.getElementById('user-details').classList.remove('hidden');
+    document.getElementById('detail-username').innerText = '@' + username;
+    document.getElementById('detail-name').innerText = fullName;
+    document.getElementById('detail-email').innerText = email;
+    document.getElementById('detail-role').innerText = role;
+    document.getElementById('detail-last-login').innerText = lastLogin;
+    document.getElementById('detail-joined').innerText = dateJoined;
+    document.getElementById('detail-rank').innerText = rank;
+    
+    document.getElementById('detail-rank-icon').src = `/static/core/images/badge/${rank}.png`;
+    document.getElementById('edit-link').href = "/users/edit/" + id + "/"; 
+
+    const imgElement = document.getElementById('detail-profile-pic');
+    const initialsElement = document.getElementById('initials');
+
+    if (imageUrl && imageUrl.trim() !== "") {
+        imgElement.src = imageUrl;
+        imgElement.classList.remove('hidden');
+        initialsElement.classList.add('hidden');
+    } else {
+        imgElement.classList.add('hidden');
+        initialsElement.classList.remove('hidden');
+        initialsElement.innerText = (fullName).substring(0, 2).toUpperCase();
+    }
+}
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+{% endblock %}
