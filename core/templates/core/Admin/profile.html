@@ -79,7 +79,7 @@
                 <form id="profileUpdateForm" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
                     {% csrf_token %} 
                     
-                    <input type="file" name="profile_image" id="profile_image_input" class="hidden" accept="image/*" onchange="previewImage(this)">
+                    <input type="file" name="image" id="profile_image_input" class="hidden" accept="image/*" onchange="previewImage(this)">
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">

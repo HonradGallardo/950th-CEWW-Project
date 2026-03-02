@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Ticket
+from django.contrib.auth.models import User
+from django.db.models import Q # Needed for filtering
+from .models import Ticket, TicketMessage
 
 def is_admin(user):
     return user.is_staff or user.groups.filter(name='Admin').exists()
@@ -36,11 +38,25 @@ def admin_ticket_dashboard(request):
 
 @login_required
 def ticket_detail(request, ticket_id):
-    """
-    Renders the conversation shell. 
-    The co-developer's images will be rendered by the chat_thread API.
-    """
     ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    # Permission check
     if not is_admin(request.user) and ticket.user != request.user:
         return redirect('dashboard')
-    return render(request, 'tickets/Admin/ticket_detail.html', {'ticket': ticket})
+
+    # 1. DYNAMICALLY FIND ACTIVE ADMINS (The participants)
+    active_staff_ids = TicketMessage.objects.filter(
+        ticket=ticket
+    ).filter(
+        Q(sender__is_staff=True) | Q(sender__groups__name='Admin')
+    ).values_list('sender_id', flat=True).distinct()
+
+    # 2. Get those users but exclude "Me" (the current user)
+    other_admins = User.objects.filter(
+        id__in=active_staff_ids
+    ).exclude(id=request.user.id).distinct()
+
+    return render(request, 'tickets/Admin/ticket_detail.html', {
+        'ticket': ticket,
+        'other_admins': other_admins 
+    })

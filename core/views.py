@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Q
 from .models import Asset, Maintenance, Incident, Notification, Profile
 from .forms import AssetForm, MaintenanceForm, UserForm
@@ -305,6 +305,31 @@ def reports(request):
 @login_required
 def profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        # 1. Handle the Profile Image (FILES)
+        # Match the 'name' attribute from your HTML input
+        if 'image' in request.FILES:
+            profile.image = request.FILES['image']
+        
+        # 2. Handle Profile Fields
+        profile.rank = request.POST.get('rank', profile.rank)
+        profile.save()
+
+        # 3. Handle User Model Fields (Email, First Name, Last Name)
+        user = request.user
+        user.email = request.POST.get('email', user.email)
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.save()
+
+        # If AJAX, return success response
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'image_url': profile.image.url if profile.image else None
+            })
+
     return render(request, 'core/Admin/profile.html', {'profile': profile})
 
 @login_required

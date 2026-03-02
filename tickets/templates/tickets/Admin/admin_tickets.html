@@ -1,22 +1,48 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    :root {
+        --head-bg: #F8FAFC;
+        --head-text: #0F172A;
+        --head-border: #e2e8f0; /* slate-200 */
+    }
+
+    .dark {
+        --head-bg: #0F172A;
+        --head-text: #F8FAFC;
+        --head-border: #1e293b; /* slate-800 */
+    }
+
+    #head {
+        background-color: var(--head-bg) !important;
+        color: var(--head-text) !important;
+        border-color: var(--head-border) !important;
+        transition: all 0.3s ease;
+    }
+
+    /* Ensure the title and subtitle inherit the header text color */
+    #head h1, #head p {
+        color: inherit !important;
+    }
+
+</style>
 <div id="mobileOverlay" onclick="closeDetails()" class="fixed inset-0 bg-slate-900/50 z-[35] hidden backdrop-blur-sm transition-opacity duration-300"></div>
 
-<div class="h-[calc(100vh-73px)] bg-[#f8fafc] dark:bg-[#020617] p-4 md:p-6 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300 overflow-hidden">
+<div class="h-[calc(100vh-73px)]  dark:bg-[#0F172A] p-4 md:p-6 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300 overflow-hidden">
     
-    <header class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-800 pb-5">
-        <div>
-            <h1 class="text-xl md:text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Support Desk</h1>
-            <p class="text-[10px] md:text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold">Admin Tactical View</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <span class="hidden sm:inline-block px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">Mode: Full Context</span>
-            <button id="mobileBackBtn" onclick="closeDetails()" class="lg:hidden hidden bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 z-50">
-                <i class="fas fa-arrow-left text-slate-500"></i>
-            </button>
-        </div>
-    </header>
+    <header id="head" class="flex items-center justify-between mb-6 border-b pb-5">
+    <div>
+        <h1 class="text-xl md:text-2xl font-black tracking-tight uppercase">Support Desk</h1>
+        <p class="text-[10px] md:text-xs mt-1 uppercase tracking-widest font-bold opacity-80">Admin Tactical View</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <span class="hidden sm:inline-block px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">Mode: Full Context</span>
+        <button id="mobileBackBtn" onclick="closeDetails()" class="lg:hidden hidden bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 z-50">
+            <i class="fas fa-arrow-left text-slate-500"></i>
+        </button>
+    </div>
+</header>
 
     <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 h-[calc(100vh-170px)] relative">
         
@@ -104,7 +130,7 @@
                             
                             <textarea id="chatInput" rows="1" 
                                       class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-4 pl-12 pr-28 text-sm outline-none focus:ring-4 ring-blue-500/10 transition-all resize-none shadow-inner" 
-                                      placeholder="Transmit response..."></textarea>
+                                      placeholder="Send a Message"></textarea>
                             
                             <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
                                 <i class="fas fa-paperclip text-lg"></i>
@@ -150,12 +176,99 @@
 </style>
 
 <script>
+    function initHeaderTheme() {
+    const header = document.getElementById('head');
+    
+    // Create an observer to watch for the 'dark' class being added/removed from <html>
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'class') {
+                console.log("Theme changed, CSS Variables will handle the rest.");
+            }
+        });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+}
+    
     let currentTicketId = null;
     let currentTicketUser = null; 
     let currentTicketDescription = "";
     const currentAdminUser = "{{ request.user.username }}";
     let currentPage = 1;
     const itemsPerPage = 8;
+
+    const SupportConsole = {
+    currentLightboxItems: [],
+    currentLightboxIndex: 0,
+
+    // --- HELPER: ADAPTIVE MEDIA GRID ---
+    renderAttachmentGrid(attachmentsList) {
+        if (!attachmentsList || attachmentsList.length === 0) return '';
+        
+        const count = attachmentsList.length;
+        const lightboxItems = [];
+        attachmentsList.forEach(att => {
+            if (/\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(att.name) || /\.(mp4|mov|webm)$/i.test(att.name)) {
+                lightboxItems.push({url: att.url, name: att.name});
+            }
+        });
+
+        // Use grid for 3+ items, flex for 1-2 items
+        const containerClass = count >= 3 ? "mt-2 grid grid-cols-2 gap-2 max-w-[400px]" : "mt-2 flex flex-wrap gap-2 max-w-[400px]";
+        let gridHtml = `<div class="${containerClass}">`;
+        
+        attachmentsList.forEach((att, index) => {
+            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(att.name);
+            const isVid = /\.(mp4|mov|webm)$/i.test(att.name);
+            if (!isImg && !isVid) return;
+
+            const MAX_VISIBLE = 4;
+            const isThirdOfThree = (count === 3 && index === 2);
+
+            if (index < MAX_VISIBLE) {
+                // Sizing: Single images show full shape; Grids are capped at 180px height
+                const sizeClasses = count === 1 ? "max-h-[350px] w-auto rounded-lg" : "h-[180px] w-full object-cover rounded-md";
+
+                let content = isImg 
+                    ? `<img src="${att.url}" class="${sizeClasses} border dark:border-slate-700 shadow-sm">`
+                    : `<div class="bg-slate-900 rounded-lg flex items-center justify-center border dark:border-slate-800 ${count === 1 ? 'w-[300px] h-[200px]' : 'w-full h-[180px]'}"><i class="fas fa-play text-white/50 text-2xl"></i></div>`;
+
+                if (index === MAX_VISIBLE - 1 && count > MAX_VISIBLE) {
+                    gridHtml += `
+                        <div class="relative cursor-pointer overflow-hidden rounded-md h-[180px]" onclick='SupportConsole.openLightbox(${JSON.stringify(lightboxItems).replace(/'/g, "&apos;")}, ${index})'>
+                            <img src="${att.url}" class="w-full h-full object-cover blur-[2px]">
+                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-black text-xl">+${count - MAX_VISIBLE}</div>
+                        </div>`;
+                } else {
+                    const wrapperStyle = (count === 1) ? "" : "h-[180px] overflow-hidden";
+                    gridHtml += `
+                        <div class="relative cursor-pointer ${wrapperStyle} ${isThirdOfThree ? 'col-span-2' : ''}" onclick='SupportConsole.openLightbox(${JSON.stringify(lightboxItems).replace(/'/g, "&apos;")}, ${index})'>
+                            ${content}
+                        </div>`;
+                }
+            }
+        });
+        return gridHtml + '</div>';
+    },
+
+    openLightbox(items, index) {
+        this.currentLightboxItems = items;
+        this.currentLightboxIndex = index;
+        const lb = document.getElementById('chatLightbox');
+        const content = document.getElementById('lightboxContent');
+        lb.classList.remove('hidden');
+        
+        const item = items[index];
+        if (/\.(mp4|mov|webm)$/i.test(item.name)) {
+            content.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[80vh] rounded shadow-2xl"></video>`;
+        } else {
+            content.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[80vh] rounded shadow-2xl object-contain">`;
+        }
+    },
+    
+    closeLightbox() { document.getElementById('chatLightbox').classList.add('hidden'); }
+}
 
     // LIGHTBOX GLOBALS
     let adminGalleryMedia = [];
@@ -176,47 +289,57 @@
     }
 
     function renderTicketTable(tickets) {
-        const body = document.getElementById('ticketTableBody');
-        if (tickets.length === 0) {
-            body.innerHTML = '<tr class="block w-full"><td class="py-10 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 block w-full">Queue Empty</td></tr>';
-            return;
-        }
+    const body = document.getElementById('ticketTableBody');
+    if (tickets.length === 0) {
+        body.innerHTML = '<tr class="block w-full"><td class="py-10 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 block w-full">Queue Empty</td></tr>';
+        return;
+    }
 
-        body.innerHTML = tickets.map(t => {
-            const isMine = t.technician_name === currentAdminUser;
-            const statusClass = getStatusStyles(t.status);
-            
-            return `
-                <tr class="ticket-row block w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl mb-2 hover:border-blue-500 dark:hover:border-blue-500 transition-all cursor-pointer group ${currentTicketId == t.id ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}" 
-                    id="row-${t.id}"
-                    data-status="${t.status}" 
-                    data-mine="${isMine}"
-                    onclick="selectTicket('${t.id}', '${t.subject.replace(/'/g, "\\'")}', '${t.user_name || 'Personnel'}', '${t.status}', '${t.description.replace(/(\r\n|\n|\r)/gm, " ").replace(/'/g, "\\'")}', '${t.created_at}')">
-                    
-                    <td class="p-4 block w-full">
-                        <div class="flex items-center justify-between gap-3 w-full">
-                            <div class="flex items-center gap-3 min-w-0 flex-1">
-                                <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center font-black text-sm shrink-0 border border-slate-200 dark:border-slate-700">
-                                    ${(t.user_name || 'P').charAt(0).toUpperCase()}
+    body.innerHTML = tickets.map(t => {
+        const isMine = t.technician_name === currentAdminUser;
+        const statusClass = getStatusStyles(t.status);
+        
+        // Match the logic from your user_list.html reference
+        const hasImage = t.user_avatar && t.user_avatar !== null;
+        const avatarContent = hasImage 
+            ? `<img src="${t.user_avatar}" class="w-full h-full object-cover" alt="profile">`
+            : `<span class="text-white font-black text-xs">${(t.user_name || 'P').substring(0, 2).toUpperCase()}</span>`;
+
+        return `
+            <tr class="ticket-row block w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl mb-2 hover:border-blue-500 dark:hover:border-blue-500 transition-all cursor-pointer group ${currentTicketId == t.id ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}" 
+                id="row-${t.id}"
+                data-status="${t.status}" 
+                data-mine="${isMine}"
+                onclick="selectTicket('${t.id}', '${t.subject.replace(/'/g, "\\'")}', '${t.user_name || 'Personnel'}', '${t.status}', '${t.description.replace(/(\r\n|\n|\r)/gm, " ").replace(/'/g, "\\'")}', '${t.created_at}', '${t.user_avatar || ''}')">
+                
+                <td class="p-4 block w-full">
+                    <div class="flex items-center justify-between gap-3 w-full">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            
+                            <div class="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-slate-200 dark:border-slate-700">
+                                ${avatarContent}
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[9px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500">#${String(t.id).padStart(4, '0')}</span>
+                                    <span class="status-pill px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${statusClass}">
+                                        ${t.status}
+                                    </span>
                                 </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="text-[9px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500">#${String(t.id).padStart(4, '0')}</span>
-                                        <span class="status-pill px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${statusClass}">
-                                            ${t.status}
-                                        </span>
-                                    </div>
-                                    <span class="font-bold text-slate-800 dark:text-slate-200 text-xs block truncate group-hover:text-blue-600 transition-colors">${t.subject}</span>
-                                    <div class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mt-1">
-                                        ${t.user_name || 'Personnel'} • <span class="${t.technician_name !== 'Unassigned' ? 'text-blue-500' : ''}">${t.technician_name}</span>
-                                    </div>
+                                <span class="font-bold text-slate-800 dark:text-slate-200 text-xs block truncate group-hover:text-blue-600 transition-colors">${t.subject}</span>
+                                
+                                <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex flex-col gap-0.5">
+                                    <span class="${t.technician_name !== 'Unassigned' ? 'text-blue-500' : 'text-slate-400'}">Admin: ${t.technician_name}</span>
+                                    <span class="text-slate-400">User: ${t.user_name || 'Personnel'}</span>
                                 </div>
                             </div>
                         </div>
-                    </td>
-                </tr>`;
-        }).join('');
-    }
+                    </div>
+                </td>
+            </tr>`;
+    }).join('');
+}
 
     function getStatusStyles(status) {
         if (status === 'Pending') return 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400';
@@ -276,115 +399,123 @@
         updatePagination();
     }
 
-    async function selectTicket(id, subject, user, status, description, datetime) {
-        currentTicketId = id;
-        currentTicketUser = user;
-        currentTicketDescription = description || "No details provided.";
-        
-        setResponsiveView(true);
-        document.getElementById('emptyDetailState').classList.add('hidden');
-        document.getElementById('ticketDetailPanel').classList.remove('hidden');
-        
-        document.getElementById('activeSubject').innerText = subject;
-        document.getElementById('activeUser').innerText = `${user}`;
-        document.getElementById('activeDateTime').innerText = `${datetime}`;
-        document.getElementById('fullDetailLink').href = `/tickets/detail/${id}/`;
-        document.getElementById('activeAvatar').src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
-        
-        document.querySelectorAll('.ticket-row').forEach(row => row.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'dark:bg-blue-900/10'));
-        const activeRow = document.getElementById(`row-${id}`);
-        if (activeRow) activeRow.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'dark:bg-blue-900/10');
-        
-        await fetchMessages(id);
+    async function selectTicket(id, subject, user, status, description, datetime, userAvatar) {
+    currentTicketId = id;
+    currentTicketUser = user;
+    currentTicketDescription = description || "No details provided.";
+
+    const activeAvatar = document.getElementById('activeAvatar');
+
+    if (activeAvatar) {
+        // Use the actual profile picture if it exists
+        if (userAvatar && userAvatar !== 'null' && userAvatar !== '') {
+            activeAvatar.src = userAvatar;
+        } else {
+            // Fallback: If no profile picture, use the UI-Avatars placeholder based on the name
+            activeAvatar.src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
+        }
     }
-
-    function handleFilePreview(event) {
-        const preview = document.getElementById('chat-attachment-preview');
-        const files = event.target.files;
-        preview.innerHTML = '';
-        if (files.length > 0) {
-            preview.classList.remove('hidden');
-            Array.from(files).forEach((file, index) => {
-                const isImage = file.type.startsWith('image/');
-                const isVideo = file.type.startsWith('video/');
-                const item = document.createElement('div');
-                item.className = "relative w-14 h-14 bg-white dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group";
-                
-                if (isImage) {
-                    const img = document.createElement('img');
-                    img.className = "w-full h-full object-cover";
-                    const reader = new FileReader();
-                    reader.onload = (e) => img.src = e.target.result;
-                    reader.readAsDataURL(file);
-                    item.appendChild(img);
-                } else {
-                    const icon = document.createElement('div');
-                    icon.className = "flex flex-col items-center justify-center h-full";
-                    icon.innerHTML = `<i class="${isVideo ? 'fas fa-video text-purple-500' : 'fas fa-file-alt text-blue-500'} text-sm"></i><span class="text-[7px] mt-1 font-bold text-slate-500 truncate w-12 text-center px-1 uppercase">${file.name}</span>`;
-                    item.appendChild(icon);
-                }
-
-                const removeBtn = document.createElement('button');
-                removeBtn.className = "absolute top-0 right-0 bg-red-500 text-white w-4 h-4 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center";
-                removeBtn.innerHTML = '<i class="fas fa-times text-[8px]"></i>';
-                removeBtn.onclick = (e) => {
-                    e.preventDefault();
-                    const input = document.getElementById('chatFileInput');
-                    const dt = new DataTransfer();
-                    for (let i = 0; i < input.files.length; i++) {
-                        if (i !== index) dt.items.add(input.files[i]);
-                    }
-                    input.files = dt.files;
-                    handleFilePreview({ target: input });
-                };
-                item.appendChild(removeBtn);
-                preview.appendChild(item);
-            });
-        } else { preview.classList.add('hidden'); }
+    
+    setResponsiveView(true);
+    
+    // UI Transitions
+    document.getElementById('emptyDetailState').classList.add('hidden');
+    document.getElementById('ticketDetailPanel').classList.remove('hidden');
+    
+    // Set Text Details
+    document.getElementById('activeSubject').innerText = subject;
+    document.getElementById('activeUser').innerText = `${user}`;
+    document.getElementById('activeDateTime').innerText = `${datetime}`;
+    document.getElementById('fullDetailLink').href = `/tickets/detail/${id}/`;
+    
+    // IMPORTANT: Removed the line that was overwriting your activeAvatar.src with a hardcoded URL
+    
+    // Highlight the active row
+    document.querySelectorAll('.ticket-row').forEach(row => 
+        row.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'dark:bg-blue-900/10')
+    );
+    
+    const activeRow = document.getElementById(`row-${id}`);
+    if (activeRow) {
+        activeRow.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'dark:bg-blue-900/10');
     }
+    
+    await fetchMessages(id);
+}
 
-    async function handleSendMessage(event) {
-        event.preventDefault();
-        const input = document.getElementById('chatInput');
-        const fileInput = document.getElementById('chatFileInput');
-        const message = input.value.trim();
+    const chatInput = document.getElementById('chatInput');
+
+// Add the "Enter" key listener
+chatInput.addEventListener('keydown', function(event) {
+    // Check if Enter is pressed without the Shift key
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // Stop the default new-line behavior
+        handleSendMessage(event); // Call your existing function
+    }
+});
+
+async function handleSendMessage(event) {
+    // Prevent default if it's coming from a button click or the keydown event
+    if (event) event.preventDefault();
+    
+    const input = document.getElementById('chatInput');
+    const fileInput = document.getElementById('chatFileInput');
+    const message = input.value.trim();
+    
+    // Check constraints
+    if (!message && fileInput.files.length === 0) return;
+    if (!currentTicketId) return;
+
+    const formData = new FormData();
+    formData.append('message', message);
+    formData.append('recipient', currentTicketUser); 
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    Array.from(fileInput.files).forEach(f => formData.append('attachments', f));
+
+    try {
+        const response = await fetch(`/tickets/api/support-api/${currentTicketId}/send_reply/`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
         
-        if (!message && fileInput.files.length === 0) return;
-        if (!currentTicketId) return;
-
-        const formData = new FormData();
-        formData.append('message', message);
-        formData.append('recipient', currentTicketUser);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-        Array.from(fileInput.files).forEach(f => formData.append('attachments', f));
-
-        try {
-            const response = await fetch(`/tickets/api/support-api/${currentTicketId}/send_reply/`, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            if (response.ok) {
-                input.value = '';
-                fileInput.value = ''; 
-                document.getElementById('chat-attachment-preview').classList.add('hidden');
-                initAdminSync(); 
-                await fetchMessages(currentTicketId);
+        if (response.ok) {
+            input.value = '';
+            fileInput.value = ''; 
+            
+            // Clear UI previews
+            const preview = document.getElementById('chat-attachment-preview');
+            if (preview) {
+                preview.classList.add('hidden');
+                preview.innerHTML = '';
             }
-        } catch (error) { console.error("API Send Failed:", error); }
+            
+            // Refresh the UI
+            await fetchMessages(currentTicketId);
+            if (typeof initAdminSync === "function") initAdminSync(); 
+        }
+    } catch (error) { 
+        console.error("API Send Failed:", error); 
     }
+}
 
-    async function fetchMessages(ticketId) {
-        try {
-            const response = await fetch(`/tickets/api/support-api/${ticketId}/chat_thread/`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                renderMessages(data.messages, data.attachments);
-            }
-        } catch (error) { console.error("Failed to load chat:", error); }
+async function fetchMessages(ticketId) {
+    if (!ticketId) return;
+
+    try {
+        const response = await fetch(`/tickets/api/support-api/${ticketId}/chat_thread/?with_staff=${currentAdminUser}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            renderMessages(data.messages, data.attachments);
+        }
+    } catch (error) { 
+        console.error("Failed to load chat:", error); 
     }
+}
 
     // --- REUSABLE MEDIA BUILDER FOR ADMIN ---
     function buildMediaHtml(attachments, isMe) {
@@ -441,50 +572,55 @@
     }
 
     function renderMessages(messages, allAttachments = []) {
-        const chatBox = document.getElementById('chatBox');
-        chatBox.innerHTML = ''; 
-        adminGalleryMedia = []; // Reset Gallery for Lightbox
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = ''; 
+    adminGalleryMedia = []; // Reset Gallery for Lightbox logic if still used elsewhere
 
-        // --- RENDER INITIAL TICKET CREATION (Inquiry + Unlinked Images) ---
-        const initAttachments = allAttachments.filter(a => !messages.some(m => m.attachments && m.attachments.some(ma => ma.id === a.id)));
-        const initMedia = buildMediaHtml(initAttachments, false);
+    // --- 1. RENDER INITIAL INQUIRY ---
+    // Filter attachments that belong to the ticket description (unlinked to messages)
+    const initAtts = allAttachments.filter(a => !a.message_id);
+    const initialGridHtml = SupportConsole.renderAttachmentGrid(initAtts);
 
-        chatBox.innerHTML += `
-            <div class="flex justify-start mb-8 w-full animate-in fade-in duration-500">
-                <div class="max-w-[85%] md:max-w-[75%] flex flex-col items-start">
-                    <div class="flex items-center gap-2 mb-1.5 flex-row">
-                        <span class="text-[9px] font-black uppercase tracking-widest opacity-80 text-blue-600">${currentTicketUser || 'USER'}</span>
-                        <span class="text-[8px] font-bold opacity-40">INITIAL INQUIRY</span>
-                    </div>
-                    ${currentTicketDescription ? `
-                    <div class="inline-block p-3.5 sm:p-4 shadow-sm max-w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-sm">
-                        <p class="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-words">${currentTicketDescription}</p>
-                    </div>` : ''}
-                    ${initMedia.mediaHtml}
-                    ${initMedia.fileHtml}
+    const initialBlockHtml = `
+        <div class="flex justify-start mb-8 w-full animate-in fade-in duration-500">
+            <div class="max-w-[85%] md:max-w-[75%] flex flex-col items-start">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-[9px] font-black uppercase tracking-widest opacity-80 text-blue-600">${currentTicketUser || 'CLIENT'}</span>
+                    <span class="text-[8px] font-bold opacity-40 uppercase">Initial Inquiry</span>
                 </div>
-            </div>`;
+                <div class="inline-block p-4 shadow-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-sm">
+                    <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${currentTicketDescription}</p>
+                </div>
+                ${initialGridHtml}
+            </div>
+        </div>`;
+    chatBox.insertAdjacentHTML('beforeend', initialBlockHtml);
 
-        // --- RENDER CHAT FEED ---
-        messages.forEach(msg => {
-            const isMe = msg.is_me || msg.sender_name === currentAdminUser; 
-            const hasText = msg.message && msg.message.trim().length > 0;
-            const isStatus = msg.message.toUpperCase().includes('STATUS UPDATE');
+    // --- 2. RENDER CHAT FEED ---
+    messages.forEach(msg => {
+        const isMe = msg.is_me || msg.sender_name === currentAdminUser; 
+        const hasText = msg.message && msg.message.trim().length > 0;
+        const isStatus = msg.message.toUpperCase().includes('STATUS UPDATE');
 
-            if (isStatus) {
-                chatBox.innerHTML += `
-                    <div class="flex justify-center py-2 animate-in fade-in duration-500 w-full">
-                        <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700">${msg.message}</span>
-                    </div>`;
-                return;
-            }
+        if (isStatus) {
+            chatBox.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-center py-2 w-full">
+                    <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700">${msg.message}</span>
+                </div>`);
+            return;
+        }
 
-            const media = buildMediaHtml(msg.attachments, isMe);
+        // Get attachments for THIS specific message
+        const msgAtts = allAttachments.filter(a => a.message_id === msg.id);
+        const hasMedia = msgAtts.length > 0;
+        const mediaGridHtml = SupportConsole.renderAttachmentGrid(msgAtts);
 
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `flex ${isMe ? 'justify-end' : 'justify-start'} mb-6 animate-in fade-in duration-300 w-full`;
-            
-            msgDiv.innerHTML = `
+        const bubbleStyle = isMe 
+            ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
+            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-sm shadow-sm';
+
+        const msgHtml = `
+            <div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-6 w-full animate-in fade-in duration-300">
                 <div class="max-w-[85%] md:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
                     <div class="flex items-center gap-2 mb-1.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}">
                         <span class="text-[9px] font-black uppercase tracking-widest opacity-80 text-slate-700 dark:text-slate-300">${isMe ? 'Me' : msg.sender_name}</span>
@@ -492,19 +628,25 @@
                     </div>
                     
                     ${hasText ? `
-                        <div class="inline-block p-3.5 sm:p-4 shadow-sm max-w-full ${isMe ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-sm'}">
-                            <p class="text-[13px] sm:text-sm leading-relaxed whitespace-pre-wrap break-words">${msg.message}</p>
+                        <div class="p-3.5 mb-1.5 ${bubbleStyle}">
+                            <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${msg.message}</p>
                         </div>
                     ` : ''}
                     
-                    ${media.mediaHtml}
-                    ${media.fileHtml}
-                </div>`;
-                
-            chatBox.appendChild(msgDiv);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+                    ${hasMedia ? `
+                        <div class="w-full flex ${isMe ? 'justify-end' : 'justify-start'}">
+                            ${mediaGridHtml}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>`;
+            
+        chatBox.insertAdjacentHTML('beforeend', msgHtml);
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
 
     // --- ADMIN LIGHTBOX LOGIC ---
     function openAdminLightbox(index) {
@@ -604,29 +746,48 @@
     }
 
     async function deleteTicket() {
-        if (!currentTicketId) return;
-        const confirmDelete = confirm("Are you sure you want to permanently delete this dispatch? This action cannot be undone.");
-        if (!confirmDelete) return;
+    if (!currentTicketId) return;
 
-        try {
-            const response = await fetch(`/tickets/delete/${currentTicketId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const data = await response.json();
-            if (data.status === 'success') {
-                window.location.reload(); 
-            } else {
-                alert("Error: " + data.message);
+    const confirmDelete = confirm("Are you sure you want to permanently delete this ticket?");
+    if (!confirmDelete) return;
+
+    try {
+        const response = await fetch(`/tickets/api/support-api/${currentTicketId}/`, {
+            method: 'DELETE', // DRF ViewSets use DELETE method for destroy()
+            headers: {
+                'X-CSRFToken': SupportConsole.getCookie('csrftoken'),
+                'Content-Type': 'application/json'
             }
-        } catch (err) {
-            console.error(err);
-            alert("An error occurred while trying to delete the ticket.");
+        });
+
+        if (response.status === 204 || response.ok) {
+            alert("Ticket deleted successfully.");
+            // Refresh the UI
+            location.reload(); 
+        } else {
+            const errorData = await response.json();
+            alert("Error: " + (errorData.message || "You do not have permission."));
+        }
+    } catch (err) {
+        console.error("Delete failed:", err);
+    }
+}
+
+// Helper to get CSRF token if not already defined
+SupportConsole.getCookie = function(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
     }
+    return cookieValue;
+}
 
     function setResponsiveView(showDetail) {
         const side = document.getElementById('sidePanel');
@@ -660,6 +821,7 @@
         initAdminSync();
         initAdminPasteFeature();
         setInterval(initAdminSync, 30000);
+        initHeaderTheme();
     });
 </script>
 {% endblock %}
