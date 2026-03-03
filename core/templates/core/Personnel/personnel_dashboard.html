@@ -196,83 +196,111 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    /**
-     * IMPLEMENTATION: JQUERY AJAX & VANILLA API
-     */
     $(document).ready(function() {
-        // --- 1. LIVE COUNTER SYNC (AJAX) ---
-        window.syncPersonnelStats = function() {
-            $('#sync-indicator').removeClass('hidden');
+        // --- 1. UNIFIED DASHBOARD SYNC ---
+        window.syncDashboard = function() {
+            $('#sync-indicator').removeClass('hidden').addClass('flex');
+
             $.ajax({
-                url: '/api/personnel/stats/', // Target API Endpoint
+                // 🚨 Match the path we just fixed in urls.py
+                url: '/api/personnel/stats/', 
                 type: 'GET',
-                dataType: 'json',
                 success: function(data) {
-                    $('#stat-total-assets').text(data.total_assets);
-                    $('#stat-my-tasks').text(data.my_tasks);
-                    $('#stat-alerts').text(data.alerts);
+                    // Update the counters using the exact keys from your function-based view
+                    $('#stat-total-assets').text(data.total_assets_count);
+                    
+                    // Calculate My Tasks using the technician_name from the Serializer
+                    const currentUser = data.user_info.username;
+                    const myTasks = data.recent_maintenance.filter(m => 
+                        m.technician_name === currentUser && m.status !== 'Completed'
+                    ).length;
+                    $('#stat-my-tasks').text(myTasks);
+
+                    // Update alerts count
+                    const openAlerts = data.recent_incidents.filter(i => i.status === 'Open').length;
+                    $('#stat-alerts').text(openAlerts);
+
+                    // Trigger table and chart refreshes
+                    renderIncidentTable(data.recent_incidents);
+                    updateChart(data.recent_incidents);
+                },
+                error: function(xhr) {
+                    console.error("Telemetry Sync Failed. Status:", xhr.status);
                 },
                 complete: function() {
-                    setTimeout(() => $('#sync-indicator').addClass('hidden'), 2000);
+                    setTimeout(() => $('#sync-indicator').fadeOut(), 2000);
                 }
             });
         };
 
-        // --- 2. AJAX SEARCH: DEBOUNCED TABLE FILTERING ---
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
+        // --- 2. TABLE RENDERING LOGIC ---
+        function renderIncidentTable(incidents) {
+            const $tbody = $('#incidentTableBody');
+            if (!incidents || incidents.length === 0) return;
+
+            let html = '';
+            incidents.forEach(inc => {
+                html += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer" onclick="window.location.href='/incidents/'">
+                        <td class="px-6 py-4 font-mono text-slate-400">#${inc.id}</td>
+                        <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${inc.title}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase border">
+                                ${inc.severity}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-black uppercase">
+                                ${inc.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">${inc.formatted_date || 'Mar 03, 2026'}</td>
+                    </tr>`;
+            });
+            $tbody.html(html);
         }
 
-        const handleTableSearch = debounce(function(inputId, tableId) {
-            const query = $(inputId).val();
-            // In a real app, this would hit an API and replace the <tbody> HTML
-            // For now, we simulate by filtering local rows as a fallback
-            const rows = $(tableId).find('tr');
-            rows.each(function() {
-                const text = $(this).text().toLowerCase();
-                $(this).toggle(text.indexOf(query.toLowerCase()) > -1);
+        // --- 3. CHART DYNAMIC UPDATE ---
+        function updateChart(incidents) {
+            if (!window.myTrendChart) return;
+            const counts = {};
+            incidents.forEach(inc => {
+                const d = inc.date_label || 'Today'; 
+                counts[d] = (counts[d] || 0) + 1;
             });
-        }, 300);
+            window.myTrendChart.data.labels = Object.keys(counts);
+            window.myTrendChart.data.datasets[0].data = Object.values(counts);
+            window.myTrendChart.update();
+        }
 
-        $('#incidentAjaxSearch').on('input', () => handleTableSearch('#incidentAjaxSearch', '#incidentTableBody'));
-        $('#assetAjaxSearch').on('input', () => handleTableSearch('#assetAjaxSearch', '#assetTableBody'));
-        $('#taskAjaxSearch').on('input', () => handleTableSearch('#taskAjaxSearch', '#taskTableBody'));
-
-        // Initialize Stats Sync
-        setInterval(syncPersonnelStats, 45000); // Update every 45s
+        // Initialize
+        syncDashboard();
+        setInterval(syncDashboard, 60000); 
     });
 
-    /**
-     * CORE: CHART LOGIC (VANILLA JS)
-     */
+    // --- 4. CHART INITIALIZATION (Outside jQuery Ready) ---
     function initIncidentChart() {
         const chartEl = document.getElementById('incidentTrendChart');
         if (!chartEl) return;
-        
         const ctx = chartEl.getContext('2d');
-        const labels = JSON.parse('{{ chart_labels|safe }}');
-        const dataValues = JSON.parse('{{ chart_values|safe }}');
+        
+        // Fallback for empty chart data
+        const labels = JSON.parse('{{ chart_labels|safe|default:"[]" }}');
+        const dataValues = JSON.parse('{{ chart_values|safe|default:"[]" }}');
         
         if (window.myTrendChart) window.myTrendChart.destroy();
-        
         window.myTrendChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: labels.length ? labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
                 datasets: [{
                     label: 'Incidents',
-                    data: dataValues,
+                    data: dataValues.length ? dataValues : [0,0,0,0,0],
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     borderWidth: 2,
                     fill: true,
-                    tension: 0.4,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#ef4444'
+                    tension: 0.4
                 }]
             },
             options: {
@@ -280,7 +308,7 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                    x: { display: false },
                     y: { display: false, beginAtZero: true }
                 }
             }
@@ -288,6 +316,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', initIncidentChart);
-    document.addEventListener('themeChanged', initIncidentChart);
 </script>
+
 {% endblock %}

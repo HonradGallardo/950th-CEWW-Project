@@ -137,28 +137,44 @@
             $('#sync-status').removeClass('hidden');
 
             $.ajax({
-                url: '/api/dashboard/strategic-stats/', // Assumes you have this API view
+                // 🚨 FIX 1: Point to the actual URL defined in your urls.py
+                url: '/api/dashboard-stats/', 
                 type: 'GET',
                 dataType: 'json',
                 success: function(data) {
-                    // 1. Update Counter Widgets via jQuery
-                    $('#api-total-assets').fadeOut(300, function() { $(this).text(data.total_assets).fadeIn(300); });
-                    $('#api-readiness').text(data.readiness_rate.toFixed(1) + '%');
+                    // 1. Update Strategic Counters
+                    $('#api-total-assets').text(data.total_assets);
+                    
+                    // Calculate readiness: (Total - In Maintenance) / Total
+                    let readiness = data.total_assets > 0 
+                        ? ((data.total_assets - data.maintenance_count) / data.total_assets * 100) 
+                        : 0;
+                    $('#api-readiness').text(readiness.toFixed(1) + '%');
+                    
                     $('#api-incidents').text(data.open_incidents);
-                    $('#api-critical').text(data.critical_threats);
+                    
+                    // Map Critical threats from the severity lists
+                    let critIdx = data.severity_labels.indexOf('Critical');
+                    let critCount = critIdx !== -1 ? data.severity_totals[critIdx] : 0;
+                    $('#api-critical').text(critCount);
 
-                    // 2. Update Charts using Vanilla loop
+                    // 2. Update Charts using the specific keys from your APIView
                     if (charts['assetChart']) {
-                        charts['assetChart'].data.datasets[0].data = data.asset_distribution;
+                        charts['assetChart'].data.labels = data.asset_labels;
+                        charts['assetChart'].data.datasets[0].data = data.asset_totals;
                         charts['assetChart'].update();
                     }
                     if (charts['severityChart']) {
-                        charts['severityChart'].data.datasets[0].data = data.severity_stats;
+                        charts['severityChart'].data.labels = data.severity_labels;
+                        charts['severityChart'].data.datasets[0].data = data.severity_totals;
                         charts['severityChart'].update();
                     }
                 },
                 complete: function() {
                     setTimeout(() => $('#sync-status').addClass('hidden'), 2000);
+                },
+                error: function(err) {
+                    console.error("Telemetry Sync Failed:", err);
                 }
             });
         };

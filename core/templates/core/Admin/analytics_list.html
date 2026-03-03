@@ -37,12 +37,12 @@
             <div>
                 <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Next Month AI Projection</h3>
                 <p class="text-white text-3xl font-black">
-                    <span id="predicted-count">{{ predicted_incidents }}</span>
+                    <span id="predicted-count">--</span>
                     <span class="text-xs text-slate-400 font-normal uppercase tracking-wider">Expected Attacks</span>
                 </p>
                 <div class="mt-4 flex items-center space-x-2">
-                    <span class="text-[9px] font-bold px-2 py-1 rounded {% if confidence_level == 'High' %}bg-emerald-500/20 text-emerald-400{% else %}bg-amber-500/20 text-amber-400{% endif %} uppercase">
-                        Confidence: {{ confidence_level }}
+                    <span id="confidence-badge" class="text-[9px] font-bold px-2 py-1 rounded uppercase bg-slate-800 text-slate-400">
+                        Analyzing...
                     </span>
                     <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter italic">Based on 90-day trend</span>
                 </div>
@@ -52,33 +52,156 @@
             </div>
         </div>
 
-        <div class="p-6 rounded-2xl border-2 transition-all advisory-card {% if predicted_incidents > current_month_total %}border-red-100 bg-red-50/30 dark-mode-red-advisory{% else %}border-emerald-100 bg-emerald-50/30 dark-mode-green-advisory{% endif %} flex flex-col justify-center">
-            <h4 class="text-[10px] font-black {% if predicted_incidents > current_month_total %}text-red-500{% else %}text-emerald-600{% endif %} uppercase tracking-widest mb-1">Readiness Advisory</h4>
-            <p id="advisory-text" class="text-slate-800 dark-mode-text font-bold text-sm leading-tight">
-                {% if predicted_incidents > current_month_total %}
-                    Trend is rising. Increase perimeter checks and asset maintenance immediately.
-                {% else %}
-                    System activity is stabilizing. Maintain current security protocols.
-                {% endif %}
-            </p>
+        <div id="advisory-container" class="p-6 rounded-2xl border-2 transition-all advisory-card border-slate-100 bg-slate-50/30 flex flex-col justify-center">
+            <h4 id="advisory-label" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Readiness Advisory</h4>
+            <p id="advisory-text" class="text-slate-800 dark-mode-text font-bold text-sm leading-tight">Awaiting telemetry synchronization...</p>
         </div>
     </div>
 
     <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm transition-all registration-card">
         <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Risk Profile by Asset Type</h3>
         <div id="asset-type-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
-            {% for entry in asset_types %}
-            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 info-badge transition-all">
-                <p class="text-[9px] font-black text-slate-400 uppercase">{{ entry.assets_type }}</p>
-                <div class="flex items-end justify-between mt-2">
-                    <span class="text-xl font-black text-slate-800 dark-mode-text">{{ entry.total }}</span>
-                    <span class="text-[9px] font-bold text-slate-400">Units</span>
-                </div>
             </div>
-            {% endfor %}
-        </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    let assetChartObj, incidentChartObj;
+
+    // Helper: Initialize Charts
+    function initCharts(data) {
+        const isDarkMode = $('body').hasClass('dark-mode');
+        const chartTextColor = isDarkMode ? '#94a3b8' : '#64748b';
+        const chartGridColor = isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+        Chart.defaults.color = chartTextColor;
+        Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui';
+
+        // 1. Asset Restoration Chart
+        const assetCtx = document.getElementById('assetChart');
+        if (assetChartObj) assetChartObj.destroy();
+        assetChartObj = new Chart(assetCtx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Fixed (Completed)',
+                        data: data.fixed_assets,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true, tension: 0.4, borderWidth: 3
+                    },
+                    {
+                        label: 'Still In Progress',
+                        data: data.pending_assets,
+                        borderColor: '#f59e0b',
+                        borderDash: [5, 5],
+                        tension: 0.4, borderWidth: 2
+                    }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: {
+                    y: { grid: { color: chartGridColor } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, usePointStyle: true } } } 
+            }
+        });
+
+        // 2. Incident Volume Chart
+        const incidentCtx = document.getElementById('incidentChart');
+        if (incidentChartObj) incidentChartObj.destroy();
+        incidentChartObj = new Chart(incidentCtx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'New Reports',
+                        data: data.new_incidents,
+                        backgroundColor: '#ef4444',
+                        borderRadius: 5
+                    },
+                    {
+                        label: 'Resolved',
+                        data: data.resolved_incidents,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: chartGridColor } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, usePointStyle: true } } } 
+            }
+        });
+    }
+
+    // 3. API Synchronization
+    window.refreshAnalytics = function() {
+        $.ajax({
+            url: '/api/monitoring-data/', 
+            type: 'GET',
+            success: function(data) {
+                // Initialize/Refresh Charts
+                initCharts(data);
+
+                // Update AI Projection
+                $('#predicted-count').text(data.predicted_incidents);
+                const confBadge = $('#confidence-badge');
+                confBadge.text(`Confidence: ${data.confidence_level}`)
+                         .removeClass('bg-slate-800 text-slate-400')
+                         .addClass(data.confidence_level === 'High' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400');
+
+                // Update Advisory
+                const advisoryCont = $('#advisory-container');
+                const advisoryText = $('#advisory-text');
+                const advisoryLabel = $('#advisory-label');
+                
+                if (data.is_rising) {
+                    advisoryCont.removeClass('border-emerald-100 bg-emerald-50/30').addClass('border-red-100 bg-red-50/30');
+                    advisoryLabel.addClass('text-red-500').removeClass('text-emerald-600');
+                    advisoryText.text('Trend is rising. Increase perimeter checks and asset maintenance immediately.');
+                } else {
+                    advisoryCont.addClass('border-emerald-100 bg-emerald-50/30').removeClass('border-red-100 bg-red-50/30');
+                    advisoryLabel.removeClass('text-red-500').addClass('text-emerald-600');
+                    advisoryText.text('System activity is stabilizing. Maintain current security protocols.');
+                }
+
+                // Update Risk Profile Grid
+                let gridHtml = '';
+                data.asset_types.forEach(entry => {
+                    gridHtml += `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 info-badge transition-all">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">${entry.assets_type}</p>
+                        <div class="flex items-end justify-between mt-2">
+                            <span class="text-xl font-black text-slate-800 dark-mode-text">${entry.total}</span>
+                            <span class="text-[9px] font-bold text-slate-400">Units</span>
+                        </div>
+                    </div>`;
+                });
+                $('#asset-type-grid').html(gridHtml);
+            },
+            error: function(e) { console.error("Analytics Sync Failed", e); }
+        });
+    };
+
+    // Initial Trigger
+    refreshAnalytics();
+    // Sync every 2 minutes
+    setInterval(refreshAnalytics, 120000);
+});
+</script>
 
 <style>
     body.dark-mode .content-bg { background-color: #0f172a !important; }
@@ -86,113 +209,7 @@
     body.dark-mode .dark-mode-text { color: #f8fafc !important; }
     body.dark-mode .dark-mode-subtext { color: #64748b !important; }
     body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; }
-    body.dark-mode .dark-mode-red-advisory { background-color: rgba(239, 68, 68, 0.1) !important; border-color: rgba(239, 68, 68, 0.2) !important; }
-    body.dark-mode .dark-mode-green-advisory { background-color: rgba(16, 185, 129, 0.1) !important; border-color: rgba(16, 185, 129, 0.2) !important; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 </style>
-
-<script>
-    $(document).ready(function() {
-        let assetChartObj, incidentChartObj;
-        const labels = {{ labels|safe }};
-        const isDarkMode = $('body').hasClass('dark-mode');
-        const chartTextColor = isDarkMode ? '#94a3b8' : '#64748b';
-        const chartGridColor = isDarkMode ? '#1f2937' : '#f1f5f9';
-
-        Chart.defaults.color = chartTextColor;
-        Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui';
-
-        // 1. ASSET CHART (JQUERY/CHART.JS)
-        assetChartObj = new Chart(document.getElementById('assetChart'), {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Fixed (Completed)',
-                        data: {{ fixed_assets|safe }},
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 3
-                    },
-                    {
-                        label: 'Still In Progress',
-                        data: {{ pending_assets|safe }},
-                        borderColor: '#f59e0b',
-                        borderDash: [5, 5],
-                        tension: 0.4,
-                        borderWidth: 2
-                    }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, usePointStyle: true } } } }
-        });
-
-        // 2. INCIDENT CHART (JQUERY/CHART.JS)
-        incidentChartObj = new Chart(document.getElementById('incidentChart'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'New Reports',
-                        data: {{ new_incidents|safe }},
-                        backgroundColor: '#ef4444',
-                        borderRadius: 5
-                    },
-                    {
-                        label: 'Resolved',
-                        data: {{ resolved_incidents|safe }},
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 5
-                    }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, usePointStyle: true } } } }
-        });
-
-        /**
-         * 3. JQUERY AJAX: LIVE DATA REFRESH
-         * Fetches updated analytics data via API
-         */
-        window.refreshAnalytics = function() {
-            $.ajax({
-                url: '/api/core/incidents/',
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    // Update Line Chart
-                    assetChartObj.data.datasets[0].data = data.fixed_assets;
-                    assetChartObj.data.datasets[1].data = data.pending_assets;
-                    assetChartObj.update();
-
-                    // Update Bar Chart
-                    incidentChartObj.data.datasets[0].data = data.new_incidents;
-                    incidentChartObj.data.datasets[1].data = data.resolved_incidents;
-                    incidentChartObj.update();
-                    
-                    // Update AI Projection
-                    $('#predicted-count').text(data.predicted_incidents);
-                }
-            });
-        };
-
-        /**
-         * 4. VANILLA FETCH ALTERNATIVE (Commented Reference)
-         */
-        /*
-        async function fetchAnalyticsVanilla() {
-            const response = await fetch('/api/monitoring-data/');
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Vanilla Fetch Sync Success", data);
-            }
-        }
-        */
-
-        // Sync data every 5 minutes
-        setInterval(refreshAnalytics, 300000);
-    });
-</script>
 {% endblock %}

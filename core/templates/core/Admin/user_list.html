@@ -155,7 +155,7 @@ $(document).ready(function() {
     // 1. Stats Sync
     window.refreshUserTable = function() {
         $.ajax({
-            url: '/api/core/users/stats/', 
+            url: '/api/dashboard-stats/', 
             type: 'GET',
             success: function(data) { $('#api-indicator').removeClass('hidden'); },
             error: function() { console.log("Stats API Offline"); }

@@ -67,68 +67,17 @@
                                 <th class="px-4 sm:px-6 py-4 w-24 sm:w-40 text-right">Time</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
-                            {% for inc in incidents %}
-                            <tr onclick="previewIncident('{{ inc.id }}', '{{ inc.title|escapejs }}', '{{ inc.severity }}', '{{ inc.status }}', '{{ inc.description|escapejs }}', '{{ inc.actions_taken|escapejs }}', '{{ inc.date|date:'d-m-Y H:i' }}', '{% url 'delete_incident' inc.id %}', '{{ inc.reported_by.username|default:'System'|escapejs }}')" 
-                                class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700">
-                                <td class="px-4 sm:px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="flex-shrink-0 w-4 text-center">
-                                            {% if inc.severity == 'Critical' %}<i class="fas fa-biohazard text-red-500 text-xxs"></i>
-                                            {% elif inc.severity == 'High' %}<i class="fas fa-exclamation-triangle text-orange-500 text-xxs"></i>
-                                            {% elif inc.severity == 'Medium' %}<i class="fas fa-exclamation-circle text-amber-500 text-xxs"></i>
-                                            {% else %}<i class="fas fa-shield-halved text-emerald-500 text-xxs"></i>{% endif %}
-                                        </div>
-                                        <div class="flex flex-col min-w-0">
-                                            <span class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-100 truncate">{{ inc.title }}</span>
-                                            <span class="sm:hidden text-[9px] font-black uppercase {% if inc.severity == 'Critical' %}text-red-500{% elif inc.severity == 'High' %}text-orange-500{% else %}text-slate-400{% endif %}">{{ inc.severity }}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="hidden sm:table-cell px-4 py-4 text-center">
-                                    <span class="inline-block w-full py-1 rounded-md border text-[9px] font-black uppercase
-                                        {% if inc.severity == 'Critical' %}bg-red-50 dark:bg-red-900/20 text-red-600 border-red-600
-                                        {% elif inc.severity == 'High' %}bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-600
-                                        {% elif inc.severity == 'Medium' %}bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-600
-                                        {% else %}bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-600{% endif %}">
-                                        {{ inc.severity }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-4 text-center">
-                                    <p class="text-[9px] sm:text-xxs font-black uppercase tracking-tighter {% if inc.status == 'Open' %}text-red-500{% elif inc.status == 'Investigating' %}text-orange-500{% else %}text-emerald-500{% endif %}">
-                                        {{ inc.status }}
-                                    </p>
-                                </td>
-                                <td class="hidden md:table-cell px-4 py-4 text-center">
-                                    <span class="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase truncate">
-                                        {{ inc.reported_by.username|default:"System" }}
-                                    </span>
-                                </td>
-                                <td class="px-4 sm:px-6 py-4 text-[9px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-bold text-right whitespace-nowrap">
-                                    {{ inc.date|date:"d M, H:i" }}
-                                </td>
-                            </tr>
-                            {% endfor %}
+                        <tbody id="incidentTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <tr><td colspan="5" class="p-10 text-center text-slate-400 italic"><i class="fas fa-spinner fa-spin mr-2"></i> Fetching live incidents...</td></tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="px-4 py-4 sm:px-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between shrink-0">
-                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">
-                        Page {{ incidents.number }} / {{ incidents.paginator.num_pages }}
+                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">
+                        Showing 0-0 of 0
                     </span>
-                    <div class="flex items-center gap-2">
-                        {% if incidents.has_previous %}
-                            <a href="?page={{ incidents.previous_page_number }}" class="p-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition shadow-sm">
-                                <i class="fas fa-chevron-left text-[10px]"></i>
-                            </a>
-                        {% endif %}
-                        {% if incidents.has_next %}
-                            <a href="?page={{ incidents.next_page_number }}" class="p-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-blue-600 hover:text-white transition shadow-sm">
-                                <i class="fas fa-chevron-right text-[10px]"></i>
-                            </a>
-                        {% endif %}
-                    </div>
+                    <div class="flex items-center gap-2" id="paginationControls"></div>
                 </div>
             </div>
         </div>
@@ -153,13 +102,9 @@
                             <div id="view_severity_badge"></div>
                             
                             {% if not is_commander %}
-                            <form id="delete-incident-form" method="POST" action="" class="hidden">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="delete">
-                                <button type="button" onclick="openDeleteModal()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-sm group">
-                                    <i class="fas fa-trash-alt text-xs group-hover:scale-110 transition-transform"></i>
-                                </button>
-                            </form>
+                            <button type="button" id="deleteIncidentIconBtn" onclick="openDeleteModal()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-sm group">
+                                <i class="fas fa-trash-alt text-xs group-hover:scale-110 transition-transform"></i>
+                            </button>
                             {% endif %}
                         </div>
                     </div>
@@ -217,7 +162,7 @@
 
                     {% if not is_commander %}
                     <div class="mt-4 pt-4 border-t border-slate-50 dark:border-slate-700 flex gap-3 shrink-0">
-                        <a id="editLink" href="#" class="w-full px-4 py-3 bg-slate-900 dark:bg-slate-700 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center">
+                        <a id="editLink" href="#" class="w-full px-4 py-3 bg-slate-900 dark:bg-slate-700 hover:bg-blue-600 text-white rounded-xl text-xs font-black transition text-center flex items-center justify-center shadow-lg">
                             Modify Report <i class="fas fa-external-link-alt ml-2"></i>
                         </a>
                     </div>
@@ -230,23 +175,175 @@
 
 <script>
 /**
- * IMPLEMENTATION: JQUERY AJAX & VANILLA API SYNC
+ * IMPLEMENTATION: JQUERY AJAX & API SYNC FOR INCIDENTS
  */
 const IS_COMMANDER = {{ is_commander|yesno:"true,false" }};
+let allIncidents = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+let currentOpenIncidentId = null;
 
-// --- MODAL LOGIC ---
-const $deleteModal = $('#deleteModal');
-function openDeleteModal() {
-    $deleteModal.removeClass('hidden');
-    $('body').css('overflow', 'hidden');
-}
-function closeDeleteModal() {
-    $deleteModal.addClass('hidden');
-    $('body').css('overflow', 'auto');
+// --- 1. API FETCH & INITIALIZATION ---
+function loadIncidents() {
+    $.ajax({
+        url: '/api/incidents/',
+        type: 'GET',
+        success: function(data) {
+            // Sort by Date Descending (Newest first)
+            allIncidents = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            initTable();
+        },
+        error: function(err) {
+            console.error("Failed to fetch incidents:", err);
+            $('#incidentTableBody').html('<tr><td colspan="5" class="p-10 text-center text-red-400 italic">Error connecting to telemetry server.</td></tr>');
+        }
+    });
 }
 
-// --- INCIDENT PREVIEW & API LOGIC ---
-function previewIncident(id, title, severity, status, desc, actions, date, deleteUrl, reporter) {
+// --- 2. TABLE PAGINATION & RENDERING ---
+function initTable() {
+    const totalEntries = allIncidents.length;
+    const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = Math.min(start + rowsPerPage, totalEntries);
+    const pageData = allIncidents.slice(start, end);
+
+    renderTableRows(pageData);
+    renderPagination(totalPages);
+    
+    $('#pageInfo').text(`Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries}`);
+}
+
+function renderTableRows(incidents) {
+    const $tbody = $('#incidentTableBody');
+    let html = '';
+
+    if (incidents.length === 0) {
+        $tbody.html('<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">No active incidents found.</td></tr>');
+        return;
+    }
+
+    // 🚨 ADDED: A robust string sanitizer to prevent line breaks and quotes from destroying the onclick attribute
+    const escapeJS = (str) => {
+        if (!str) return "";
+        return String(str)
+            .replace(/\\/g, "\\\\")  // Escape backslashes
+            .replace(/'/g, "\\'")    // Escape single quotes for JS
+            .replace(/"/g, "&quot;") // Escape double quotes for HTML
+            .replace(/\n/g, "\\n")   // Escape newlines (The main culprit!)
+            .replace(/\r/g, "\\r");  // Escape carriage returns
+    };
+
+    incidents.forEach(inc => {
+        // Prepare display parameters
+        let sevIcon, sevColor, sevBadge, statusColor;
+        
+        // Severity Logic
+        if (inc.severity === 'Critical') {
+            sevIcon = 'fa-biohazard'; sevColor = 'text-red-500'; 
+            sevBadge = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-600';
+        } else if (inc.severity === 'High') {
+            sevIcon = 'fa-exclamation-triangle'; sevColor = 'text-orange-500'; 
+            sevBadge = 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-600';
+        } else if (inc.severity === 'Medium') {
+            sevIcon = 'fa-exclamation-circle'; sevColor = 'text-amber-500'; 
+            sevBadge = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-600';
+        } else {
+            sevIcon = 'fa-shield-halved'; sevColor = 'text-emerald-500'; 
+            sevBadge = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-600';
+        }
+
+        // Status Logic
+        if (inc.status === 'Open') statusColor = 'text-red-500';
+        else if (inc.status === 'Investigating') statusColor = 'text-orange-500';
+        else statusColor = 'text-emerald-500';
+
+        // Date Formatting
+        let formattedDate = 'N/A';
+        if (inc.date) {
+            const d = new Date(inc.date);
+            formattedDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ', ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // 🚨 UPDATED: Apply the new escapeJS function to all text fields
+        const safeTitle = escapeJS(inc.title);
+        const safeDesc = escapeJS(inc.description || "No description provided.");
+        const safeActions = escapeJS(inc.actions_taken || "No actions logged yet.");
+        const safeReporter = escapeJS(inc.reported_by_name || "System");
+
+        // Generate Row
+        html += `
+        <tr onclick="previewIncident({
+                id: '${inc.id}',
+                title: '${safeTitle}',
+                severity: '${inc.severity}',
+                status: '${inc.status}',
+                desc: '${safeDesc}',
+                actions: '${safeActions}',
+                date: '${formattedDate}',
+                reporter: '${safeReporter}'
+            })" 
+            class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700">
+            
+            <td class="px-4 sm:px-6 py-4">
+                <div class="flex items-center gap-2">
+                    <div class="flex-shrink-0 w-4 text-center">
+                        <i class="fas ${sevIcon} ${sevColor} text-xxs"></i>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-100 truncate">${inc.title}</span>
+                        <span class="sm:hidden text-[9px] font-black uppercase ${sevColor}">${inc.severity}</span>
+                    </div>
+                </div>
+            </td>
+            
+            <td class="hidden sm:table-cell px-4 py-4 text-center">
+                <span class="inline-block w-full py-1 rounded-md border text-[9px] font-black uppercase ${sevBadge}">
+                    ${inc.severity}
+                </span>
+            </td>
+            
+            <td class="px-4 py-4 text-center">
+                <p class="text-[9px] sm:text-xxs font-black uppercase tracking-tighter ${statusColor}">
+                    ${inc.status}
+                </p>
+            </td>
+            
+            <td class="hidden md:table-cell px-4 py-4 text-center">
+                <span class="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase truncate">
+                    ${safeReporter}
+                </span>
+            </td>
+            
+            <td class="px-4 sm:px-6 py-4 text-[9px] sm:text-[11px] text-slate-400 dark:text-slate-500 font-bold text-right whitespace-nowrap">
+                ${formattedDate}
+            </td>
+        </tr>`;
+    });
+
+    $tbody.html(html);
+}
+
+function renderPagination(totalPages) {
+    const container = document.getElementById('paginationControls');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+    
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-500 hover:bg-slate-50'}`;
+        btn.onclick = () => { currentPage = i; initTable(); };
+        container.appendChild(btn);
+    }
+}
+
+// --- 3. PREVIEW PANEL LOGIC ---
+function previewIncident(data) {
+    currentOpenIncidentId = data.id;
+
     // UI Visibility
     $('#emptyState').addClass('hidden');
     $('#detailContent').removeClass('hidden');
@@ -255,65 +352,100 @@ function previewIncident(id, title, severity, status, desc, actions, date, delet
         $('#incidentDetailPanel')[0].scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Assign hidden ID
-    $('#incident_id').val(id);
+    // Assign hidden ID for chat
+    $('#incident_id').val(data.id);
 
     // Populate Fields
-    $('#view_id').text("ID: INC-" + String(id).padStart(3, '0'));
-    $('#view_title').text(title);
-    $('#view_status').text(status);
-    $('#view_reporter').text(reporter);
-    $('#view_date').text(date);
-    $('#view_description').text(desc || "No description provided.");
-    $('#view_actions').text(actions || "No actions logged.");
+    $('#view_id').text("ID: INC-" + String(data.id).padStart(3, '0'));
+    $('#view_title').text(data.title);
+    $('#view_status').text(data.status);
+    $('#view_reporter').text(data.reporter);
+    $('#view_date').text(data.date);
+    $('#view_description').text(data.desc);
+    
+    // Actions mapping not passed from DRF serializer currently, fallback text:
+    $('#view_actions').text(data.actions);
     
     // Update Action Link
-    if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${id}/`);
+    if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${data.id}/`);
 
     // Dynamic Badge Color
     const $badge = $('#view_severity_badge');
     let colorClass = '';
-    if (severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100';
-    else if (severity === 'High') colorClass = 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-100';
-    else if (severity === 'Medium') colorClass = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100';
+    if (data.severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100';
+    else if (data.severity === 'High') colorClass = 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-100';
+    else if (data.severity === 'Medium') colorClass = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-100';
     else colorClass = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100';
-    $badge.html(`<span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${colorClass}">${severity}</span>`);
+    $badge.html(`<span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${colorClass}">${data.severity}</span>`);
 
     // Manage Delete Access
-    const $deleteForm = $('#delete-incident-form');
-    if (!IS_COMMANDER && $deleteForm.length) {
-        if (status === 'Resolved' && deleteUrl) {
-            $deleteForm.removeClass('hidden');
-            $('#confirmDeleteBtn').off('click').on('click', function() {
-                $deleteForm.attr('action', deleteUrl).submit();
-            });
+    if (!IS_COMMANDER) {
+        if (data.status === 'Resolved') {
+            $('#deleteIncidentIconBtn').removeClass('hidden');
         } else { 
-            $deleteForm.addClass('hidden'); 
+            $('#deleteIncidentIconBtn').addClass('hidden'); 
         }
     }
 
-    // API: Fetch Logs via AJAX
-    fetchLogs(id);
+    // Fetch Discussion Logs
+    fetchLogs(data.id);
 }
 
-// VANILLA FETCH FOR LOGS
+// --- 4. DELETE MODAL API INTEGRATION ---
+const $deleteModal = $('#deleteModal');
+
+function openDeleteModal() {
+    $deleteModal.removeClass('hidden');
+    $('body').css('overflow', 'hidden');
+}
+
+function closeDeleteModal() {
+    $deleteModal.addClass('hidden');
+    $('body').css('overflow', 'auto');
+}
+
+$('#confirmDeleteBtn').on('click', function() {
+    if (!currentOpenIncidentId) return;
+    
+    // DELETE request to the DRF API
+    $.ajax({
+        url: `/api/incidents/${currentOpenIncidentId}/`,
+        type: 'DELETE',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        success: function() {
+            closeDeleteModal();
+            loadIncidents(); // Refresh the table
+            $('#detailContent').addClass('hidden'); // Hide the details panel
+            $('#emptyState').removeClass('hidden');
+        },
+        error: function(err) {
+            console.error("Failed to delete incident", err);
+            alert("Deletion failed. Ensure you have the right permissions.");
+        }
+    });
+});
+
+// --- 5. LOG/CHAT LOGIC (Preserved & Hooked to View) ---
+// --- 5. LOG/CHAT LOGIC (API SYNCED) ---
 async function fetchLogs(id) {
     const $container = $('#chat-container');
     $container.html('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Synchronizing Logs...</p>');
 
     try {
-        const response = await fetch(`/incidents/${id}/comments/`, {
+        const response = await fetch(`/api/incident-comments/?incident=${id}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
+        
+        if (!response.ok) throw new Error("API Route missing");
         const data = await response.json();
         
         $container.empty();
-        if (!data.comments || data.comments.length === 0) {
+        if (data.length === 0) {
             $container.append('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase">No logs recorded</p>');
             return;
         }
 
-        data.comments.forEach(c => {
+        data.forEach(c => {
             const sideClass = c.is_current_user ? 'items-end' : 'items-start';
             const bubbleClass = c.is_current_user 
                 ? 'bg-blue-600 text-white rounded-l-xl rounded-tr-xl' 
@@ -323,18 +455,24 @@ async function fetchLogs(id) {
             $container.append(`
                 <div class="flex flex-col ${sideClass}">
                     <div class="max-w-[90%] ${bubbleClass} p-3 shadow-sm">
-                        <p class="text-[9px] font-black ${authorClass} uppercase mb-1">${c.author} • ${c.created_at}</p>
+                        <p class="text-[9px] font-black ${authorClass} uppercase mb-1">${c.author_name} • ${c.formatted_time}</p>
                         <p class="text-xs font-medium">${c.message}</p>
                     </div>
                 </div>
             `);
         });
         $container.scrollTop($container[0].scrollHeight);
-    } catch (e) { console.error("Telemetry Error", e); }
+    } catch (e) { 
+        console.error("Telemetry Error", e); 
+        $container.html('<p class="text-center py-10 text-[10px] text-red-400 font-bold uppercase">Failed to load logs</p>');
+    }
 }
 
-// JQUERY AJAX FOR LOG SUBMISSION
 $(document).ready(function() {
+    loadIncidents(); // Initial Load
+    setInterval(loadIncidents, 30000); // Live Refresh every 30s
+
+    // POST TO DRF API
     $('#chat-form').on('submit', function(e) {
         e.preventDefault();
         const $msg = $('#chat-message');
@@ -342,21 +480,26 @@ $(document).ready(function() {
         if (!$msg.val().trim() || !id) return;
 
         $.ajax({
-            url: "{% url 'incident_list' %}", // Current view handles POST comments
+            url: "/api/incident-comments/", 
             type: "POST",
-            data: {
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            data: JSON.stringify({
                 message: $msg.val(),
-                incident_id: id,
-                csrfmiddlewaretoken: "{{ csrf_token }}"
-            },
+                incident: parseInt(id) 
+            }),
             success: function() {
-                $msg.val('');
-                fetchLogs(id); // Reload log container
+                $msg.val(''); // Clear the input box
+                fetchLogs(id); // Reload logs
             },
-            error: function() { alert("Transmission Failure: Terminal disconnected."); }
+            error: function(err) { 
+                console.error("API Rejected Log:", err.responseText);
+                alert("Transmission Failure: Terminal disconnected."); 
+            }
         });
     });
 });
+
 </script>
 
 <style>

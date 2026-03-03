@@ -192,21 +192,35 @@
 $(document).ready(function() {
     const $form = $('#profileUpdateForm');
     const $btn = $('#updateProfileBtn');
+    $.get('/api/dashboard-stats/', function(data) {
+    $('.text-blue-400').text(data.open_incidents); 
+    });
 
     // --- 1. JQUERY AJAX: ASYNC PROFILE UPDATE ---
     $form.on('submit', function(e) {
-        e.preventDefault();
+        e.preventDefault(); // Stop the page from refreshing
+
+        // 🚨 PLACE THE VALIDATION HERE 🚨
+        const emailValue = $('#email_input').val();
+        const originalText = $btn.html();
+
+        // Simple check to prevent saving a completely broken email string
+        if (emailValue && !emailValue.includes('@')) {
+            alert("Invalid Email Format. Please use a valid email or leave it blank.");
+            $btn.prop('disabled', false).html(originalText);
+            return; // This stops the AJAX call from ever happening
+        }
 
         // Prepare multi-part form data for image upload
         const formData = new FormData(this);
-        const originalText = $btn.html();
+        const userId = "{{ user.id }}"; // Ensure this is defined
 
         // UI Loading State
         $btn.prop('disabled', true).html('<i class="fas fa-sync fa-spin mr-2"></i> SAVING...');
 
         $.ajax({
-            url: window.location.href, // Current Profile URL
-            type: 'POST',
+            url: `/api/users/${userId}/`, 
+            type: 'PATCH',
             data: formData,
             processData: false, // Required for FormData
             contentType: false, // Required for FormData

@@ -98,9 +98,67 @@
         </div>
         
         <p class="text-center text-slate-400 text-[10px] mt-8 uppercase tracking-widest">
-            &copy; 2026 950th Communications Engineering & WiFi Wing
+            &copy; 950th Cyberspace and Electronic Warfare Wing
         </p>
     </div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#loginForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const $form = $(this);
+            const $btn = $form.find('button[type="submit"]');
+            const $card = $('#loginCard');
+            const originalBtnText = $btn.html();
+            
+            // 1. Enter Secure Processing State
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Authenticating...');
+            $card.addClass('opacity-75 pointer-events-none');
+
+            $.ajax({
+                url: "{% url 'login' %}", 
+                type: "POST",
+                data: $form.serialize(),
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                success: function(response) {
+                    // --- 🚀 FUTURE MFA HOOK ---
+                    if (response.mfa_required) {
+                        handleMFAStep(response);
+                        return;
+                    }
+
+                    // Success: Redirect to role-based dashboard
+                    window.location.href = response.redirect_url || "{% url 'role_redirect' %}";
+                },
+                error: function(xhr) {
+                    // 2. Error Feedback
+                    $btn.prop('disabled', false).html(originalBtnText);
+                    $card.removeClass('opacity-75 pointer-events-none');
+                    
+                    // Shake effect for feedback
+                    $card.addClass('animate-bounce');
+                    setTimeout(() => $card.removeClass('animate-bounce'), 500);
+
+                    // Extract error message from JSON if available
+                    let errorMsg = "Authentication Failed: Check credentials.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    
+                    alert(errorMsg);
+                }
+            });
+        });
+
+        // 🛡️ MOCK MFA HANDLER (FOR FUTURE INTEGRATION)
+        function handleMFAStep(data) {
+            // This is where you would hide the password field 
+            // and show an OTP input field in the future.
+            console.log("MFA required for user:", data.user);
+        }
+    });
+</script>
 
 </body>
 </html>

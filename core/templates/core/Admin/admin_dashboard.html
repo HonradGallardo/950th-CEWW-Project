@@ -10,19 +10,19 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 my-6">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Total Assets</p>
-            <div id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</div>
+            <div id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">--</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-green-500/70 text-[10px] font-black mb-1 tracking-widest uppercase">Assigned</p>
-            <div id="stat-assigned-assets" class="text-3xl font-black text-green-600">{{ assigned_assets|default:"0" }}</div>
+            <div id="stat-assigned-assets" class="text-3xl font-black text-green-600">--</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Maintenance</p>
-            <div id="stat-maintenance-count" class="text-3xl font-black text-slate-800 dark:text-white">{{ maintenance_assets_count|default:"0" }}</div>
+            <div id="stat-maintenance-count" class="text-3xl font-black text-slate-800 dark:text-white">--</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-red-400 text-[10px] font-black mb-1 tracking-widest uppercase">Open Incidents</p>
-            <div id="stat-open-incidents" class="text-3xl font-black text-red-600">{{ open_incidents_count|default:"0" }}</div>
+            <div id="stat-open-incidents" class="text-3xl font-black text-red-600">--</div>
         </div>
     </div>
 
@@ -52,19 +52,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-slate-700" id="maintenanceTableBody">
-                        {% for maintenance in recent_maintenance %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{{ maintenance.asset.assets_name }}</td>
-                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400">{{ maintenance.technician.username }}</td>
-                            <td class="px-6 py-4 text-right">
-                                <span class="text-[10px] font-black uppercase tracking-wider {% if maintenance.status == 'Completed' %}text-green-500{% elif maintenance.status == 'In Progress' %}text-orange-400{% else %}text-slate-400{% endif %}">
-                                    {{ maintenance.status|upper }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records found.</td></tr>
-                        {% endfor %}
+                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">Synchronizing...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -84,15 +72,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
-                        {% for incident in open_incidents %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{{ incident.title }}</td>
-                            <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider {% if incident.severity == 'Critical' %} text-red-600{% elif incident.severity == 'High' %} text-slate-800 dark:text-slate-200{% else %} text-slate-400 {% endif %}">{{ incident.severity|upper }}</span></td>
-                            <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents reported.</td></tr>
-                        {% endfor %}
+                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">Synchronizing...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -104,22 +84,24 @@
     document.addEventListener('DOMContentLoaded', function() {
         let assetChart, incidentChart;
 
-        function initCharts() {
+        // Initialize/Update Charts
+        function updateCharts(data) {
             const isDark = document.body.classList.contains('dark-mode');
             const textColor = isDark ? '#f1f5f9' : '#94a3b8';
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(148, 163, 184, 0.1)';
 
+            // 1. Asset Bar Chart
             const assetCtx = document.getElementById('adminAssetChart');
             if (assetCtx) {
                 if (assetChart) assetChart.destroy();
                 assetChart = new Chart(assetCtx, {
                     type: 'bar',
                     data: {
-                        labels: {{ asset_labels|safe|default:"['Laptop', 'PC', 'Router', 'Server']" }},
+                        labels: data.asset_labels,
                         datasets: [{
-                            data: {{ asset_totals|safe|default:"[0, 0, 0, 0]" }},
+                            data: data.asset_totals,
                             backgroundColor: ['#3b82f6', '#818cf8', '#34d399', '#fbbf24'],
-                            borderRadius: 2,
+                            borderRadius: 4,
                             barThickness: 25
                         }]
                     },
@@ -127,22 +109,23 @@
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            y: { beginAtZero: true, grid: { color: gridColor, drawBorder: false }, ticks: { color: textColor } },
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
                             x: { grid: { display: false }, ticks: { color: textColor } }
                         }
                     }
                 });
             }
 
+            // 2. Incident Pie Chart
             const pieCtx = document.getElementById('adminIncidentPie');
             if (pieCtx) {
                 if (incidentChart) incidentChart.destroy();
                 incidentChart = new Chart(pieCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: {{ severity_labels|safe|default:"['Critical', 'High', 'Low', 'Medium']" }},
+                        labels: data.severity_labels,
                         datasets: [{
-                            data: {{ severity_totals|safe|default:"[0, 0, 0, 0]" }},
+                            data: data.severity_totals,
                             backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#94a3b8'],
                             borderWidth: 0
                         }]
@@ -161,43 +144,69 @@
             }
         }
 
-        /**
-         * IMPLEMENTATION: JQUERY AJAX
-         * Periodically fetches global counts to keep dashboard live.
-         */
-        function refreshDashboardStats() {
+        // Fetch Live Data
+        function refreshDashboard() {
             $.ajax({
-                url: '/api/dashboard-stats/', // Assumes you have an API endpoint
+                url: '/api/dashboard-stats/',
                 type: 'GET',
                 success: function(data) {
+                    // Update Counters
                     $('#stat-total-assets').text(data.total_assets);
                     $('#stat-assigned-assets').text(data.assigned_assets);
                     $('#stat-maintenance-count').text(data.maintenance_count);
                     $('#stat-open-incidents').text(data.open_incidents);
+
+                    // Update Charts
+                    updateCharts(data);
+
+                    // Update Tables
+                    renderMaintenanceTable(data.recent_maintenance);
+                    renderIncidentTable(data.open_incidents_list);
                 },
-                error: function(err) {
-                    console.error("Dashboard Sync Error:", err);
-                }
+                error: function(err) { console.error("Dashboard Sync Error:", err); }
             });
         }
 
-        /**
-         * IMPLEMENTATION: VANILLA JS (Reference)
-         * Shows how to fetch data without jQuery.
-         */
-        /*
-        async function fetchStatsVanilla() {
-            try {
-                const response = await fetch('/api/dashboard-stats/');
-                const data = await response.json();
-                document.getElementById('stat-total-assets').innerText = data.total_assets;
-            } catch (e) { console.log(e); }
+        function renderMaintenanceTable(logs) {
+            let html = '';
+            if (!logs || logs.length === 0) {
+                html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records.</td></tr>';
+            } else {
+                logs.forEach(log => {
+                    const statusColor = log.status === 'Completed' ? 'text-green-500' : 'text-orange-400';
+                    html += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${log.asset_name}</td>
+                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400">${log.technician_name || 'System'}</td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="text-[10px] font-black uppercase tracking-wider ${statusColor}">${log.status}</span>
+                            </td>
+                        </tr>`;
+                });
+            }
+            $('#maintenanceTableBody').html(html);
         }
-        */
 
-        initCharts();
-        setInterval(refreshDashboardStats, 30000); // Sync every 30 seconds
-        document.addEventListener('themeChanged', initCharts);
+        function renderIncidentTable(incidents) {
+            let html = '';
+            if (!incidents || incidents.length === 0) {
+                html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents.</td></tr>';
+            } else {
+                incidents.forEach(inc => {
+                    const sevColor = inc.severity === 'Critical' ? 'text-red-600' : (inc.severity === 'High' ? 'text-orange-500' : 'text-slate-400');
+                    html += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${inc.title}</td>
+                            <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider ${sevColor}">${inc.severity}</span></td>
+                            <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
+                        </tr>`;
+                });
+            }
+            $('#incidentTableBody').html(html);
+        }
+
+        refreshDashboard();
+        setInterval(refreshDashboard, 30000); 
     });
 </script>
 

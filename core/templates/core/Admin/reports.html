@@ -213,31 +213,44 @@
 
         // --- 1. VANILLA FETCH: ASYNC API SYNC ---
         window.syncDataViaAPI = async function() {
-            // Mapping UI report types to API endpoints
+            // 1. Identify which API to hit based on the current report view
             let endpoint = `/api/assets/`;
             if (reportType === 'maintenance') endpoint = `/api/maintenance/`;
             if (reportType === 'incident') endpoint = `/api/incidents/`;
 
-            // Append filter if not "All"
-            const url = category !== "All" ? `${endpoint}?category=${category}` : endpoint;
+            // 2. Build the query parameters
+            // DRF uses standard filtering. If you haven't implemented a 'category' filter 
+            // in your ViewSet yet, this will just return all results (which is a safe fallback).
+            const url = (category && category !== "All") ? `${endpoint}?category=${category}` : endpoint;
 
             try {
-                const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const response = await fetch(url, { 
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    } 
+                });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                
                 const data = await response.json();
                 
-                // Handle different DRF response formats (paginated vs simple list)
+                // 3. Handle DRF Pagination (it returns { count, next, previous, results })
+                // or a simple list []
                 const count = data.count !== undefined ? data.count : (Array.isArray(data) ? data.length : 0);
                 
-                // Update UI without refresh
+                // 4. Update the UI Counters
                 $('#api-total-display, #total-records-display').fadeOut(200, function() {
                     $(this).text(count).fadeIn(200);
                 });
                 
-                // Flash status badge
-                $('#api-status-badge').addClass('opacity-100').removeClass('opacity-50');
+                // Success indicator
+                $('#api-status-badge').removeClass('opacity-50').addClass('opacity-100');
+                $('#api-status-badge span').text("API Synced");
             } catch (error) {
-                console.error("API Sync Failed:", error);
+                console.error("950th CEWW API Sync Error:", error);
                 $('#api-status-badge').addClass('opacity-50');
+                $('#api-status-badge span').text("Sync Error");
             }
         };
 

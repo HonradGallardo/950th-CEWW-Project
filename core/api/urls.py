@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .viewsets import AssetViewSet, MaintenanceViewSet, IncidentViewSet, NotificationViewSet
+from core.api import views
+from .viewsets import AssetViewSet, DashboardStatsAPI, MaintenanceViewSet, IncidentViewSet, NotificationViewSet
 
 router = DefaultRouter()
 router.register(r'assets', AssetViewSet)
@@ -9,5 +10,11 @@ router.register(r'incidents', IncidentViewSet)
 router.register(r'notifications', NotificationViewSet, basename='api-notifications')
 
 urlpatterns = [
+    
+    path('api/personnel/stats/', views.dashboard_stats_api, name='personnel-stats-api'),
+    
+    # Keep this if you use the class-based version elsewhere
+    path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
+    
     path('', include(router.urls)),
 ]

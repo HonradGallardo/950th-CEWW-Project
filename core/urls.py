@@ -3,14 +3,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from . import views
+from django.contrib.auth import views as auth_views
 # Import modular viewsets
-from core.api.viewsets import AssetViewSet, MaintenanceViewSet, IncidentViewSet, NotificationViewSet, UserViewSet
+from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView
 
 router = DefaultRouter()
 router.register(r'assets', AssetViewSet)
 router.register(r'maintenance', MaintenanceViewSet)
 router.register(r'incidents', IncidentViewSet)
 router.register(r'notifications', NotificationViewSet, basename='api-notifications')
+router.register(r'incident-comments', IncidentCommentViewSet, basename='api-incident-comments')
 router.register(r'users', UserViewSet, basename='api-users')
 
 urlpatterns = [
@@ -20,9 +22,13 @@ urlpatterns = [
 
     # --- CORE PAGES ---
     path('', views.landing, name='landing'),
+    path('login/', APILoginView.as_view(), name='login'),
+    path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('profile/', views.profile_view, name='profile'),
+    #---ANALYTICS & MONITORING ---
+    path('api/monitoring-data/', MonitoringDataAPI.as_view(), name='monitoring_data_api'),
     
     # --- ASSETS ---
     path('assets/', views.asset_list, name='asset_list'),
@@ -51,5 +57,9 @@ urlpatterns = [
     path('reports/', views.reports, name='reports'),
     path('notifications/read-all/', views.mark_all_as_read, name='mark_all_read'),
     path('forgot_password/', views.forgot_password_view, name='forgot_password'),
+    path('api/forgot-password/', ForgotPasswordAPI.as_view(), name='api_forgot_password'),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    
+    path('api/change-password/', ChangePasswordAPI.as_view(), name='api_change_password'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

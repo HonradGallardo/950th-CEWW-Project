@@ -28,14 +28,14 @@
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 transition-colors">
         <div>
             <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Edit Maintenance Log</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest">Update Service Record for {{ maintenance.asset.assets_id }}</p>
+            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest">Update Service Record for {{ form.instance.asset.assets_id }}</p>
         </div>
         <a href="{% url 'maintenance_list' %}" class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 font-bold text-xs uppercase tracking-widest transition-colors">
             <i class="fas fa-arrow-left mr-2"></i> Back
         </a>
     </div>
 
-    <form method="POST" id="editMaintenanceForm" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <form method="POST" id="editMaintenanceForm" class="grid grid-cols-1 lg:grid-cols-3 gap-6" novalidate>
         {% csrf_token %}
         
         {% for hidden in form.hidden_fields %}
@@ -45,11 +45,11 @@
         <div class="space-y-4">
             <div class="bg-slate-900 dark:bg-slate-950 rounded-2xl p-6 text-white shadow-xl border border-transparent dark:border-slate-800">
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Asset under repair</label>
-                <h2 class="text-xl font-black mb-4">{{ maintenance.asset.assets_name }}</h2>
+                <h2 class="text-xl font-black mb-4">{{ form.instance.asset.assets_name }}</h2>
                 <div class="space-y-3 pt-4 border-t border-white/10">
                     <div class="flex justify-between items-center">
                         <span class="text-[10px] text-slate-500 font-bold uppercase">System ID</span>
-                        <span class="text-xs font-mono font-bold">{{ maintenance.asset.assets_id }}</span>
+                        <span class="text-xs font-mono font-bold">{{ form.instance.asset.assets_id }}</span>
                     </div>
                 </div>
             </div>
@@ -95,32 +95,43 @@
 </div>
 
 <script>
-    /**
-     * 1. JQUERY AJAX IMPLEMENTATION
-     * Submits the maintenance update via API in the background.
-     */
     $(document).ready(function() {
-        $('#editMaintenanceForm').on('submit', function(e) {
-            e.preventDefault(); // Stop standard reload
+        const logId = "{{ log_id }}";
 
-            const $form = $(this);
+        // Strip 'required' from hidden fields to unblock the browser
+        $('[name="asset"], [name="technician"]').removeAttr('required').prop('required', false);
+
+        $('#editMaintenanceForm').on('submit', function(e) {
+            e.preventDefault(); 
+
             const $btn = $('#submitBtn');
             const originalText = $btn.html();
 
-            // Set Loading State
+            // 🚨 FIXED: Inject the exact ID directly from the database, ignoring the hidden HTML select entirely
+            const assetPk = "{{ form.instance.asset.id }}"; 
+            
+            const statusVal = $('input[name="status"]:checked').val(); 
+            const maintTypeVal = $('[name="maintenance_type"]').val();
+            const notesVal = $('textarea[name="notes"]').val();
+
             $btn.prop('disabled', true)
                 .addClass('opacity-70 cursor-not-allowed')
                 .html('<i class="fas fa-sync fa-spin mr-2"></i> COMMITTING CHANGES...');
 
             $.ajax({
-                url: window.location.href, // Current Edit URL
-                type: 'POST',
-                data: $form.serialize(), // Packages radio, select, and text fields
+                url: `/api/maintenance/${logId}/`,
+                type: 'PUT',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest' // Helps Django detect AJAX
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                 },
+                data: JSON.stringify({
+                    asset: parseInt(assetPk),
+                    status: statusVal,
+                    maintenance_type: maintTypeVal,
+                    notes: notesVal
+                }),
+                contentType: 'application/json',
                 success: function(response) {
-                    // Success Visual Feedback
                     $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').html('<i class="fas fa-check mr-2"></i> RECORD UPDATED');
                     
                     setTimeout(() => {
@@ -129,40 +140,12 @@
                 },
                 error: function(xhr) {
                     $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalText);
-                    alert("Update Failed: Please ensure technical notes are provided.");
-                    console.error(xhr.responseText);
+                    alert("Update Failed: " + (xhr.responseJSON?.detail || "Please ensure technical notes are provided."));
+                    console.error("API Error Response:", xhr.responseText);
                 }
             });
         });
     });
-
-    /**
-     * 2. VANILLA JAVASCRIPT ALTERNATIVE (Commented Reference)
-     */
-    /*
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('#editMaintenanceForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.querySelector('#submitBtn');
-            const formData = new FormData(form);
-
-            btn.disabled = true;
-            btn.innerText = "SYNCING...";
-
-            try {
-                const response = await fetch(window.location.href, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                if (response.ok) { window.location.href = "/maintenance/"; }
-            } catch (err) { 
-                btn.disabled = false;
-                console.error(err); 
-            }
-        });
-    });
-    */
 </script>
+
 {% endblock %}

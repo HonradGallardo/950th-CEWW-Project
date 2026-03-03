@@ -66,26 +66,44 @@ $(document).ready(function() {
     const $btn = $('#saveUserBtn');
     const $icon = $('#saveIcon');
     const $text = $('#btnText');
+    const userId = "{{ form.instance.id }}";
+    const isEdit = userId && userId !== "None";
 
     // --- 1. JQUERY AJAX: ASYNC USER CREATION ---
     $form.on('submit', function(e) {
-        e.preventDefault(); // Stop standard reload
+        e.preventDefault();
+
+        // 🚨 ADD THIS EMAIL VALIDATION BLOCK 🚨
+        const $emailInput = $('input[name="email"]');
+        const emailValue = $emailInput.val();
+        const originalText = $text.text();
+
+        if (emailValue && !emailValue.includes('@')) {
+            $(`#error-email`).html(`
+                <p class="text-red-500 dark:text-red-400 text-[10px] font-bold flex items-center mt-1">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Invalid email format. Use 'user@domain.com'
+                </p>
+            `);
+            $emailInput.addClass('border-red-500').focus();
+            return; // STOP the submission
+        }
 
         // Clear previous AJAX errors
         $('.field-error-container').empty();
+        $('input').removeClass('border-red-500');
         
-        // UI Loading State
-        const originalText = $text.text();
+        // UI Loading State (Rest of your existing code...)
         $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
         $icon.removeClass('fa-save').addClass('fa-circle-notch fa-spin');
         $text.text('VALIDATING...');
 
         $.ajax({
-            url: window.location.href, // Add or Edit URL
-            type: 'POST',
+            url: isEdit ? `/api/users/${userId}/` : window.location.href,
+            type: isEdit ? 'PATCH' : 'POST',
             data: $form.serialize(),
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
             },
             success: function(response) {
                 // Success visual confirmation
