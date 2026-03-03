@@ -69,6 +69,7 @@ class AssetForm(forms.ModelForm):
         }
         
 class UserForm(forms.ModelForm):
+    email = forms.EmailField(required=True)
     # Add a dropdown for Groups/Roles
     role = forms.ModelChoiceField(
         queryset=Group.objects.all(),

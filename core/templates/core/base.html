@@ -60,7 +60,27 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    <div class="relative inline-block">
+    <button id="notification-button" class="p-2 text-slate-500 hover:text-blue-600 dark:text-slate-400 transition-colors">
+        <i class="fas fa-bell"></i>
+        <span id="notification-count" class="absolute top-0 right-0 hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-slate-900">
+            0
+        </span>
+    </button>
 
+    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50">
+        <div class="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <span class="text-xs font-black uppercase tracking-wider">Recent Alerts</span>
+            <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-500 hover:underline">Clear All</a>
+        </div>
+        <ul id="notification-list" class="max-h-60 overflow-y-auto custom-scrollbar">
+            </ul>
+        <div class="p-2 border-t border-slate-100 dark:border-slate-700 text-center">
+            <a href="#" class="text-[10px] text-slate-400 uppercase font-bold">View All Notifications</a>
+        </div>
+    </div>
+</div>
+{% if user.is_authenticated %}
     <script>
         /**
          * 1. THEME ENGINE (PRESERVED)
@@ -78,6 +98,56 @@
                 darkIcon.classList.remove('hidden');
             }
         }
+function updateNotifications() {
+    $.ajax({
+        url: '/api/notifications/',
+        type: 'GET',
+        success: function(data) {
+            const unreadCount = data.filter(n => !n.is_read).length;
+            const $bell = $('#notification-count'); // Ensure this ID exists on your bell icon
+            
+            if (unreadCount > 0) {
+                $bell.text(unreadCount).show();
+            } else {
+                $bell.hide();
+            }
+            
+            // Optionally update the dropdown list here
+            let listHtml = '';
+            data.slice(0, 5).forEach(n => {
+                listHtml += `<li class="p-2 text-xs border-b ${n.is_read ? 'opacity-50' : 'font-bold'}">${n.message}</li>`;
+            });
+            $('#notification-list').html(listHtml);
+        }
+    });
+}
+
+// Check every 30 seconds
+setInterval(updateNotifications, 30000);
+updateNotifications();
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    }
+});
 
         updateToggleIcons();
 
@@ -99,22 +169,62 @@
          * Checks for new system messages/notifications every 2 minutes
          */
         $(document).ready(function() {
-            function syncGlobalNotifications() {
+            const $btn = $('#notification-button');
+            const $dropdown = $('#notification-dropdown');
+
+            // Toggle Dropdown
+            $btn.on('click', function(e) {
+                e.stopPropagation();
+                $dropdown.toggleClass('hidden');
+            });
+
+            // Close dropdown when clicking outside
+            $(document).on('click', function() {
+                $dropdown.addClass('hidden');
+            });
+
+            // Improve your existing updateNotifications function with UI Feedback
+            window.updateNotifications = function() {
+                const $indicator = $('#global-api-indicator');
+                
                 $.ajax({
-                    url: '/notifications/latest/', // Assumed API Endpoint
+                    url: '/api/notifications/',
                     type: 'GET',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     success: function(data) {
-                        $('#global-api-indicator').removeClass('hidden');
-                        // Logic to show toast notifications can go here
+                        $indicator.removeClass('hidden').fadeIn();
+                        
+                        const unread = data.filter(n => !n.is_read);
+                        const $bellCount = $('#notification-count');
+                        
+                        if (unread.length > 0) {
+                            $bellCount.text(unread.length).removeClass('hidden');
+                        } else {
+                            $bellCount.addClass('hidden');
+                        }
+
+                        let listHtml = '';
+                        if (data.length === 0) {
+                            listHtml = '<li class="p-4 text-center text-xs text-slate-400 italic">No new alerts</li>';
+                        } else {
+                            data.slice(0, 5).forEach(n => {
+                                listHtml += `
+                                    <li class="p-3 border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                        <p class="text-xs ${n.is_read ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100 font-semibold'}">${n.message}</p>
+                                        <span class="text-[9px] text-slate-400 font-mono">${n.timestamp}</span>
+                                    </li>`;
+                            });
+                        }
+                        $('#notification-list').html(listHtml);
+                        
+                        // Hide indicator after 3 seconds of success
+                        setTimeout(() => $indicator.fadeOut(), 3000);
                     },
                     error: function() {
-                        console.log("System API Connectivity: Offline");
-                        $('#global-api-indicator').addClass('hidden');
+                        $indicator.addClass('hidden');
+                        console.warn("Connection to Wing API lost. Retrying...");
                     }
                 });
             }
-            setInterval(syncGlobalNotifications, 120000);
         });
 
         /**
@@ -134,6 +244,6 @@
             }
         };
     </script>
-    {% block extra_js %}{% endblock %}
+    {% endif %}
 </body>
 </html>

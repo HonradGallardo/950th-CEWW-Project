@@ -92,72 +92,54 @@
 
 <script>
     /**
-     * 1. JQUERY AJAX IMPLEMENTATION
-     * Best for browser compatibility and cleaner syntax with Django.
+     * 1. JQUERY AJAX IMPLEMENTATION (DRF API CONNECTED)
      */
     $(document).ready(function() {
         $('#incidentForm').on('submit', function(e) {
-            e.preventDefault(); // Stop page reload
+            e.preventDefault(); // Stop standard page reload
 
-            const $form = $(this);
             const $btn = $('#submitBtn');
             const originalText = $btn.html();
 
+            // 🚨 FIXED: Use FormData to properly package all fields for the API
+            const formData = new FormData(this);
+
             // UI Loading State
-            $btn.prop('disabled', true).html('<i class="fas fa-circle-notch animate-spin mr-2"></i> PROCESSING REPORT...');
+            $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> PROCESSING REPORT...');
 
             $.ajax({
-                url: window.location.href, // Sends to the current View API endpoint
+                url: '/api/incidents/', // 🚨 FIXED: Target the DRF endpoint directly
                 type: 'POST',
-                data: $form.serialize(), // Encodes form elements for submission
+                data: formData,
+                processData: false, // Prevents jQuery from turning data into a query string
+                contentType: false, // Lets browser set the correct multipart boundary
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest' // Helps Django identify AJAX request
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                 },
                 success: function(response) {
-                    // Assuming API returns success
+                    // Success UI Feedback
                     $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').html('<i class="fas fa-check mr-2"></i> REPORT SUBMITTED');
                     
                     setTimeout(() => {
                         window.location.href = "{% url 'incident_list' %}";
-                    }, 1500);
+                    }, 1000);
                 },
                 error: function(xhr) {
+                    // Restore button state
                     $btn.prop('disabled', false).html(originalText);
-                    alert("System Error: Failed to submit incident. Please check required fields.");
+                    
+                    // Parse exact API errors for debugging
+                    let errorMsg = "System Error: Failed to submit incident. Please check required fields.";
+                    if(xhr.responseJSON) {
+                        const errors = Object.values(xhr.responseJSON).flat();
+                        if(errors.length > 0) errorMsg = "API Error: " + errors[0];
+                    }
+                    alert(errorMsg);
+                    console.error("API Rejection:", xhr.responseText);
                 }
             });
         });
     });
-
-    /**
-     * 2. VANILLA JAVASCRIPT ALTERNATIVE (Commented Out)
-     * Use this if you want zero dependencies.
-     */
-    /*
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.querySelector('#incidentForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const btn = document.querySelector('#submitBtn');
-            
-            btn.disabled = true;
-            btn.innerText = "PROCESSING...";
-
-            try {
-                const response = await fetch(window.location.href, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                if (response.ok) { window.location.href = "/incidents/"; }
-            } catch (err) { 
-                btn.disabled = false;
-                console.error("Fetch Error:", err); 
-            }
-        });
-    });
-    */
 </script>
 
 <style>

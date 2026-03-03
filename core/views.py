@@ -1,3 +1,4 @@
+from django.conf import settings
 import openpyxl
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -14,6 +15,8 @@ from django.core.paginator import Paginator
 # --- NAVIGATION & DASHBOARD ---
 def landing(request):
     return render(request, 'core/landing.html')
+
+
 
 @login_required
 def role_redirect(request):
@@ -77,29 +80,25 @@ def dashboard(request):
 
 # --- ASSET MODULE ---
 @login_required
-def asset_list(request):
-    return render(request, 'core/Admin/asset_list.html', {'assets': Asset.objects.all()})
+def add_asset(request):
+    # Only responsible for providing the form structure to the template
+    form = AssetForm() 
+    return render(request, 'core/Admin/add_asset.html', {'form': form})
 
 @login_required
-def add_asset(request):
-    form = AssetForm(request.POST or None)
-    if request.method == 'POST' and form.is_valid():
-        asset = form.save(commit=False)
-        asset.assigned_to = request.user
-        asset.save()
-        messages.success(request, "Asset registered.")
-        return redirect('asset_list')
-    return render(request, 'core/Admin/add_asset.html', {'form': form})
+def asset_list(request):
+    # Standard list rendering
+    return render(request, 'core/Admin/asset_list.html', {'assets': Asset.objects.all()})
 
 @login_required
 def edit_asset(request, asset_id):
     asset = get_object_or_404(Asset, pk=asset_id)
-    form = AssetForm(request.POST or None, instance=asset)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        return redirect('asset_list')
-    return render(request, 'core/Admin/add_asset.html', {'form': form, 'asset': asset})
-
+    # Important: We keep the form and asset in context
+    form = AssetForm(instance=asset) 
+    return render(request, 'core/Admin/add_asset.html', {
+        'form': form, 
+        'asset': asset  # This allows us to check if asset exists in JS
+    })
 @login_required
 def delete_asset(request, asset_id):
     asset = get_object_or_404(Asset, pk=asset_id)
@@ -108,9 +107,18 @@ def delete_asset(request, asset_id):
     return redirect('asset_list')
 
 # --- MAINTENANCE MODULE ---
+
 @login_required
 def maintenance_list(request):
-    return render(request, 'core/Admin/maintenance_list.html', {'maintenances': Maintenance.objects.all()})
+    """
+    Renders the shell for the service history. 
+    API handles the data loading via /api/maintenance/
+    """
+    # Fetch asset types for the filter dropdown
+    asset_types = Asset.objects.values_list('assets_type', flat=True).distinct()
+    return render(request, 'core/Admin/maintenance_list.html', {
+        'asset_types': asset_types
+    })
 
 @login_required
 def add_maintenance(request):
@@ -125,11 +133,11 @@ def add_maintenance(request):
 @login_required
 def edit_maintenance(request, pk):
     log = get_object_or_404(Maintenance, pk=pk)
-    form = MaintenanceForm(request.POST or None, instance=log)
-    if form.is_valid():
-        form.save()
-        return redirect('maintenance_list')
-    return render(request, 'core/Admin/edit_maintenance.html', {'form': form})
+    form = MaintenanceForm(instance=log)
+    return render(request, 'core/Admin/edit_maintenance.html', {
+        'form': form,
+        'log_id': pk  # Pass ID for API URL construction
+    })
 
 @login_required
 def delete_maintenance(request, pk):
@@ -180,9 +188,18 @@ def add_user(request):
 def edit_user(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
     form = UserForm(request.POST or None, instance=target_user)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        return redirect('user_list')
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'success'})
+            return redirect('user_list')
+        else:
+            # 🚨 SEND ERRORS BACK TO AJAX 🚨
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'errors': form.errors}, status=400)
+                
     return render(request, 'core/Admin/user_form.html', {'form': form, 'title': 'Edit Personnel'})
 
 @login_required
@@ -198,6 +215,7 @@ def analytics_list(request):
     date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
     labels = [d.strftime('%a') for d in date_list]
     date_to_idx = {d: i for i, d in enumerate(date_list)}
+    incident_data = Incident.objects.values('severity').annotate(count=Count('id'))
 
     # Initialize data arrays for Chart.js
     fixed_assets, pending_assets = [0]*7, [0]*7
@@ -235,7 +253,8 @@ def analytics_list(request):
         'asset_types': Asset.objects.values('assets_type').annotate(total=Count('id')),
         'predicted_incidents': 5, # Placeholder for AI logic
         'current_month_total': 3,
-        'confidence_level': 'High'
+        'confidence_level': 'High',
+        'incident_summary': list(incident_data), # Ready for Chart.js
     }
     return render(request, 'core/Admin/analytics_list.html', context)
 
@@ -273,10 +292,28 @@ def reports(request):
     if export_format == 'excel':
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename={report_type}_report.xlsx'
+        
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Report Data"
-        # Add headers and rows logic here...
+
+        # Define Headers based on Report Type
+        if report_type == 'maintenance':
+            headers = ['Asset Name', 'Technician', 'Status', 'Date']
+            ws.append(headers)
+            for item in data_qs:
+                ws.append([item.asset.assets_name, item.technician.username, item.status, item.date.strftime('%Y-%m-%d')])
+        elif report_type == 'incident':
+            headers = ['Severity', 'Title', 'Asset', 'Status']
+            ws.append(headers)
+            for item in data_qs:
+                ws.append([item.severity, item.title, str(item.asset), item.status])
+        else: # it_asset
+            headers = ['Asset ID', 'Asset Name', 'Type', 'Location', 'Status']
+            ws.append(headers)
+            for item in data_qs:
+                ws.append([item.assets_id, item.assets_name, item.assets_type, item.location, item.status])
+
         wb.save(response)
         return response
 
@@ -339,4 +376,6 @@ def mark_all_as_read(request):
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 def forgot_password_view(request):
-    return render(request, 'registration/forgot_password.html')
+    return render(request, 'registration/forgot_password.html', {
+        'recaptcha_site_key': getattr(settings, 'RECAPTCHA_SITE_KEY', '')
+    })

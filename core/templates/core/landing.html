@@ -180,63 +180,74 @@
         </div>
     </section>
 
-    <footer class="py-12 border-t border-slate-100 text-center px-6 bg-slate-50/30">
-        <div class="flex flex-col items-center space-y-6">
-            <div class="flex items-center space-x-4 grayscale opacity-50">
+    <footer class="py-12 border-t border-slate-100 px-6 bg-slate-50/30">
+        <div class="max-w-7xl mx-auto flex flex-col items-center space-y-6">
+            <div class="w-full max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">System Readiness</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-xs font-bold text-slate-700">All Nodes Active</span>
+                    </div>
+                </div>
+                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Local Uplink</p>
+                    <p id="local-time-display" class="text-xs font-bold text-slate-700 font-mono">--:--:--</p>
+                </div>
+                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Server Uptime</p>
+                    <p id="server-uptime-display" class="text-xs font-bold text-blue-600 font-mono">--h --m</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4 grayscale opacity-50 pt-4">
                 <i class="fas fa-shield-halved text-2xl"></i>
                 <span class="font-bold text-lg">950TH CEWW</span>
             </div>
-            <p class="text-slate-400 text-[10px] font-extrabold tracking-[0.2em] uppercase">
+            <p class="text-slate-400 text-[10px] font-extrabold tracking-[0.2em] uppercase text-center">
                 &copy; 2026 OFFICIAL USE ONLY - SECURE OFFLINE ARCHITECTURE
             </p>
         </div>
     </footer>
 
-    <script>
-        /**
-         * 1. VANILLA JS API CONFIG
-         * Global utilities for the system landing page
-         */
-        const SystemStatus = {
-            async checkConnection() {
-                try {
-                    // This hits your server just to confirm availability
-                    const response = await fetch('/role-redirect/', { 
-                        method: 'HEAD',
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-                    return response.ok;
-                } catch (e) {
-                    return false;
+<script>
+    // --- SYSTEM READINESS WIDGET ---
+    
+    // 1. Live Local Time (Client-side)
+    function updateLocalClock() {
+        const now = new Date();
+        // Force Philippine Standard Time format as per project requirements
+        const timeString = now.toLocaleTimeString('en-PH', { 
+            timeZone: 'Asia/Manila',
+            hour12: false, 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        });
+        $('#local-time-display').text(timeString);
+    }
+    setInterval(updateLocalClock, 1000);
+    updateLocalClock();
+    
+    // 2. Server Uptime Sync (API Integration)
+    function syncServerUptime() {
+        $.ajax({
+            url: '/api/dashboard-stats/?include_uptime=true', 
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if(data.server_uptime) {
+                    $('#server-uptime-display').text(data.server_uptime);
                 }
             }
-        };
-
-        /**
-         * 2. JQUERY AJAX: NETWORK HEARTBEAT
-         * Checks the "Secure Network Active" status every 30 seconds
-         */
-        $(document).ready(function() {
-            function updateNetworkUI() {
-                $.ajax({
-                    url: '/', // Head request to landing
-                    type: 'HEAD',
-                    success: function() {
-                        $('#status-dot').removeClass('bg-slate-300 bg-red-500').addClass('bg-emerald-500 animate-pulse');
-                        $('#status-text').text('Secure Network Active').removeClass('text-red-500').addClass('text-slate-400');
-                    },
-                    error: function() {
-                        $('#status-dot').removeClass('bg-emerald-500 animate-pulse').addClass('bg-red-500');
-                        $('#status-text').text('Network Offline').addClass('text-red-500');
-                    }
-                });
-            }
-
-            // Initial trigger and interval
-            updateNetworkUI();
-            setInterval(updateNetworkUI, 30000);
         });
-    </script>
+    }
+    // Sync uptime every 60 seconds
+    setInterval(syncServerUptime, 60000);
+    syncServerUptime();
+</script>
 
 </body>
 </html>

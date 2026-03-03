@@ -20,6 +20,7 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from core import views
 from django.conf.urls.static import static
+from core.api import views as api_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,11 +36,13 @@ urlpatterns = [
     
     # 4. User Edit Path
     path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('api/personnel/stats/', api_views.dashboard_stats_api, name='personnel-stats-api'),
+
+    path('', TemplateView.as_view(template_name='core/landing.html'), name='home'),
+    path('accounts/', include('django.contrib.auth.urls')), 
+    path('', include('core.urls')),
     
     # --- TICKETS APP ---
-    # FIXED: Only include tickets.urls ONCE. 
-    # If you want staff to use 'manage/', use that as the prefix, 
-    # but don't include the same file under 'tickets/' as well.
     path('tickets/', include('tickets.urls')),
 
     # --- API PATHS ---
