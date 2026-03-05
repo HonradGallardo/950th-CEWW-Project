@@ -97,10 +97,9 @@ class Notification(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
-    # Add this line:
+    # Changed from ImageField to FileField to bypass the Pillow requirement
+    image = models.FileField(default='default.jpg', upload_to='profile_pics')
     rank = models.CharField(max_length=50, default='Private')
 
-    # Change __clstr__ to __str__
     def __str__(self):
         return f'{self.user.username} Profile'
