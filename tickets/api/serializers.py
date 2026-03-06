@@ -31,13 +31,20 @@ class TicketMessageSerializer(serializers.ModelSerializer):
         return obj.sender == request.user if request else False
 
 class TicketSerializer(serializers.ModelSerializer):
-    attachments = AttachmentSerializer(many=True, source='all_attachments', read_only=True)
-    technician_name = serializers.ReadOnlyField(source='technician.username', default="Unassigned")
-    
+    user_name = serializers.CharField(source='user.username', read_only=True)
+    technician_name = serializers.CharField(source='technician.username', read_only=True, default="Unassigned")
+    # Add this field
+    user_avatar = serializers.SerializerMethodField()
+
     class Meta:
         model = Ticket
-        fields = [
-            'id', 'subject', 'category', 'priority', 'status', 
-            'description', 'technician_name', 'last_technician', 
-            'attachments', 'created_at'
-        ]
+        fields = ['id', 'subject', 'user_name', 'status', 'description', 'created_at', 'technician_name', 'updated_at', 'user_avatar']
+
+    def get_user_avatar(self, obj):
+        try:
+            # Matches your user_list.html logic
+            if obj.user.profile.image:
+                return obj.user.profile.image.url
+        except:
+            pass
+        return None

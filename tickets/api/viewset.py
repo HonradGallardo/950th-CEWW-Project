@@ -1,16 +1,46 @@
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated          # Added
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication  # Added
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from ..models import Ticket, TicketMessage, TicketAttachment
 
-# --- SERIALIZER ---
+# --- SERIALIZERS ---
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    # Ensure full URL is generated for frontend view/download
+    url = serializers.FileField(source='file') 
+
+    class Meta:
+        model = TicketAttachment
+        fields = ['id', 'url', 'name']
+
+    def get_name(self, obj):
+        return obj.file.name.split('/')[-1]
+
+class TicketMessageSerializer(serializers.ModelSerializer):
+    sender_name = serializers.ReadOnlyField(source='sender.username')
+    recipient_name = serializers.ReadOnlyField(source='recipient.username', default="Everyone")
+    timestamp = serializers.DateTimeField(source='created_at', format='%b %d, %H:%M', read_only=True)
+    # This must be a nested serializer to provide the 'url' and 'name' for bubbles
+    attachments = AttachmentSerializer(many=True, read_only=True)
+    is_me = serializers.SerializerMethodField() # Add this to match your JS usage
+
+    class Meta:
+        model = TicketMessage
+        fields = ['id', 'message', 'sender_name','recipient_name', 'attachments', 'timestamp', 'is_me']
+
+    def get_is_me(self, obj):
+        request = self.context.get('request')
+        return obj.sender == request.user if request else False
+
 class TicketSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
     technician_name = serializers.CharField(source='technician.username', read_only=True, default="Unassigned")
-    # Add this field
     user_avatar = serializers.SerializerMethodField()
 
     class Meta:
@@ -26,9 +56,15 @@ class TicketSerializer(serializers.ModelSerializer):
             pass
         return None
 
+
 # --- VIEWSET ---
+
 class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
+    
+    # 🔒 ENFORCE AUTHENTICATION HERE 
+    #authentication_classes = [TokenAuthentication, SessionAuthentication]
+    #permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user

@@ -14,13 +14,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+"""
+URL configuration for CEWWproject project.
+"""
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
-from core import views
+from core import views  # <-- 1. This remains as 'views' for your core app
 from django.conf.urls.static import static
 from core.api import views as api_views
+from rest_framework.authtoken import views as auth_views  # <-- 2. ALIASED to auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,17 +39,15 @@ urlpatterns = [
     path('', include('core.urls')), 
     
     # 4. User Edit Path
-    path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('users/edit/<int:user_id>/', views.edit_user, name='edit_user'), # <-- Now uses core.views
     path('api/personnel/stats/', api_views.dashboard_stats_api, name='personnel-stats-api'),
-
-    path('', TemplateView.as_view(template_name='core/landing.html'), name='home'),
-    path('accounts/', include('django.contrib.auth.urls')), 
-    path('', include('core.urls')),
     
     # --- TICKETS APP ---
     path('tickets/', include('tickets.urls')),
 
     # --- API PATHS ---
+    path('api-token-auth/', auth_views.obtain_auth_token, name='api_token_auth'), # <-- 3. Uses the new alias
+    
     # Give the API a unique namespace to distinguish it from standard views
     path('api/tickets/', include('tickets.api.urls', namespace='tickets-api')),
     path('api/core/', include('core.api.urls')),

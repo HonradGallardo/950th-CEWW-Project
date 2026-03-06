@@ -68,27 +68,31 @@ class UserProfileSerializer(serializers.ModelSerializer):
 # core/api/serializers.py
 
 class UserSerializer(serializers.ModelSerializer):
-    # This allows the API to see the rank from the Profile model
     rank = serializers.CharField(source='profile.rank', required=False)
+    # 🚨 Map the image field to the related profile model
+    image = serializers.ImageField(source='profile.image', required=False) 
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank']
+        # 🚨 Add 'image' to the fields array
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank', 'image']
 
     def update(self, instance, validated_data):
-        # 1. Extract the profile data (rank) from the validated data
         profile_data = validated_data.pop('profile', None)
         
-        # 2. Update the main User fields (email, names, etc.)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.email = validated_data.get('email', instance.email)
         instance.save()
 
-        # 3. Update the Profile fields
         if profile_data:
             profile = instance.profile
             profile.rank = profile_data.get('rank', profile.rank)
+            
+            # 🚨 Ensure the image is saved if it's included in the request
+            if 'image' in profile_data:
+                profile.image = profile_data['image']
+                
             profile.save()
 
         return instance
