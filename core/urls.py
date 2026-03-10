@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 from django.contrib.auth import views as auth_views
 # Import modular viewsets
-from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView
+from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI
 
 router = DefaultRouter()
 router.register(r'assets', AssetViewSet)
@@ -23,6 +23,7 @@ urlpatterns = [
     # --- CORE PAGES ---
     path('', views.landing, name='landing'),
     path('login/', APILoginView.as_view(), name='login'),
+    path('api/verify-mfa/', VerifyMFAAPI.as_view(), name='api_verify_mfa'),
     path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),

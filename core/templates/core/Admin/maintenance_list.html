@@ -46,7 +46,9 @@
     </div>
 
     <div class="flex-1 grid grid-cols-12 gap-6 lg:min-h-0 lg:overflow-hidden pb-10 sm:pb-4">
+        
         <div class="col-span-12 lg:col-span-8 flex flex-col h-fit lg:h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
                 <div class="flex items-center space-x-3 flex-1 overflow-x-auto no-scrollbar">
                     <div class="relative flex-1 min-w-[150px] max-w-xs">
@@ -69,23 +71,15 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-x-auto lg:overflow-y-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse min-w-[600px] sm:min-w-0" id="maintenanceTable" style="table-layout: fixed;">
-                    <thead class="sticky top-0 bg-white dark:bg-slate-900 shadow-sm z-10">
-                        <tr class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                            <th class="px-6 py-4" style="width: 20%;">Asset ID</th>
-                            <th class="px-6 py-4" style="width: 30%;">Asset Name</th>
-                            <th class="px-6 py-4" style="width: 25%;">Type</th>
-                            <th class="px-6 py-4" style="width: 25%;">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800" id="tableBody">
-                        <tr><td colspan="4" class="p-10 text-center text-slate-400 italic"><i class="fas fa-spinner fa-spin mr-2"></i> Syncing with server...</td></tr>
-                    </tbody>
-                </table>
+            <div class="flex-grow overflow-y-auto custom-scrollbar p-6 bg-slate-50 dark:bg-[#0f172a]">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="tableBody">
+                    <div class="col-span-full p-10 text-center text-slate-400 italic">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Syncing with server...
+                    </div>
+                </div>
             </div>
 
-            <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between shrink-0">
+            <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between shrink-0">
                 <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" id="pageInfo">Showing 0-0 of 0 logs</p>
                 <div class="flex items-center space-x-2" id="paginationControls"></div>
             </div>
@@ -93,8 +87,8 @@
 
         <div class="col-span-12 lg:col-span-4 flex flex-col h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 overflow-hidden">
             <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center">
-                <i class="fas fa-file-medical text-slate-200 dark:text-slate-800 text-3xl mb-4"></i>
-                <p class="text-slate-400 dark:text-slate-600 text-xs font-medium">Select log to view activity</p>
+                <i class="fas fa-file-medical text-slate-200 dark:text-slate-800 text-5xl mb-4"></i>
+                <p class="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest">Select a card to view activity</p>
             </div>
 
             <div id="detail-content" class="hidden flex-1 flex flex-col min-h-0">
@@ -102,9 +96,9 @@
                     <div>
                         <div class="flex items-center space-x-2">
                             <span id="det-icon" class="text-blue-500 dark:text-blue-400"></span>
-                            <h3 class="font-black text-xs text-slate-800 dark:text-slate-100" id="det-id">---</h3>
+                            <h3 class="font-black text-sm text-slate-800 dark:text-slate-100" id="det-id">---</h3>
                         </div>
-                        <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter" id="det-asset-type">---</p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-1" id="det-asset-type">---</p>
                     </div>
                     
                     {% if not request.user.groups.all.0.name == "Commander" %}
@@ -125,25 +119,18 @@
                             <p class="text-[9px] text-slate-400 dark:text-slate-500" id="det-time">---</p>
                         </div>
                         <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                            <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block">Last Modified</label>
-                            <p class="text-[11px] font-bold text-slate-600 dark:text-slate-300" id="det-modified">---</p>
+                            <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block">Status</label>
+                            <p class="text-[11px] font-black mt-1 uppercase" id="det-status">---</p>
                         </div>
                     </div>
 
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <div class="flex items-center space-x-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 rounded-xl">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                             <i class="fas fa-user-cog text-xs"></i>
                         </div>
                         <div>
-                            <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block">Technician</label>
+                            <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block">Assigned Technician</label>
                             <p class="text-xs font-bold text-slate-700 dark:text-slate-200" id="det-tech">---</p>
-                        </div>
-                    </div>
-
-                    <div class="p-3 bg-slate-900 dark:bg-black rounded-xl space-y-2 text-[10px]">
-                        <div class="flex justify-between">
-                            <span class="text-slate-400 dark:text-slate-500 uppercase font-bold">Current Status:</span> 
-                            <span id="det-status" class="font-black italic uppercase">---</span>
                         </div>
                     </div>
 
@@ -156,7 +143,7 @@
                 </div>
 
                 {% if not request.user.groups.all.0.name == "Commander" %}
-                <div class="mt-4 pt-4 shrink-0 border-t dark:border-slate-800">
+                <div class="mt-4 pt-4 shrink-0 border-t border-slate-100 dark:border-slate-800">
                     <a id="det-edit-link" href="#" class="w-full py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center shadow-lg transition-all bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600">
                         <i class="fas fa-edit mr-2"></i> Update Service Log
                     </a>
@@ -169,7 +156,7 @@
 
 <script>
 let currentPage = 1;
-const rowsPerPage = 10;
+const rowsPerPage = 6; // Max 6 items per page
 let allMaintenanceLogs = [];
 let currentOpenLogId = null;
 
@@ -189,6 +176,19 @@ function loadMaintenanceLogs() {
 }
 
 /**
+ * Helper: Smart Icon matching based on asset name or type
+ */
+function getAssetIconClass(text) {
+    if (!text) return 'fa-microchip';
+    const t = text.toUpperCase();
+    if (t.includes('PC') || t.includes('DESKTOP')) return 'fa-desktop';
+    if (t.includes('LAPTOP')) return 'fa-laptop';
+    if (t.includes('SERVER')) return 'fa-server';
+    if (t.includes('ROUTER') || t.includes('NETWORK') || t.includes('SWITCH')) return 'fa-network-wired';
+    return 'fa-microchip';
+}
+
+/**
  * 2. TABLE FILTERING, SORTING & PAGINATION
  */
 function initTable() {
@@ -196,28 +196,26 @@ function initTable() {
     const type = $("#typeFilter").val().toUpperCase();
     const status = $("#statusFilter").val().toUpperCase();
 
-    // 1. Filter the data
+    // Filter
     const filtered = allMaintenanceLogs.filter(log => {
         const matchesSearch = log.asset_name.toUpperCase().includes(search) || 
-                              log.asset.toString().includes(search);
+                              (log.asset_string_id && log.asset_string_id.toString().includes(search));
         const matchesType = type === "" || log.maintenance_type.toUpperCase() === type;
         const matchesStatus = status === "" || log.status.toUpperCase() === status;
         return matchesSearch && matchesType && matchesStatus;
     });
 
-    // 2. SORTING LOGIC: By Status first, then by Log Number (ID) descending
+    // Sort: Completed to bottom, then by ID descending
     filtered.sort((a, b) => {
-        // Push 'Completed' to the bottom
         if (a.status !== b.status) {
             if (a.status === 'Completed') return 1;
             if (b.status === 'Completed') return -1;
-            return 0; // Keep other statuses relative to each other
+            return 0; 
         }
-        // If statuses match, sort by ID number (Newest first)
         return b.id - a.id; 
     });
 
-    // 3. Pagination
+    // Pagination
     const totalEntries = filtered.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -226,33 +224,46 @@ function initTable() {
     const end = Math.min(start + rowsPerPage, totalEntries);
     const pageData = filtered.slice(start, end);
 
-    renderTableRows(pageData);
+    renderTableRows(pageData); 
     renderPagination(totalPages);
 
     $('#pageInfo').text(`Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries} logs`);
 }
 
 /**
- * 3. DYNAMIC ROW RENDERING
- */
-/**
- * 3. DYNAMIC ROW RENDERING
+ * 3. DYNAMIC CARD RENDERING ENGINE
  */
 function renderTableRows(logs) {
-    const $tbody = $('#tableBody');
+    const $container = $('#tableBody');
     let html = '';
+
+    if (logs.length === 0) {
+        $container.html('<div class="col-span-full p-12 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">No logs found matching your criteria.</div>');
+        return;
+    }
 
     logs.forEach(log => {
         const isCompleted = log.status === 'Completed';
-        const statusClass = isCompleted 
-            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" 
-            : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
         
-        // Dim the row text if it's completed
-        const textDim = isCompleted ? "opacity-50" : "";
+        // Dynamic colors
+        const statusPillClass = isCompleted 
+            ? "bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400" 
+            : "bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400";
+            
+        const hoverColorClass = isCompleted
+            ? "hover:border-emerald-400 hover:ring-4 hover:ring-emerald-500/20 dark:hover:border-emerald-500 dark:hover:ring-emerald-500/30"
+            : "hover:border-blue-400 hover:ring-4 hover:ring-blue-500/20 dark:hover:border-blue-500 dark:hover:ring-blue-500/30";
+
+        const accentLine = isCompleted ? "bg-emerald-500" : "bg-blue-500";
+        const isActive = currentOpenLogId == log.id ? `ring-2 ring-blue-500 border-blue-500` : `border-slate-200 dark:border-slate-700`;
+        const textDim = isCompleted ? "opacity-60" : "";
+        
+        // Use smart icon based on asset name/type
+        const iconClass = getAssetIconClass(log.asset_name + " " + log.maintenance_type);
+
         const safeNotes = (log.notes || "No technical notes.").replace(/'/g, "\\'");
 
-        // Handle safe date parsing
+        // Safe date parsing
         let displayDate = 'N/A';
         let displayTime = '--:--';
         if (log.date) {
@@ -262,35 +273,56 @@ function renderTableRows(logs) {
         }
 
         html += `
-        <tr class="asset-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors" 
-            onclick="showDetails({
-                logId: '${log.id}',
-                assetId: '${log.asset_string_id}', // 🚨 CHANGED to use the new string ID
-                name: '${log.asset_name}',
-                status: '${log.status}',
-                tech: '${log.technician_name || 'System Generated'}',
-                notes: '${safeNotes}',
-                date: '${displayDate}',
-                time: '${displayTime}',
-                a_type: '${log.maintenance_type}',
-                editUrl: '/maintenance/edit/${log.id}/'
-            })">
-            <td class="px-6 py-4 text-xs font-bold text-blue-600 ${textDim} truncate">${log.asset_string_id}</td>
-            <td class="px-6 py-4 text-xs font-bold text-slate-700 dark:text-slate-300 ${textDim} truncate">${log.asset_name}</td>
-            <td class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase ${textDim}">${log.maintenance_type}</td>
-            <td class="px-6 py-4">
-                <span class="status-tag ${statusClass} px-2 py-1 rounded text-[10px] font-black uppercase shadow-sm">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive} ${hoverColorClass}"
+             onclick="showDetails({
+                 logId: '${log.id}',
+                 assetId: '${log.asset_string_id}',
+                 name: '${log.asset_name}',
+                 status: '${log.status}',
+                 tech: '${log.technician_name || 'System Generated'}',
+                 notes: '${safeNotes}',
+                 date: '${displayDate}',
+                 time: '${displayTime}',
+                 a_type: '${log.maintenance_type}',
+                 editUrl: '/maintenance/edit/${log.id}/'
+             })">
+            
+            <div class="flex justify-between items-start mb-3 ${textDim}">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 group-hover:text-blue-500 transition-colors">
+                        <i class="fas ${iconClass} text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">${log.asset_string_id}</span>
+                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate max-w-[150px] sm:max-w-[120px]">${log.asset_name}</h3>
+                    </div>
+                </div>
+                
+                <div class="text-slate-300 dark:text-slate-600 transition-colors group-hover:text-blue-400 shrink-0 ml-2">
+                    <i class="fas fa-tools text-lg"></i>
+                </div>
+            </div>
+
+            <div class="mb-4 ${textDim}">
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider"><i class="fas fa-clipboard-list mr-1 opacity-50"></i> ${log.maintenance_type}</p>
+            </div>
+
+            <div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-700/60 ${textDim}">
+                <span class="px-2.5 py-1 rounded-md text-[9px] font-black uppercase ${statusPillClass}">
                     ${log.status}
                 </span>
-            </td>
-        </tr>`;
+                <span class="text-[9px] font-bold text-slate-400">${displayDate}</span>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 w-full h-1 ${accentLine} opacity-50 group-hover:opacity-100 transition-opacity"></div>
+        </div>`;
     });
 
-    $tbody.html(html || '<tr><td colspan="4" class="p-10 text-center text-slate-400">No logs found.</td></tr>');
+    $container.html(html);
 }
 
 /**
- * 4. SHOW DETAILS
+ * 4. SHOW DETAILS (RIGHT PANEL)
  */
 function showDetails(data) {
     currentOpenLogId = data.logId;
@@ -299,23 +331,30 @@ function showDetails(data) {
     $('#placeholder-content').addClass('hidden');
     $('#detail-content').removeClass('hidden');
     
+    // Re-render table to apply the active ring border
+    initTable(); 
+    
     // Fill Data
     $('#det-id').text(data.name);
     $('#det-asset-type').text(data.a_type);
     $('#det-date').text(data.date);
-    $('#det-time').text(data.time); // Added to display time
+    $('#det-time').text(data.time); 
     $('#det-tech').text(data.tech);
     $('#det-status').text(data.status);
     $('#det-notes').text(data.notes);
     $('#det-edit-link').attr('href', data.editUrl);
 
-    // Status Styling
+    // Update icon in the detail panel to match
+    const detIconClass = getAssetIconClass(data.name + " " + data.a_type);
+    $('#det-icon').removeClass().addClass(`fas ${detIconClass} text-blue-500 dark:text-blue-400 text-xl`);
+
+    // Status Styling in detail panel
     const statusEl = document.getElementById('det-status');
     if (data.status === 'Completed') {
-        statusEl.className = "font-black text-emerald-500 uppercase italic";
+        statusEl.className = "text-[11px] font-black text-emerald-500 uppercase";
         $('#delete-log-form').removeClass('hidden'); 
     } else {
-        statusEl.className = "font-black text-blue-500 uppercase italic";
+        statusEl.className = "text-[11px] font-black text-blue-500 uppercase";
         $('#delete-log-form').addClass('hidden');
     }
 }
@@ -359,7 +398,6 @@ function deleteMaintenanceLog() {
 $(document).ready(function() {
     loadMaintenanceLogs();
     $('#confirmDeleteBtn').on('click', deleteMaintenanceLog);
-    // Refresh table data every 30 seconds
     setInterval(loadMaintenanceLogs, 30000);
 });
 
