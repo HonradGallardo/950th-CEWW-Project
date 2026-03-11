@@ -72,7 +72,7 @@
             </div>
 
             <div class="flex-grow overflow-y-auto custom-scrollbar p-6 bg-slate-50 dark:bg-[#0f172a]">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="tableBody">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6" id="tableBody">
                     <div class="col-span-full p-10 text-center text-slate-400 italic">
                         <i class="fas fa-spinner fa-spin mr-2"></i> Syncing with server...
                     </div>
@@ -160,9 +160,6 @@ const rowsPerPage = 6; // Max 6 items per page
 let allMaintenanceLogs = [];
 let currentOpenLogId = null;
 
-/**
- * 1. API DATA FETCH
- */
 function loadMaintenanceLogs() {
     $.ajax({
         url: '/api/maintenance/',
@@ -175,9 +172,6 @@ function loadMaintenanceLogs() {
     });
 }
 
-/**
- * Helper: Smart Icon matching based on asset name or type
- */
 function getAssetIconClass(text) {
     if (!text) return 'fa-microchip';
     const t = text.toUpperCase();
@@ -188,15 +182,11 @@ function getAssetIconClass(text) {
     return 'fa-microchip';
 }
 
-/**
- * 2. TABLE FILTERING, SORTING & PAGINATION
- */
 function initTable() {
     const search = $("#assetSearch").val().toUpperCase();
     const type = $("#typeFilter").val().toUpperCase();
     const status = $("#statusFilter").val().toUpperCase();
 
-    // Filter
     const filtered = allMaintenanceLogs.filter(log => {
         const matchesSearch = log.asset_name.toUpperCase().includes(search) || 
                               (log.asset_string_id && log.asset_string_id.toString().includes(search));
@@ -205,7 +195,6 @@ function initTable() {
         return matchesSearch && matchesType && matchesStatus;
     });
 
-    // Sort: Completed to bottom, then by ID descending
     filtered.sort((a, b) => {
         if (a.status !== b.status) {
             if (a.status === 'Completed') return 1;
@@ -215,7 +204,6 @@ function initTable() {
         return b.id - a.id; 
     });
 
-    // Pagination
     const totalEntries = filtered.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -230,9 +218,6 @@ function initTable() {
     $('#pageInfo').text(`Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries} logs`);
 }
 
-/**
- * 3. DYNAMIC CARD RENDERING ENGINE
- */
 function renderTableRows(logs) {
     const $container = $('#tableBody');
     let html = '';
@@ -245,7 +230,6 @@ function renderTableRows(logs) {
     logs.forEach(log => {
         const isCompleted = log.status === 'Completed';
         
-        // Dynamic colors
         const statusPillClass = isCompleted 
             ? "bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400" 
             : "bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400";
@@ -258,12 +242,9 @@ function renderTableRows(logs) {
         const isActive = currentOpenLogId == log.id ? `ring-2 ring-blue-500 border-blue-500` : `border-slate-200 dark:border-slate-700`;
         const textDim = isCompleted ? "opacity-60" : "";
         
-        // Use smart icon based on asset name/type
         const iconClass = getAssetIconClass(log.asset_name + " " + log.maintenance_type);
-
         const safeNotes = (log.notes || "No technical notes.").replace(/'/g, "\\'");
 
-        // Safe date parsing
         let displayDate = 'N/A';
         let displayTime = '--:--';
         if (log.date) {
@@ -272,8 +253,9 @@ function renderTableRows(logs) {
             displayTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
+        // 🚨 UPDATED HTML: LARGE SPACING, BIGGER ICONS, AND 2-COLUMN GRID (Matches Original Asset Page)
         html += `
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive} ${hoverColorClass}"
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive} ${hoverColorClass}"
              onclick="showDetails({
                  logId: '${log.id}',
                  assetId: '${log.asset_string_id}',
@@ -287,31 +269,43 @@ function renderTableRows(logs) {
                  editUrl: '/maintenance/edit/${log.id}/'
              })">
             
-            <div class="flex justify-between items-start mb-3 ${textDim}">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 group-hover:text-blue-500 transition-colors">
-                        <i class="fas ${iconClass} text-lg"></i>
+            <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4 ${textDim}">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 group-hover:text-blue-500 transition-colors">
+                        <i class="fas ${iconClass} text-2xl"></i>
                     </div>
-                    <div>
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">${log.asset_string_id}</span>
-                        <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate max-w-[150px] sm:max-w-[120px]">${log.asset_name}</h3>
+                    <div class="min-w-0">
+                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight truncate max-w-[200px] sm:max-w-[180px]">${log.asset_name}</h3>
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${log.asset_string_id}</span>
                     </div>
                 </div>
                 
-                <div class="text-slate-300 dark:text-slate-600 transition-colors group-hover:text-blue-400 shrink-0 ml-2">
-                    <i class="fas fa-tools text-lg"></i>
+                <div class="flex flex-col items-end gap-2 z-10 relative shrink-0 ml-2">
+                    <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusPillClass}">
+                        ${log.status}
+                    </span>
+                    <div class="text-slate-300 dark:text-slate-600 transition-colors group-hover:text-blue-400 mt-1">
+                        <i class="fas fa-tools text-lg"></i>
+                    </div>
                 </div>
             </div>
 
-            <div class="mb-4 ${textDim}">
-                <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider"><i class="fas fa-clipboard-list mr-1 opacity-50"></i> ${log.maintenance_type}</p>
-            </div>
-
-            <div class="flex items-center justify-between mt-auto pt-4 border-t border-slate-100 dark:border-slate-700/60 ${textDim}">
-                <span class="px-2.5 py-1 rounded-md text-[9px] font-black uppercase ${statusPillClass}">
-                    ${log.status}
-                </span>
-                <span class="text-[9px] font-bold text-slate-400">${displayDate}</span>
+            <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10 ${textDim} mt-auto">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Service Type</label>
+                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">${log.maintenance_type}</p>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Technician</label>
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate">
+                        <i class="fas fa-user-cog text-slate-300 dark:text-slate-600 text-xs mr-1"></i> 
+                        ${log.technician_name || 'System Generated'}
+                    </p>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Date Logged</label>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">${displayDate} at ${displayTime}</p>
+                </div>
             </div>
             
             <div class="absolute bottom-0 left-0 w-full h-1 ${accentLine} opacity-50 group-hover:opacity-100 transition-opacity"></div>
@@ -321,20 +315,14 @@ function renderTableRows(logs) {
     $container.html(html);
 }
 
-/**
- * 4. SHOW DETAILS (RIGHT PANEL)
- */
 function showDetails(data) {
     currentOpenLogId = data.logId;
     
-    // UI Toggles
     $('#placeholder-content').addClass('hidden');
     $('#detail-content').removeClass('hidden');
     
-    // Re-render table to apply the active ring border
     initTable(); 
     
-    // Fill Data
     $('#det-id').text(data.name);
     $('#det-asset-type').text(data.a_type);
     $('#det-date').text(data.date);
@@ -344,11 +332,9 @@ function showDetails(data) {
     $('#det-notes').text(data.notes);
     $('#det-edit-link').attr('href', data.editUrl);
 
-    // Update icon in the detail panel to match
     const detIconClass = getAssetIconClass(data.name + " " + data.a_type);
     $('#det-icon').removeClass().addClass(`fas ${detIconClass} text-blue-500 dark:text-blue-400 text-xl`);
 
-    // Status Styling in detail panel
     const statusEl = document.getElementById('det-status');
     if (data.status === 'Completed') {
         statusEl.className = "text-[11px] font-black text-emerald-500 uppercase";
@@ -359,9 +345,6 @@ function showDetails(data) {
     }
 }
 
-/**
- * 5. DELETE & PAGINATION HELPERS
- */
 function renderPagination(totalPages) {
     const container = document.getElementById('paginationControls');
     container.innerHTML = '';
@@ -376,7 +359,6 @@ function renderPagination(totalPages) {
 }
 
 function filterTable() { currentPage = 1; initTable(); }
-
 function openDeleteModal() { $('#deleteModal').removeClass('hidden'); }
 function closeDeleteModal() { $('#deleteModal').addClass('hidden'); }
 
