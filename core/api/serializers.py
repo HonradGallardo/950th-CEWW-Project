@@ -69,32 +69,37 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     rank = serializers.CharField(source='profile.rank', required=False)
-    # 🚨 Map the image field to the related profile model
     image = serializers.ImageField(source='profile.image', required=False) 
+    # Use write_only so the password is never sent back to the browser
+    password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-        # 🚨 Add 'image' to the fields array
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank', 'image']
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank', 'image']
+
+    def create(self, validated_data):
+        """Hashes password automatically when creating a new user."""
+        password = validated_data.pop('password', None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password) # This is the encryption step
+        user.save()
+        return user
 
     def update(self, instance, validated_data):
-        profile_data = validated_data.pop('profile', None)
+        """Hashes password automatically when updating an existing user."""
+        password = validated_data.pop('password', None)
         
+        # Update standard fields
+        instance.username = validated_data.get('username', instance.username)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.email = validated_data.get('email', instance.email)
+
+        if password:
+            instance.set_password(password) # Encrypts the new password
+        
         instance.save()
-
-        if profile_data:
-            profile = instance.profile
-            profile.rank = profile_data.get('rank', profile.rank)
-            
-            # 🚨 Ensure the image is saved if it's included in the request
-            if 'image' in profile_data:
-                profile.image = profile_data['image']
-                
-            profile.save()
-
         return instance
         
 

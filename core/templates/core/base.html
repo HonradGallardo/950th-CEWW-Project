@@ -7,7 +7,6 @@
     <title>{% block title %}950th CEWW System{% endblock %}</title>
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
@@ -35,7 +34,6 @@
 
     <style>
         body { transition: background-color 0.3s ease, color 0.3s ease; }
-        /* Custom scrollbar for API-loaded content */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
     </style>
@@ -60,30 +58,31 @@
             {% block content %}{% endblock %}
         </main>
     </div>
-    <div class="relative inline-block">
-    <button id="notification-button" class="p-2 text-slate-500 hover:text-blue-600 dark:text-slate-400 transition-colors">
-        <i class="fas fa-bell"></i>
-        <span id="notification-count" class="absolute top-0 right-0 hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-slate-900">
-            0
-        </span>
-    </button>
 
-    <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50">
-        <div class="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <span class="text-xs font-black uppercase tracking-wider">Recent Alerts</span>
-            <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-500 hover:underline">Clear All</a>
-        </div>
-        <ul id="notification-list" class="max-h-60 overflow-y-auto custom-scrollbar">
-            </ul>
-        <div class="p-2 border-t border-slate-100 dark:border-slate-700 text-center">
-            <a href="#" class="text-[10px] text-slate-400 uppercase font-bold">View All Notifications</a>
+    <div class="relative inline-block">
+        <button id="notification-button" class="p-2 text-slate-500 hover:text-blue-600 dark:text-slate-400 transition-colors">
+            <i class="fas fa-bell"></i>
+            <span id="notification-count" class="absolute top-0 right-0 hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-slate-900">
+                0
+            </span>
+        </button>
+
+        <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50">
+            <div class="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                <span class="text-xs font-black uppercase tracking-wider">Recent Alerts</span>
+                <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-500 hover:underline">Clear All</a>
+            </div>
+            <ul id="notification-list" class="max-h-60 overflow-y-auto custom-scrollbar"></ul>
+            <div class="p-2 border-t border-slate-100 dark:border-slate-700 text-center">
+                <a href="#" class="text-[10px] text-slate-400 uppercase font-bold">View All Notifications</a>
+            </div>
         </div>
     </div>
-</div>
+
 {% if user.is_authenticated %}
     <script>
         /**
-         * 1. THEME ENGINE (PRESERVED)
+         * 1. THEME ENGINE
          */
         const themeToggleBtn = document.getElementById('theme-toggle');
         const darkIcon = document.getElementById('theme-toggle-dark-icon');
@@ -98,56 +97,6 @@
                 darkIcon.classList.remove('hidden');
             }
         }
-function updateNotifications() {
-    $.ajax({
-        url: '/api/notifications/',
-        type: 'GET',
-        success: function(data) {
-            const unreadCount = data.filter(n => !n.is_read).length;
-            const $bell = $('#notification-count'); // Ensure this ID exists on your bell icon
-            
-            if (unreadCount > 0) {
-                $bell.text(unreadCount).show();
-            } else {
-                $bell.hide();
-            }
-            
-            // Optionally update the dropdown list here
-            let listHtml = '';
-            data.slice(0, 5).forEach(n => {
-                listHtml += `<li class="p-2 text-xs border-b ${n.is_read ? 'opacity-50' : 'font-bold'}">${n.message}</li>`;
-            });
-            $('#notification-list').html(listHtml);
-        }
-    });
-}
-
-// Check every 30 seconds
-setInterval(updateNotifications, 30000);
-updateNotifications();
-
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-$.ajaxSetup({
-    beforeSend: function(xhr, settings) {
-        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-        }
-    }
-});
 
         updateToggleIcons();
 
@@ -160,30 +109,73 @@ $.ajaxSetup({
                 localStorage.setItem('color-theme', 'dark');
             }
             updateToggleIcons();
-            // Dispatch event for components that need to re-render (like Charts)
             document.dispatchEvent(new Event('themeChanged'));
         });
 
         /**
-         * 2. JQUERY AJAX: SYSTEM NOTIFICATION SYNC
-         * Checks for new system messages/notifications every 2 minutes
+         * 2. INACTIVITY LOGOUT TIMER (30 Minutes)
          */
+        (function() {
+            const idleTimeout = 30 * 60 * 1000; // 30 minutes
+            let idleTimer;
+
+            function handleInactivity() {
+                alert("Security Protocol: You have been logged out due to 30 minutes of inactivity.");
+                window.location.href = "{% url 'logout' %}";
+            }
+
+            function resetTimer() {
+                clearTimeout(idleTimer);
+                idleTimer = setTimeout(handleInactivity, idleTimeout);
+            }
+
+            const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            
+            resetTimer();
+            activityEvents.forEach(event => {
+                document.addEventListener(event, resetTimer, false);
+            });
+        })();
+
+        /**
+         * 3. JQUERY AJAX: NOTIFICATION ENGINE & CSRF
+         */
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+
         $(document).ready(function() {
             const $btn = $('#notification-button');
             const $dropdown = $('#notification-dropdown');
 
-            // Toggle Dropdown
             $btn.on('click', function(e) {
                 e.stopPropagation();
                 $dropdown.toggleClass('hidden');
             });
 
-            // Close dropdown when clicking outside
             $(document).on('click', function() {
                 $dropdown.addClass('hidden');
             });
 
-            // Improve your existing updateNotifications function with UI Feedback
             window.updateNotifications = function() {
                 const $indicator = $('#global-api-indicator');
                 
@@ -215,21 +207,20 @@ $.ajaxSetup({
                             });
                         }
                         $('#notification-list').html(listHtml);
-                        
-                        // Hide indicator after 3 seconds of success
                         setTimeout(() => $indicator.fadeOut(), 3000);
                     },
                     error: function() {
                         $indicator.addClass('hidden');
-                        console.warn("Connection to Wing API lost. Retrying...");
                     }
                 });
             }
+
+            setInterval(updateNotifications, 30000);
+            updateNotifications();
         });
 
         /**
-         * 3. VANILLA JS API: GLOBAL UTILITIES
-         * Used for quick data fetching across all sub-templates
+         * 4. VANILLA JS API: GLOBAL UTILITIES
          */
         const SystemAPI = {
             async fetchJson(url) {
@@ -244,6 +235,6 @@ $.ajaxSetup({
             }
         };
     </script>
-    {% endif %}
+{% endif %}
 </body>
 </html>

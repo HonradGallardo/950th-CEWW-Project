@@ -67,6 +67,7 @@ class TicketMessage(models.Model):
         related_name='received_messages'
     )
     message = models.TextField()
+    is_group_chat = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

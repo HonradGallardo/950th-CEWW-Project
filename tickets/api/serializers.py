@@ -32,19 +32,33 @@ class TicketMessageSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
+    
+    # Fields for Column 3 and 4
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    
+    # Field for Column 6
     technician_name = serializers.CharField(source='technician.username', read_only=True, default="Unassigned")
-    # Add this field
+    
+    # Field for Column 7 (Previous Technician)
+    previous_technician = serializers.CharField(source='last_technician', read_only=True, default="None")
+    
     user_avatar = serializers.SerializerMethodField()
+    
+    # Field for Column 9
+    created_at = serializers.DateTimeField(format='%b %d, %Y %I:%M %p', read_only=True)
 
     class Meta:
         model = Ticket
-        fields = ['id', 'subject', 'user_name', 'status', 'description', 'created_at', 'technician_name', 'updated_at', 'user_avatar']
+        fields = [
+            'id', 'subject', 'user_name', 'first_name', 'last_name', 
+            'status', 'priority', 'description', 'created_at', 'technician_name', 
+            'previous_technician', 'updated_at', 'user_avatar'
+        ]
 
     def get_user_avatar(self, obj):
         try:
-            # Matches your user_list.html logic
             if obj.user.profile.image:
                 return obj.user.profile.image.url
         except:
-            pass
-        return None
+            return None

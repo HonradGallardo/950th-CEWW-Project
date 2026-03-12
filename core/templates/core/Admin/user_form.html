@@ -98,8 +98,8 @@ $(document).ready(function() {
         $text.text('VALIDATING...');
 
         $.ajax({
-            url: isEdit ? `/api/users/${userId}/` : window.location.href,
-            type: isEdit ? 'PATCH' : 'POST',
+            url: window.location.href, 
+            type: 'POST', // Use POST for both to keep it simple for the Django Form
             data: $form.serialize(),
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

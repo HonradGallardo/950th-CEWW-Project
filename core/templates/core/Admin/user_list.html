@@ -65,7 +65,7 @@
                                 <td class="px-4 py-4"><div class="w-11 h-10 rounded-lg bg-slate-50 dark:bg-slate-800/80 p-1.5 mx-auto"><img src="/static/core/images/badge/{{ person.profile.rank|default:'Airman' }}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';"></div></td>
                                 <td class="px-4 py-4 text-center sm:text-left"><span class="text-[8px] font-medium text-slate-400 uppercase">{{ person.profile.rank|default:"Airman" }}</span></td>
                                 <td class="px-6 py-4 font-bold text-sm text-slate-800 dark:text-slate-200">{{ person.get_full_name|default:person.username }}</td>
-                                <td class="px-6 py-4 font-bold text-blue-600 dark:text-blue-400 font-mono text-[10px]">@{{ person.username }}</td>
+                                <td class="px-6 py-4 font-bold text-blue-600 dark:text-blue-400 font-mono text-[10px]">{{ person.username }}</td>
                                 <td class="px-6 py-4 text-[10px] text-slate-500">{{ person.last_login|date:"d-m-y"|default:"Never" }}</td>
                                 <td class="px-6 py-4 text-center"><a href="{% url 'edit_user' person.id %}" class="text-slate-500 hover:text-blue-600"><i class="fas fa-edit"></i></a></td>
                             </tr>
@@ -247,7 +247,7 @@ function updateUserTable(users) {
                 </td>
                 <td class="block sm:table-cell px-4 py-4 text-center sm:text-left"><span class="text-[8px] font-medium text-slate-400 uppercase">${u.rank}</span></td>
                 <td class="block sm:table-cell px-6 py-4 font-bold text-sm text-slate-800 dark:text-slate-200">${u.full_name}</td>
-                <td class="block sm:table-cell px-6 py-4 font-bold text-blue-600 dark:text-blue-400 font-mono text-[10px]">@${u.username}</td>
+                <td class="block sm:table-cell px-6 py-4 font-bold text-blue-600 dark:text-blue-400 font-mono text-[10px]">${u.username}</td>
                 <td class="block sm:table-cell px-6 py-4 text-[10px] text-slate-500">${u.last_login}</td>
                 <td class="block sm:table-cell px-6 py-4 text-center">
                     <a href="/users/edit/${u.id}/" class="text-slate-500 hover:text-blue-600"><i class="fas fa-edit"></i></a>
@@ -261,7 +261,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     activeUserId = id;
     document.getElementById('empty-message').classList.add('hidden');
     document.getElementById('user-details').classList.remove('hidden');
-    document.getElementById('detail-username').innerText = '@' + username;
+    document.getElementById('detail-username').innerText = username;
     document.getElementById('detail-name').innerText = fullName;
     document.getElementById('detail-email').innerText = email;
     document.getElementById('detail-role').innerText = role;
