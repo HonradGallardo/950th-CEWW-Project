@@ -183,13 +183,15 @@ let currentPage = 1;
 const rowsPerPage = 10;
 let currentOpenIncidentId = null;
 
+// 🚨 NEW: Variable to hold our active chat refresh timer
+let chatRefreshInterval = null; 
+
 // --- 1. API FETCH & INITIALIZATION ---
 function loadIncidents() {
     $.ajax({
         url: '/api/incidents/',
         type: 'GET',
         success: function(data) {
-            // Sort by Date Descending (Newest first)
             allIncidents = data.sort((a, b) => new Date(b.date) - new Date(a.date));
             initTable();
         },
@@ -225,22 +227,19 @@ function renderTableRows(incidents) {
         return;
     }
 
-    // 🚨 ADDED: A robust string sanitizer to prevent line breaks and quotes from destroying the onclick attribute
     const escapeJS = (str) => {
         if (!str) return "";
         return String(str)
-            .replace(/\\/g, "\\\\")  // Escape backslashes
-            .replace(/'/g, "\\'")    // Escape single quotes for JS
-            .replace(/"/g, "&quot;") // Escape double quotes for HTML
-            .replace(/\n/g, "\\n")   // Escape newlines (The main culprit!)
-            .replace(/\r/g, "\\r");  // Escape carriage returns
+            .replace(/\\/g, "\\\\") 
+            .replace(/'/g, "\\'")    
+            .replace(/"/g, "&quot;") 
+            .replace(/\n/g, "\\n")   
+            .replace(/\r/g, "\\r");  
     };
 
     incidents.forEach(inc => {
-        // Prepare display parameters
         let sevIcon, sevColor, sevBadge, statusColor;
         
-        // Severity Logic
         if (inc.severity === 'Critical') {
             sevIcon = 'fa-biohazard'; sevColor = 'text-red-500'; 
             sevBadge = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-600';
@@ -255,25 +254,24 @@ function renderTableRows(incidents) {
             sevBadge = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-600';
         }
 
-        // Status Logic
         if (inc.status === 'Open') statusColor = 'text-red-500';
         else if (inc.status === 'Investigating') statusColor = 'text-orange-500';
         else statusColor = 'text-emerald-500';
 
-        // Date Formatting
         let formattedDate = 'N/A';
         if (inc.date) {
             const d = new Date(inc.date);
             formattedDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ', ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        // 🚨 UPDATED: Apply the new escapeJS function to all text fields
         const safeTitle = escapeJS(inc.title);
         const safeDesc = escapeJS(inc.description || "No description provided.");
         const safeActions = escapeJS(inc.actions_taken || "No actions logged yet.");
         const safeReporter = escapeJS(inc.reported_by_name || "System");
 
-        // Generate Row
+        // Highlight the row if it's currently open
+        const activeClass = currentOpenIncidentId == inc.id ? 'bg-blue-50/50 dark:bg-blue-900/20' : '';
+
         html += `
         <tr onclick="previewIncident({
                 id: '${inc.id}',
@@ -285,7 +283,7 @@ function renderTableRows(incidents) {
                 date: '${formattedDate}',
                 reporter: '${safeReporter}'
             })" 
-            class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700">
+            class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass}">
             
             <td class="px-4 sm:px-6 py-4">
                 <div class="flex items-center gap-2">
@@ -344,6 +342,9 @@ function renderPagination(totalPages) {
 function previewIncident(data) {
     currentOpenIncidentId = data.id;
 
+    // Re-render table to apply the highlight to the selected row
+    initTable();
+
     // UI Visibility
     $('#emptyState').addClass('hidden');
     $('#detailContent').removeClass('hidden');
@@ -352,24 +353,17 @@ function previewIncident(data) {
         $('#incidentDetailPanel')[0].scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Assign hidden ID for chat
     $('#incident_id').val(data.id);
-
-    // Populate Fields
     $('#view_id').text("ID: INC-" + String(data.id).padStart(3, '0'));
     $('#view_title').text(data.title);
     $('#view_status').text(data.status);
     $('#view_reporter').text(data.reporter);
     $('#view_date').text(data.date);
     $('#view_description').text(data.desc);
-    
-    // Actions mapping not passed from DRF serializer currently, fallback text:
     $('#view_actions').text(data.actions);
     
-    // Update Action Link
     if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${data.id}/`);
 
-    // Dynamic Badge Color
     const $badge = $('#view_severity_badge');
     let colorClass = '';
     if (data.severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-900/20 text-red-600 border-red-100';
@@ -378,7 +372,6 @@ function previewIncident(data) {
     else colorClass = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-100';
     $badge.html(`<span class="px-2 py-0.5 rounded border text-[10px] font-black uppercase ${colorClass}">${data.severity}</span>`);
 
-    // Manage Delete Access
     if (!IS_COMMANDER) {
         if (data.status === 'Resolved') {
             $('#deleteIncidentIconBtn').removeClass('hidden');
@@ -387,8 +380,17 @@ function previewIncident(data) {
         }
     }
 
-    // Fetch Discussion Logs
-    fetchLogs(data.id);
+    // Load logs with the spinning animation
+    fetchLogs(data.id, true);
+
+    // 🚨 NEW: Start polling the server for new messages every 3 seconds!
+    if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+    chatRefreshInterval = setInterval(() => {
+        if (currentOpenIncidentId) {
+            // Pass 'false' so it updates silently without showing the loading spinner
+            fetchLogs(currentOpenIncidentId, false); 
+        }
+    }, 3000); 
 }
 
 // --- 4. DELETE MODAL API INTEGRATION ---
@@ -407,16 +409,19 @@ function closeDeleteModal() {
 $('#confirmDeleteBtn').on('click', function() {
     if (!currentOpenIncidentId) return;
     
-    // DELETE request to the DRF API
     $.ajax({
         url: `/api/incidents/${currentOpenIncidentId}/`,
         type: 'DELETE',
         headers: { 'X-CSRFToken': '{{ csrf_token }}' },
         success: function() {
             closeDeleteModal();
-            loadIncidents(); // Refresh the table
-            $('#detailContent').addClass('hidden'); // Hide the details panel
+            loadIncidents();
+            $('#detailContent').addClass('hidden');
             $('#emptyState').removeClass('hidden');
+            
+            // Clear tracking variables
+            currentOpenIncidentId = null;
+            if(chatRefreshInterval) clearInterval(chatRefreshInterval);
         },
         error: function(err) {
             console.error("Failed to delete incident", err);
@@ -425,11 +430,15 @@ $('#confirmDeleteBtn').on('click', function() {
     });
 });
 
-// --- 5. LOG/CHAT LOGIC (Preserved & Hooked to View) ---
-// --- 5. LOG/CHAT LOGIC (API SYNCED) ---
-async function fetchLogs(id) {
+// --- 5. REAL-TIME LOG/CHAT LOGIC ---
+let lastScrollHeight = 0;
+
+async function fetchLogs(id, showLoader = true) {
     const $container = $('#chat-container');
-    $container.html('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Synchronizing Logs...</p>');
+    
+    if (showLoader) {
+        $container.html('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Synchronizing Logs...</p>');
+    }
 
     try {
         const response = await fetch(`/api/incident-comments/?incident=${id}`, {
@@ -461,45 +470,75 @@ async function fetchLogs(id) {
                 </div>
             `);
         });
-        $container.scrollTop($container[0].scrollHeight);
+
+        // Smart Scrolling: Only auto-scroll to the bottom if new messages appeared
+        const currentScrollHeight = $container[0].scrollHeight;
+        if (currentScrollHeight > lastScrollHeight || showLoader) {
+            $container.scrollTop(currentScrollHeight);
+            lastScrollHeight = currentScrollHeight;
+        }
+
     } catch (e) { 
         console.error("Telemetry Error", e); 
-        $container.html('<p class="text-center py-10 text-[10px] text-red-400 font-bold uppercase">Failed to load logs</p>');
+        if (showLoader) {
+            $container.html('<p class="text-center py-10 text-[10px] text-red-400 font-bold uppercase">Failed to load logs</p>');
+        }
     }
 }
 
 $(document).ready(function() {
-    loadIncidents(); // Initial Load
-    setInterval(loadIncidents, 30000); // Live Refresh every 30s
+    loadIncidents(); 
+    setInterval(loadIncidents, 30000); 
 
-    // POST TO DRF API
+    // POST TO DRF API - INSTANT FEEL
     $('#chat-form').on('submit', function(e) {
         e.preventDefault();
         const $msg = $('#chat-message');
         const id = $('#incident_id').val();
-        if (!$msg.val().trim() || !id) return;
+        const text = $msg.val().trim();
+        const $submitBtn = $('#chatSubmitBtn');
+        
+        if (!text || !id) return;
 
+        // 1. Instantly draw the message on screen so the user doesn't have to wait
+        const $container = $('#chat-container');
+        $container.append(`
+            <div class="flex flex-col items-end opacity-50">
+                <div class="max-w-[90%] bg-blue-600 text-white rounded-l-xl rounded-tr-xl p-3 shadow-sm">
+                    <p class="text-[9px] font-black text-blue-100 uppercase mb-1">Sending...</p>
+                    <p class="text-xs font-medium">${text}</p>
+                </div>
+            </div>
+        `);
+        $container.scrollTop($container[0].scrollHeight);
+
+        // 2. Lock input to prevent spamming
+        $msg.val('');
+        $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin text-xs"></i>');
+
+        // 3. Send data quietly
         $.ajax({
             url: "/api/incident-comments/", 
             type: "POST",
             contentType: 'application/json',
             headers: { 'X-CSRFToken': '{{ csrf_token }}' },
             data: JSON.stringify({
-                message: $msg.val(),
+                message: text,
                 incident: parseInt(id) 
             }),
             success: function() {
-                $msg.val(''); // Clear the input box
-                fetchLogs(id); // Reload logs
+                // Instantly fetch the real data to replace our "Sending..." bubble
+                fetchLogs(id, false); 
+                $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane text-xs"></i>');
             },
             error: function(err) { 
                 console.error("API Rejected Log:", err.responseText);
                 alert("Transmission Failure: Terminal disconnected."); 
+                $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane text-xs"></i>');
             }
         });
     });
 });
-
 </script>
 
 <style>

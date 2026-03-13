@@ -168,42 +168,44 @@
         }
 
         function renderMaintenanceTable(logs) {
-            let html = '';
-            if (!logs || logs.length === 0) {
-                html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records.</td></tr>';
-            } else {
-                logs.forEach(log => {
-                    const statusColor = log.status === 'Completed' ? 'text-green-500' : 'text-orange-400';
-                    html += `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${log.asset_name}</td>
-                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400">${log.technician_name || 'System'}</td>
-                            <td class="px-6 py-4 text-right">
-                                <span class="text-[10px] font-black uppercase tracking-wider ${statusColor}">${log.status}</span>
-                            </td>
-                        </tr>`;
-                });
-            }
-            $('#maintenanceTableBody').html(html);
-        }
+                    let html = '';
+                    if (!logs || logs.length === 0) {
+                        html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records.</td></tr>';
+                    } else {
+                        logs.forEach(log => {
+                            const statusColor = log.status === 'Completed' ? 'text-green-500' : 'text-orange-400';
+                            // Use log.id which is guaranteed by the new API view
+                            html += `
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/maintenance/edit/${log.id}/'">
+                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${log.asset_name}</td>
+                                    <td class="px-6 py-4 text-slate-500 dark:text-slate-400">${log.technician_name || 'System'}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span class="text-[10px] font-black uppercase tracking-wider ${statusColor}">${log.status}</span>
+                                    </td>
+                                </tr>`;
+                        });
+                    }
+                    $('#maintenanceTableBody').html(html);
+                }
 
-        function renderIncidentTable(incidents) {
-            let html = '';
-            if (!incidents || incidents.length === 0) {
-                html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents.</td></tr>';
-            } else {
-                incidents.forEach(inc => {
-                    const sevColor = inc.severity === 'Critical' ? 'text-red-600' : (inc.severity === 'High' ? 'text-orange-500' : 'text-slate-400');
-                    html += `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${inc.title}</td>
-                            <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider ${sevColor}">${inc.severity}</span></td>
-                            <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
-                        </tr>`;
-                });
-            }
-            $('#incidentTableBody').html(html);
-        }
+                function renderIncidentTable(incidents) {
+                    let html = '';
+                    if (!incidents || incidents.length === 0) {
+                        html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents.</td></tr>';
+                    } else {
+                        incidents.forEach(inc => {
+                            const sevColor = inc.severity === 'Critical' ? 'text-red-600' : (inc.severity === 'High' ? 'text-orange-500' : 'text-slate-400');
+                            // Use inc.id which is guaranteed by the new API view
+                            html += `
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/incidents/edit/${inc.id}/'">
+                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${inc.title}</td>
+                                    <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider ${sevColor}">${inc.severity}</span></td>
+                                    <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
+                                </tr>`;
+                        });
+                    }
+                    $('#incidentTableBody').html(html);
+                }
 
         refreshDashboard();
         setInterval(refreshDashboard, 30000); 

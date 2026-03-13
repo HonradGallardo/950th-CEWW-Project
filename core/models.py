@@ -4,6 +4,17 @@ from django.utils import timezone
 from django.db import models
 
 
+class UserPasskey(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='passkeys')
+    name = models.CharField(max_length=100, default="My Authenticator") # e.g. "iPhone 15 Pro"
+    credential_id = models.CharField(max_length=255, unique=True)
+    public_key = models.TextField()
+    sign_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+    
 class Asset(models.Model):
     ASSET_TYPES = [('PC', 'PC'), ('Laptop', 'Laptop'), ('Server', 'Server'), ('Router', 'Router')]
     STATUS_CHOICES = [('Active', 'Active'), ('Inactive', 'Inactive'), ('Maintenance', 'Under Maintenance')]

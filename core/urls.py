@@ -2,10 +2,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
+from django.views.generic import TemplateView
 from . import views
 from django.contrib.auth import views as auth_views
 # Import modular viewsets
-from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView
+from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI
 
 router = DefaultRouter()
 router.register(r'assets', AssetViewSet)
@@ -23,6 +24,7 @@ urlpatterns = [
     # --- CORE PAGES ---
     path('', views.landing, name='landing'),
     path('login/', APILoginView.as_view(), name='login'),
+    path('api/verify-mfa/', VerifyMFAAPI.as_view(), name='api_verify_mfa'),
     path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
@@ -56,6 +58,7 @@ urlpatterns = [
     path('analytics_list/', views.analytics_list, name='analytics_list'),
     path('reports/', views.reports, name='reports'),
     path('notifications/read-all/', views.mark_all_as_read, name='mark_all_read'),
+    path('settings/password/', TemplateView.as_view(template_name='core/Admin/password_change.html'), name='custom_password_change'),
     path('forgot_password/', views.forgot_password_view, name='forgot_password'),
     path('api/forgot-password/', ForgotPasswordAPI.as_view(), name='api_forgot_password'),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),

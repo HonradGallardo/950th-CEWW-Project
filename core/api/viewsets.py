@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from rest_framework import viewsets
+from webauthn import generate_authentication_options, generate_registration_options, verify_registration_response
 from ..models import Asset, IncidentComment, Maintenance, Incident, Notification
 from .serializers import AssetSerializer, ChangePasswordSerializer, IncidentCommentSerializer, MaintenanceSerializer, IncidentSerializer, NotificationSerializer, UserSerializer
 from rest_framework.decorators import action
@@ -10,12 +11,19 @@ from django.db.models import Q, Count
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework import status
-from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import login, update_session_auth_hash
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import random
 from django.core.mail import send_mail
 from django.contrib.auth.views import LoginView
-
+import requests
+import json, base64
+from django.http import HttpResponse
+from webauthn import generate_authentication_options, verify_authentication_response
+from webauthn.helpers.options_to_json import options_to_json
+from core.models import UserPasskey
+from webauthn.helpers.structs import PublicKeyCredentialDescriptor
+from webauthn.helpers.base64url_to_bytes import base64url_to_bytes
 from core.api.serializers import (
     UserSerializer, 
     AssetSerializer, 
@@ -24,25 +32,252 @@ from core.api.serializers import (
     IncidentCommentSerializer,
     NotificationSerializer,
 )
+# Ensure these match your local environment
+RP_ID = "localhost" 
+ORIGIN = "http://localhost:8000"
+
+# ==========================================
+# PASSKEY REGISTRATION (For Profile Page)
+# ==========================================
+class PasskeyRegisterOptionsAPI(APIView):
+    permission_classes = [IsAuthenticated] 
+
+    def post(self, request):
+        user = request.user
+        
+        options = generate_registration_options(
+            rp_id=RP_ID,
+            rp_name="950th CEWW System",
+            user_id=str(user.id).encode('utf-8'),
+            user_name=user.username,
+        )
+
+        challenge_b64 = base64.b64encode(options.challenge).decode('utf-8')
+        request.session['webauthn_register_challenge'] = challenge_b64
+
+        return HttpResponse(options_to_json(options), content_type='application/json')
+
+class PasskeyRegisterVerifyAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            challenge_b64 = request.session.get('webauthn_register_challenge')
+            if not challenge_b64:
+                 return Response({"error": "Registration session expired. Please try again."}, status=400)
+                 
+            challenge_bytes = base64.b64decode(challenge_b64)
+            
+            # 🚨 FIX: Use request.data instead of json.loads(request.body)
+            credential_data = request.data 
+            
+            verification = verify_registration_response(
+                credential=credential_data,
+                expected_challenge=challenge_bytes, 
+                expected_rp_id=RP_ID,
+                expected_origin=ORIGIN,
+            )
+            
+            credential_id_str = base64.b64encode(verification.credential_id).decode('utf-8')
+            public_key_str = base64.b64encode(verification.credential_public_key).decode('utf-8')
+
+            from core.models import UserPasskey
+            UserPasskey.objects.create(
+                user=request.user,
+                name="My Authenticator",
+                credential_id=credential_id_str,
+                public_key=public_key_str,
+                sign_count=verification.sign_count
+            )
+            
+            return Response({"status": "success"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+# ==========================================
+# PASSKEY LOGIN (For Login Page)
+# ==========================================
+class PasskeyLoginOptionsAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            username = request.data.get('username') 
+            from django.contrib.auth.models import User
+            user = User.objects.filter(username=username).first()
+
+            if not user:
+                return Response({"error": "User not found."}, status=400)
+
+            user_passkeys = user.passkeys.all()
+            if not user_passkeys:
+                return Response({"error": "No passkeys registered for this account."}, status=400)
+
+            # 🚨 FIX 1: Use PublicKeyCredentialDescriptor instead of a plain dictionary
+            allow_credentials = [
+                PublicKeyCredentialDescriptor(
+                    id=base64.b64decode(pk.credential_id)
+                ) for pk in user_passkeys
+            ]
+
+            options = generate_authentication_options(
+                rp_id=RP_ID,
+                allow_credentials=allow_credentials,
+            )
+
+            challenge_b64 = base64.b64encode(options.challenge).decode('utf-8')
+            request.session['webauthn_login_challenge'] = challenge_b64
+            request.session['webauthn_user_id'] = user.id
+
+            return HttpResponse(options_to_json(options), content_type='application/json')
+            
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+class PasskeyLoginVerifyAPI(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        try:
+            credential_data = request.data 
+            
+            challenge_b64 = request.session.get('webauthn_login_challenge')
+            user_id = request.session.get('webauthn_user_id')
+
+            if not challenge_b64 or not user_id:
+                return Response({"error": "Session expired. Try again."}, status=400)
+
+            challenge_bytes = base64.b64decode(challenge_b64)
+
+            from django.contrib.auth.models import User
+            user = User.objects.filter(id=user_id).first()
+            
+            # 🚨 FIX 2: Safely compare the browser's Base64URL with our DB's Standard Base64
+            frontend_cred_id_bytes = base64url_to_bytes(credential_data.get('id'))
+            
+            passkey = None
+            for pk in user.passkeys.all():
+                db_cred_bytes = base64.b64decode(pk.credential_id)
+                if db_cred_bytes == frontend_cred_id_bytes:
+                    passkey = pk
+                    break
+                    
+            if not passkey:
+                 return Response({"error": "Unrecognized passkey."}, status=400)
+
+            verification = verify_authentication_response(
+                credential=credential_data,
+                expected_challenge=challenge_bytes,
+                expected_rp_id=RP_ID,
+                expected_origin=ORIGIN,
+                credential_public_key=base64.b64decode(passkey.public_key),
+                credential_current_sign_count=passkey.sign_count,
+            )
+
+            passkey.sign_count = verification.new_sign_count
+            passkey.save()
+
+            del request.session['webauthn_login_challenge']
+            del request.session['webauthn_user_id']
+            
+            from django.contrib.auth import login
+            login(request, user)
+            return Response({"status": "success", "redirect_url": "/role-redirect/"})
+
+        except Exception as e:
+            return Response({"error": "Biometric verification failed: " + str(e)}, status=400)
+        
+        
+        
 class APILoginView(LoginView):
     template_name = 'registration/login.html'
 
     def form_valid(self, form):
-        # If it's an AJAX request, return a JSON response
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            from django.contrib.auth import login
-            login(self.request, form.get_user())
-            return JsonResponse({
-                'status': 'success',
-                'redirect_url': '/role-redirect/',
-                'mfa_required': False  # Future hook for OTP/MFA
-            })
+            user = form.get_user()
+            
+            # --- MFA LOGIC CHECK ---
+            # For now, we will simulate MFA being turned ON for everyone.
+            # Later, you can change this to: mfa_enabled = user.profile.mfa_enabled
+            mfa_enabled = True 
+
+            if mfa_enabled:
+                
+                if not user.email or user.email.strip() == "":
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'MFA is required, but no email is registered to this account. Please contact your system administrator.'
+                    }, status=400)
+                # 1. Generate a 6-digit OTP
+                generated_otp = str(random.randint(100000, 999999))
+                
+                # 2. Store pre-auth info in the session securely
+                self.request.session['mfa_user_id'] = user.id
+                self.request.session['mfa_expected_otp'] = generated_otp
+
+                # 3. Send the OTP via Email
+                subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
+                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
+                try:
+                    send_mail(
+                        subject, message,
+                        getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
+                        [user.email], fail_silently=True,
+                    )
+                except Exception as e:
+                    print(f"Failed to send MFA email: {e}")
+
+                # 4. Tell the frontend to show the MFA form!
+                return JsonResponse({
+                    'status': 'success',
+                    'mfa_required': True 
+                })
+            else:
+                # Standard Login (No MFA)
+                login(self.request, user)
+                return JsonResponse({
+                    'status': 'success',
+                    'redirect_url': '/role-redirect/',
+                    'mfa_required': False 
+                })
+                
         return super().form_valid(form)
 
     def form_invalid(self, form):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            return JsonResponse({'status': 'error', 'message': 'Invalid credentials.'}, status=400)
         return super().form_invalid(form)
+
+
+class VerifyMFAAPI(APIView):
+    """Endpoint to verify the OTP entered during login."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        otp_code = request.data.get('otp_code')
+        user_id = request.session.get('mfa_user_id')
+        expected_otp = request.session.get('mfa_expected_otp')
+
+        # 1. Check if the session expired
+        if not user_id or not expected_otp:
+            return Response({"message": "Session expired. Please log in again."}, status=400)
+
+        # 2. Verify the Code
+        if str(otp_code) == str(expected_otp):
+            user = User.objects.filter(id=user_id).first()
+            if user:
+                # Success! Log them in officially.
+                login(request, user)
+                
+                # Clean up session data
+                del request.session['mfa_user_id']
+                del request.session['mfa_expected_otp']
+                
+                return Response({"status": "success", "redirect_url": "/role-redirect/"})
+            else:
+                return Response({"message": "User account error."}, status=400)
+
+        return Response({"message": "Invalid verification code."}, status=400)
 
 class DashboardStatsAPI(APIView):
     """Provides live data for dashboard counters, charts, and tables."""
@@ -66,6 +301,7 @@ class DashboardStatsAPI(APIView):
         # 4. Table Data: Recent Maintenance
         recent_maint = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
         maint_list = [{
+            'id': m.id,
             'asset_name': m.asset.assets_name,
             'technician_name': m.technician.username if m.technician else 'System',
             'status': m.status
@@ -74,6 +310,7 @@ class DashboardStatsAPI(APIView):
         # 5. Table Data: Open Incidents
         open_inc_qs = Incident.objects.filter(status='Open').order_by('-date')[:5]
         inc_list = [{
+            'id': i.id,
             'title': i.title,
             'severity': i.severity,
         } for i in open_inc_qs]

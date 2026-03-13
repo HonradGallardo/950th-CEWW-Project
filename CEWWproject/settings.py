@@ -7,8 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 2. Initialize Environ
 env = environ.Env(
-    DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ['127.0.0.1', 'localhost'])
+    DEBUG=(bool, False)
+    # Removed the incorrect ALLOWED_HOSTS definition from here
 )
 
 # 3. Read Environment Files (Priority: .sys_config then .env)
@@ -24,8 +24,17 @@ if os.path.exists(default_env_path):
 
 # 4. Core Security Settings
 SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG')
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
+
+# --- MERGE CONFLICT RESOLVED ---
+# Honrad-Branch (Active): Secure, environment-driven approach
+DEBUG = env.bool('DEBUG', default=False)
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+
+# Christian-Branch (Preserved as comments): 
+# DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
+# CRITICAL FIX: Hardcode the allowed hosts right here, overwriting the env file completely.
+# ALLOWED_HOSTS = ['*']
+# -------------------------------
 
 # 5. Application Definition
 INSTALLED_APPS = [
@@ -100,13 +109,24 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = f'950th CEWW System <{EMAIL_HOST_USER}>'
+DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+
+# Original hardcoded credentials preserved as comments
+# EMAIL_HOST_USER = 'honradg71@gmail.com'
+# EMAIL_HOST_PASSWORD = '[REDACTED_APP_PASSWORD]'
+
+# Active secure configuration
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='honradg71@gmail.com')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
 # 11. ReCaptcha Security
-RECAPTCHA_SITE_KEY = env('RECAPTCHA_SITE_KEY')
-RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY')
+# Original hardcoded credentials preserved as comments
+# RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+# RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+
+# Active secure configuration
+RECAPTCHA_SITE_KEY = env('RECAPTCHA_SITE_KEY', default='6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
+RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY', default='6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
 
 # 12. Authentication Routing
 LOGIN_URL = 'login'

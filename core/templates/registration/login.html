@@ -7,6 +7,7 @@
     <title>Login | IT Asset & Cybersecurity System</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .login-gradient {
@@ -16,11 +17,44 @@
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
         }
+        .animate-in { animation-duration: 300ms; animation-fill-mode: forwards; }
+        .fade-in { animation-name: fadeIn; }
+        .slide-in-from-right-4 { animation-name: slideInRight; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(1rem); } to { transform: translateX(0); } }
     </style>
 </head>
-<body class="login-gradient flex items-center justify-center min-h-screen p-4 font-sans text-slate-900">
+<body class="login-gradient flex items-center justify-center min-h-screen p-4 font-sans text-slate-900 relative">
 
-    <div class="w-full max-w-md">
+    <div id="errorModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeErrorModal()"></div>
+
+            <div class="relative bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-sm w-full border border-slate-100 animate-in fade-in scale-95 duration-200">
+                <div class="bg-white px-6 pt-6 pb-6">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto shrink-0 flex items-center justify-center h-16 w-16 rounded-full bg-red-50 sm:mx-0 sm:h-12 sm:w-12">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                        </div>
+                        <div class="mt-4 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg font-black text-slate-800 tracking-tight" id="modal-title">Authentication Error</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-slate-500 font-medium" id="errorModalMessage">
+                                    An error occurred during login.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-slate-100">
+                    <button type="button" onclick="closeErrorModal()" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-red-600 text-sm font-bold text-white hover:bg-red-700 focus:outline-none sm:w-auto transition-colors">
+                        Understood
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="w-full max-w-md relative z-10">
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
                 <i class="fas fa-shield-alt text-white text-3xl"></i>
@@ -33,15 +67,6 @@
 
         <div id="loginCard" class="glass-effect rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/50 transition-all duration-300">
             
-            {% if form.errors %}
-            <div class="mx-8 mt-6 bg-red-50 border border-red-100 rounded-xl p-3 flex items-center animate-pulse">
-                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
-                <p class="text-xs text-red-700 font-semibold">
-                    Access Denied: Invalid credentials or inactive account.
-                </p>
-            </div>
-            {% endif %}
-
             <form id="loginForm" method="post" action="{% url 'login' %}" class="p-10 space-y-5">
                 {% csrf_token %}
                 
@@ -80,10 +105,45 @@
                     Sign In
                 </button>
 
+                <div class="relative flex items-center justify-center my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-slate-200"></div>
+                    </div>
+                    <span class="relative bg-white/80 backdrop-blur-md px-4 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest">Or</span>
+                </div>
+
+                <button type="button" id="passkey-login-btn" class="w-full bg-white/60 hover:bg-white text-slate-700 border border-slate-200 font-bold py-3.5 rounded-2xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-3">
+                    <i class="fas fa-fingerprint text-blue-600 text-xl"></i> Sign in with Passkey
+                </button>
+
                 <div class="text-center mt-6">
                     <a href="{% url 'landing' %}" class="text-sm text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center font-medium">
                         <i class="fas fa-chevron-left mr-2 text-xs"></i> Back to Homepage
                     </a>
+                </div>
+            </form>
+
+            <form id="mfaForm" class="hidden p-10 space-y-6 animate-in fade-in slide-in-from-right-4">
+                <div class="text-center mb-4">
+                    <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-3">
+                        <i class="fas fa-mobile-alt text-emerald-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 uppercase">2-Step Verification</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Enter the 6-digit code sent to your email</p>
+                </div>
+
+                <input type="text" name="otp_code" id="otp_code" required maxlength="6" autocomplete="off"
+                       class="w-full px-4 py-4 bg-slate-100/50 border border-slate-200 rounded-2xl text-center font-mono text-2xl tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-slate-700"
+                       placeholder="••••••">
+
+                <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all mt-2">
+                    Verify & Login
+                </button>
+                
+                <div class="text-center mt-4">
+                    <button type="button" id="backToLoginBtn" class="text-xs font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">
+                        <i class="fas fa-arrow-left mr-1"></i> Cancel & Go Back
+                    </button>
                 </div>
             </form>
 
@@ -101,9 +161,24 @@
             &copy; 950th Cyberspace and Electronic Warfare Wing
         </p>
     </div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+    // --- MODAL CONTROLS ---
+    function showErrorModal(message) {
+        $('#errorModalMessage').text(message);
+        $('#errorModal').removeClass('hidden');
+    }
+    
+    function closeErrorModal() {
+        $('#errorModal').addClass('hidden');
+    }
+
     $(document).ready(function() {
+        
+        // ==========================================
+        // 1. HANDLE STANDARD LOGIN SUBMISSION
+        // ==========================================
         $('#loginForm').on('submit', function(e) {
             e.preventDefault();
             
@@ -112,7 +187,6 @@
             const $card = $('#loginCard');
             const originalBtnText = $btn.html();
             
-            // 1. Enter Secure Processing State
             $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Authenticating...');
             $card.addClass('opacity-75 pointer-events-none');
 
@@ -122,41 +196,145 @@
                 data: $form.serialize(),
                 headers: { "X-Requested-With": "XMLHttpRequest" },
                 success: function(response) {
-                    // --- 🚀 FUTURE MFA HOOK ---
                     if (response.mfa_required) {
                         handleMFAStep(response);
                         return;
                     }
-
-                    // Success: Redirect to role-based dashboard
                     window.location.href = response.redirect_url || "{% url 'role_redirect' %}";
                 },
                 error: function(xhr) {
-                    // 2. Error Feedback
                     $btn.prop('disabled', false).html(originalBtnText);
                     $card.removeClass('opacity-75 pointer-events-none');
                     
-                    // Shake effect for feedback
                     $card.addClass('animate-bounce');
                     setTimeout(() => $card.removeClass('animate-bounce'), 500);
 
-                    // Extract error message from JSON if available
                     let errorMsg = "Authentication Failed: Check credentials.";
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMsg = xhr.responseJSON.message;
                     }
                     
-                    alert(errorMsg);
+                    // 🔥 TRIGGER THE NEW CLEAN POPUP HERE
+                    showErrorModal(errorMsg);
                 }
             });
         });
 
-        // 🛡️ MOCK MFA HANDLER (FOR FUTURE INTEGRATION)
+        // ==========================================
+        // 2. MFA UI TRANSITION LOGIC
+        // ==========================================
         function handleMFAStep(data) {
-            // This is where you would hide the password field 
-            // and show an OTP input field in the future.
-            console.log("MFA required for user:", data.user);
+            $('#loginForm').addClass('hidden');
+            $('#mfaForm').removeClass('hidden');
+            $('#loginCard').removeClass('opacity-75 pointer-events-none');
+            $('#otp_code').focus(); 
         }
+
+        $('#backToLoginBtn').on('click', function() {
+            $('#mfaForm').addClass('hidden');
+            $('#loginForm').removeClass('hidden');
+            $('#loginForm').find('button[type="submit"]').prop('disabled', false).text('Sign In');
+            $('#otp_code').val(''); 
+        });
+
+        // ==========================================
+        // 3. HANDLE MFA FORM SUBMISSION
+        // ==========================================
+        $('#mfaForm').on('submit', function(e) {
+            e.preventDefault();
+            const $btn = $(this).find('button[type="submit"]');
+            const originalText = $btn.html();
+            
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...');
+
+            $.ajax({
+                url: "/api/verify-mfa/",
+                type: "POST",
+                data: $(this).serialize(),
+                headers: { 
+                    "X-Requested-With": "XMLHttpRequest", 
+                    "X-CSRFToken": "{{ csrf_token }}" 
+                },
+                success: function(response) {
+                    window.location.href = response.redirect_url || "{% url 'role_redirect' %}";
+                },
+                error: function(xhr) {
+                    let errorMsg = "Invalid or expired code. Please try again.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    
+                    // 🔥 TRIGGER THE NEW CLEAN POPUP HERE
+                    showErrorModal(errorMsg);
+                    
+                    $btn.prop('disabled', false).html(originalText);
+                    $('#otp_code').val('').focus();
+                }
+            });
+        });
+
+        // ==========================================
+        // 4. HANDLE PASSKEY AUTHENTICATION
+        // ==========================================
+        $('#passkey-login-btn').on('click', async function() {
+            const username = $('#id_username').val();
+            
+            if (!username) {
+                showErrorModal("Please enter your Username first to use a Passkey.");
+                $('#id_username').focus();
+                return;
+            }
+
+            const $btn = $(this);
+            const originalText = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2 text-blue-600"></i> Connecting to Device...');
+
+            try {
+                // Step 1: Ask the server for a cryptographic challenge
+                const optionsResponse = await fetch('/api/webauthn/login-options/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ username: username })
+                });
+                
+                if (!optionsResponse.ok) {
+                    const err = await optionsResponse.json();
+                    throw new Error(err.error || "Failed to load passkey options.");
+                }
+                const options = await optionsResponse.json();
+
+                // Step 2: Trigger the OS biometric prompt (FaceID/Fingerprint)
+                const assertion = await SimpleWebAuthnBrowser.startAuthentication(options);
+
+                $btn.html('<i class="fas fa-spinner fa-spin mr-2 text-blue-600"></i> Verifying Signature...');
+
+                // Step 3: Send the cryptographically signed proof back to the server
+                const verifyResponse = await fetch('/api/webauthn/login-verify/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify(assertion)
+                });
+                
+                const verifyResult = await verifyResponse.json();
+                
+                if (verifyResult.status === 'success') {
+                    window.location.href = verifyResult.redirect_url;
+                } else {
+                    throw new Error(verifyResult.error || "Verification failed.");
+                }
+            } catch (error) {
+                console.error("Passkey error:", error);
+                
+                // Handle the user clicking "Cancel" on the biometric prompt gracefully
+                if (error.name === 'NotAllowedError') {
+                    showErrorModal("Passkey request was cancelled or timed out.");
+                } else {
+                    showErrorModal(error.message || "Ensure this device supports WebAuthn.");
+                }
+                $btn.prop('disabled', false).html(originalText);
+            }
+        });
+
     });
 </script>
 

@@ -24,7 +24,9 @@ from django.views.generic import TemplateView
 from core import views  # <-- 1. This remains as 'views' for your core app
 from django.conf.urls.static import static
 from core.api import views as api_views
-from rest_framework.authtoken import views as auth_views  # <-- 2. ALIASED to auth_views
+from rest_framework.authtoken import views as auth_views
+
+from core.api.viewsets import PasskeyLoginOptionsAPI, PasskeyLoginVerifyAPI, PasskeyRegisterOptionsAPI, PasskeyRegisterVerifyAPI  # <-- 2. ALIASED to auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -51,5 +53,9 @@ urlpatterns = [
     # Give the API a unique namespace to distinguish it from standard views
     path('api/tickets/', include('tickets.api.urls', namespace='tickets-api')),
     path('api/core/', include('core.api.urls')),
+    path('api/webauthn/login-options/', PasskeyLoginOptionsAPI.as_view(), name='passkey_options'),
+    path('api/webauthn/login-verify/', PasskeyLoginVerifyAPI.as_view(), name='passkey_verify'),
+    path('api/webauthn/register-options/', PasskeyRegisterOptionsAPI.as_view(), name='passkey_register_options'),
+    path('api/webauthn/register-verify/', PasskeyRegisterVerifyAPI.as_view(), name='passkey_register_verify'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

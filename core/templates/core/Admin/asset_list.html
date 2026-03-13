@@ -6,6 +6,7 @@
 <div class="flex flex-col lg:flex-row gap-6 lg:h-full lg:overflow-hidden p-1 sm:p-0 transition-colors duration-300 dark:bg-slate-900">
     
     <div class="flex-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col min-h-[500px] lg:min-h-0">
+        
         <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700 flex-none flex justify-between items-center">
             <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-0 tracking-tight uppercase">IT Asset Inventory</h2>
             <div class="flex items-center gap-3">
@@ -21,16 +22,16 @@
             </div>
         </div>
 
-        <div class="p-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+        <div class="p-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
+                <div class="flex flex-col sm:flex-row w-full gap-2">
                     <div class="relative w-full sm:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                         <input type="text" id="searchInput" placeholder="Search assets..." 
-                            class="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-slate-700 dark:text-slate-200">
+                            class="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-slate-700 dark:text-slate-200 shadow-sm">
                     </div>
                     <select id="typeFilter" 
-                        class="w-full sm:w-auto px-3 py-2.5 sm:py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none cursor-pointer font-bold text-slate-600 dark:text-slate-300 hover:border-slate-300">
+                        class="w-full sm:w-auto px-3 py-2.5 sm:py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none cursor-pointer font-bold text-slate-600 dark:text-slate-300 hover:border-slate-300 shadow-sm">
                         <option value="all">All Types</option>
                         <option value="PC">PC</option>
                         <option value="Laptop">Laptop</option>
@@ -41,74 +42,34 @@
             </div>
         </div>
 
-        <div class="flex-grow overflow-y-auto custom-scrollbar min-h-0">
-            <table class="w-full text-left text-sm border-separate border-spacing-0" id="assetTable">
-                <thead class="hidden sm:table-header-group bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-black uppercase text-[10px] sticky top-0 z-10 shadow-sm">
-                    <tr>
-                        <th class="p-4 border-b border-slate-100 dark:border-slate-700">ID</th>
-                        <th class="p-4 border-b border-slate-100 dark:border-slate-700">Name</th>
-                        <th class="p-4 border-b border-slate-100 dark:border-slate-700">Type</th>
-                        <th class="p-4 border-b border-slate-100 dark:border-slate-700">Location</th>
-                        <th class="p-4 border-b border-slate-100 dark:border-slate-700">Status</th>
-                        <th class="p-4 border-b border-slate-100 dark:border-slate-700">Date</th>
-                        {% if not request.user.groups.all.0.name == "Commander" %}
-                        <th class="p-4 border-b border-slate-100 dark:border-slate-700 text-right">Action</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody class="block sm:table-row-group divide-y divide-slate-100 dark:divide-slate-700" id="tableBody">
-                    </tbody>
-            </table>
+        <div class="flex-grow overflow-y-auto custom-scrollbar p-4 sm:p-6 bg-slate-50 dark:bg-[#0f172a]" id="assetCardContainer">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6" id="tableBody"></div>
         </div>
 
-        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest" id="pageInfo">Showing 0-0 of 0 assets</p>
             <div class="flex items-center space-x-2" id="paginationControls"></div>
         </div>
     </div>
 
-    <div class="w-full lg:w-80 space-y-6 flex-none pb-10 lg:pb-0">
-        <div id="detail-panel" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-            <div class="p-4 border-b border-slate-100 dark:border-slate-700 font-black text-[10px] uppercase tracking-wider bg-slate-50/50 dark:bg-slate-900/30">
-                <i class="fas fa-info-circle text-blue-500"></i> Asset Quick View
-            </div>
-            <div id="detail-placeholder" class="p-12 text-center text-slate-400 italic">
-                <i class="fas fa-mouse-pointer block text-2xl mb-2 opacity-20"></i> Select an asset
-            </div>
-            <div id="detail-card" class="hidden p-6 space-y-6">
-                <div>
-                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Asset ID</label>
-                    <p id="det-id" class="text-2xl font-black text-blue-600 dark:text-blue-400"></p>
-                </div>
-                <div>
-                    <label class="text-[9px] uppercase font-bold text-slate-400 tracking-widest block mb-1">Asset Name</label>
-                    <p id="det-name" class="font-bold text-slate-800 dark:text-slate-100 text-sm"></p>
-                    <p id="det-type-text" class="text-[10px] text-slate-500 uppercase mt-1"></p>
-                </div>
-                <div>
-                    <label class="text-[9px] uppercase font-bold text-slate-400 tracking-widest mb-2 block">Status</label>
-                    <p id="det-status" class="px-4 py-1.5 inline-block rounded-lg text-[10px] font-black uppercase shadow-sm"></p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="w-full lg:w-80 flex-none pb-10 lg:pb-0">
+        
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 h-full">
             <h3 class="font-black text-[10px] mb-6 text-slate-800 dark:text-slate-100 uppercase tracking-widest">Status Distribution</h3>
-            <div class="relative h-48 w-full"><canvas id="statusChart"></canvas></div>
-            <div class="mt-6 text-[10px] font-black text-slate-500 pt-4 flex justify-between items-center uppercase">
-                <p>Total Assets</p>
-                <span id="total-asset-badge" class="text-slate-900 dark:text-slate-100 text-base">0</span>
+            <div class="relative h-64 w-full"><canvas id="statusChart"></canvas></div>
+            <div class="mt-8 text-[10px] font-black text-slate-500 pt-6 flex justify-between items-center uppercase border-t border-slate-100 dark:border-slate-700">
+                <p>Total Assets Registered</p>
+                <span id="total-asset-badge" class="text-slate-900 dark:text-slate-100 text-xl font-black">0</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-/** * GLOBAL STATE 
- */
+/** * GLOBAL STATE */
 let allAssets = [];
 let currentPage = 1;
-const rowsPerPage = 10;
+const rowsPerPage = 6; // Changed from 12 to 6
 let myChart;
 
 /**
@@ -124,7 +85,7 @@ function loadAssets() {
         type: 'GET',
         success: function(data) {
             allAssets = data;
-            currentPage = 1; // Reset to first page on data refresh/filter
+            currentPage = 1; 
             updateTableUI();
             updateDashboardMetrics(data);
         },
@@ -133,12 +94,11 @@ function loadAssets() {
 }
 
 /**
- * 2. TABLE & PAGINATION RENDERING
+ * 2. EXPANDED CARD RENDERING ENGINE
  */
 function updateTableUI() {
     const searchVal = $('#searchInput').val().toLowerCase();
     
-    // Filter the master list
     const filtered = allAssets.filter(a => 
         a.assets_name.toLowerCase().includes(searchVal) || 
         (a.assets_id && a.assets_id.toString().toLowerCase().includes(searchVal)) ||
@@ -148,79 +108,87 @@ function updateTableUI() {
     const totalEntries = filtered.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
     
-    // Adjust current page if out of bounds after filtering
     if (currentPage > totalPages) currentPage = totalPages;
 
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     const paginatedItems = filtered.slice(start, end);
 
-    renderRows(paginatedItems);
+    renderCards(paginatedItems); 
     renderPaginationControls(totalPages);
     
-    // Update display text
     const displayEnd = Math.min(end, totalEntries);
     $('#pageInfo').text(`Showing ${totalEntries === 0 ? 0 : start + 1}-${displayEnd} of ${totalEntries} assets`);
 }
 
-function renderRows(items) {
-    const $tbody = $('#tableBody');
+function renderCards(items) {
+    const $container = $('#tableBody');
     let html = '';
 
     if (items.length === 0) {
-        $tbody.html('<tr><td colspan="7" class="p-12 text-center text-slate-400 italic">No assets found.</td></tr>');
+        $container.html('<div class="col-span-full p-12 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">No assets found matching your criteria.</div>');
         return;
     }
 
     items.forEach(asset => {
         const statusClasses = getStatusClasses(asset.status);
         const iconClass = getIconClass(asset.assets_type);
+        const isCommander = "{{ request.user.groups.all.0.name }}" === "Commander";
+        const assetId = asset.assets_id || asset.id;
+        
+        // Use the helper to get the specific color for the hover state
+        const hoverColorClass = getStatusHoverColor(asset.status);
 
+        // Expanded Card HTML with Hover Glow AND bottom accent line
         html += `
-        <tr class="asset-row block sm:table-row hover:bg-blue-50/30 dark:hover:bg-blue-900/10 cursor-pointer transition-colors group p-4 sm:p-0" 
-            onclick="showDetails('${asset.assets_id || asset.id}', '${asset.assets_name}', '${asset.assets_type}', '${asset.location}', '${asset.status}')">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 hover:shadow-lg ${hoverColorClass}">
             
-            <td class="block sm:table-cell p-0 sm:p-4 mb-2 sm:mb-0">
-                <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase mr-2">ID:</span>
-                <span class="font-bold text-blue-600 dark:text-blue-400">${asset.assets_id || asset.id}</span>
-            </td>
-
-            <td class="block sm:table-cell p-0 sm:p-4 mb-1 sm:mb-0">
-                <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase mr-2">Name:</span>
-                <span class="font-semibold text-slate-700 dark:text-slate-200">${asset.assets_name}</span>
-            </td>
-
-            <td class="block sm:table-cell p-0 sm:p-4 mb-1 sm:mb-0 text-slate-600 dark:text-slate-400">
-                <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase mr-2">Type:</span>
-                <i class="fas ${iconClass} opacity-50 mr-1"></i> ${asset.assets_type}
-            </td>
-
-            <td class="block sm:table-cell p-0 sm:p-4 mb-1 sm:mb-0 text-slate-500 dark:text-slate-400">
-                <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase mr-2">Location:</span>
-                ${asset.location}
-            </td>
-
-            <td class="block sm:table-cell p-0 sm:p-4 mb-2 sm:mb-0">
-                <span class="sm:hidden text-[9px] font-black text-slate-400 uppercase mr-2">Status:</span>
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${statusClasses}">
-                    ${asset.status}
-                </span>
-            </td>
-
-            <td class="block sm:table-cell p-0 sm:p-4 mb-3 sm:mb-0 text-slate-400 dark:text-slate-500 font-mono text-xs">
-                ${asset.date_added || 'N/A'}
-            </td>
-
-            {% if not request.user.groups.all.0.name == "Commander" %}
-            <td class="block sm:table-cell p-0 sm:p-4 text-right">
-                <div class="flex justify-end gap-4" onclick="event.stopPropagation();">
-                    <a href="/assets/edit/${asset.id}/" class="text-slate-400 hover:text-blue-600"><i class="fas fa-edit"></i></a>
+            <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+                        <i class="fas ${iconClass} text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight">${asset.assets_name}</h3>
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${asset.assets_type}</span>
+                    </div>
                 </div>
-            </td>
-            {% endif %}
-        </tr>`;
+                
+                <div class="flex flex-col items-end gap-2 z-10 relative">
+                    <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusClasses}">
+                        ${asset.status}
+                    </span>
+                    ${!isCommander ? `
+                    <a href="/assets/edit/${asset.id}/" class="text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1" title="Edit Asset">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10">
+                <div>
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Asset ID</label>
+                    <p class="font-mono text-sm font-bold text-slate-700 dark:text-slate-300">#${assetId}</p>
+                </div>
+                <div>
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Location</label>
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate flex items-center gap-1.5">
+                        <i class="fas fa-map-marker-alt text-slate-300 dark:text-slate-600 text-xs"></i> 
+                        ${asset.location}
+                    </p>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Date Added</label>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">${asset.date_added || 'N/A'}</p>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 w-full h-1 ${getStatusAccentColor(asset.status)} opacity-50 group-hover:opacity-100 transition-opacity"></div>
+        </div>`;
     });
-    $tbody.html(html);
+    
+    $container.html(html);
 }
 
 function renderPaginationControls(totalPages) {
@@ -231,8 +199,8 @@ function renderPaginationControls(totalPages) {
     for (let i = 1; i <= totalPages; i++) {
         const isActive = (i === currentPage);
         const btnClass = isActive 
-            ? `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-blue-600 text-white border border-blue-600`
-            : `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-50`;
+            ? `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-blue-600 text-white border border-blue-600 shadow-sm`
+            : `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600`;
         
         const $btn = $(`<button class="${btnClass}">${i}</button>`);
         $btn.on('click', function() {
@@ -263,29 +231,27 @@ function updateDashboardMetrics(assets) {
  * HELPERS & THEME
  */
 function getStatusClasses(status) {
-    if (status === 'Active') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-    if (status === 'Maintenance') return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-    return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    if (status === 'Active') return 'bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400';
+    if (status === 'Maintenance') return 'bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400';
+    return 'bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400';
+}
+
+// Helper to apply a glowing ring and border based on status
+function getStatusHoverColor(status) {
+    if (status === 'Active') return 'hover:border-emerald-400 hover:ring-4 hover:ring-emerald-500/20 dark:hover:border-emerald-500 dark:hover:ring-emerald-500/30';
+    if (status === 'Maintenance') return 'hover:border-amber-400 hover:ring-4 hover:ring-amber-500/20 dark:hover:border-amber-500 dark:hover:ring-amber-500/30';
+    return 'hover:border-red-400 hover:ring-4 hover:ring-red-500/20 dark:hover:border-red-500 dark:hover:ring-red-500/30';
+}
+
+function getStatusAccentColor(status) {
+    if (status === 'Active') return 'bg-emerald-500';
+    if (status === 'Maintenance') return 'bg-amber-500';
+    return 'bg-red-500';
 }
 
 function getIconClass(type) {
     const map = { 'PC': 'fa-desktop', 'Laptop': 'fa-laptop', 'Server': 'fa-server', 'Router': 'fa-network-wired' };
     return map[type] || 'fa-microchip';
-}
-
-function showDetails(id, name, type, loc, status) {
-    $('#detail-placeholder').addClass('hidden');
-    $('#detail-card').removeClass('hidden');
-    $('#det-id').text(id);
-    $('#det-name').text(name);
-    $('#det-type-text').text(type);
-    
-    const $st = $('#det-status');
-    $st.text(status).removeClass().addClass('px-4 py-1.5 inline-block rounded-lg text-[10px] font-black uppercase shadow-sm ' + getStatusClasses(status));
-    
-    if (window.innerWidth < 1024) {
-        document.getElementById('detail-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
 }
 
 function toggleDarkMode() {
@@ -324,7 +290,7 @@ $(document).ready(function() {
             labels: ['Active', 'Inactive', 'Maintenance'],
             datasets: [{
                 data: [0, 0, 0],
-                backgroundColor: ['#22c55e', '#94a3b8', '#facc15'],
+                backgroundColor: ['#10b981', '#64748b', '#f59e0b'],
                 borderWidth: 4,
                 borderColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
                 hoverOffset: 4
@@ -367,7 +333,6 @@ $(document).ready(function() {
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
-    .dark .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 </style>
 {% endblock %}
