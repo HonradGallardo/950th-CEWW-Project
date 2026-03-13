@@ -12,18 +12,29 @@ env = environ.Env(
 )
 
 # 3. Read Environment Files (Priority: .sys_config then .env)
-env_path = os.path.join(BASE_DIR, '.internal_lib', '.sys_config')
-if os.path.exists(env_path):
-    environ.Env.read_env(env_path)
-else:
-    environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+sys_env_path = os.path.join(BASE_DIR, '.internal_lib', '.sys_config')
+default_env_path = os.path.join(BASE_DIR, '.env')
+
+if os.path.exists(sys_env_path):
+    environ.Env.read_env(sys_env_path)
+
+# Always try loading .env as well
+if os.path.exists(default_env_path):
+    environ.Env.read_env(default_env_path)
 
 # 4. Core Security Settings
 SECRET_KEY = env('SECRET_KEY')
-DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
 
+# --- MERGE CONFLICT RESOLVED ---
+# Honrad-Branch (Active): Secure, environment-driven approach
+DEBUG = env.bool('DEBUG', default=False)
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+
+# Christian-Branch (Preserved as comments): 
+# DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
 # CRITICAL FIX: Hardcode the allowed hosts right here, overwriting the env file completely.
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
+# -------------------------------
 
 # 5. Application Definition
 INSTALLED_APPS = [
@@ -44,13 +55,12 @@ INSTALLED_APPS = [
 SESSION_COOKIE_AGE = 1800  # 30 minutes
 SESSION_SAVE_EVERY_REQUEST = True  # Resets the 30min timer on every click
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
 
-# 6. Django REST Framework Configuration
 # 6. Django REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # Use ONLY your custom class for tokens
-        'core.authentication.ExpiringTokenAuthentication', 
+        'core.authentication.ExpiringTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -99,23 +109,40 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'honradg71@gmail.com'
-EMAIL_HOST_PASSWORD = 'nsvj nrsw zdod zurb'
 DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
+# Original hardcoded credentials preserved as comments
+# EMAIL_HOST_USER = 'honradg71@gmail.com'
+# EMAIL_HOST_PASSWORD = '[REDACTED_APP_PASSWORD]'
+
+# Active secure configuration
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='honradg71@gmail.com')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+
 # 11. ReCaptcha Security
-RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
-RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+# Original hardcoded credentials preserved as comments
+# RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+# RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+
+# Active secure configuration
+RECAPTCHA_SITE_KEY = env('RECAPTCHA_SITE_KEY', default='6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
+RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY', default='6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
 
 # 12. Authentication Routing
-LOGIN_URL = '/admin/login/'
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'role_redirect'
-LOGOUT_REDIRECT_URL = 'landing'
+LOGOUT_REDIRECT_URL = 'login'
 
 # 13. Static and Media Files
 STATIC_URL = 'static/'
+
 MEDIA_URL = env('MEDIA_URL', default='/media/')
-MEDIA_ROOT = os.path.join(BASE_DIR, env('MEDIA_ROOT_PATH', default='media'))
+
+# Support both MEDIA_ROOT and MEDIA_ROOT_PATH to avoid breaking env files
+MEDIA_ROOT = os.path.join(
+    BASE_DIR,
+    env('MEDIA_ROOT', default=env('MEDIA_ROOT_PATH', default='media'))
+)
 
 # 14. Internationalization
 TIME_ZONE = 'Asia/Manila'

@@ -176,29 +176,51 @@ def user_list(request):
     users = User.objects.all().prefetch_related('groups', 'profile')[:10]
     return render(request, 'core/Admin/user_list.html', {'users': users})
 
+from django.contrib.auth.hashers import make_password
+
 @login_required
 def add_user(request):
     form = UserForm(request.POST or None)
     if request.method == 'POST' and form.is_valid():
-        form.save()
+        user = form.save(commit=False) # 1. Create the object but don't save to DB yet
+        
+        # 2. 🚨 ENCRYPT THE PASSWORD
+        raw_password = form.cleaned_data.get('password')
+        if raw_password:
+            user.set_password(raw_password)
+        
+        user.save() # 3. Save the encrypted user
+        form.save_m2m() # 4. Save many-to-many relationships (if any)
         return redirect('user_list')
     return render(request, 'core/Admin/user_form.html', {'form': form, 'title': 'Add Personnel'})
 
 @login_required
 def edit_user(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
-    form = UserForm(request.POST or None, instance=target_user)
     
-    if request.method == 'POST':
+    if request.method in ['POST', 'PATCH']:
+        data = request.POST if request.method == 'POST' else QueryDict(request.body)
+        form = UserForm(data, instance=target_user)
+        
         if form.is_valid():
-            form.save()
+            user = form.save(commit=False)
+            
+            # 2. 🚨 ENCRYPT THE PASSWORD IF IT WAS CHANGED
+            raw_password = form.cleaned_data.get('password')
+            if raw_password:
+                user.set_password(raw_password)
+                
+            user.save()
+            form.save_m2m()
+
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
             return redirect('user_list')
         else:
-            # 🚨 SEND ERRORS BACK TO AJAX 🚨
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'errors': form.errors}, status=400)
+    else:
+        form = UserForm(instance=target_user)
                 
     return render(request, 'core/Admin/user_form.html', {'form': form, 'title': 'Edit Personnel'})
 

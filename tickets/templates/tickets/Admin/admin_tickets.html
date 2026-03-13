@@ -2,826 +2,445 @@
 
 {% block content %}
 <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     :root {
-        --head-bg: #F8FAFC;
+        --head-bg: rgba(248, 250, 252, 0.8);
         --head-text: #0F172A;
-        --head-border: #e2e8f0; /* slate-200 */
+        --head-border: #e2e8f0;
+        --row-hover: #f1f5f9;
+        --nav-height: 73px; 
     }
 
     .dark {
         --head-bg: #0F172A;
         --head-text: #F8FAFC;
-        --head-border: #1e293b; /* slate-800 */
+        --head-border: #1e293b;
+        --row-hover: #1e293b;
     }
 
     #head {
         background-color: var(--head-bg) !important;
+        backdrop-filter: blur(8px);
         color: var(--head-text) !important;
         border-color: var(--head-border) !important;
         transition: all 0.3s ease;
+        top: 0; 
+        position: sticky;
+        z-index: 30;
     }
 
-    /* Ensure the title and subtitle inherit the header text color */
-    #head h1, #head p {
-        color: inherit !important;
+    .admin-table-container {
+        height: auto; 
+        overflow: visible;
     }
-
-</style>
-<div id="mobileOverlay" onclick="closeDetails()" class="fixed inset-0 bg-slate-900/50 z-[35] hidden backdrop-blur-sm transition-opacity duration-300"></div>
-
-<div class="h-[calc(100vh-73px)]  dark:bg-[#0F172A] p-4 md:p-6 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300 overflow-hidden">
     
-    <header id="head" class="flex items-center justify-between mb-6 border-b pb-5">
-    <div>
-        <h1 class="text-xl md:text-2xl font-black tracking-tight uppercase">Support Desk</h1>
-        <p class="text-[10px] md:text-xs mt-1 uppercase tracking-widest font-bold opacity-80">Admin Tactical View</p>
-    </div>
-    <div class="flex items-center gap-3">
-        <span class="hidden sm:inline-block px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">Mode: Full Context</span>
-        <button id="mobileBackBtn" onclick="closeDetails()" class="lg:hidden hidden bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 z-50">
-            <i class="fas fa-arrow-left text-slate-500"></i>
-        </button>
-    </div>
-</header>
-
-    <div class="flex flex-col lg:grid lg:grid-cols-12 gap-6 h-[calc(100vh-170px)] relative">
-        
-        <div id="sidePanel" class="col-span-12 lg:col-span-5 xl:col-span-4 flex flex-col gap-4 overflow-hidden h-full transition-all duration-300">
-            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex flex-col h-full overflow-hidden">
-                
-                <div class="p-5 space-y-4 border-b border-slate-100 dark:border-slate-800">
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-slate-400 text-xs"></i>
-                        </span>
-                        <input type="text" id="ticketSearch" placeholder="Search dispatches..." class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all">
-                    </div>
-
-                    <div class="flex gap-2 p-1 bg-slate-100 dark:bg-[#020617] rounded-xl overflow-x-auto no-scrollbar border dark:border-slate-800">
-                        <button class="filter-btn flex-1 min-w-[70px] py-2 bg-white dark:bg-blue-600 dark:text-white shadow-sm text-blue-600 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all" onclick="filterTable('all', this)">All</button>
-                        <button class="filter-btn flex-1 min-w-[70px] py-2 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-800 transition-all" onclick="filterTable('Pending', this)">Pending</button>
-                        <button class="filter-btn flex-1 min-w-[70px] py-2 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-800 transition-all" onclick="filterTable('mine', this)">My Tasks</button>
-                    </div>
-                </div>
-
-                <div class="overflow-y-auto flex-1 custom-scrollbar p-2">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <tbody id="ticketTableBody" class="space-y-2 flex flex-col"></tbody>
-                    </table>
-                </div>
-
-                <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex items-center justify-between">
-                    <button id="prevPage" onclick="changePage(-1)" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl disabled:opacity-30 hover:text-blue-500 transition-colors">Prev</button>
-                    <span id="pageIndicator" class="text-[9px] font-black uppercase tracking-widest text-slate-500">Page 1</span>
-                    <button id="nextPage" onclick="changePage(1)" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl disabled:opacity-30 hover:text-blue-500 transition-colors">Next</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="detailPanel" class="hidden lg:flex col-span-12 lg:col-span-7 xl:col-span-8 flex-col gap-4 overflow-hidden h-full transition-all duration-300">
-            
-            <div id="emptyDetailState" class="flex-1 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-400 p-10 text-center bg-white/50 dark:bg-slate-900/20">
-                <div class="w-20 h-20 mb-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <i class="fas fa-satellite-dish text-3xl text-slate-300 dark:text-slate-600"></i>
-                </div>
-                <h3 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">Awaiting Signal</h3>
-                <p class="text-xs max-w-xs mt-2 text-slate-500 leading-relaxed">Select a dispatch from the queue to view transmission history and respond.</p>
-            </div>
-
-            <div id="ticketDetailPanel" class="hidden flex-1 flex flex-col gap-4 overflow-hidden">
-                
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-4 md:p-6 shrink-0">
-                    <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
-                        <div class="flex items-center gap-4">
-                            <img id="activeAvatar" src="" class="w-12 h-12 md:w-14 md:h-14 rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm object-cover">
-                            <div>
-                                <h2 id="activeSubject" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase tracking-tight"></h2>
-                                <div class="flex items-center gap-3 mt-1.5">
-                                    <p id="activeUser" class="text-[9px] md:text-[10px] text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest"></p>
-                                    <span class="w-1 h-1 bg-slate-300 dark:bg-slate-700 rounded-full"></span>
-                                    <p id="activeDateTime" class="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-wider"></p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                            <a id="fullDetailLink" href="#" class="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
-                                <span>Manage</span>
-                                <i class="fas fa-external-link-alt"></i>
-                            </a>
-                            <button onclick="deleteTicket()" class="p-2.5 text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-200 dark:hover:border-red-900/50" title="Delete Ticket">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                            <button onclick="closeDetails()" class="hidden lg:flex items-center justify-center p-2.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex-1 flex flex-col overflow-hidden relative">
-                    <div id="chatBox" class="p-4 md:p-8 flex-1 overflow-y-auto space-y-6 bg-slate-50/50 dark:bg-[#020617]/50 custom-scrollbar relative"></div>
-                    
-                    <div class="p-4 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 z-10">
-                        <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-2 mb-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"></div>
-                        
-                        <form onsubmit="handleSendMessage(event)" class="relative group">
-                            <input type="file" id="chatFileInput" multiple class="hidden" onchange="handleFilePreview(event)">
-                            
-                            <textarea id="chatInput" rows="1" 
-                                      class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-4 pl-12 pr-28 text-sm outline-none focus:ring-4 ring-blue-500/10 transition-all resize-none shadow-inner" 
-                                      placeholder="Send a Message"></textarea>
-                            
-                            <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
-                                <i class="fas fa-paperclip text-lg"></i>
-                            </button>
-
-                            <div class="absolute right-2 top-2 bottom-2 flex items-center">
-                                <button type="submit" class="h-full bg-blue-600 hover:bg-blue-700 px-5 rounded-xl text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all active:scale-95">
-                                    Send
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="adminLightbox" class="fixed inset-0 z-[9999] hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-    <button onclick="closeAdminLightbox()" class="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 p-4 transition-colors">
-        <i class="fas fa-times"></i>
-    </button>
-    
-    <button onclick="prevAdminLightbox()" class="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 transition-colors">
-        <i class="fas fa-chevron-left"></i>
-    </button>
-    
-    <button onclick="nextAdminLightbox()" class="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 transition-colors">
-        <i class="fas fa-chevron-right"></i>
-    </button>
-
-    <div id="adminLightboxContent" class="w-full h-full flex items-center justify-center p-8"></div>
-    <div id="adminLightboxInfo" class="absolute bottom-10 left-0 right-0 text-center"></div>
-</div>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .ticket-row { transition: all 0.2s ease; cursor: pointer; }
+    .ticket-row:hover { background-color: var(--row-hover) !important; }
+
+    .id-badge {
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: -0.05em;
+    }
+
+    .action-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        z-index: 50;
+        min-width: 160px;
+        animation: menuFade 0.2s ease-out;
+    }
+
+    @keyframes menuFade {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .action-btn-trigger {
+        transition: all 0.2s ease;
+    }
+    .action-btn-trigger:hover {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    @media (max-width: 1024px) {
+        .admin-table-container { height: auto; overflow: visible; }
+        table, thead, tbody, th, td, tr { display: block; }
+        thead tr { position: absolute; top: -9999px; left: -9999px; }
+        
+        #ticketTableBody {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 0.75rem;
+            padding: 0.5rem;
+        }
+
+        .ticket-row {
+            background: white !important;
+            border: 1px solid var(--head-border) !important;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .dark .ticket-row { background: #1e293b !important; }
+        
+        .ticket-row td { 
+            padding: 0 !important; 
+            border: none !important;
+            width: 100% !important;
+            max-width: none !important;
+        }
+    }
 </style>
+
+<div class="min-h-[calc(100vh-73px)] dark:bg-[#0F172A] p-2 md:p-4 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300">
+    
+    <header id="head" class="flex flex-col gap-4 p-4 mb-4 rounded-2xl border shadow-lg backdrop-blur-md">
+        <div class="flex items-center justify-between">
+            <div class="flex flex-col">
+                <h1 class="text-sm md:text-lg font-black tracking-tight uppercase flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-blue-600 animate-pulse"></i>
+                    Support Command Center
+                </h1>
+                <p class="text-[7px] md:text-[9px] uppercase tracking-[0.3em] font-bold opacity-60 text-blue-500">
+                    Administrative Dispatch Overview
+                </p>
+            </div>
+            <div class="lg:hidden bg-blue-600/10 border border-blue-500/20 px-2 py-1 rounded-lg">
+                <span id="mobileCount" class="text-[10px] font-black text-blue-600">00</span>
+            </div>
+        </div>
+        
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+            <div class="relative flex-grow">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-slate-400 text-xs"></i>
+                </span>
+                <input type="text" id="ticketSearch" placeholder="Search ID, Name, or Date..." 
+                    class="w-full bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 rounded-xl py-2 pl-9 pr-3 text-xs font-semibold outline-none transition-all">
+            </div>
+            
+            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/30 gap-1">
+                <button class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white dark:bg-blue-600 shadow-sm text-blue-600 dark:text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all" data-filter="all" onclick="filterTable('all', this)">All</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-1.5 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-700 transition-all" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-1.5 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-700 transition-all" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-1.5 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-700 transition-all" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-2xl overflow-visible flex flex-col backdrop-blur-sm">
+        <div class="admin-table-container overflow-auto custom-scrollbar">
+            <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px]">
+                <thead class="hidden lg:table-header-group">
+                    <tr class="sticky top-0 z-10 bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md">
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Ref ID</th>
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Priority</th>
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Client</th>
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Issue & Snippet</th>
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Agent Details</th>
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700 text-center">Status</th>
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Created At</th>
+                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/50"></tbody>
+            </table>
+        </div>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <span id="pageIndicator" class="text-[9px] font-black text-slate-400 uppercase tracking-widest"></span>
+            <div class="flex items-center gap-2">
+                <button id="prevPage" onclick="changePage(-1)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30"><i class="fas fa-chevron-left text-[10px]"></i></button>
+                <div id="pageNumbers" class="flex gap-1"></div>
+                <button id="nextPage" onclick="changePage(1)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30"><i class="fas fa-chevron-right text-[10px]"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    function initHeaderTheme() {
-    const header = document.getElementById('head');
-    
-    // Create an observer to watch for the 'dark' class being added/removed from <html>
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.attributeName === 'class') {
-                console.log("Theme changed, CSS Variables will handle the rest.");
-            }
-        });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-}
-    
-    let currentTicketId = null;
-    let currentTicketUser = null; 
-    let currentTicketDescription = "";
-    const currentAdminUser = "{{ request.user.username }}";
+    let allTickets = [];
     let currentPage = 1;
-    const itemsPerPage = 8;
+    const itemsPerPage = 10;
+    const currentAdminUser = "{{ request.user.username }}";
+    const currentUserId = "{{ request.user.id }}";
 
-    const SupportConsole = {
-    currentLightboxItems: [],
-    currentLightboxIndex: 0,
-
-    // --- HELPER: ADAPTIVE MEDIA GRID ---
-    renderAttachmentGrid(attachmentsList) {
-        if (!attachmentsList || attachmentsList.length === 0) return '';
-        
-        const count = attachmentsList.length;
-        const lightboxItems = [];
-        attachmentsList.forEach(att => {
-            if (/\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(att.name) || /\.(mp4|mov|webm)$/i.test(att.name)) {
-                lightboxItems.push({url: att.url, name: att.name});
-            }
-        });
-
-        // Use grid for 3+ items, flex for 1-2 items
-        const containerClass = count >= 3 ? "mt-2 grid grid-cols-2 gap-2 max-w-[400px]" : "mt-2 flex flex-wrap gap-2 max-w-[400px]";
-        let gridHtml = `<div class="${containerClass}">`;
-        
-        attachmentsList.forEach((att, index) => {
-            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(att.name);
-            const isVid = /\.(mp4|mov|webm)$/i.test(att.name);
-            if (!isImg && !isVid) return;
-
-            const MAX_VISIBLE = 4;
-            const isThirdOfThree = (count === 3 && index === 2);
-
-            if (index < MAX_VISIBLE) {
-                // Sizing: Single images show full shape; Grids are capped at 180px height
-                const sizeClasses = count === 1 ? "max-h-[350px] w-auto rounded-lg" : "h-[180px] w-full object-cover rounded-md";
-
-                let content = isImg 
-                    ? `<img src="${att.url}" class="${sizeClasses} border dark:border-slate-700 shadow-sm">`
-                    : `<div class="bg-slate-900 rounded-lg flex items-center justify-center border dark:border-slate-800 ${count === 1 ? 'w-[300px] h-[200px]' : 'w-full h-[180px]'}"><i class="fas fa-play text-white/50 text-2xl"></i></div>`;
-
-                if (index === MAX_VISIBLE - 1 && count > MAX_VISIBLE) {
-                    gridHtml += `
-                        <div class="relative cursor-pointer overflow-hidden rounded-md h-[180px]" onclick='SupportConsole.openLightbox(${JSON.stringify(lightboxItems).replace(/'/g, "&apos;")}, ${index})'>
-                            <img src="${att.url}" class="w-full h-full object-cover blur-[2px]">
-                            <div class="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-black text-xl">+${count - MAX_VISIBLE}</div>
-                        </div>`;
-                } else {
-                    const wrapperStyle = (count === 1) ? "" : "h-[180px] overflow-hidden";
-                    gridHtml += `
-                        <div class="relative cursor-pointer ${wrapperStyle} ${isThirdOfThree ? 'col-span-2' : ''}" onclick='SupportConsole.openLightbox(${JSON.stringify(lightboxItems).replace(/'/g, "&apos;")}, ${index})'>
-                            ${content}
-                        </div>`;
-                }
-            }
-        });
-        return gridHtml + '</div>';
-    },
-
-    openLightbox(items, index) {
-        this.currentLightboxItems = items;
-        this.currentLightboxIndex = index;
-        const lb = document.getElementById('chatLightbox');
-        const content = document.getElementById('lightboxContent');
-        lb.classList.remove('hidden');
-        
-        const item = items[index];
-        if (/\.(mp4|mov|webm)$/i.test(item.name)) {
-            content.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[80vh] rounded shadow-2xl"></video>`;
+    // Reusable function to force the scroll to the top of the content
+    function scrollToTop() {
+        const headElement = document.getElementById('head');
+        if (headElement) {
+            headElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
-            content.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[80vh] rounded shadow-2xl object-contain">`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    },
-    
-    closeLightbox() { document.getElementById('chatLightbox').classList.add('hidden'); }
-}
-
-    // LIGHTBOX GLOBALS
-    let adminGalleryMedia = [];
-    let adminLightboxIndex = 0;
-    let adminBoundKeyHandler = null;
+    }
 
     async function initAdminSync() {
         try {
-            const response = await fetch('/tickets/api/support-api/', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            const response = await fetch('/tickets/api/support-api/', { 
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } 
             });
             if (!response.ok) return;
             const data = await response.json();
-            const tickets = data.results || data; 
-            renderTicketTable(tickets);
-            updatePagination();
-        } catch (err) { console.error("Admin Sync Failed:", err); }
+            allTickets = Array.isArray(data) ? data : (data.results || []); 
+            updateUI();
+        } catch (err) { console.error("Sync Error:", err); }
     }
 
-    function renderTicketTable(tickets) {
-    const body = document.getElementById('ticketTableBody');
-    if (tickets.length === 0) {
-        body.innerHTML = '<tr class="block w-full"><td class="py-10 text-center text-[10px] font-black uppercase tracking-widest text-slate-400 block w-full">Queue Empty</td></tr>';
-        return;
+    function getPriorityStyles(priority) {
+        const base = "flex items-center gap-1.5 font-black text-[9px] uppercase tracking-tighter ";
+        if (priority === 'High') return base + 'text-red-500';
+        if (priority === 'Medium') return base + 'text-amber-500';
+        return base + 'text-blue-400';
     }
 
-    body.innerHTML = tickets.map(t => {
-        const isMine = t.technician_name === currentAdminUser;
-        const statusClass = getStatusStyles(t.status);
-        
-        // Match the logic from your user_list.html reference
-        const hasImage = t.user_avatar && t.user_avatar !== null;
-        const avatarContent = hasImage 
-            ? `<img src="${t.user_avatar}" class="w-full h-full object-cover" alt="profile">`
-            : `<span class="text-white font-black text-xs">${(t.user_name || 'P').substring(0, 2).toUpperCase()}</span>`;
-
-        return `
-            <tr class="ticket-row block w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl mb-2 hover:border-blue-500 dark:hover:border-blue-500 transition-all cursor-pointer group ${currentTicketId == t.id ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/10' : ''}" 
-                id="row-${t.id}"
-                data-status="${t.status}" 
-                data-mine="${isMine}"
-                onclick="selectTicket('${t.id}', '${t.subject.replace(/'/g, "\\'")}', '${t.user_name || 'Personnel'}', '${t.status}', '${t.description.replace(/(\r\n|\n|\r)/gm, " ").replace(/'/g, "\\'")}', '${t.created_at}', '${t.user_avatar || ''}')">
-                
-                <td class="p-4 block w-full">
-                    <div class="flex items-center justify-between gap-3 w-full">
-                        <div class="flex items-center gap-3 min-w-0 flex-1">
-                            
-                            <div class="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-slate-200 dark:border-slate-700">
-                                ${avatarContent}
-                            </div>
-
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[9px] font-mono font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500">#${String(t.id).padStart(4, '0')}</span>
-                                    <span class="status-pill px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${statusClass}">
-                                        ${t.status}
-                                    </span>
-                                </div>
-                                <span class="font-bold text-slate-800 dark:text-slate-200 text-xs block truncate group-hover:text-blue-600 transition-colors">${t.subject}</span>
-                                
-                                <div class="text-[9px] font-bold uppercase tracking-widest mt-1 flex flex-col gap-0.5">
-                                    <span class="${t.technician_name !== 'Unassigned' ? 'text-blue-500' : 'text-slate-400'}">Admin: ${t.technician_name}</span>
-                                    <span class="text-slate-400">User: ${t.user_name || 'Personnel'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>`;
-    }).join('');
-}
-
-    function getStatusStyles(status) {
-        if (status === 'Pending') return 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400';
-        if (status === 'In Progress' || status === 'Under Review') return 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400';
-        if (status === 'Unresolved') return 'bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400';
-        return 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400';
-    }
-
-    function filterTable(filterType, btnElement) {
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-600', 'dark:text-white', 'shadow-sm');
-            btn.classList.add('text-slate-500');
+    function formatTimestamp(dateStr) {
+        if (!dateStr) return "N/A";
+        const date = new Date(dateStr);
+        return date.toLocaleString('en-US', { 
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true 
         });
-        btnElement.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-600', 'dark:text-white', 'shadow-sm');
-        btnElement.classList.remove('text-slate-500');
-
-        document.querySelectorAll('.ticket-row').forEach(row => {
-            if (filterType === 'all') row.setAttribute('data-filter-hidden', 'false');
-            else if (filterType === 'mine') row.setAttribute('data-filter-hidden', row.getAttribute('data-mine') === 'true' ? 'false' : 'true');
-            else row.setAttribute('data-filter-hidden', row.getAttribute('data-status') === filterType ? 'false' : 'true');
-        });
-        currentPage = 1;
-        updatePagination();
     }
 
-    document.getElementById('ticketSearch').addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('.ticket-row').forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.setAttribute('data-search-hidden', text.includes(term) ? 'false' : 'true');
+    function toggleActionMenu(event, specificMenuId) {
+        event.stopPropagation();
+        document.querySelectorAll('.action-menu').forEach(menu => {
+            if (menu.id !== specificMenuId) menu.style.display = 'none';
         });
-        currentPage = 1;
-        updatePagination();
+        const menu = document.getElementById(specificMenuId);
+        if(menu) {
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+    }
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.action-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
     });
 
-    function updatePagination() {
-        const activeRows = Array.from(document.querySelectorAll('.ticket-row')).filter(row => {
-            return row.getAttribute('data-search-hidden') !== 'true' && row.getAttribute('data-filter-hidden') !== 'true';
+    function updateUI() {
+        const body = document.getElementById('ticketTableBody');
+        const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
+        const activeBtn = document.querySelector('.filter-btn.bg-white, .filter-btn.dark\\:bg-blue-600');
+        const filterType = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+
+        let filtered = allTickets.filter(t => {
+            const paddedId = String(t.id).padStart(6, '0');
+            const searchableContent = [
+                t.id.toString(), paddedId, (t.subject || ""), (t.description || ""), (t.status || ""), 
+                (t.priority || ""), (t.user_name || ""), (t.first_name || ""), 
+                (t.last_name || ""), (t.technician_name || ""), formatTimestamp(t.created_at).toLowerCase()
+            ].join(" ").toLowerCase();
+
+            const matchesSearch = searchableContent.includes(searchTerm);
+            let matchesFilter = true;
+            if (filterType === 'pending') matchesFilter = (t.status || "").toLowerCase() === 'pending';
+            else if (filterType === 'mine') matchesFilter = t.technician_name === currentAdminUser;
+            else if (filterType === 'completed') {
+                const s = (t.status || "").toLowerCase();
+                matchesFilter = (s === 'resolved' || s === 'closed' || s === 'completed');
+            }
+            return matchesSearch && matchesFilter;
         });
-        const totalPages = Math.ceil(activeRows.length / itemsPerPage) || 1;
+
+        const mobileCountEl = document.getElementById('mobileCount');
+        if(mobileCountEl) mobileCountEl.innerText = String(filtered.length).padStart(2, '0');
+
+        const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
         if (currentPage > totalPages) currentPage = totalPages;
         if (currentPage < 1) currentPage = 1;
-        
-        document.querySelectorAll('.ticket-row').forEach(row => row.style.display = 'none');
-        
+
         const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        activeRows.forEach((row, index) => { if (index >= start && index < end) row.style.display = ''; });
-        
-        document.getElementById('pageIndicator').innerText = `PAGE ${currentPage} OF ${totalPages}`;
-        document.getElementById('prevPage').disabled = currentPage === 1;
-        document.getElementById('nextPage').disabled = currentPage === totalPages;
-    }
+        const paginatedItems = filtered.slice(start, start + itemsPerPage);
 
-    function changePage(direction) {
-        currentPage += direction;
-        updatePagination();
-    }
-
-    async function selectTicket(id, subject, user, status, description, datetime, userAvatar) {
-    currentTicketId = id;
-    currentTicketUser = user;
-    currentTicketDescription = description || "No details provided.";
-
-    const activeAvatar = document.getElementById('activeAvatar');
-
-    if (activeAvatar) {
-        // Use the actual profile picture if it exists
-        if (userAvatar && userAvatar !== 'null' && userAvatar !== '') {
-            activeAvatar.src = userAvatar;
+        if (paginatedItems.length === 0) {
+            body.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-[10px] font-black uppercase tracking-widest opacity-40">No records found</td></tr>`;
         } else {
-            // Fallback: If no profile picture, use the UI-Avatars placeholder based on the name
-            activeAvatar.src = `https://ui-avatars.com/api/?name=${user}&background=3b82f6&color=fff&bold=true`;
-        }
-    }
-    
-    setResponsiveView(true);
-    
-    // UI Transitions
-    document.getElementById('emptyDetailState').classList.add('hidden');
-    document.getElementById('ticketDetailPanel').classList.remove('hidden');
-    
-    // Set Text Details
-    document.getElementById('activeSubject').innerText = subject;
-    document.getElementById('activeUser').innerText = `${user}`;
-    document.getElementById('activeDateTime').innerText = `${datetime}`;
-    document.getElementById('fullDetailLink').href = `/tickets/detail/${id}/`;
-    
-    // IMPORTANT: Removed the line that was overwriting your activeAvatar.src with a hardcoded URL
-    
-    // Highlight the active row
-    document.querySelectorAll('.ticket-row').forEach(row => 
-        row.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'dark:bg-blue-900/10')
-    );
-    
-    const activeRow = document.getElementById(`row-${id}`);
-    if (activeRow) {
-        activeRow.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'dark:bg-blue-900/10');
-    }
-    
-    await fetchMessages(id);
-}
-
-    const chatInput = document.getElementById('chatInput');
-
-// Add the "Enter" key listener
-chatInput.addEventListener('keydown', function(event) {
-    // Check if Enter is pressed without the Shift key
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault(); // Stop the default new-line behavior
-        handleSendMessage(event); // Call your existing function
-    }
-});
-
-async function handleSendMessage(event) {
-    // Prevent default if it's coming from a button click or the keydown event
-    if (event) event.preventDefault();
-    
-    const input = document.getElementById('chatInput');
-    const fileInput = document.getElementById('chatFileInput');
-    const message = input.value.trim();
-    
-    // Check constraints
-    if (!message && fileInput.files.length === 0) return;
-    if (!currentTicketId) return;
-
-    const formData = new FormData();
-    formData.append('message', message);
-    formData.append('recipient', currentTicketUser); 
-    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    
-    Array.from(fileInput.files).forEach(f => formData.append('attachments', f));
-
-    try {
-        const response = await fetch(`/tickets/api/support-api/${currentTicketId}/send_reply/`, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        
-        if (response.ok) {
-            input.value = '';
-            fileInput.value = ''; 
-            
-            // Clear UI previews
-            const preview = document.getElementById('chat-attachment-preview');
-            if (preview) {
-                preview.classList.add('hidden');
-                preview.innerHTML = '';
-            }
-            
-            // Refresh the UI
-            await fetchMessages(currentTicketId);
-            if (typeof initAdminSync === "function") initAdminSync(); 
-        }
-    } catch (error) { 
-        console.error("API Send Failed:", error); 
-    }
-}
-
-async function fetchMessages(ticketId) {
-    if (!ticketId) return;
-
-    try {
-        const response = await fetch(`/tickets/api/support-api/${ticketId}/chat_thread/?with_staff=${currentAdminUser}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            renderMessages(data.messages, data.attachments);
-        }
-    } catch (error) { 
-        console.error("Failed to load chat:", error); 
-    }
-}
-
-    // --- REUSABLE MEDIA BUILDER FOR ADMIN ---
-    function buildMediaHtml(attachments, isMe) {
-        let mediaHtml = '';
-        let fileHtml = '';
-        
-        if (!attachments || attachments.length === 0) return { mediaHtml, fileHtml };
-
-        const mediaList = attachments.filter(a => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)$/i.test(a.name) || a.type === 'image' || a.type === 'video');
-        const otherDocs = attachments.filter(a => !mediaList.includes(a));
-
-        if (mediaList.length > 0) {
-            let gridClass = mediaList.length === 1 ? 'grid-cols-1' : 'grid-cols-2';
-            mediaHtml = `<div class="grid ${gridClass} gap-1 mt-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-sm w-fit max-w-[260px] sm:max-w-[360px] md:max-w-[420px] ${isMe ? 'ml-auto' : 'mr-auto'}">`;
-
-            mediaList.slice(0, 4).forEach((att, index) => {
-                adminGalleryMedia.push(att);
-                const globalIndex = adminGalleryMedia.length - 1;
-
-                const isVideo = /\.(mp4|mov|webm)$/i.test(att.name) || att.type === 'video';
-                const isFirstOfThree = mediaList.length === 3 && index === 0;
-                const itemSpan = isFirstOfThree ? 'col-span-2' : 'col-span-1';
-                
-                // Fixed: Use object-contain to prevent cropping text inside screenshots
-                let heightClass = mediaList.length === 1 ? 'max-h-[350px] w-auto' : (isFirstOfThree ? 'h-48 w-full' : 'h-32 sm:h-40 w-full');
-                const isLastVisible = index === 3 && mediaList.length > 4;
-
-                mediaHtml += `
-                <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-[#020617] flex items-center justify-center ${itemSpan}" onclick="openAdminLightbox(${globalIndex})">
-                    ${isVideo 
-                        ? `<video src="${att.url}#t=0.1" class="${heightClass} object-contain ${isLastVisible ? 'blur-sm scale-105' : ''}" muted playsinline></video>` 
-                        : `<img src="${att.url}" class="${heightClass} object-contain p-1 transition-transform duration-500 ${isLastVisible ? 'blur-sm scale-105' : 'group-hover:scale-105'}">`
-                    }
-                    ${isVideo && !isLastVisible ? `<div class="absolute inset-0 flex items-center justify-center bg-black/10"><i class="fas fa-play text-white text-3xl drop-shadow-md"></i></div>` : ''}
-                    ${isLastVisible ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center"><span class="text-white text-xl sm:text-2xl font-black tracking-widest">+${mediaList.length - 4}</span></div>` : ''}
-                </div>`;
-            });
-            mediaHtml += `</div>`;
-        }
-
-        if (otherDocs.length > 0) {
-            fileHtml = `<div class="mt-2 flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'} w-full">`;
-            otherDocs.forEach(att => {
-                fileHtml += `
-                    <a href="${att.url}" target="_blank" class="inline-flex items-center gap-2 p-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-xl text-[10px] font-bold border border-slate-200 dark:border-slate-700 transition-colors max-w-full">
-                        <i class="fas fa-file-alt text-blue-500 shrink-0 text-base"></i> 
-                        <span class="truncate">${att.name}</span>
-                    </a>`;
-            });
-            fileHtml += `</div>`;
-        }
-
-        return { mediaHtml, fileHtml };
-    }
-
-    function renderMessages(messages, allAttachments = []) {
-    const chatBox = document.getElementById('chatBox');
-    chatBox.innerHTML = ''; 
-    adminGalleryMedia = []; // Reset Gallery for Lightbox logic if still used elsewhere
-
-    // --- 1. RENDER INITIAL INQUIRY ---
-    // Filter attachments that belong to the ticket description (unlinked to messages)
-    const initAtts = allAttachments.filter(a => !a.message_id);
-    const initialGridHtml = SupportConsole.renderAttachmentGrid(initAtts);
-
-    const initialBlockHtml = `
-        <div class="flex justify-start mb-8 w-full animate-in fade-in duration-500">
-            <div class="max-w-[85%] md:max-w-[75%] flex flex-col items-start">
-                <div class="flex items-center gap-2 mb-1.5">
-                    <span class="text-[9px] font-black uppercase tracking-widest opacity-80 text-blue-600">${currentTicketUser || 'CLIENT'}</span>
-                    <span class="text-[8px] font-bold opacity-40 uppercase">Initial Inquiry</span>
-                </div>
-                <div class="inline-block p-4 shadow-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-sm">
-                    <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${currentTicketDescription}</p>
-                </div>
-                ${initialGridHtml}
-            </div>
-        </div>`;
-    chatBox.insertAdjacentHTML('beforeend', initialBlockHtml);
-
-    // --- 2. RENDER CHAT FEED ---
-    messages.forEach(msg => {
-        const isMe = msg.is_me || msg.sender_name === currentAdminUser; 
-        const hasText = msg.message && msg.message.trim().length > 0;
-        const isStatus = msg.message.toUpperCase().includes('STATUS UPDATE');
-
-        if (isStatus) {
-            chatBox.insertAdjacentHTML('beforeend', `
-                <div class="flex justify-center py-2 w-full">
-                    <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700">${msg.message}</span>
-                </div>`);
-            return;
-        }
-
-        // Get attachments for THIS specific message
-        const msgAtts = allAttachments.filter(a => a.message_id === msg.id);
-        const hasMedia = msgAtts.length > 0;
-        const mediaGridHtml = SupportConsole.renderAttachmentGrid(msgAtts);
-
-        const bubbleStyle = isMe 
-            ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
-            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 rounded-2xl rounded-tl-sm shadow-sm';
-
-        const msgHtml = `
-            <div class="flex ${isMe ? 'justify-end' : 'justify-start'} mb-6 w-full animate-in fade-in duration-300">
-                <div class="max-w-[85%] md:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                    <div class="flex items-center gap-2 mb-1.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}">
-                        <span class="text-[9px] font-black uppercase tracking-widest opacity-80 text-slate-700 dark:text-slate-300">${isMe ? 'Me' : msg.sender_name}</span>
-                        <span class="text-[8px] font-bold opacity-40">${msg.timestamp}</span>
-                    </div>
-                    
-                    ${hasText ? `
-                        <div class="p-3.5 mb-1.5 ${bubbleStyle}">
-                            <p class="text-sm leading-relaxed whitespace-pre-wrap break-words">${msg.message}</p>
+            body.innerHTML = paginatedItems.map(t => `
+                <tr class="ticket-row group" onclick="goToDetail(${t.id})">
+                    <td class="p-4 lg:w-32">
+                        <div class="lg:block flex justify-between items-center w-full">
+                            <span class="id-badge font-bold text-blue-600 text-[12px] bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20">
+                                #${String(t.id).padStart(6, '0')}
+                            </span>
+                            <div class="lg:hidden text-right relative">
+                                <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-full flex items-center justify-center text-slate-400 hover:text-blue-600">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl overflow-hidden right-0">
+                                     <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
+                                        <i class="fas fa-user-plus text-blue-500"></i> Assign To Me
+                                    </button>
+                                    <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
+                                        <i class="fas fa-check-circle text-emerald-500"></i> Mark Resolved
+                                    </button>
+                                    <div class="border-t dark:border-slate-700"></div>
+                                    <button onclick="deleteTicket(event, ${t.id})" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                                        <i class="fas fa-trash-alt"></i> Delete Record
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    ` : ''}
-                    
-                    ${hasMedia ? `
-                        <div class="w-full flex ${isMe ? 'justify-end' : 'justify-start'}">
-                            ${mediaGridHtml}
+                    </td>
+                    <td class="p-4">
+                        <div class="${getPriorityStyles(t.priority)}">
+                            <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
                         </div>
-                    ` : ''}
-                </div>
-            </div>`;
-            
-        chatBox.insertAdjacentHTML('beforeend', msgHtml);
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-xs">${t.first_name || ''} ${t.last_name || ''}</span>
+                            <span class="text-[9px] opacity-50 font-medium">@${t.user_name}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 lg:max-w-[280px]">
+                        <div class="flex flex-col overflow-hidden">
+                            <p class="font-bold text-xs truncate group-hover:text-blue-500 transition-colors">${t.subject}</p>
+                            <p class="text-[10px] opacity-50 truncate italic">"${t.description || 'No details provided'}"</p>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-bold text-slate-500"><i class="fas fa-user-shield mr-1.5 opacity-50"></i>${t.technician_name || 'Unassigned'}</span>
+                            <span class="text-[8px] opacity-40 uppercase font-black">Prev: ${t.previous_technician || 'None'}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 lg:text-center">
+                        <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase border dark:bg-slate-800/50">${t.status}</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-slate-600 dark:text-slate-400 whitespace-nowrap">${formatTimestamp(t.created_at)}</span>
+                            <span class="text-[8px] opacity-40 font-bold uppercase tracking-widest">Logged</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-right relative hidden lg:table-cell">
+                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-full flex items-center justify-center text-slate-400 hover:text-blue-600">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div id="menu-desktop-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl overflow-hidden">
+                            <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
+                                <i class="fas fa-user-plus text-blue-500"></i> Assign To Me
+                            </button>
+                            <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
+                                <i class="fas fa-check-circle text-emerald-500"></i> Mark Resolved
+                            </button>
+                            <div class="border-t dark:border-slate-700"></div>
+                            <button onclick="deleteTicket(event, ${t.id})" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
+                                <i class="fas fa-trash-alt"></i> Delete Record
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        const showingStart = filtered.length > 0 ? start + 1 : 0;
+        const showingEnd = Math.min(start + itemsPerPage, filtered.length);
+        document.getElementById('pageIndicator').innerText = `NODE ${showingStart}-${showingEnd} / TOTAL ${filtered.length}`;
+        
+        document.getElementById('prevPage').disabled = (currentPage <= 1);
+        document.getElementById('nextPage').disabled = (currentPage >= totalPages);
+
+        const pageNumbersContainer = document.getElementById('pageNumbers');
+        pageNumbersContainer.innerHTML = '';
+        
+        let startPage = Math.max(1, currentPage - 1);
+        let endPage = Math.min(totalPages, startPage + 2);
+        if (endPage - startPage < 2) startPage = Math.max(1, endPage - 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            const isCurrent = i === currentPage;
+            const btn = document.createElement('button');
+            btn.innerText = i;
+            btn.className = `px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border ${
+                isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200'
+            }`;
+            btn.onclick = () => { 
+                currentPage = i; 
+                updateUI(); 
+                scrollToTop(); // Use the enhanced scroll function
+            };
+            pageNumbersContainer.appendChild(btn);
+        }
+    }
+
+    function changePage(dir) { 
+        currentPage += dir; 
+        updateUI(); 
+        scrollToTop(); // Use the enhanced scroll function
+    }
+
+    function goToDetail(id) { window.location.href = `/tickets/detail/${id}/`; }
+
+    async function quickAction(event, id, type) {
+        event.stopPropagation();
+        const payload = type === 'assign' 
+            ? { technician_id: currentUserId, status: 'In Progress', priority: 'Medium' } 
+            : { status: 'Resolved' };
+        
+        try {
+            const res = await fetch(`/tickets/api/support-api/${id}/update_technical_details/`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) initAdminSync();
+        } catch (err) { console.error(err); }
+    }
+
+    async function deleteTicket(event, id) {
+        event.stopPropagation();
+        if (!confirm("Are you sure you want to permanently delete this dispatch record?")) return;
+        try {
+            const res = await fetch(`/tickets/api/support-api/${id}/`, {
+                method: 'DELETE',
+                headers: { 
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            if (res.ok) initAdminSync();
+        } catch (err) { console.error(err); }
+    }
+
+    function filterTable(type, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-600', 'dark:text-white', 'shadow-sm');
+            b.classList.add('text-slate-500');
+        });
+        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-600', 'dark:text-white', 'shadow-sm');
+        btn.classList.remove('text-slate-500');
+        currentPage = 1;
+        updateUI();
+    }
+
+    document.getElementById('ticketSearch').addEventListener('input', () => { 
+        currentPage = 1; 
+        updateUI(); 
     });
 
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-
-    // --- ADMIN LIGHTBOX LOGIC ---
-    function openAdminLightbox(index) {
-        adminLightboxIndex = index < 0 ? 0 : index;
-        const lightbox = document.getElementById('adminLightbox');
-        if (!lightbox || adminGalleryMedia.length === 0) return;
-
-        lightbox.classList.remove('hidden');
-        updateAdminLightboxContent();
-
-        if (adminBoundKeyHandler) window.removeEventListener('keydown', adminBoundKeyHandler);
-
-        adminBoundKeyHandler = (e) => {
-            if (e.key === "ArrowRight") nextAdminLightbox();
-            if (e.key === "ArrowLeft") prevAdminLightbox();
-            if (e.key === "Escape") closeAdminLightbox();
-        };
-        window.addEventListener('keydown', adminBoundKeyHandler);
-    }
-
-    function closeAdminLightbox() {
-        const lightbox = document.getElementById('adminLightbox');
-        if (lightbox) {
-            lightbox.classList.add('hidden');
-            document.getElementById('adminLightboxContent').innerHTML = ''; 
-        }
-        if (adminBoundKeyHandler) {
-            window.removeEventListener('keydown', adminBoundKeyHandler);
-            adminBoundKeyHandler = null;
-        }
-    }
-
-    function updateAdminLightboxContent() {
-        const content = document.getElementById('adminLightboxContent');
-        const info = document.getElementById('adminLightboxInfo');
-        const file = adminGalleryMedia[adminLightboxIndex];
-        if (!file) return;
-
-        const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(file.name);
-        
-        content.innerHTML = isImg 
-            ? `<img src="${file.url}" class="max-w-full max-h-full object-contain animate-in fade-in zoom-in duration-300">`
-            : `<video src="${file.url}" controls autoplay class="max-w-full max-h-full object-contain"></video>`;
-
-        info.innerHTML = `
-            <p class="text-white font-black uppercase text-[10px] tracking-widest">${file.name}</p>
-            <p class="text-white/50 text-[8px] uppercase font-bold mt-1">File ${adminLightboxIndex + 1} of ${adminGalleryMedia.length}</p>
-        `;
-    }
-
-    function nextAdminLightbox() {
-        if (adminLightboxIndex < adminGalleryMedia.length - 1) {
-            adminLightboxIndex++;
-            updateAdminLightboxContent();
-        }
-    }
-
-    function prevAdminLightbox() {
-        if (adminLightboxIndex > 0) {
-            adminLightboxIndex--;
-            updateAdminLightboxContent();
-        }
-    }
-
-    // --- PASTE SUPPORT ---
-    function initAdminPasteFeature() {
-        const chatInput = document.getElementById('chatInput');
-        const fileInput = document.getElementById('chatFileInput');
-        if (!chatInput || !fileInput) return;
-
-        chatInput.addEventListener('paste', (e) => {
-            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            const dataTransfer = new DataTransfer();
-
-            if (fileInput.files.length > 0) {
-                Array.from(fileInput.files).forEach(file => dataTransfer.items.add(file));
-            }
-
-            let hasFiles = false;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].kind === 'file') {
-                    const blob = items[i].getAsFile();
-                    if (blob) {
-                        const ext = blob.type.split('/')[1] || 'png';
-                        const file = new File([blob], `pasted_${Date.now()}.${ext}`, { type: blob.type });
-                        dataTransfer.items.add(file);
-                        hasFiles = true;
-                    }
-                }
-            }
-
-            if (hasFiles) {
-                fileInput.files = dataTransfer.files;
-                handleFilePreview({ target: fileInput });
-            }
-        });
-    }
-
-    async function deleteTicket() {
-    if (!currentTicketId) return;
-
-    const confirmDelete = confirm("Are you sure you want to permanently delete this ticket?");
-    if (!confirmDelete) return;
-
-    try {
-        const response = await fetch(`/tickets/api/support-api/${currentTicketId}/`, {
-            method: 'DELETE', // DRF ViewSets use DELETE method for destroy()
-            headers: {
-                'X-CSRFToken': SupportConsole.getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.status === 204 || response.ok) {
-            alert("Ticket deleted successfully.");
-            // Refresh the UI
-            location.reload(); 
-        } else {
-            const errorData = await response.json();
-            alert("Error: " + (errorData.message || "You do not have permission."));
-        }
-    } catch (err) {
-        console.error("Delete failed:", err);
-    }
-}
-
-// Helper to get CSRF token if not already defined
-SupportConsole.getCookie = function(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-    function setResponsiveView(showDetail) {
-        const side = document.getElementById('sidePanel');
-        const detail = document.getElementById('detailPanel');
-        if (window.innerWidth < 1024) { 
-            if (showDetail) {
-                side.classList.add('hidden');
-                detail.classList.remove('hidden');
-                detail.classList.add('flex', 'fixed', 'inset-0', 'z-40', 'bg-[#f8fafc]', 'dark:bg-[#020617]', 'p-4');
-                document.getElementById('mobileOverlay').classList.remove('hidden');
-                document.getElementById('mobileBackBtn').classList.remove('hidden');
-            } else {
-                side.classList.remove('hidden');
-                detail.classList.add('hidden');
-                detail.classList.remove('flex', 'fixed', 'inset-0', 'z-40', 'p-4');
-                document.getElementById('mobileOverlay').classList.add('hidden');
-                document.getElementById('mobileBackBtn').classList.add('hidden');
-            }
-        }
-    }
-
-    function closeDetails() {
-        setResponsiveView(false);
-        document.getElementById('ticketDetailPanel').classList.add('hidden');
-        document.getElementById('emptyDetailState').classList.remove('hidden');
-        document.querySelectorAll('.ticket-row').forEach(row => row.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/50', 'dark:bg-blue-900/10'));
-        currentTicketId = null;
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        initAdminSync();
-        initAdminPasteFeature();
-        setInterval(initAdminSync, 30000);
-        initHeaderTheme();
+    window.addEventListener('DOMContentLoaded', () => { 
+        initAdminSync(); 
+        setInterval(initAdminSync, 30000); 
     });
 </script>
 {% endblock %}

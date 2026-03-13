@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated          # Added
+from rest_framework.permissions import IsAuthenticated, AllowAny         # Added
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication  # Added
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -40,16 +40,29 @@ class TicketMessageSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
+    
+    # These fields reach into the User model to get the names
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    
     technician_name = serializers.CharField(source='technician.username', read_only=True, default="Unassigned")
+    
+    # This maps the model field 'last_technician' to the frontend key 'previous_technician'
+    previous_technician = serializers.CharField(source='last_technician', read_only=True, default="None")
+    
     user_avatar = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(format='%b %d, %Y %H:%M', read_only=True)
 
     class Meta:
         model = Ticket
-        fields = ['id', 'subject', 'user_name', 'status', 'description', 'created_at', 'technician_name', 'updated_at', 'user_avatar']
+        fields = [
+            'id', 'subject', 'user_name', 'first_name', 'last_name', 
+            'status', 'priority', 'description', 'created_at', 'technician_name', 
+            'previous_technician', 'updated_at', 'user_avatar'
+        ]
 
     def get_user_avatar(self, obj):
         try:
-            # Matches your user_list.html logic
             if obj.user.profile.image:
                 return obj.user.profile.image.url
         except:
@@ -61,10 +74,18 @@ class TicketSerializer(serializers.ModelSerializer):
 
 class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
+    pagination_class = None
     
     # 🔒 ENFORCE AUTHENTICATION HERE 
     #authentication_classes = [TokenAuthentication, SessionAuthentication]
     #permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        # Allow anyone (even guests) to submit a ticket via POST
+        if self.action == 'create':
+            return [AllowAny()]
+        # Require login for everything else (viewing, deleting, chatting)
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
@@ -81,16 +102,19 @@ class TicketViewSet(viewsets.ModelViewSet):
         # select_related avoids N+1 database hits
         all_messages = ticket.messages.all().select_related('sender', 'recipient').order_by('created_at')
 
-        if user_is_admin:
+        if chat_with_staff_username == 'GROUP_CHAT':
+            # Logic: Group messages are those where recipient is null
+            filtered_messages = all_messages.filter(recipient__isnull=True)
+        elif user_is_admin:
             if chat_with_staff_username and chat_with_staff_username not in ['SHOW_ALL', 'Everyone', 'null']:
                 filtered_messages = all_messages.filter(
                     (Q(sender__username=chat_with_staff_username) & Q(recipient=ticket.user)) |
-                    (Q(sender=ticket.user) & Q(recipient__username=chat_with_staff_username)) |
-                    (Q(recipient__isnull=True) & Q(sender__is_staff=True))
+                    (Q(sender=ticket.user) & Q(recipient__username=chat_with_staff_username))
                 )
             else:
                 filtered_messages = all_messages
         else:
+            # For the regular user, show their private messages AND group messages
             filtered_messages = all_messages.filter(
                 Q(sender=request.user) | Q(recipient=request.user) | Q(recipient__isnull=True)
             )
@@ -130,25 +154,28 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket = self.get_object()
         text = request.data.get('message', '').strip()
         recipient_username = request.data.get('recipient')
+        is_group_chat = request.data.get('is_group_chat') == 'true'
         files = request.FILES.getlist('attachments') 
 
         if not text and not files:
             return Response({'status': 'error', 'message': 'Empty message'}, status=400)
 
+        # Logic: If it's a group chat, recipient is None. 
+        # Otherwise, find the target user.
+        # In viewset.py -> send_reply method
         target_user = None
-        if recipient_username and recipient_username not in ["Everyone", "null"]:
-            target_user = User.objects.filter(username=recipient_username).first()
-        
-        if not target_user:
-            if request.user.is_staff:
-                target_user = ticket.user
-            else:
-                target_user = ticket.technician
+        if not is_group_chat:
+            # Ensure "Everyone" sent from JS results in target_user = None
+            if recipient_username and recipient_username not in ["Everyone", "null", "GROUP_CHAT"]:
+                target_user = User.objects.filter(username=recipient_username).first()
+            
+            if not target_user:
+                target_user = ticket.user if request.user.is_staff else ticket.technician
 
         new_msg = TicketMessage.objects.create(
             ticket=ticket, 
             sender=request.user, 
-            recipient=target_user, 
+            recipient=target_user, # Will be None if is_group_chat is true
             message=text
         )
 
@@ -170,22 +197,49 @@ class TicketViewSet(viewsets.ModelViewSet):
         header += "─" * 25 + "\n"
         details = []
         
+        # 1. Identity / New Account Fields
         if category == "Identity":
             details.append(f"👤 First Name: {data.get('first_name', 'N/A')}")
             details.append(f"👤 Last Name: {data.get('last_name', 'N/A')}")
             details.append(f"📧 Email: {data.get('email', 'N/A')}")
             details.append(f"🎖️ Rank: {data.get('rank', 'N/A')}")
             details.append(f"📞 Phone: {data.get('phone', 'N/A')}")
+
+        # 2. Security / MFA Removal Fields
         elif category == "Security":
             details.append(f"🔐 Auth ID: {data.get('auth_id', 'N/A')}")
             details.append(f"⚠️ Request Type: {data.get('removal_type', 'N/A')}")
-            details.append(f"🖥️ System: {data.get('system_name', 'N/A')}")
+
+        # 3. Technical / Bug Report Fields (New)
+        elif category == "Technical":
+            details.append(f"📦 Impacted Module: {data.get('bug_module', 'N/A')}")
+            details.append(f"🚫 Error Code: {data.get('error_code', 'None')}")
+            details.append(f"🔄 Steps: {data.get('reproduce_steps', 'N/A')}")
+
+        # 4. Access / Permission Fields (New)
+        elif category == "Access":
+            # Handles both Permission changes and Login/Lockout issues
+            if data.get('target_resource'):
+                details.append(f"🔑 Resource: {data.get('target_resource', 'N/A')}")
+                details.append(f"📊 Level: {data.get('access_level', 'N/A')}")
+                details.append(f"✍️ Approver: {data.get('approving_officer', 'N/A')}")
+            else:
+                details.append(f"🆔 Affected ID: {data.get('affected_id', 'N/A')}")
+                details.append(f"📱 Alt Contact: {data.get('alt_contact', 'N/A')}")
 
         detail_text = "\n".join(details)
         full_body = f"{header}{detail_text}\n\n📝 USER CONCERN:\n{description}"
 
+        if self.request.user.is_authenticated:
+            ticket_owner = self.request.user
+        else:
+            ticket_owner, created = User.objects.get_or_create(
+                username='PublicGuest',
+                defaults={'first_name': 'Public', 'last_name': 'Guest', 'email': 'guest@system.local'}
+            )
+
         ticket = serializer.save(
-            user=self.request.user, 
+            user=ticket_owner, 
             description=full_body, 
             status="Pending"
         )
@@ -200,19 +254,32 @@ class TicketViewSet(viewsets.ModelViewSet):
         old_tech = ticket.technician
         data = request.data
 
+        # 1. Update status and priority first
         ticket.status = data.get('status', ticket.status)
         ticket.priority = data.get('priority', ticket.priority)
-        ticket.description = data.get('description', ticket.description)
-
+        
+        # 2. Capture the tech_id from the frontend
         tech_id = data.get('technician_id')
-        if tech_id:
+        
+        if tech_id and str(tech_id).strip() != "":
             new_tech = get_object_or_404(User, id=tech_id)
             if old_tech != new_tech:
                 ticket.last_technician = old_tech.username if old_tech else "None"
                 ticket.technician = new_tech
-        elif ticket.status == 'Pending' and ticket.technician:
-            ticket.last_technician = ticket.technician.username
-            ticket.technician = None
+                
+                # CRITICAL: If a tech is assigned, the ticket should no longer be 'Pending'
+                if ticket.status == 'Pending':
+                    ticket.status = 'Open'
+                    
+        else:
+            # UNASSIGNED LOGIC: 
+            # If no technician ID is sent (Unassigned), clear the tech and force status to Pending
+            if ticket.technician:
+                ticket.last_technician = ticket.technician.username
+                ticket.technician = None
+            
+            # Force the status to Pending regardless of what the frontend sent
+            ticket.status = 'Pending'
 
         ticket.save()
         return Response({'status': 'success'})
