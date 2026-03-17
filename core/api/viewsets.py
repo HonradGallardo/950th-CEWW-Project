@@ -32,6 +32,7 @@ from core.api.serializers import (
     IncidentCommentSerializer,
     NotificationSerializer,
 )
+
 # Ensure these match your local environment
 RP_ID = "localhost" 
 ORIGIN = "http://localhost:8000"
@@ -68,7 +69,6 @@ class PasskeyRegisterVerifyAPI(APIView):
                  
             challenge_bytes = base64.b64decode(challenge_b64)
             
-            # 🚨 FIX: Use request.data instead of json.loads(request.body)
             credential_data = request.data 
             
             verification = verify_registration_response(
@@ -113,7 +113,6 @@ class PasskeyLoginOptionsAPI(APIView):
             if not user_passkeys:
                 return Response({"error": "No passkeys registered for this account."}, status=400)
 
-            # 🚨 FIX 1: Use PublicKeyCredentialDescriptor instead of a plain dictionary
             allow_credentials = [
                 PublicKeyCredentialDescriptor(
                     id=base64.b64decode(pk.credential_id)
@@ -152,7 +151,6 @@ class PasskeyLoginVerifyAPI(APIView):
             from django.contrib.auth.models import User
             user = User.objects.filter(id=user_id).first()
             
-            # 🚨 FIX 2: Safely compare the browser's Base64URL with our DB's Standard Base64
             frontend_cred_id_bytes = base64url_to_bytes(credential_data.get('id'))
             
             passkey = None
@@ -197,8 +195,6 @@ class APILoginView(LoginView):
             user = form.get_user()
             
             # --- MFA LOGIC CHECK ---
-            # For now, we will simulate MFA being turned ON for everyone.
-            # Later, you can change this to: mfa_enabled = user.profile.mfa_enabled
             mfa_enabled = True 
 
             if mfa_enabled:
@@ -324,8 +320,8 @@ class DashboardStatsAPI(APIView):
             'asset_totals': asset_totals,
             'severity_labels': severity_labels,
             'severity_totals': severity_totals,
-            'recent_maintenance': maint_list, # 🚨 Added for table refresh
-            'open_incidents_list': inc_list   # 🚨 Added for table refresh
+            'recent_maintenance': maint_list,
+            'open_incidents_list': inc_list
         })
         
 class UserViewSet(viewsets.ModelViewSet):
@@ -383,12 +379,14 @@ class AssetViewSet(viewsets.ModelViewSet):
         asset = serializer.save(assigned_to=self.request.user)
         self.handle_maintenance_logic(asset)
     
+    # 🚨 UPDATED FILTER LOGIC: Matches Type OR Status
     def get_queryset(self):
-        """Allows the API to filter by category (assets_type)"""
-        queryset = Asset.objects.all()
+        queryset = super().get_queryset()
         category = self.request.query_params.get('category')
         if category and category != 'All':
-            queryset = queryset.filter(assets_type=category)
+            queryset = queryset.filter(
+                Q(assets_type__iexact=category) | Q(status__iexact=category)
+            )
         return queryset
 
     def perform_update(self, serializer):
@@ -418,6 +416,16 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
     queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer
 
+    # 🚨 ADDED FILTER LOGIC: Matches Type OR Status
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category = self.request.query_params.get('category')
+        if category and category != 'All':
+            queryset = queryset.filter(
+                Q(maintenance_type__iexact=category) | Q(status__iexact=category)
+            )
+        return queryset
+
     def perform_create(self, serializer):
         # Automatically set the technician to the currently logged-in user
         serializer.save(technician=self.request.user)
@@ -441,10 +449,19 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
         instance.delete()
         
         
-# 🚨 RESTORED: This is the missing IncidentViewSet
 class IncidentViewSet(viewsets.ModelViewSet):
     queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
+
+    # 🚨 ADDED FILTER LOGIC: Matches Severity OR Status
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category = self.request.query_params.get('category')
+        if category and category != 'All':
+            queryset = queryset.filter(
+                Q(severity__iexact=category) | Q(status__iexact=category)
+            )
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
@@ -510,11 +527,10 @@ class MonitoringDataAPI(APIView):
         
 class NotificationViewSet(viewsets.ModelViewSet):
     """API for dynamic notification bell updates."""
-    serializer_class = NotificationSerializer # Make sure your serializer is linked!
-    permission_classes = [IsAuthenticated]    # 🚨 Block anonymous users from hitting this endpoint
+    serializer_class = NotificationSerializer 
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # 🚨 Extra safeguard: Return an empty list instead of crashing if the user is somehow logged out
         if not self.request.user.is_authenticated:
             return Notification.objects.none()
             
@@ -567,7 +583,6 @@ class ForgotPasswordAPI(APIView):
                 return Response({'status': 'error', 'message': 'Security check required.'})
 
             # 1. Verify Google reCAPTCHA
-            # Make sure RECAPTCHA_SECRET_KEY is in your settings.py
             recaptcha_secret = getattr(settings, 'RECAPTCHA_SECRET_KEY', None)
             if recaptcha_secret:
                 verify_req = requests.post(
@@ -580,8 +595,6 @@ class ForgotPasswordAPI(APIView):
             # 2. Verify User Exists
             user = User.objects.filter(email=email).first()
             if not user:
-                # Security Practice: Do not reveal if an email exists to prevent enumeration.
-                # Just return an error telling them the account wasn't found.
                 return Response({'status': 'error', 'message': 'No active personnel account found with that email.'})
 
             # 3. Generate a 6-digit OTP

@@ -10,11 +10,13 @@ router.register(r'incidents', IncidentViewSet)
 router.register(r'notifications', NotificationViewSet, basename='api-notifications')
 
 urlpatterns = [
-    
     path('api/personnel/stats/', views.dashboard_stats_api, name='personnel-stats-api'),
-    
-    # Keep this if you use the class-based version elsewhere
     path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
+    
+    # EXACT matches for your frontend JavaScript
+    path('api/report/it-asset/', AssetViewSet.as_view({'get': 'list'})),
+    path('api/report/maintenance/', MaintenanceViewSet.as_view({'get': 'list'})),
+    path('api/report/incident/', IncidentViewSet.as_view({'get': 'list'})),
     
     path('', include(router.urls)),
 ]

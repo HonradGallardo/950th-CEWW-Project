@@ -5,15 +5,15 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     :root {
-        --head-bg: rgba(248, 250, 252, 0.8);
+        --head-bg: rgba(255, 255, 255, 0.85);
         --head-text: #0F172A;
         --head-border: #e2e8f0;
-        --row-hover: #f1f5f9;
+        --row-hover: #f8fafc;
         --nav-height: 73px; 
     }
 
     .dark {
-        --head-bg: #0F172A;
+        --head-bg: rgba(15, 23, 42, 0.85);
         --head-text: #F8FAFC;
         --head-border: #1e293b;
         --row-hover: #1e293b;
@@ -21,7 +21,8 @@
 
     #head {
         background-color: var(--head-bg) !important;
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         color: var(--head-text) !important;
         border-color: var(--head-border) !important;
         transition: all 0.3s ease;
@@ -35,17 +36,21 @@
         overflow: visible;
     }
     
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
     .ticket-row { transition: all 0.2s ease; cursor: pointer; }
-    .ticket-row:hover { background-color: var(--row-hover) !important; }
+    .ticket-row:hover { 
+        background-color: var(--row-hover) !important; 
+        /* transform: translateY(-1px); NOTE: Commented out to prevent Z-index stacking context conflicts with action menus */ 
+    }
 
     .id-badge {
-        font-family: 'JetBrains Mono', monospace;
-        letter-spacing: -0.05em;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        letter-spacing: -0.02em;
     }
 
     .action-menu {
@@ -53,22 +58,26 @@
         position: absolute;
         right: 0;
         top: 100%;
-        z-index: 50;
-        min-width: 160px;
+        z-index: 9999; /* Boosted from 50 to 9999 to guarantee top visibility */
+        width: 200px; 
+        text-align: left; 
         animation: menuFade 0.2s ease-out;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     }
 
     @keyframes menuFade {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .action-btn-trigger {
         transition: all 0.2s ease;
     }
     .action-btn-trigger:hover {
-        background-color: rgba(59, 130, 246, 0.1);
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #2563eb;
     }
+    .dark .action-btn-trigger:hover { color: #60a5fa; }
 
     @media (max-width: 1024px) {
         .admin-table-container { height: auto; overflow: visible; }
@@ -77,24 +86,24 @@
         
         #ticketTableBody {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 0.75rem;
-            padding: 0.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
         }
 
         .ticket-row {
             background: white !important;
             border: 1px solid var(--head-border) !important;
-            border-radius: 0.75rem;
-            padding: 0.75rem;
+            border-radius: 1rem;
+            padding: 1.25rem;
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            gap: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
 
-        .dark .ticket-row { background: #1e293b !important; }
+        .dark .ticket-row { background: #0f172a !important; }
         
         .ticket-row td { 
             padding: 0 !important; 
@@ -105,66 +114,71 @@
     }
 </style>
 
-<div class="min-h-[calc(100vh-73px)] dark:bg-[#0F172A] p-2 md:p-4 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300">
+<div class="min-h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#0F172A] p-3 md:p-6 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300">
     
-    <header id="head" class="flex flex-col gap-4 p-4 mb-4 rounded-2xl border shadow-lg backdrop-blur-md">
+    <header id="head" class="flex flex-col gap-5 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
         <div class="flex items-center justify-between">
-            <div class="flex flex-col">
-                <h1 class="text-sm md:text-lg font-black tracking-tight uppercase flex items-center gap-2">
-                    <i class="fas fa-shield-alt text-blue-600 animate-pulse"></i>
-                    Support Command Center
+            <div class="flex flex-col gap-1">
+                <h1 class="text-base md:text-xl font-black tracking-tight flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <i class="fas fa-shield-alt text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 uppercase">
+                        Support Command Center
+                    </span>
                 </h1>
-                <p class="text-[7px] md:text-[9px] uppercase tracking-[0.3em] font-bold opacity-60 text-blue-500">
+                <p class="text-xs font-semibold opacity-70 text-blue-600 dark:text-blue-400 uppercase tracking-widest pl-11">
                     Administrative Dispatch Overview
                 </p>
             </div>
-            <div class="lg:hidden bg-blue-600/10 border border-blue-500/20 px-2 py-1 rounded-lg">
-                <span id="mobileCount" class="text-[10px] font-black text-blue-600">00</span>
+            <div class="lg:hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <i class="fas fa-ticket-alt text-blue-500 text-xs"></i>
+                <span id="mobileCount" class="text-sm font-black text-blue-700 dark:text-blue-400">00</span>
             </div>
         </div>
         
-        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-            <div class="relative flex-grow">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-slate-400 text-xs"></i>
+        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+            <div class="relative flex-grow max-w-2xl">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-slate-400"></i>
                 </span>
-                <input type="text" id="ticketSearch" placeholder="Search ID, Name, or Date..." 
-                    class="w-full bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 rounded-xl py-2 pl-9 pr-3 text-xs font-semibold outline-none transition-all">
+                <input type="text" id="ticketSearch" placeholder="Search by ID, Subject, Client, or Date..." 
+                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner">
             </div>
             
-            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/30 gap-1">
-                <button class="filter-btn whitespace-nowrap px-4 py-1.5 bg-white dark:bg-blue-600 shadow-sm text-blue-600 dark:text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-all" data-filter="all" onclick="filterTable('all', this)">All</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-1.5 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-700 transition-all" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-1.5 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-700 transition-all" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-1.5 text-slate-500 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-white/50 dark:hover:bg-slate-700 transition-all" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
+            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5">
+                <button class="filter-btn whitespace-nowrap px-5 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all" data-filter="all" onclick="filterTable('all', this)">All</button>
+                <button class="filter-btn whitespace-nowrap px-5 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
+                <button class="filter-btn whitespace-nowrap px-5 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
+                <button class="filter-btn whitespace-nowrap px-5 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
             </div>
         </div>
     </header>
 
-    <div class="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-2xl overflow-visible flex flex-col backdrop-blur-sm">
+    <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col">
         <div class="admin-table-container overflow-auto custom-scrollbar">
             <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px]">
                 <thead class="hidden lg:table-header-group">
-                    <tr class="sticky top-0 z-10 bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md">
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Ref ID</th>
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Priority</th>
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Client</th>
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Issue & Snippet</th>
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Agent Details</th>
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700 text-center">Status</th>
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700">Created At</th>
-                        <th class="p-2.5 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b dark:border-slate-700 text-right">Actions</th>
+                    <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm">
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl">Ref ID</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Priority</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Client</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Issue & Snippet</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Agent Details</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-center">Status</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Created At</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/50"></tbody>
+                <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80"></tbody>
             </table>
         </div>
-        <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <span id="pageIndicator" class="text-[9px] font-black text-slate-400 uppercase tracking-widest"></span>
+        <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-xl md:rounded-b-2xl">
+            <span id="pageIndicator" class="text-xs font-bold text-slate-500 uppercase tracking-wider"></span>
             <div class="flex items-center gap-2">
-                <button id="prevPage" onclick="changePage(-1)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30"><i class="fas fa-chevron-left text-[10px]"></i></button>
-                <div id="pageNumbers" class="flex gap-1"></div>
-                <button id="nextPage" onclick="changePage(1)" class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30"><i class="fas fa-chevron-right text-[10px]"></i></button>
+                <button id="prevPage" onclick="changePage(-1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
+                <div id="pageNumbers" class="flex gap-1.5"></div>
+                <button id="nextPage" onclick="changePage(1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
             </div>
         </div>
     </div>
@@ -174,10 +188,9 @@
     let allTickets = [];
     let currentPage = 1;
     const itemsPerPage = 10;
-    const currentAdminUser = "{{ request.user.username }}";
-    const currentUserId = "{{ request.user.id }}";
+    const currentAdminUser = "{{ request.user.username|default:'' }}";
+    const currentUserId = "{{ request.user.id|default:'null' }}";
 
-    // Reusable function to force the scroll to the top of the content
     function scrollToTop() {
         const headElement = document.getElementById('head');
         if (headElement) {
@@ -192,7 +205,10 @@
             const response = await fetch('/tickets/api/support-api/', { 
                 headers: { 'X-Requested-With': 'XMLHttpRequest' } 
             });
-            if (!response.ok) return;
+            if (!response.ok) {
+                console.error("Failed to fetch tickets:", response.status);
+                return;
+            }
             const data = await response.json();
             allTickets = Array.isArray(data) ? data : (data.results || []); 
             updateUI();
@@ -200,10 +216,18 @@
     }
 
     function getPriorityStyles(priority) {
-        const base = "flex items-center gap-1.5 font-black text-[9px] uppercase tracking-tighter ";
-        if (priority === 'High') return base + 'text-red-500';
-        if (priority === 'Medium') return base + 'text-amber-500';
-        return base + 'text-blue-400';
+        const p = (priority || '').toLowerCase();
+        if (p === 'high') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800/50';
+        if (p === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50';
+    }
+
+    function getStatusStyles(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'resolved' || s === 'closed' || s === 'completed') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50';
+        if (s === 'in progress') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50';
+        if (s === 'pending') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
+        return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
     }
 
     function formatTimestamp(dateStr) {
@@ -268,80 +292,84 @@
         const paginatedItems = filtered.slice(start, start + itemsPerPage);
 
         if (paginatedItems.length === 0) {
-            body.innerHTML = `<tr><td colspan="8" class="p-20 text-center text-[10px] font-black uppercase tracking-widest opacity-40">No records found</td></tr>`;
+            body.innerHTML = `<tr><td colspan="8" class="p-24 text-center text-sm font-bold text-slate-400 dark:text-slate-600 flex flex-col items-center gap-3"><i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i> No dispatch records found</td></tr>`;
         } else {
             body.innerHTML = paginatedItems.map(t => `
                 <tr class="ticket-row group" onclick="goToDetail(${t.id})">
-                    <td class="p-4 lg:w-32">
+                    <td class="p-4 lg:w-36 align-middle">
                         <div class="lg:block flex justify-between items-center w-full">
-                            <span class="id-badge font-bold text-blue-600 text-[12px] bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded border border-blue-100 dark:border-blue-500/20">
+                            <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
                                 #${String(t.id).padStart(6, '0')}
                             </span>
                             <div class="lg:hidden text-right relative">
-                                <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-full flex items-center justify-center text-slate-400 hover:text-blue-600">
+                                <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full flex items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
-                                <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl overflow-hidden right-0">
-                                     <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
-                                        <i class="fas fa-user-plus text-blue-500"></i> Assign To Me
+                                <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2">
+                                     <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                        <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
                                     </button>
-                                    <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
-                                        <i class="fas fa-check-circle text-emerald-500"></i> Mark Resolved
+                                    <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                        <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
                                     </button>
-                                    <div class="border-t dark:border-slate-700"></div>
-                                    <button onclick="deleteTicket(event, ${t.id})" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
-                                        <i class="fas fa-trash-alt"></i> Delete Record
+                                    <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
+                                    <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
+                                        <i class="fas fa-trash-alt w-4"></i> Delete Record
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </td>
-                    <td class="p-4">
-                        <div class="${getPriorityStyles(t.priority)}">
+                    <td class="p-4 align-middle">
+                        <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
                             <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
-                        </div>
+                        </span>
                     </td>
-                    <td class="p-4">
+                    <td class="p-4 align-middle">
                         <div class="flex flex-col">
-                            <span class="font-bold text-xs">${t.first_name || ''} ${t.last_name || ''}</span>
-                            <span class="text-[9px] opacity-50 font-medium">@${t.user_name}</span>
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${t.first_name || ''} ${t.last_name || ''}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">@${t.user_name || 'unknown'}</span>
                         </div>
                     </td>
-                    <td class="p-4 lg:max-w-[280px]">
+                    <td class="p-4 align-middle lg:max-w-[320px]">
                         <div class="flex flex-col overflow-hidden">
-                            <p class="font-bold text-xs truncate group-hover:text-blue-500 transition-colors">${t.subject}</p>
-                            <p class="text-[10px] opacity-50 truncate italic">"${t.description || 'No details provided'}"</p>
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${t.subject || 'No Subject'}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">"${t.description || 'No additional details provided'}"</p>
                         </div>
                     </td>
-                    <td class="p-4">
+                    <td class="p-4 align-middle">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                <i class="fas fa-user-shield text-slate-400"></i> ${t.technician_name || 'Unassigned'}
+                            </span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">Prev: ${t.previous_technician || 'None'}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 align-middle lg:text-center">
+                        <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
+                            ${t.status || 'Open'}
+                        </span>
+                    </td>
+                    <td class="p-4 align-middle">
                         <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-slate-500"><i class="fas fa-user-shield mr-1.5 opacity-50"></i>${t.technician_name || 'Unassigned'}</span>
-                            <span class="text-[8px] opacity-40 uppercase font-black">Prev: ${t.previous_technician || 'None'}</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">${formatTimestamp(t.created_at)}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Logged</span>
                         </div>
                     </td>
-                    <td class="p-4 lg:text-center">
-                        <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase border dark:bg-slate-800/50">${t.status}</span>
-                    </td>
-                    <td class="p-4">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-black text-slate-600 dark:text-slate-400 whitespace-nowrap">${formatTimestamp(t.created_at)}</span>
-                            <span class="text-[8px] opacity-40 font-bold uppercase tracking-widest">Logged</span>
-                        </div>
-                    </td>
-                    <td class="p-4 text-right relative hidden lg:table-cell">
-                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-full flex items-center justify-center text-slate-400 hover:text-blue-600">
+                    <td class="p-4 align-middle text-right relative hidden lg:table-cell">
+                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
                             <i class="fas fa-ellipsis-v"></i>
                         </button>
-                        <div id="menu-desktop-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl overflow-hidden">
-                            <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
-                                <i class="fas fa-user-plus text-blue-500"></i> Assign To Me
+                        <div id="menu-desktop-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mt-2">
+                            <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
                             </button>
-                            <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3">
-                                <i class="fas fa-check-circle text-emerald-500"></i> Mark Resolved
+                            <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
                             </button>
-                            <div class="border-t dark:border-slate-700"></div>
-                            <button onclick="deleteTicket(event, ${t.id})" class="w-full px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3">
-                                <i class="fas fa-trash-alt"></i> Delete Record
+                            <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
+                            <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
+                                <i class="fas fa-trash-alt w-4"></i> Delete Record
                             </button>
                         </div>
                     </td>
@@ -351,7 +379,7 @@
 
         const showingStart = filtered.length > 0 ? start + 1 : 0;
         const showingEnd = Math.min(start + itemsPerPage, filtered.length);
-        document.getElementById('pageIndicator').innerText = `NODE ${showingStart}-${showingEnd} / TOTAL ${filtered.length}`;
+        document.getElementById('pageIndicator').innerText = `Showing ${showingStart}-${showingEnd} of ${filtered.length} Records`;
         
         document.getElementById('prevPage').disabled = (currentPage <= 1);
         document.getElementById('nextPage').disabled = (currentPage >= totalPages);
@@ -367,13 +395,13 @@
             const isCurrent = i === currentPage;
             const btn = document.createElement('button');
             btn.innerText = i;
-            btn.className = `px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all border ${
-                isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200'
+            btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-sm ${
+                isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`;
             btn.onclick = () => { 
                 currentPage = i; 
                 updateUI(); 
-                scrollToTop(); // Use the enhanced scroll function
+                scrollToTop(); 
             };
             pageNumbersContainer.appendChild(btn);
         }
@@ -382,16 +410,25 @@
     function changePage(dir) { 
         currentPage += dir; 
         updateUI(); 
-        scrollToTop(); // Use the enhanced scroll function
+        scrollToTop(); 
     }
 
     function goToDetail(id) { window.location.href = `/tickets/detail/${id}/`; }
 
     async function quickAction(event, id, type) {
         event.stopPropagation();
+        
+        // Ensure we send the current tech ID for both actions to satisfy backend validation
         const payload = type === 'assign' 
-            ? { technician_id: currentUserId, status: 'In Progress', priority: 'Medium' } 
-            : { status: 'Resolved' };
+            ? { 
+                technician_id: currentUserId, 
+                status: 'In Progress', 
+                priority: 'Medium' 
+              } 
+            : { 
+                technician_id: currentUserId, // Include who is resolving it
+                status: 'Resolved' 
+              };
         
         try {
             const res = await fetch(`/tickets/api/support-api/${id}/update_technical_details/`, {
@@ -403,8 +440,18 @@
                 },
                 body: JSON.stringify(payload)
             });
-            if (res.ok) initAdminSync();
-        } catch (err) { console.error(err); }
+
+            if (res.ok) {
+                // Refresh data and close menus
+                initAdminSync();
+            } else {
+                const errorData = await res.json();
+                console.error("Server Error:", errorData);
+                alert("Failed to update ticket: " + (errorData.detail || "Unknown error"));
+            }
+        } catch (err) { 
+            console.error("Fetch Error:", err); 
+        }
     }
 
     async function deleteTicket(event, id) {
@@ -424,11 +471,11 @@
 
     function filterTable(type, btn) {
         document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-600', 'dark:text-white', 'shadow-sm');
-            b.classList.add('text-slate-500');
+            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+            b.classList.add('text-slate-600', 'dark:text-slate-400');
         });
-        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-600', 'dark:text-white', 'shadow-sm');
-        btn.classList.remove('text-slate-500');
+        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
         currentPage = 1;
         updateUI();
     }

@@ -344,6 +344,25 @@
 
             // Initial UI update
             updateToggleUI($('body').hasClass('dark-mode'));
+
+            // --- INACTIVITY TIMER SCRIPT ---
+            let inactivityTimer;
+            const timeoutInMS = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+            function resetTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(function() {
+                    alert("You have been inactive for 30 minutes. You must re-login to continue.");
+                    // Since standard redirect works, assuming the login URL is named 'login'
+                    window.location.href = "{% url 'login' %}"; 
+                }, timeoutInMS);
+            }
+
+            // Listen for user interactions to reset the timer
+            $(document).on('mousemove keypress click scroll', resetTimer);
+            
+            // Initialize timer on load
+            resetTimer();
         });
     </script>
 </body>

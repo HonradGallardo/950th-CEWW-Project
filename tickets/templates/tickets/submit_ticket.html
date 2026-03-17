@@ -26,29 +26,29 @@
 
     /* Utility for hidden scrollbars but keep functionality */
     .no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-.no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-}
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
 
-.custom-scrollbar::-webkit-scrollbar { 
-    display: none; 
-}
-.custom-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
+    .custom-scrollbar::-webkit-scrollbar { 
+        display: none; 
+    }
+    .custom-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
 
-#sidebar-ticket-details {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;     /* Firefox */
-}
+    #sidebar-ticket-details {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
 
-#sidebar-ticket-details::-webkit-scrollbar {
-    display: none;             /* Chrome, Safari and Opera */
-}
+    #sidebar-ticket-details::-webkit-scrollbar {
+        display: none;             /* Chrome, Safari and Opera */
+    }
 
     .active-ticket-item { 
         background-color: #f1f5f9 !important; 
@@ -66,9 +66,9 @@
 
 <div class="h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans text-slate-900 dark:text-slate-100 main-container">
     
-    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 md:px-8 shrink-0 z-30 shadow-sm">
+    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 md:px-8 shrink-0 z-30 shadow-sm relative">
         <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto overflow-hidden">
-            <button onclick="SupportConsole.toggleSidebar()" class="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0">
+            <button type="button" onclick="SupportConsole.toggleSidebar()" class="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                 <i class="fas fa-bars text-lg"></i>
             </button>
             
@@ -85,13 +85,13 @@
         
         <div class="flex items-center gap-2 md:gap-4 shrink-0 pl-2">
             <div class="hidden sm:block text-right leading-tight">
-                <p class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ request.user.username }}</p>
+                <p class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ request.user.username|default:"Staff Member" }}</p>
                 <p class="text-[10px] font-bold text-emerald-500 uppercase flex items-center justify-end gap-1">
                     <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
                 </p>
             </div>
             <div class="relative group">
-                <img src="https://ui-avatars.com/api/?name={{ request.user.username }}&background=3b82f6&color=fff&bold=true" 
+                <img src="https://ui-avatars.com/api/?name={{ request.user.username|default:'U' }}&background=3b82f6&color=fff&bold=true" 
                     class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
             </div>
         </div>
@@ -99,83 +99,83 @@
 
     <main class="flex-1 flex overflow-hidden h-full relative min-h-0">
         
-        <aside id="mainSidebar" class="fixed top-0 bottom-0 left-0 z-50 w-[85vw] sm:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
-            <div class="p-4 md:p-5 space-y-4">
+        <aside id="mainSidebar" class="absolute lg:static inset-y-0 left-0 z-50 w-[85vw] sm:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-hidden">
+            <div class="p-4 md:p-5 space-y-4 shrink-0">
                 <div class="flex items-center justify-between gap-2">
                     <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Conversations</span>
                     <button type="button" onclick="SupportConsole.openAssistant()" 
-                            class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap">
-                        + New Ticket
+                            class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm focus:outline-none">
+                        <i class="fas fa-plus mr-1"></i> New Ticket
                     </button>
                 </div>
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
                     <input type="text" id="sidebarSearch" oninput="SupportConsole.filterSidebar()" 
-                           placeholder="Search..." 
-                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:ring-2 ring-blue-500/20 transition-all">
+                           placeholder="Search tickets..." 
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all">
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1 pb-2" id="sidebarTicketContainer">
+            <div class="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1.5 pb-2" id="sidebarTicketContainer">
                 {% for ticket in user_tickets %}
                 <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}', '{{ ticket.technician.username|default:'Unassigned' }}')" 
                      id="ticket-item-{{ ticket.id }}"
-                     class="ticket-item p-3 md:p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-transparent">
+                     class="ticket-item p-3 md:p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-transparent shadow-sm">
                     <div class="flex justify-between items-start mb-2">
-                        <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">#{{ ticket.id|stringformat:"04d" }}</span>
+                        <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500 border border-slate-200 dark:border-slate-700">#{{ ticket.id|stringformat:"04d" }}</span>
                         <span class="text-[9px] font-black uppercase tracking-tighter 
                             {% if ticket.status == 'Completed' %}text-emerald-500{% else %}text-blue-500{% endif %}">
                             {{ ticket.status }}
                         </span>
                     </div>
-                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 transition-colors">{{ ticket.subject }}</p>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ ticket.subject }}</p>
                     <p class="text-[9px] text-slate-400 mt-1 font-medium">{{ ticket.created_at|date:'M d' }} • {{ ticket.priority }} Priority</p>
                 </div>
                 {% endfor %}
             </div>
 
-            <div id="sidebar-ticket-details" class="scrollbar-hide h-[40%] flex flex-col overflow-y-auto border-t border-slate-200 dark:border-slate-800 p-4 md:p-5 bg-slate-50/30 dark:bg-slate-900/50 shrink-0">
-                <div id="ticket-details-empty" class="text-center py-4 md:py-8">
-                    <i class="fas fa-info-circle text-slate-200 dark:text-slate-800 text-xl mb-2"></i>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Select a ticket to view details</p>
+            <div id="sidebar-ticket-details" class="scrollbar-hide h-[40%] min-h-[200px] flex flex-col overflow-y-auto border-t border-slate-200 dark:border-slate-800 p-4 md:p-5 bg-slate-50/50 dark:bg-slate-900/50 shrink-0 relative">
+                <div id="ticket-details-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <i class="fas fa-info-circle text-slate-300 dark:text-slate-700 text-2xl mb-3"></i>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Select a ticket to view details</p>
                 </div>
 
-                <div id="contact-details-inner" class="hidden flex-col pb-4">
-                    <div class="flex items-center gap-2 mb-4">
+                <div id="contact-details-inner" class="hidden flex-col pb-4 h-full">
+                    <div class="flex items-center gap-2 mb-4 shrink-0">
                         <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Initial Inquiry</span>
                     </div>
                     
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3 flex-1 overflow-y-auto custom-scrollbar">
                         <div class="flex items-center gap-2">
-                            <i class="fas fa-ticket-alt text-blue-500 text-xs"></i>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate w-full">Ticket Type: <span id="detailCategory" class="text-blue-600">--</span></span>
+                            <i class="fas fa-ticket-alt text-blue-500 text-xs shrink-0"></i>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate w-full">Ticket Type: <span id="detailCategory" class="text-blue-600 dark:text-blue-400">--</span></span>
                         </div>
                         
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full"></div>
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
                         
-                        <div class="grid grid-cols-2 gap-2 text-[10px]">
-                            <div class="col-span-2 sm:col-span-1 flex items-center gap-1.5 truncate">
-                                <i class="fas fa-user text-slate-400 shrink-0"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Name: <span id="contactName" class="font-bold">--</span></span>
+                        <div class="grid grid-cols-2 gap-3 text-[10px] shrink-0">
+                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
+                                <i class="fas fa-user text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Name: <span id="contactName" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
                             </div>
-                            <div class="col-span-2 sm:col-span-1 flex items-center gap-1.5 truncate">
-                                <i class="fas fa-medal text-slate-400 shrink-0"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Rank: <span id="contactRank" class="font-bold">--</span></span>
+                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
+                                <i class="fas fa-medal text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Rank: <span id="contactRank" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
                             </div>
-                            <div class="col-span-2 flex items-center gap-1.5 truncate">
-                                <i class="fas fa-envelope text-slate-400 shrink-0"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Email: <span id="contactEmail" class="font-bold">--</span></span>
+                            <div class="col-span-2 flex items-center gap-2 truncate">
+                                <i class="fas fa-envelope text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Email: <span id="contactEmail" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
                             </div>
-                            <div class="col-span-2 flex items-center gap-1.5 truncate">
-                                <i class="fas fa-phone text-slate-400 shrink-0"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Phone: <span id="contactPhone" class="font-bold">--</span></span>
+                            <div class="col-span-2 flex items-center gap-2 truncate">
+                                <i class="fas fa-phone text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Phone: <span id="contactPhone" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
                             </div>
                         </div>
 
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full mt-2"></div>
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full mt-3 mb-2 shrink-0"></div>
                         
-                        <div>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 block">User Concern:</span>
+                        <div class="mt-2">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">User Concern:</span>
                             <p id="detailConcern" class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium break-words">--</p>
                         </div>
                     </div>
@@ -183,23 +183,25 @@
             </div>
         </aside>
 
-        <div id="sidebarOverlay" onclick="SupportConsole.toggleSidebar()" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[45]"></div>
+        <div id="sidebarOverlay" onclick="SupportConsole.toggleSidebar()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[45]"></div>
 
         <section class="flex-1 flex flex-col bg-white dark:bg-[#0f172a] relative overflow-hidden w-full min-w-0 min-h-0 h-full">
             
-            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-[70] flex flex-col p-4 md:p-12 animate-in fade-in zoom-in-95 duration-300 overflow-y-auto">
-                <div class="max-w-4xl mx-auto w-full flex flex-col h-full min-h-fit pb-8">
-                    <div class="flex justify-between items-center mb-6 md:mb-8 shrink-0">
+            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-[70] flex flex-col p-4 md:p-8 overflow-y-auto">
+                <div class="max-w-4xl mx-auto w-full flex flex-col h-full min-h-fit pb-8 animate-in fade-in zoom-in-95 duration-300">
+                    <div class="flex justify-between items-center mb-6 md:mb-8 shrink-0 bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm">
                         <div class="flex items-center gap-3 md:gap-4">
-                            <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20 shrink-0">
+                            <div class="w-10 h-10 md:w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
                                 <i class="fas fa-robot text-white text-lg md:text-xl"></i>
                             </div>
                             <div>
                                 <h2 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Smart Assistant</h2>
-                                <p class="text-[8px] md:text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Neural Link Active</p>
+                                <p class="text-[8px] md:text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Neural Link Active
+                                </p>
                             </div>
                         </div>
-                        <button onclick="SupportConsole.closeAssistant()" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all shrink-0">
+                        <button type="button" onclick="SupportConsole.closeAssistant()" class="w-8 h-8 md:w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500/50">
                             <i class="fas fa-times text-lg"></i>
                         </button>
                     </div>
@@ -211,8 +213,10 @@
                         
                         <form id="newTicketForm" class="hidden flex flex-col gap-5 animate-in slide-in-from-bottom-4 duration-500" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <div class="border-b border-slate-200 dark:border-slate-800 pb-2">
-                                <p id="form-context-msg" class="text-[10px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest"></p>
+                            <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
+                                <p id="form-context-msg" class="text-[10px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fas fa-layer-group"></i> <span></span>
+                                </p>
                             </div>
                             
                             <input type="hidden" name="category" id="newCat" value="General">
@@ -392,15 +396,15 @@
                             <div class="flex flex-col gap-4">
                                 <div class="flex flex-col gap-1.5">
                                     <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Subject</label>
-                                    <input type="text" name="subject" id="newSub" required class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                    <input type="text" name="subject" id="newSub" required class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm">
                                 </div>
                                 
                                 <div class="flex flex-col gap-1.5">
                                     <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Description</label>
-                                    <textarea name="description" id="newDescInput" required rows="3" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"></textarea>
+                                    <textarea name="description" id="newDescInput" required rows="4" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none shadow-sm"></textarea>
                                 </div>
                                 
-                                <div class="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-6 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all text-center">
+                                <div class="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-6 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all text-center">
                                     <input type="file" name="attachments" multiple class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="SupportConsole.updateFileList(this)">
                                     <div class="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-blue-500 transition-colors">
                                         <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-800 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-all">
@@ -413,7 +417,7 @@
                             </div>
                             
                             <button type="button" onclick="SupportConsole.finalizeTicketSubmission()" 
-                                    class="w-full bg-blue-600 text-white py-3.5 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] transition-all mt-2">
+                                    class="w-full bg-blue-600 text-white py-3.5 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] transition-all mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
                                 Initialize Dispatch
                             </button>
                         </form>
@@ -422,26 +426,26 @@
             </div>
 
             <div id="no-chat-selected" class="absolute inset-0 bg-white dark:bg-[#0f172a] z-20 flex flex-col items-center justify-center p-6 text-center">
-                <div class="w-16 h-16 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-100 dark:border-slate-800">
+                <div class="w-16 h-16 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-100 dark:border-slate-800 shadow-sm">
                     <i class="fas fa-comments text-2xl md:text-4xl text-slate-200 dark:text-slate-800"></i>
                 </div>
                 <h3 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Secure Line Ready</h3>
                 <p class="text-[10px] md:text-xs text-slate-400 mt-2 max-w-[200px] leading-relaxed">Select a thread or start a new assistant session.</p>
             </div>
 
-            <div class="h-12 md:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-2 md:px-6 shrink-0 z-30 w-full min-w-0 relative">
+            <div class="h-12 md:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-2 md:px-6 shrink-0 z-30 w-full min-w-0 relative shadow-sm">
                 
                 <div class="flex items-center border-r border-slate-200 dark:border-slate-800 mr-2 md:mr-4 h-full shrink-0">
-                    <button onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Activity</button>
-                    <button onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent">Case Details</button>
+                    <button type="button" onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Activity</button>
+                    <button type="button" onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Case Details</button>
                     
-                    <button onclick="SupportConsole.toggleAssets()" class="xl:hidden px-3 md:px-4 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-600 flex items-center gap-1.5">
+                    <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden px-3 md:px-4 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-600 focus:outline-none flex items-center gap-1.5">
                         <i class="fas fa-folder-open"></i> <span class="hidden sm:inline">Assets</span>
                     </button>
                 </div>
                 
                 <div id="staff-threads-container" class="flex-1 flex items-center gap-2 overflow-visible custom-scrollbar h-full min-w-0 scroll-smooth pr-4">
-                    </div>
+                </div>
                 
             </div>
 
@@ -449,35 +453,34 @@
                 <div class="px-4 md:px-8 pt-4 md:pt-6 shrink-0">
                     <div id="feed-header-label" class="flex items-center gap-3 mb-3 md:mb-4">
                         <span class="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] whitespace-nowrap truncate">Chatting with: <span id="active-chat-id">#0000</span></span>
-                        <div class="flex-1 h-px bg-slate-200 dark:border-slate-800"></div>
+                        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
                     </div>
-                    
                 </div>
 
                 <div class="flex-1 overflow-y-auto no-scrollbar px-3 md:px-8 py-4 min-h-0" id="workspaceScroll">
                     <div id="messageContainer" class="max-w-4xl mx-auto space-y-6 md:space-y-8"></div>
                 </div>
 
-                <div class="p-3 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 mb-[env(safe-area-inset-bottom)]">
+                <div class="p-3 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 z-10 mb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                     <div class="max-w-4xl mx-auto">
-                        <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-2 mb-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200"></div>
-                        <form onsubmit="SupportConsole.sendMessage(event)" id="chatMsgForm" class="relative group" enctype="multipart/form-data">
+                        <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-2 mb-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"></div>
+                        <form onsubmit="SupportConsole.sendMessage(event)" id="chatMsgForm" class="relative group flex items-end" enctype="multipart/form-data">
                             {% csrf_token %}
                             <input type="file" id="chatFileInput" name="attachments" multiple class="hidden" onchange="SupportConsole.handleChatFileSelect(this)">
                             
-                            <textarea id="chatInput" rows="1" 
-                                      class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-3 md:py-4 pl-10 md:pl-12 pr-[4.5rem] md:pr-32 text-xs md:text-sm outline-none focus:ring-4 ring-blue-500/10 transition-all resize-none" 
-                                      placeholder="Send Message"></textarea>
-                            
-                            <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-2">
-                                <i class="fas fa-paperclip text-base md:text-lg"></i>
-                            </button>
-
-                            <div class="absolute right-1.5 md:right-2 top-1.5 md:top-2 bottom-1.5 md:bottom-2 flex items-center">
-                                <button type="submit" id="shareBtn" class="h-full bg-blue-600 px-3 md:px-6 rounded-xl text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all">
-                                    Send
+                            <div class="flex-1 relative">
+                                <textarea id="chatInput" rows="1" 
+                                          class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-[4.5rem] md:pr-28 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all resize-none shadow-sm" 
+                                          placeholder="Type your message here..."></textarea>
+                                
+                                <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none">
+                                    <i class="fas fa-paperclip text-base md:text-lg"></i>
                                 </button>
                             </div>
+
+                            <button type="submit" id="shareBtn" class="absolute right-2 top-2 bottom-2 bg-blue-600 px-4 md:px-6 rounded-xl text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                                Send
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -493,7 +496,7 @@
                                 <p class="text-[10px] md:text-xs text-slate-400 mt-1">Modify internal descriptions.</p>
                             </div>
                             <div class="flex flex-col sm:flex-row gap-2">
-                                <button type="button" onclick="SupportConsole.deleteTicket()" class="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white">
+                                <button type="button" onclick="SupportConsole.deleteTicket()" class="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors focus:outline-none">
                                     Delete Ticket
                                 </button>
                             </div>
@@ -501,26 +504,26 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                             <div class="md:col-span-2">
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Subject</label>
-                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-slate-500 cursor-not-allowed">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Subject</label>
+                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-slate-500 cursor-not-allowed outline-none shadow-sm">
                             </div>
 
                             <div class="md:col-span-2">
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Technician (Locked)</label>
-                                <input type="text" id="editTechnician" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-blue-600">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Technician (Locked)</label>
+                                <input type="text" id="editTechnician" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-blue-600 cursor-not-allowed outline-none shadow-sm">
                             </div>
 
                             <div>
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Status</label>
-                                <input type="text" name="status" id="editStatus" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Status</label>
+                                <input type="text" name="status" id="editStatus" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
                             </div>
                             <div>
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Priority</label>
-                                <input type="text" name="priority" id="editPriority" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Priority</label>
+                                <input type="text" name="priority" id="editPriority" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="text-[9px] md:text-[10px] font-black uppercase text-slate-400 mb-1 block">Internal Summary</label>
-                                <textarea id="editDesc" name="description" rows="4" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm outline-none focus:ring-2 ring-blue-500/20"></textarea>
+                                <label class="text-[9px] md:text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Internal Summary</label>
+                                <textarea id="editDesc" name="description" rows="5" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 shadow-sm transition-all resize-none"></textarea>
                             </div>
                         </div>
                     </form>
@@ -528,23 +531,23 @@
             </div>
         </section>
 
-        <div id="assetsOverlay" onclick="SupportConsole.toggleAssets()" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] xl:hidden transition-opacity"></div>
+        <div id="assetsOverlay" onclick="SupportConsole.toggleAssets()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] xl:hidden transition-opacity"></div>
 
-        <aside id="rightAssetsSidebar" class="fixed xl:static top-0 right-0 bottom-0 z-[60] w-[85vw] sm:w-80 bg-white dark:bg-slate-900 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 transform translate-x-full xl:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl xl:shadow-none">
+        <aside id="rightAssetsSidebar" class="absolute xl:static inset-y-0 right-0 z-[60] w-[85vw] sm:w-80 bg-white dark:bg-slate-900 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 transform translate-x-full xl:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl xl:shadow-none overflow-hidden">
             
             <div class="xl:hidden flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-folder-open text-blue-500"></i>
                     <span class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white">Ticket Assets</span>
                 </div>
-                <button onclick="SupportConsole.toggleAssets()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">
+                <button type="button" onclick="SupportConsole.toggleAssets()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors focus:outline-none">
                     <i class="fas fa-times text-sm"></i>
                 </button>
             </div>
 
-            <div id="contact-details-container" class="flex-1 flex flex-col opacity-0 transition-all duration-500 translate-x-4 overflow-hidden">
-                <div class="flex-1 flex flex-col overflow-hidden">
-                    <div class="p-4 border-b border-slate-200 dark:border-slate-800 hidden xl:block">
+            <div id="contact-details-container" class="flex-1 flex flex-col opacity-0 transition-all duration-500 translate-x-4 overflow-hidden min-h-0">
+                <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-800 hidden xl:block shrink-0">
                         <div class="flex items-center justify-between mb-3">
                             <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Assets</span>
                             <i class="fas fa-paperclip text-[10px] text-slate-400"></i>
@@ -553,13 +556,13 @@
                     
                     <div class="p-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
                         <div class="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
-                            <button onclick="SupportConsole.switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all bg-white dark:bg-slate-900 shadow-sm text-blue-600">Media</button>
-                            <button onclick="SupportConsole.switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500">Files</button>
-                            <button onclick="SupportConsole.switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500">Links</button>
+                            <button type="button" onclick="SupportConsole.switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all bg-white dark:bg-slate-900 shadow-sm text-blue-600 focus:outline-none">Media</button>
+                            <button type="button" onclick="SupportConsole.switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Files</button>
+                            <button type="button" onclick="SupportConsole.switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Links</button>
                         </div>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto custom-scrollbar p-3 min-h-0">
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 min-h-0">
                         <div id="mediaGridView" class="grid grid-cols-3 gap-2"></div>
                         <div id="filesListView" class="hidden space-y-3"></div>
                         <div id="linksListView" class="hidden space-y-3"></div>
@@ -746,7 +749,6 @@
             }
         },
 
-        // NEW: Function to open the Assets drawer on mobile
         toggleAssets() {
             const sidebar = document.getElementById('rightAssetsSidebar');
             const overlay = document.getElementById('assetsOverlay');
@@ -794,21 +796,17 @@
         setBotOptions(opts) {
             const container = document.getElementById('assistant-options');
             
-            // Force 2 columns even on mobile for a compact, app-like grid
             container.className = "grid grid-cols-2 gap-2 md:gap-3 mb-4";
             
             container.innerHTML = opts.map((o, index) => {
-                // If it's the "Back" button, or if it's the only button in the list, make it span both columns
                 const isBack = o.label === "Back";
                 const isOnlyOption = opts.length === 1;
                 const colSpanClass = (isBack || isOnlyOption) ? "col-span-2" : "col-span-1";
                 
-                // Give the Back button a slightly more neutral styling to separate it from primary actions
                 const colorClasses = isBack
                     ? "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700"
                     : "text-blue-600 bg-white hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-500/20 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
 
-                // Parse emojis/icons out of the text so they stack neatly on mobile screens
                 let displayHtml = o.label;
                 const parts = o.label.split(' ');
                 
@@ -828,13 +826,11 @@
 
                 return `
                 <button type="button" onclick="SupportConsole.${o.action}()" 
-                        class="${colSpanClass} w-full flex flex-col sm:flex-row items-center justify-center p-3 sm:px-5 sm:py-3 border rounded-xl text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest transition-all active:scale-[0.98] ${colorClasses} text-center min-h-[64px] sm:min-h-0 h-full whitespace-normal break-words">
+                        class="${colSpanClass} w-full flex flex-col sm:flex-row items-center justify-center p-3 sm:px-5 sm:py-3 border rounded-xl text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest transition-all active:scale-[0.98] ${colorClasses} text-center min-h-[64px] sm:min-h-0 h-full whitespace-normal break-words focus:outline-none">
                     ${displayHtml}
                 </button>`;
             }).join('');
         },
-
-        // --- UPDATED SMART BOT HANDLERS ---
         
         hideForms() {
             document.getElementById('newTicketForm').classList.add('hidden');
@@ -981,7 +977,6 @@
         },
 
         triggerForm(category, subject, descPrefix, backAction = "cancelFormToMain") {
-            // Replaced clearing HTML with rendering the Back button based on previous selection
             this.setBotOptions([
                 { label: "Back", action: backAction }
             ]);
@@ -990,7 +985,7 @@
             document.getElementById('newCat').value = category;
             document.getElementById('newSub').value = subject;
             document.getElementById('newDescInput').value = descPrefix;
-            document.getElementById('form-context-msg').innerText = `Department: ${category} Support`;
+            document.getElementById('form-context-msg').innerHTML = `<i class="fas fa-layer-group"></i> <span>Department: ${category} Support</span>`;
         },
 
         async finalizeTicketSubmission() {
@@ -1118,8 +1113,8 @@
                     }
                     
                     const removeBtn = document.createElement('button');
-                    removeBtn.className = "absolute top-0 right-0 bg-red-500 text-white w-4 h-4 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center";
-                    removeBtn.innerHTML = '<i class="fas fa-times text-[8px]"></i>';
+                    removeBtn.className = "absolute top-0 right-0 bg-red-500 text-white w-5 h-5 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center focus:outline-none";
+                    removeBtn.innerHTML = '<i class="fas fa-times text-[10px]"></i>';
                     removeBtn.onclick = () => {
                         const dt = new DataTransfer();
                         for (let i = 0; i < input.files.length; i++) {
@@ -1185,7 +1180,6 @@
             document.getElementById('no-chat-selected').classList.add('hidden');
             this.switchTab('feed');
 
-            // NEW: Auto-close sidebar on mobile after selecting a ticket
             if(window.innerWidth < 1024) {
                 const sidebar = document.getElementById('mainSidebar');
                 const overlay = document.getElementById('sidebarOverlay');
@@ -1221,21 +1215,16 @@
                 document.getElementById('contact-details-container').classList.remove('opacity-0');
                 document.getElementById('contact-details-container').classList.remove('translate-x-4');
 
-                // --- NEW AUTO-LOAD LOGIC ---
                 if (this.fullMessageCache.length > 0) {
-                    // Grab the most recent message (last in the array)
                     const lastMsg = this.fullMessageCache[this.fullMessageCache.length - 1];
                     
-                    // Route to the correct view based on the latest message
                     if (lastMsg.recipient_name === "Everyone" || lastMsg.message.toUpperCase().includes('STATUS UPDATE')) {
                         this.loadGroupChat();
                     } else {
-                        // Determine the technician's name (whether they sent it or we sent it to them)
                         const techName = lastMsg.is_me ? lastMsg.recipient_name : lastMsg.sender_name;
                         this.loadTechnicianConversation(techName);
                     }
                 } else {
-                    // Default to Group Chat if the ticket is brand new with no messages
                     this.loadGroupChat();
                 }
 
@@ -1262,7 +1251,6 @@
                 <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Chatting with: ${techName}</span>
                 <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4"></div>`;
 
-            // FIXED: Do not include "Everyone" to prevent group messages from bleeding into private threads
             const techMessages = this.fullMessageCache.filter(msg => {
                 const isStatusUpdate = msg.message.toUpperCase().includes('STATUS UPDATE');
                 if (isStatusUpdate) return true;
@@ -1286,7 +1274,7 @@
             let initMediaHtml = '';
             initialAtts.forEach(att => {
                 if (/\.(jpg|jpeg|png|webp|gif)$/i.test(att.name)) {
-                    initMediaHtml += `<img src="${att.url}" classmax-w-[200px] rounded-lg mt-2 shadow-sm border border-slate-200 dark:border-slate-700">`;
+                    initMediaHtml += `<img src="${att.url}" class="max-w-[200px] rounded-lg mt-2 shadow-sm border border-slate-200 dark:border-slate-700">`;
                 }
             });
 
@@ -1335,14 +1323,13 @@
             const container = document.getElementById('staff-threads-container');
             if (!container) return;
 
-            // Fix the clipping issue so the dropdown can break out of the header
             container.classList.remove('overflow-x-auto');
             container.classList.add('overflow-visible');
 
             const groupChatHtml = `
                 <div onclick="SupportConsole.loadGroupChat()" id="staff-item-GROUP_CHAT"
                     class="staff-thread-item flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 p-1.5 md:px-3 md:py-1.5 rounded-full border border-blue-500/30 cursor-pointer hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shrink-0">
-                    <div class="w-6 h-6 md:w-5 md:h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[12px] md:text-[10px] shrink-0">
+                    <div class="w-6 h-6 md:w-5 md:h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[12px] md:text-[10px] shrink-0 shadow-sm">
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="hidden md:flex flex-col justify-center pr-2 md:pr-0">
@@ -1357,16 +1344,14 @@
                 return;
             }
 
-            // Updated to pull the exact profile picture from the chat history 
-            // and fallback to a clean FontAwesome user icon if no image exists
             const generateAdminItem = (name) => {
                 const userMsg = this.fullMessageCache.find(m => m.sender_name === name && m.sender_avatar);
                 const avatarSrc = userMsg ? userMsg.sender_avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
 
                 return `
                 <div onclick="SupportConsole.loadTechnicianConversation('${name}')" id="staff-item-${name}"
-                    class="staff-thread-item flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all w-full overflow-hidden">
-                    <div class="w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs overflow-hidden shrink-0">
+                    class="staff-thread-item flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all w-full overflow-hidden border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <div class="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
                         <img src="${avatarSrc}" onerror="this.onerror=null; this.outerHTML='<i class=\\'fas fa-user text-[10px]\\'></i>';" class="w-full h-full object-cover">
                     </div>
                     <div class="flex flex-col justify-center min-w-0 flex-1">
@@ -1380,7 +1365,7 @@
 
             finalHtml += `
                 <div class="relative group shrink-0" tabindex="0">
-                    <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-1.5 md:px-3 md:py-1.5 rounded-full border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-all whitespace-nowrap">
+                    <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-1.5 md:px-3 md:py-1.5 rounded-full border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-all whitespace-nowrap shadow-sm">
                         <div class="w-6 h-6 md:w-5 md:h-5 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 text-[12px] md:text-[10px] shrink-0">
                             <i class="fas fa-user-tie"></i>
                         </div>
@@ -1390,7 +1375,7 @@
                         </div>
                     </div>
                     
-                    <div class="absolute right-0 sm:left-0 top-full pt-2 hidden group-hover:block z-[100] min-w-[160px] max-w-[80vw] sm:max-w-none">
+                    <div class="absolute right-0 sm:left-0 top-full pt-2 hidden group-hover:block z-[100] min-w-[180px] max-w-[80vw] sm:max-w-none">
                         <div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-2 max-h-[50vh] overflow-y-auto custom-scrollbar">
                             ${staffAdmins.map(name => generateAdminItem(name)).join('')}
                         </div>
@@ -1416,7 +1401,6 @@
                 <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Public Group Chat</span>
                 <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4"></div>`;
 
-            // FIXED: Filter from the cache instead of overwriting it
             const groupMessages = this.fullMessageCache.filter(msg => {
                 return msg.recipient_name === "Everyone" || msg.message.toUpperCase().includes('STATUS UPDATE');
             });
@@ -1538,7 +1522,7 @@
                 if (isStatus) {
                     return `
                     <div class="flex justify-center py-2 animate-in fade-in duration-500 w-full">
-                        <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700">
+                        <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm">
                             ${msg.message}
                         </span>
                     </div>`;
@@ -1608,7 +1592,7 @@
                 <div class="flex ${isMe ? 'justify-end' : 'justify-start'} items-end gap-2 mb-4 animate-in fade-in duration-300 w-full">
 
                     ${!isMe ? `
-                    <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
+                    <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">
                     ` : ''}
 
                     <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
@@ -1618,7 +1602,7 @@
                         </div>
 
                         ${hasText ? `
-                        <div class="px-4 py-2 rounded-2xl text-sm shadow-sm
+                        <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm
                             ${isMe
                                 ? 'bg-blue-600 text-white rounded-br-none'
                                 : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
@@ -1636,7 +1620,7 @@
                     </div>
 
                     ${isMe ? `
-                    <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
+                    <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">
                     ` : ''}
 
                 </div>`;
@@ -1689,7 +1673,6 @@
                     const preview = document.getElementById('chat-attachment-preview');
                     if(preview) preview.classList.add('hidden');
                     
-                    // FIXED: Always refresh everything from the server universally so cache updates
                     await this.refreshChatData();
                 }
             } catch (err) { 
@@ -1711,8 +1694,8 @@
             this.galleryMedia = []; 
 
             if (!attachments || attachments.length === 0) {
-                if (mediaGrid) mediaGrid.innerHTML = `<p class="col-span-3 text-center text-[9px] py-10 opacity-30 uppercase font-black">No Media</p>`;
-                if (filesList) filesList.innerHTML = `<p class="text-center text-[9px] py-4 opacity-30 uppercase font-black">No Files</p>`;
+                if (mediaGrid) mediaGrid.innerHTML = `<p class="col-span-3 text-center text-[9px] py-10 opacity-30 uppercase font-black tracking-widest">No Media</p>`;
+                if (filesList) filesList.innerHTML = `<p class="text-center text-[9px] py-4 opacity-30 uppercase font-black tracking-widest">No Files</p>`;
                 return;
             }
 
@@ -1727,7 +1710,7 @@
                 this.galleryMedia.forEach((file, index) => {
                     const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(file.name);
                     const item = document.createElement('div');
-                    item.className = "group relative aspect-square rounded-lg overflow-hidden border dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all";
+                    item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
                     
                     item.onclick = () => this.openLightbox(index);
                     item.innerHTML = `
@@ -1747,7 +1730,7 @@
             } else {
                 docs.forEach(file => {
                     const item = document.createElement('div');
-                    item.className = "flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 mb-2 hover:border-blue-500/50 transition-colors";
+                    item.className = "flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 mb-2 hover:border-blue-500/50 transition-colors shadow-sm";
                     item.innerHTML = `
                         <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
                             <i class="fas fa-file-alt"></i>
@@ -1801,8 +1784,10 @@
                 description: newDesc 
             };
 
-            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> Updating...';
-            btn.disabled = true;
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> Updating...';
+                btn.disabled = true;
+            }
 
             try {
                 const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/update_technical_details/`, { 
@@ -1822,13 +1807,17 @@
                     this.currentTicketStatus = newStatus;
                     await this.loadChat(this.activeTicketId, currentSub, newDesc, this.ownerInfo.name, this.ownerInfo.email, newStatus, newPriority, "", document.getElementById('editTechnician').value);
                     this.switchTab('feed');
-                    btn.innerHTML = 'Update Case';
-                    btn.disabled = false;
+                    if (btn) {
+                        btn.innerHTML = 'Update Case';
+                        btn.disabled = false;
+                    }
                 }
             } catch (err) { 
                 console.error(err);
-                btn.innerText = "Error"; 
-                btn.disabled = false; 
+                if (btn) {
+                    btn.innerText = "Error"; 
+                    btn.disabled = false; 
+                }
             }
         },
 
@@ -1844,39 +1833,16 @@
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
 </script>
 
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; }
-    
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    .active-ticket-item { 
-        background-color: #f1f5f9 !important; 
-        border-color: #cbd5e1 !important; 
-        border-left: 4px solid #2563eb !important;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-    }
-    .dark .active-ticket-item { 
-        background-color: #1e293b !important; 
-        border-color: #334155 !important; 
-        border-left: 4px solid #3b82f6 !important; 
-    }
-    #chatInput { min-height: 52px; max-height: 200px; }
-</style>
-
 <div id="chatLightbox" class="fixed inset-0 z-[9999] hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
-    <button onclick="SupportConsole.closeLightbox()" 
-            class="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 p-4">
+    <button type="button" onclick="SupportConsole.closeLightbox()" 
+            class="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 p-4 focus:outline-none transition-colors">
         <i class="fas fa-times"></i>
     </button>
     
-    <button onclick="SupportConsole.prevLightbox()" class="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40">
+    <button type="button" onclick="SupportConsole.prevLightbox()" class="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 focus:outline-none transition-colors">
         <i class="fas fa-chevron-left"></i>
     </button>
-    <button onclick="SupportConsole.nextLightbox()" class="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40">
+    <button type="button" onclick="SupportConsole.nextLightbox()" class="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 focus:outline-none transition-colors">
         <i class="fas fa-chevron-right"></i>
     </button>
 

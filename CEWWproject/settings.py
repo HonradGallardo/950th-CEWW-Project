@@ -121,17 +121,21 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
 # 11. ReCaptcha Security
 # Original hardcoded credentials preserved as comments
-# RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
-# RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+# RECAPTCHA_SITE_KEY = '6LfZKoksAAAAAIQa-R-ifpRM-KAWlH6GURcjcT5D'
+# RECAPTCHA_SECRET_KEY = '6LfZKoksAAAAAI2kvj1d2d-5KlL1dNDsC_YNn_Xo'
 
 # Active secure configuration
-RECAPTCHA_SITE_KEY = env('RECAPTCHA_SITE_KEY', default='6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
-RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY', default='6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
+RECAPTCHA_SITE_KEY = env('6LfZKoksAAAAAIQa-R-ifpRM-KAWlH6GURcjcT5D', default='6LfZKoksAAAAAIQa-R-ifpRM-KAWlH6GURcjcT5D')
+RECAPTCHA_SECRET_KEY = env('6LfZKoksAAAAAI2kvj1d2d-5KlL1dNDsC_YNn_Xo', default='6LfZKoksAAAAAI2kvj1d2d-5KlL1dNDsC_YNn_Xo')
 
 # 12. Authentication Routing
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'role_redirect'
 LOGOUT_REDIRECT_URL = 'login'
+
+WEBAUTHN_RP_ID = 'localhost'
+WEBAUTHN_RP_NAME = "950th CEWW System"
+WEBAUTHN_ORIGIN = 'http://localhost:8000'
 
 # 13. Static and Media Files
 STATIC_URL = 'static/'

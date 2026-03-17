@@ -16,8 +16,15 @@ router.register(r'notifications', NotificationViewSet, basename='api-notificatio
 router.register(r'incident-comments', IncidentCommentViewSet, basename='api-incident-comments')
 router.register(r'users', UserViewSet, basename='api-users')
 
+# --- FIX: ATTACH THE 3 CUSTOM REPORT ENDPOINTS TO THE ROUTER ---
+router.register(r'report/it-asset', AssetViewSet, basename='report-it-asset')
+router.register(r'report/maintenance', MaintenanceViewSet, basename='report-maintenance')
+router.register(r'report/incident', IncidentViewSet, basename='report-incident')
+
 urlpatterns = [
     # --- API DATA HUB ---
+    # Because of this line below, the router automatically adds "/api/" 
+    # to "report/it-asset", making it exactly what your Javascript wants!
     path('api/', include(router.urls)),
     path('api/core/', include(router.urls)),
 
@@ -29,6 +36,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('profile/', views.profile_view, name='profile'),
+    
     #---ANALYTICS & MONITORING ---
     path('api/monitoring-data/', MonitoringDataAPI.as_view(), name='monitoring_data_api'),
     
@@ -61,6 +69,9 @@ urlpatterns = [
     path('settings/password/', TemplateView.as_view(template_name='core/Admin/password_change.html'), name='custom_password_change'),
     path('forgot_password/', views.forgot_password_view, name='forgot_password'),
     path('api/forgot-password/', ForgotPasswordAPI.as_view(), name='api_forgot_password'),
+    
+    # Note: I left this duplicate login path as it was in your file, 
+    # but normally you only want one 'login/' path!
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     
     path('api/change-password/', ChangePasswordAPI.as_view(), name='api_change_password'),

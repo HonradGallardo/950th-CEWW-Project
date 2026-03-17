@@ -70,10 +70,11 @@ class AssetForm(forms.ModelForm):
         
 class UserForm(forms.ModelForm):
     email = forms.EmailField(required=True)
-    # Add a dropdown for Groups/Roles
+    
+    # 🚨 FIX: We remove `required=True` here so the backend logic from views.py controls the group
     role = forms.ModelChoiceField(
         queryset=Group.objects.all(),
-        required=True,
+        required=False, 
         empty_label="Select Role",
         widget=forms.Select(attrs={'class': 'w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500'})
     )
@@ -86,6 +87,11 @@ class UserForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # 🚨 FIX: If we are creating a NEW user, make password required
+        if not self.instance.pk:
+            self.fields['password'].required = True
+            
         # If editing an existing user, pre-select their current group
         if self.instance.pk and self.instance.groups.exists():
             self.fields['role'].initial = self.instance.groups.first()

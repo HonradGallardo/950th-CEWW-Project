@@ -74,11 +74,19 @@ class Incident(models.Model):
 
     title = models.CharField(max_length=100)
     asset = models.ForeignKey(Asset, on_delete=models.SET_NULL, null=True, related_name='incidents')
+    
+    # 1. ADD THIS FIELD to capture the data from your "Add Incident" form
+    affected_area = models.CharField(max_length=255, blank=True, null=True) 
+
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     description = models.TextField(blank=True)
     actions_taken = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True) # Changed to DateTime
+    date = models.DateTimeField(auto_now_add=True) 
+
+    # 2. ADD THIS FIELD to track when the incident is updated
+    updated_at = models.DateTimeField(auto_now=True) 
+
     reported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='reported_incidents')
 
     def __str__(self):
@@ -110,7 +118,10 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     # Changed from ImageField to FileField to bypass the Pillow requirement
     image = models.FileField(default='default.jpg', upload_to='profile_pics')
-    rank = models.CharField(max_length=50, default='Private')
+    rank = models.CharField(max_length=50, default='Airman') # Adjusted default to match your frontend
+    
+    # 🚨 NEW: Add the phone field with max_length 11
+    phone = models.CharField(max_length=11, blank=True, null=True)
 
     def __str__(self):
         return f'{self.user.username} Profile'

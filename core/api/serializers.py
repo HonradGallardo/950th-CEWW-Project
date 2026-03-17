@@ -5,6 +5,8 @@ from django.contrib.auth.password_validation import validate_password
 
 class AssetSerializer(serializers.ModelSerializer):
     """Converts Asset model instances into JSON."""
+
+    assigned_to_name = serializers.ReadOnlyField(source='assigned_to.username')
     class Meta:
         model = Asset
         fields = '__all__'
@@ -14,6 +16,7 @@ class MaintenanceSerializer(serializers.ModelSerializer):
     """Includes helpful human-readable fields for the dashboard tables."""
     asset_name = serializers.ReadOnlyField(source='asset.assets_name')
     technician_name = serializers.ReadOnlyField(source='technician.username')
+    asset_type = serializers.CharField(source='asset.assets_type', read_only=True)
     
     # 🚨 ADD THIS LINE: Fetch the string ID (e.g., AST-003)
     asset_string_id = serializers.ReadOnlyField(source='asset.assets_id')
@@ -21,16 +24,25 @@ class MaintenanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Maintenance
         # 🚨 ADD 'asset_string_id' TO THE FIELDS LIST
-        fields = ['id', 'asset', 'asset_string_id', 'asset_name', 'technician_name', 'maintenance_type', 'status', 'date', 'notes']
+        fields = ['id', 'asset_string_id', 'asset_name', 'asset_type', 'maintenance_type', 'technician_name', 'date', 'last_modified', 'status']
 
 # 🚨 RESTORED: This is the missing IncidentSerializer
 class IncidentSerializer(serializers.ModelSerializer):
     """Prepares incident data with formatted reporting information."""
     reported_by_name = serializers.ReadOnlyField(source='reported_by.username')
     
+    # ADD THESE LINES to include details from the related Asset
+    asset_location = serializers.ReadOnlyField(source='asset.location')
+    asset_id_display = serializers.ReadOnlyField(source='asset.assets_id')
+    
     class Meta:
         model = Incident
-        fields = '__all__'
+        # List all fields explicitly to ensure affected_area and updated_at are sent
+        fields = [
+            'id', 'title', 'asset', 'asset_location', 'asset_id_display', 
+            'affected_area', 'severity', 'status', 'description', 
+            'date', 'updated_at', 'reported_by', 'reported_by_name'
+        ]
 
 class IncidentCommentSerializer(serializers.ModelSerializer):
     author_name = serializers.ReadOnlyField(source='author.username')
@@ -68,29 +80,52 @@ class UserProfileSerializer(serializers.ModelSerializer):
 # core/api/serializers.py
 
 class UserSerializer(serializers.ModelSerializer):
-    rank = serializers.CharField(source='profile.rank', required=False)
-    image = serializers.ImageField(source='profile.image', required=False) 
+    # Map the nested profile fields
+    rank = serializers.CharField(source='profile.rank', required=False, allow_blank=True, allow_null=True)
+    image = serializers.ImageField(source='profile.image', required=False, allow_null=True)
+    # 🚨 NEW: Added the phone mapping
+    phone = serializers.CharField(source='profile.phone', required=False, allow_blank=True, allow_null=True)
+    
     # Use write_only so the password is never sent back to the browser
     password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank', 'image']
+        # 🚨 ADDED 'phone' to the fields list
+        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank', 'image', 'phone']
 
     def create(self, validated_data):
-        """Hashes password automatically when creating a new user."""
+        """Hashes password automatically and handles nested Profile data."""
+        # 1. Pop the nested profile data out of the validated dictionary FIRST
+        profile_data = validated_data.pop('profile', {})
         password = validated_data.pop('password', None)
+        
+        # 2. Create the base User object
         user = User(**validated_data)
         if password:
             user.set_password(password) # This is the encryption step
         user.save()
+        
+        # 3. Save the nested Profile data
+        # (Assuming a Django Signal automatically creates a blank Profile when a User is created)
+        profile = user.profile
+        if 'rank' in profile_data:
+            profile.rank = profile_data['rank']
+        if 'image' in profile_data:
+            profile.image = profile_data['image']
+        if 'phone' in profile_data:
+            profile.phone = profile_data['phone']
+        profile.save()
+        
         return user
 
     def update(self, instance, validated_data):
-        """Hashes password automatically when updating an existing user."""
+        """Hashes password automatically and handles nested Profile data."""
+        # 1. Pop the nested profile data out
+        profile_data = validated_data.pop('profile', {})
         password = validated_data.pop('password', None)
         
-        # Update standard fields
+        # 2. Update standard User fields
         instance.username = validated_data.get('username', instance.username)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
@@ -100,8 +135,18 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password) # Encrypts the new password
         
         instance.save()
-        return instance
         
+        # 3. Update the nested Profile fields
+        profile = instance.profile
+        if 'rank' in profile_data:
+            profile.rank = profile_data['rank']
+        if 'image' in profile_data:
+            profile.image = profile_data['image']
+        if 'phone' in profile_data:
+            profile.phone = profile_data['phone']
+        profile.save()
+        
+        return instance
 
 class ChangePasswordSerializer(serializers.Serializer):
     """Handles the validation and updating of user passwords via API."""

@@ -2,7 +2,7 @@ from django.conf import settings
 import openpyxl
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Count, Q
@@ -15,8 +15,6 @@ from django.core.paginator import Paginator
 # --- NAVIGATION & DASHBOARD ---
 def landing(request):
     return render(request, 'core/landing.html')
-
-
 
 @login_required
 def role_redirect(request):
@@ -152,7 +150,7 @@ def incident_list(request):
 @login_required
 def add_incident(request):
     if request.method == 'POST':
-        Incident.objects.create(title=request.POST.get('title'), severity=request.POST.get('severity'), reported_by=request.user)
+        Incident.objects.create(title=request.POST.get('title'), severity=request.POST.get('severity'), affected_area=request.POST.get('affected_area'), reported_by=request.user)
         return redirect('incident_list')
     return render(request, 'core/Admin/add_incident.html')
 
@@ -170,28 +168,60 @@ def delete_incident(request, incident_id):
 @login_required
 def user_list(request):
     """
-    Serves the HTML shell. JavaScript AJAX handles the data loading.
+    Serves the HTML shell with initial paginated data.
+    JavaScript AJAX handles live search filtering.
     """
-    # Initial data for the first page load
-    users = User.objects.all().prefetch_related('groups', 'profile')[:10]
-    return render(request, 'core/Admin/user_list.html', {'users': users})
-
-from django.contrib.auth.hashers import make_password
+    # Fetch all users, order them (required for consistent pagination), and prefetch related data
+    user_list_qs = User.objects.all().prefetch_related('groups', 'profile').order_by('-id')
+    
+    # Set up pagination: 10 users per page
+    paginator = Paginator(user_list_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Pass 'page_obj' as 'users' to match the template variable
+    return render(request, 'core/Admin/user_list.html', {'users': page_obj})
 
 @login_required
 def add_user(request):
-    form = UserForm(request.POST or None)
+    form = UserForm(request.POST or None, request.FILES or None)
+    
     if request.method == 'POST' and form.is_valid():
-        user = form.save(commit=False) # 1. Create the object but don't save to DB yet
+        user = form.save(commit=False) 
         
-        # 2. 🚨 ENCRYPT THE PASSWORD
         raw_password = form.cleaned_data.get('password')
         if raw_password:
             user.set_password(raw_password)
         
-        user.save() # 3. Save the encrypted user
-        form.save_m2m() # 4. Save many-to-many relationships (if any)
+        user.save() 
+        form.save_m2m() 
+
+        # 🚨 ROLE (GROUP) SAVING LOGIC 🚨
+        # Check for either the Django 'role' or the custom 'role_name'
+        submitted_role = request.POST.get('role') or request.POST.get('role_name') 
+        if submitted_role:
+            user.groups.clear() # Clear existing to avoid duplicates
+            group = Group.objects.filter(name=submitted_role).first()
+            if group:
+                user.groups.add(group)
+
+        # Handle Profile and extra fields
+        profile, created = Profile.objects.get_or_create(user=user)
+        profile.rank = request.POST.get('rank', profile.rank)
+        profile.phone = request.POST.get('phone', profile.phone)
+        
+        if 'profile_picture' in request.FILES:
+            profile.image = request.FILES['profile_picture']
+        
+        profile.save()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success'})
         return redirect('user_list')
+    
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'errors': form.errors}, status=400)
+        
     return render(request, 'core/Admin/user_form.html', {'form': form, 'title': 'Add Personnel'})
 
 @login_required
@@ -200,18 +230,36 @@ def edit_user(request, user_id):
     
     if request.method in ['POST', 'PATCH']:
         data = request.POST if request.method == 'POST' else QueryDict(request.body)
-        form = UserForm(data, instance=target_user)
+        form = UserForm(data, request.FILES, instance=target_user)
         
         if form.is_valid():
             user = form.save(commit=False)
             
-            # 2. 🚨 ENCRYPT THE PASSWORD IF IT WAS CHANGED
             raw_password = form.cleaned_data.get('password')
             if raw_password:
                 user.set_password(raw_password)
                 
             user.save()
             form.save_m2m()
+
+            # 🚨 FIX: ROLE (GROUP) SAVING LOGIC 🚨
+            # Check for either the Django 'role' or the custom 'role_name'
+            submitted_role = request.POST.get('role') or request.POST.get('role_name') 
+            if submitted_role:
+                user.groups.clear() # Clear existing roles to prevent multiple assignments
+                group = Group.objects.filter(name=submitted_role).first()
+                if group:
+                    user.groups.add(group)
+
+            # Update Profile with the extra fields
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.rank = request.POST.get('rank', profile.rank)
+            profile.phone = request.POST.get('phone', profile.phone)
+            
+            if 'profile_picture' in request.FILES:
+                profile.image = request.FILES['profile_picture']
+                
+            profile.save()
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'success'})
@@ -280,12 +328,10 @@ def analytics_list(request):
     }
     return render(request, 'core/Admin/analytics_list.html', context)
 
-
 @login_required
 def monitoring_data_api(request):
     # (Insert the same calculation logic from Step 1 here)
     return JsonResponse(data)
-
 
 @login_required
 def reports(request):
@@ -373,6 +419,7 @@ def profile_view(request):
         
         # 2. Handle Profile Fields
         profile.rank = request.POST.get('rank', profile.rank)
+        profile.phone = request.POST.get('phone', profile.phone)
         profile.save()
 
         # 3. Handle User Model Fields (Email, First Name, Last Name)
