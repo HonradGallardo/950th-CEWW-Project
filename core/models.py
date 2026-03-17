@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db import models
+from django.db.models import JSONField
 
 
 class UserPasskey(models.Model):
@@ -30,7 +31,14 @@ class Asset(models.Model):
     
     # AUTOMATIC: auto_now_add captures date AND time on creation
     date_added = models.DateTimeField(default=timezone.now)
-
+    specifications = JSONField(default=dict, blank=True, help_text="Store hardware-specific specs here")
+    processor = models.CharField(max_length=100, blank=True, null=True)
+    ram_gb = models.IntegerField(blank=True, null=True)
+    storage_capacity = models.CharField(max_length=50, blank=True, null=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    mac_address = models.CharField(max_length=17, blank=True, null=True)
+    firmware_version = models.CharField(max_length=50, blank=True, null=True)
+    
     def save(self, *args, **kwargs):
         if not self.assets_id:
             last_asset = Asset.objects.all().order_by('id').last()
@@ -82,7 +90,8 @@ class Incident(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     description = models.TextField(blank=True)
     actions_taken = models.TextField(blank=True)
-    date = models.DateTimeField(auto_now_add=True) 
+    date = models.DateTimeField(auto_now_add=True)
+    threat_actor = models.CharField(max_length=255, blank=True, null=True)
 
     # 2. ADD THIS FIELD to track when the incident is updated
     updated_at = models.DateTimeField(auto_now=True) 

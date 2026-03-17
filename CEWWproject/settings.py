@@ -28,12 +28,12 @@ SECRET_KEY = env('SECRET_KEY')
 # --- MERGE CONFLICT RESOLVED ---
 # Honrad-Branch (Active): Secure, environment-driven approach
 DEBUG = env.bool('DEBUG', default=False)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+#ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
 
 # Christian-Branch (Preserved as comments): 
 # DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
 # CRITICAL FIX: Hardcode the allowed hosts right here, overwriting the env file completely.
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']
 # -------------------------------
 
 # 5. Application Definition
