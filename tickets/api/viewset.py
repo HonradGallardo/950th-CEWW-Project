@@ -103,7 +103,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         all_messages = ticket.messages.all().select_related('sender', 'recipient').order_by('created_at')
 
         if chat_with_staff_username == 'GROUP_CHAT':
-            # Logic: Group messages are those where recipient is null
             filtered_messages = all_messages.filter(recipient__isnull=True)
         elif user_is_admin:
             if chat_with_staff_username and chat_with_staff_username not in ['SHOW_ALL', 'Everyone', 'null']:
@@ -114,17 +113,33 @@ class TicketViewSet(viewsets.ModelViewSet):
             else:
                 filtered_messages = all_messages
         else:
-            # For the regular user, show their private messages AND group messages
             filtered_messages = all_messages.filter(
                 Q(sender=request.user) | Q(recipient=request.user) | Q(recipient__isnull=True)
             )
 
-        # We provide both 'sender' and 'sender_name' to prevent JS undefined errors
+        # FIX 1: Safely load avatars without crashing
+        def get_avatar_url(user):
+            try:
+                if hasattr(user, 'profile') and user.profile.image and hasattr(user.profile.image, 'url'):
+                    return user.profile.image.url
+            except Exception:
+                pass
+            return None
+
+        # FIX 2: Safely parse filenames without crashing
+        def get_safe_filename(file_obj):
+            try:
+                if file_obj and hasattr(file_obj, 'name') and file_obj.name:
+                    return file_obj.name.split('/')[-1]
+            except Exception:
+                pass
+            return "Attached_File"
+
         messages_data = [{
             'id': msg.id,
             'sender': msg.sender.username,
             'sender_name': msg.sender.username,
-            'sender_avatar': msg.sender.profile.image.url if hasattr(msg.sender, 'profile') and msg.sender.profile.image else None,
+            'sender_avatar': get_avatar_url(msg.sender),
             'recipient_name': msg.recipient.username if msg.recipient else "Everyone",
             'message': msg.message,
             'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
@@ -132,16 +147,16 @@ class TicketViewSet(viewsets.ModelViewSet):
             'is_staff': msg.sender.is_staff,
             'attachments': [{
                 'id': a.id,
-                'name': a.file.name.split('/')[-1],
-                'url': a.file.url
+                'name': get_safe_filename(a.file),
+                'url': a.file.url if hasattr(a.file, 'url') else ""
             } for a in msg.attachments.all()] 
         } for msg in filtered_messages]
 
         attachments_data = [{
             'id': a.id,
-            'name': a.file.name.split('/')[-1],
-            'url': a.file.url,
-            'message_id': a.message.id if a.message else None 
+            'name': get_safe_filename(a.file),
+            'url': a.file.url if hasattr(a.file, 'url') else "",
+            'message_id': a.message.id if hasattr(a, 'message') and a.message else None 
         } for a in ticket.all_attachments.all()]
 
         return Response({

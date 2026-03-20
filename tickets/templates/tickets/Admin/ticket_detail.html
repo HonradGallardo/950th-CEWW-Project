@@ -869,25 +869,31 @@
         if (filesList) filesList.innerHTML = '';
         if (linksList) linksList.innerHTML = '';
 
-        const visibleMessageIds = messages.map(msg => msg.id);
+        // Enforce string matching to prevent ID mismatches
+        const visibleMessageIds = messages.map(msg => String(msg.id));
         const sortedAttachments = [...allAttachments].reverse();
-        const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(att.message_id));
+        const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(String(att.message_id)));
 
-        // FIX: Extract all Cloudinary media items
+        // FIX: Identical Media Check Logic
         const mediaItemsForLightbox = visibleAttachments
             .filter(att => {
-                const s = (att.name || att.url || '').toLowerCase();
-                return /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || s.includes('/image/upload/') || s.includes('/video/upload/');
+                const s = (att.name || '').toLowerCase();
+                const u = (att.url || '').toLowerCase();
+                const isDocument = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDocument;
             })
             .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
 
         visibleAttachments.forEach(att => {
-            const fileName = att.name || att.url || 'Attachment';
+            const fileName = att.name || 'Attachment';
             const s = fileName.toLowerCase();
-            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(s) || s.includes('/image/upload/');
-            const isVid = /\.(mp4|mov|webm)/i.test(s) || s.includes('/video/upload/');
+            const u = (att.url || '').toLowerCase();
+            
+            const isDocument = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+            const isMedia = (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDocument;
+            const isVid = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
 
-            if (isImg || isVid) {
+            if (isMedia) {
                 const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);
                 let contentHtml = isVid 
                     ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div>`
