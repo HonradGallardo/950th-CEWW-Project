@@ -739,15 +739,18 @@
             
             if (!file) return;
 
-            // FIX: Removed '$' and checking url as fallback
-            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(file.name || file.url || '');
+            // FIX: Use our new master classifier
+            const type = this.classifyAttachment(file);
             
-            content.innerHTML = isImg 
-                ? `<img src="${file.url}" class="max-w-full max-h-full object-contain animate-in fade-in zoom-in duration-300">`
-                : `<video src="${file.url}" controls autoplay class="max-w-full max-h-full object-contain"></video>`;
+            if (type === 'video') {
+                content.innerHTML = `<video src="${file.url}" controls autoplay class="max-w-full max-h-full object-contain"></video>`;
+            } else {
+                // Default everything else to an image tag
+                content.innerHTML = `<img src="${file.url}" class="max-w-full max-h-full object-contain animate-in fade-in zoom-in duration-300">`;
+            }
 
             info.innerHTML = `
-                <p class="text-white font-black uppercase text-[10px] tracking-widest">${file.name}</p>
+                <p class="text-white font-black uppercase text-[10px] tracking-widest">${file.name || 'Media'}</p>
                 <p class="text-white/50 text-[8px] uppercase font-bold mt-1">File ${this.currentLightboxIndex + 1} of ${this.galleryMedia.length}</p>
             `;
         },

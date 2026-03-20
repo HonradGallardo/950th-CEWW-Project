@@ -481,11 +481,15 @@
 
             if (!container || !item) return;
 
-            // FIX: Removed '$'
-            const isVideo = /\.(mp4|mov|webm)/i.test(item.url || '');
-            container.innerHTML = isVideo 
-                ? `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`
-                : `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
+            // FIX: Use our new master classifier
+            const type = this.classifyAttachment(item);
+            
+            if (type === 'video') {
+                container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
+            } else {
+                // Default everything else to an image tag
+                container.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
+            }
             
             const caption = document.getElementById('lightboxCaption');
             if (caption) caption.innerText = item.name || `Attachment ${this.currentLightboxIndex + 1}`;
