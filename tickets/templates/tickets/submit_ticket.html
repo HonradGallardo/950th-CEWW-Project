@@ -651,32 +651,35 @@
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
+                // FIX: Added 'relative' and fixed heights to the wrapper
                 let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
-                let heightClass = "h-40 sm:h-48 w-full object-cover";
+                let heightClass = "h-40 sm:h-48 w-full"; // Default container height
 
                 if (count === 1) {
-                    heightClass = "max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]";
+                    heightClass = "h-[300px] sm:h-[350px] w-full";
                 } else if (count === 3 && index === 0) {
                     cellClass += " col-span-2"; 
-                    heightClass = "h-48 sm:h-56 w-full object-cover";
+                    heightClass = "h-48 sm:h-56 w-full";
                 } else if (count >= 2) {
-                    heightClass = "h-32 sm:h-40 w-full object-cover";
+                    heightClass = "h-32 sm:h-40 w-full";
                 }
 
-                html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
+                html += `<div class="${cellClass} ${heightClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
                 if (type === 'image') {
-                    html += `<img src="${file.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                    // Images can use normal object-cover
+                    html += `<img src="${file.url}" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (type === 'video') {
-                    html += `<video src="${file.url}#t=0.1" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
-                             <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
+                    // FIX: Force video to fill container absolutely so it can't stretch it
+                    html += `<video src="${file.url}#t=0.1" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline preload="metadata"></video>
+                             <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
-                    html += `<div class="flex flex-col items-center p-6 text-slate-500 dark:text-slate-400 w-full h-full justify-center ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
+                    html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
                 }
 
                 if (hasMore && isLast) {
-    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
-}
+                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-20"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
+                }
                 
                 html += `</div>`;
             });
@@ -1617,29 +1620,19 @@
                 let fileHtml = '';
 
                 if (attachments.length > 0) {
-                    const mediaList = attachments.filter(a => {
-                        const s = (a.name || '').toLowerCase();
-                        const u = (a.url || '').toLowerCase();
-                        const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
-                        const isMediaExt = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u);
-                        return (isMediaExt || u.includes('cloudinary.com')) && !isDoc;
-                    });
-                    
-                    const otherDocs = attachments.filter(a => !mediaList.includes(a));
+                    // 1. Use your master classifier!
+                    const mediaList = attachments.filter(a => SupportConsole.classifyAttachment(a) !== 'document');
+                    const otherDocs = attachments.filter(a => SupportConsole.classifyAttachment(a) === 'document');
 
                     if (mediaList.length > 0) {
-                        const count = mediaList.length; // THE CRITICAL BUG FIX IS RIGHT HERE!
+                        const count = mediaList.length;
                         let gridClass = count === 1 ? 'grid-cols-1' : count === 2 ? 'grid-cols-2 h-48' : 'grid-cols-2 grid-rows-2 h-56';
 
                         mediaHtml = `<div class="grid ${gridClass} gap-1 mt-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-sm w-fit max-w-[260px] sm:max-w-[360px] md:max-w-[420px] ${isMe ? 'ml-auto' : 'mr-auto'}">`;
 
                         mediaList.slice(0, 4).forEach((att, index) => {
                             const globalIndex = SupportConsole.galleryMedia.findIndex(m => m.url === att.url);
-                            const s = (att.name || '').toLowerCase();
-                            const u = (att.url || '').toLowerCase();
-                            
-                            const isVideo = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
-                            const isImage = !isVideo && (/\.(jpg|jpeg|png|gif|webp|jfif)/i.test(s) || /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(u) || u.includes('cloudinary.com'));
+                            const type = SupportConsole.classifyAttachment(att);
 
                             let itemSpan = (count === 3 && index === 0) ? 'col-span-2' : 'col-span-1';
                             let heightClass = count === 1 ? 'max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]' : (count === 3 && index === 0) ? 'h-44 sm:h-52 w-full object-cover' : 'h-32 sm:h-40 w-full object-cover';
@@ -1650,9 +1643,9 @@
                             mediaHtml += `
                             <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-[#020617] flex items-center justify-center ${itemSpan}" onclick="SupportConsole.openLightbox(${globalIndex})">`;
 
-                            if (isImage) {
+                            if (type === 'image') {
                                 mediaHtml += `<img src="${att.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
-                            } else if (isVideo) {
+                            } else if (type === 'video') {
                                 mediaHtml += `<video src="${att.url}#t=0.1" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                                          <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                             } else {
@@ -1670,12 +1663,19 @@
                     if (otherDocs.length > 0) {
                         fileHtml = `<div class="mt-2 flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'} w-full">`;
                         otherDocs.forEach(att => {
+                            const fileName = att.name || 'Document';
+                            
+                            // 2. FORCE DOWNLOAD TRICK IN THE CHAT BUBBLES
+                            const downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
+                                ? att.url.replace('/upload/', '/upload/fl_attachment/') 
+                                : att.url;
+
                             fileHtml += `
-                            <a href="${att.url}" target="_blank" class="inline-flex items-center gap-3 p-3 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 shadow-sm transition-all max-w-[260px] sm:max-w-xs">
+                            <a href="${downloadUrl}" download="${fileName}" class="inline-flex items-center gap-3 p-3 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 shadow-sm transition-all max-w-[260px] sm:max-w-xs">
                                 <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
                                     <i class="fas fa-file-alt text-blue-500 text-base"></i>
                                 </div>
-                                <span class="truncate block flex-1 min-w-0">${att.name || 'Document'}</span>
+                                <span class="truncate block flex-1 min-w-0">${fileName}</span>
                             </a>`;
                         });
                         fileHtml += `</div>`;
@@ -1911,11 +1911,24 @@
 
         scrollToBottom() {
             setTimeout(() => {
-                const scrollArea = document.getElementById('workspaceScroll');
-                if(scrollArea) {
-                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                // Find the main scrolling workspace
+                const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+                if (scrollArea) {
+                    // Smoothly scroll to the absolute bottom of the container
+                    scrollArea.scrollTo({
+                        top: scrollArea.scrollHeight,
+                        behavior: 'smooth'
+                    });
                 }
-            }, 50);
+                
+                // If on mobile, ensure the input box is pushed into view
+                if (window.innerWidth < 1024) {
+                    const inputContainer = document.getElementById('messageInputContainer') || document.getElementById('chatMsgForm');
+                    if (inputContainer) {
+                        inputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                }
+            }, 100); // Slight delay to ensure DOM has rendered new messages
         }
     };
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());

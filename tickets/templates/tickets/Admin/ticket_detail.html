@@ -409,31 +409,34 @@
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
+                // FIX: Added 'relative' and fixed heights to the wrapper
                 let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
-                let heightClass = "h-40 sm:h-48 w-full object-cover";
+                let heightClass = "h-40 sm:h-48 w-full"; // Default container height
 
                 if (count === 1) {
-                    heightClass = "max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]";
+                    heightClass = "h-[300px] sm:h-[350px] w-full";
                 } else if (count === 3 && index === 0) {
                     cellClass += " col-span-2"; 
-                    heightClass = "h-48 sm:h-56 w-full object-cover";
+                    heightClass = "h-48 sm:h-56 w-full";
                 } else if (count >= 2) {
-                    heightClass = "h-32 sm:h-40 w-full object-cover";
+                    heightClass = "h-32 sm:h-40 w-full";
                 }
 
-                html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
+                html += `<div class="${cellClass} ${heightClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
                 if (type === 'image') {
-                    html += `<img src="${file.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                    // Images can use normal object-cover
+                    html += `<img src="${file.url}" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (type === 'video') {
-                    html += `<video src="${file.url}#t=0.1" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
-                             <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
+                    // FIX: Force video to fill container absolutely so it can't stretch it
+                    html += `<video src="${file.url}#t=0.1" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline preload="metadata"></video>
+                             <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
-                    html += `<div class="flex flex-col items-center p-6 text-slate-500 dark:text-slate-400 w-full h-full justify-center ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
+                    html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
                 }
 
                 if (hasMore && isLast) {
-                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white font-black text-2xl">+${count - 3}</span></div>`;
+                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-20"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
                 }
                 
                 html += `</div>`;
@@ -507,6 +510,27 @@
                 this.currentLightboxIndex--;
                 this.renderLightboxItem();
             }
+        },
+        scrollToBottom() {
+            setTimeout(() => {
+                // Find the main scrolling workspace
+                const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+                if (scrollArea) {
+                    // Smoothly scroll to the absolute bottom of the container
+                    scrollArea.scrollTo({
+                        top: scrollArea.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+                
+                // If on mobile, ensure the input box is pushed into view
+                if (window.innerWidth < 1024) {
+                    const inputContainer = document.getElementById('messageInputContainer') || document.getElementById('chatMsgForm');
+                    if (inputContainer) {
+                        inputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }
+                }
+            }, 100); // Slight delay to ensure DOM has rendered new messages
         }
     };
 
