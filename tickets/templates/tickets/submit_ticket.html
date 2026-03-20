@@ -674,7 +674,8 @@
             
             if (!file) return;
 
-            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(file.name);
+            // FIX: Removed '$' and checking url as fallback
+            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(file.name || file.url || '');
             
             content.innerHTML = isImg 
                 ? `<img src="${file.url}" class="max-w-full max-h-full object-contain animate-in fade-in zoom-in duration-300">`
@@ -689,7 +690,9 @@
         renderLightboxItem() {
             const container = document.getElementById('lightboxContent');
             const item = this.currentLightboxItems[this.currentLightboxIndex];
-            const isVideo = /\.(mp4|mov|webm)$/i.test(item.name);
+            
+            // FIX: Removed '$' and checking url as fallback
+            const isVideo = /\.(mp4|mov|webm)/i.test(item.name || item.url || '');
             
             container.innerHTML = isVideo 
                 ? `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-lg"></video>`
@@ -1546,7 +1549,8 @@
                 let fileHtml = '';
 
                 if (attachments.length > 0) {
-                    const mediaList = attachments.filter(a => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)$/i.test(a.name));
+                    // FIX: Removed '$' and checking url as fallback
+                    const mediaList = attachments.filter(a => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(a.name || a.url || ''));
                     const otherDocs = attachments.filter(a => !mediaList.includes(a));
 
                     if (mediaList.length > 0) {
@@ -1557,7 +1561,8 @@
 
                         mediaList.slice(0, 4).forEach((att, index) => {
                             const globalIndex = SupportConsole.galleryMedia.findIndex(m => m.url === att.url);
-                            const isVideo = /\.(mp4|mov|webm)$/i.test(att.name);
+                            // FIX: Removed '$' and checking url as fallback
+                            const isVideo = /\.(mp4|mov|webm)/i.test(att.name || att.url || '');
 
                             let itemSpan = 'col-span-1';
                             if (mediaList.length === 3 && index === 0) itemSpan = 'col-span-2';
@@ -1604,39 +1609,18 @@
 
                 return `
                 <div class="flex ${isMe ? 'justify-end' : 'justify-start'} items-end gap-2 mb-4 animate-in fade-in duration-300 w-full">
-
-                    ${!isMe ? `
-                    <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">
-                    ` : ''}
-
+                    ${!isMe ? `<img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                     <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-
-                        <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">
-                            ${senderName}
-                        </div>
-
+                        <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${senderName}</div>
                         ${hasText ? `
-                        <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm
-                            ${isMe
-                                ? 'bg-blue-600 text-white rounded-br-none'
-                                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
+                        <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
                             ${msg.message}
-                        </div>
-                        ` : ''}
-
+                        </div>` : ''}
                         ${mediaHtml}
                         ${fileHtml}
-
-                        <div class="text-[9px] opacity-60 mt-1 ${isMe ? 'text-right' : ''}">
-                            ${msg.timestamp}
-                        </div>
-
+                        <div class="text-[9px] opacity-60 mt-1 ${isMe ? 'text-right' : ''}">${msg.timestamp}</div>
                     </div>
-
-                    ${isMe ? `
-                    <img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">
-                    ` : ''}
-
+                    ${isMe ? `<img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                 </div>`;
             }).join('');
 
@@ -1714,15 +1698,17 @@
             }
 
             const reversedAttachments = [...new Set(attachments)].reverse(); 
-            const mediaRegex = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)$/i;
+            // FIX: Removed '$' from mediaRegex
+            const mediaRegex = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i;
 
-            this.galleryMedia = reversedAttachments.filter(file => mediaRegex.test(file.name));
+            // FIX: Checking url as fallback
+            this.galleryMedia = reversedAttachments.filter(file => mediaRegex.test(file.name || file.url || ''));
 
             if (this.galleryMedia.length === 0) {
                 if (mediaGrid) mediaGrid.innerHTML = `<p class="col-span-3 text-center text-[9px] py-10 opacity-50 uppercase font-black tracking-widest">No Media Found</p>`;
             } else {
                 this.galleryMedia.forEach((file, index) => {
-                    const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(file.name);
+                    const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(file.name || file.url || '');
                     const item = document.createElement('div');
                     item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
                     
@@ -1738,7 +1724,7 @@
                 });
             }
 
-            const docs = reversedAttachments.filter(file => !mediaRegex.test(file.name));
+            const docs = reversedAttachments.filter(file => !mediaRegex.test(file.name || file.url || ''));
             if (docs.length === 0) {
                 if (filesList) filesList.innerHTML = `<p class="text-center text-[9px] py-10 opacity-50 uppercase font-black tracking-widest">No Documents</p>`;
             } else {

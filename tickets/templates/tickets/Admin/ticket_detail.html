@@ -389,8 +389,9 @@
 
             attachments.slice(0, 4).forEach((file, index) => {
                 const fileName = file.name || file.url || 'Attachment';
-                const isVideo = file.url.match(/\.(mp4|webm|ogg|mov)$/i);
-                const isImage = file.url.match(/\.(jpg|jpeg|png|gif|webp|jfif)$/i);
+                // FIX: Removed '$'
+                const isVideo = file.url.match(/\.(mp4|webm|ogg|mov)/i);
+                const isImage = file.url.match(/\.(jpg|jpeg|png|gif|webp|jfif)/i);
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
@@ -456,7 +457,8 @@
 
             if (!container || !item) return;
 
-            const isVideo = /\.(mp4|mov|webm)$/i.test(item.url);
+            // FIX: Removed '$'
+            const isVideo = /\.(mp4|mov|webm)/i.test(item.url || '');
             container.innerHTML = isVideo 
                 ? `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`
                 : `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
@@ -723,8 +725,9 @@
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = ''; 
 
+        // FIX: Removed '$' and checking url
         const allMediaItems = allAttachments
-            .filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)$/i.test(att.name || att.url))
+            .filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(att.name || att.url || ''))
             .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
 
         messages.forEach(msg => {
@@ -744,8 +747,9 @@
             const hasText = msg.message && msg.message.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
             
-            const mediaFiles = messageAttachments.filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)$/i.test(att.name || att.url));
-            const docFiles = messageAttachments.filter(att => /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv)$/i.test(att.name || att.url));
+            // FIX: Removed '$' and checking url
+            const mediaFiles = messageAttachments.filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(att.name || att.url || ''));
+            const docFiles = messageAttachments.filter(att => /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv)/i.test(att.name || att.url || ''));
 
             let mediaGridHtml = mediaFiles.length > 0 ? SupportConsole.renderAttachmentGrid(mediaFiles) : '';
 
@@ -772,7 +776,6 @@
 
             const avatarContent = msg.sender_avatar ? `<img src="${msg.sender_avatar}" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>`;
             
-            // Refined Chat Bubbles
             let bubbleClasses = alignRight 
                 ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
                 : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-tl-sm shadow-sm';
@@ -844,7 +847,6 @@
     function updateAttachmentsSidebar(messages, allAttachments = []) {
         const dynamicInquiry = document.getElementById('dynamicInquiryContent');
         if (dynamicInquiry) {
-            // Fix: Store the escaped description in a variable rather than embedding directly inside the template literal, preventing ReferenceError evaluation logic.
             const rawDescription = "{{ ticket.description|escapejs }}";
             dynamicInquiry.innerHTML = `
                 <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
@@ -866,14 +868,16 @@
         const sortedAttachments = [...allAttachments].reverse();
         const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(att.message_id));
 
+        // FIX: Removed '$' and checking url
         const mediaItemsForLightbox = visibleAttachments
-            .filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)$/i.test(att.name || att.url))
+            .filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(att.name || att.url || ''))
             .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
 
         visibleAttachments.forEach(att => {
             const fileName = att.name || att.url || 'Attachment';
-            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(fileName);
-            const isVid = /\.(mp4|mov|webm)$/i.test(fileName);
+            // FIX: Removed '$'
+            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(fileName || att.url);
+            const isVid = /\.(mp4|mov|webm)/i.test(fileName || att.url);
 
             if (isImg || isVid) {
                 const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);
