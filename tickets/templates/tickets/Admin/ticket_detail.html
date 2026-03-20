@@ -390,12 +390,13 @@
             const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
 
             attachments.slice(0, 4).forEach((file, index) => {
-                const s = (file.name || '').toLowerCase();
-                const u = (file.url || '').toLowerCase();
+                const nameStr = (file.name || '').toLowerCase();
+                const urlStr = (file.url || '').toLowerCase();
                 
-                // FIX: Trust Cloudinary URLs as media by default
-                const isVideo = /\.(mp4|webm|ogg|mov)/i.test(s) || /\.(mp4|webm|ogg|mov)/i.test(u) || u.includes('/video/upload/');
-                const isImage = !isVideo && (/\.(jpg|jpeg|png|gif|webp|jfif)/i.test(s) || /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(u) || u.includes('cloudinary.com'));
+                // FIX: Ensure videos are correctly identified for rendering
+                const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(nameStr) || /\.(mp4|webm|ogg|mov)$/i.test(urlStr) || urlStr.includes('/video/upload/');
+                // It's considered an image if it's in the media list but NOT a video
+                const isImage = !isVideo;
 
                 const isLast = index === 3;
                 const hasMore = count > 4;
@@ -760,12 +761,22 @@
             
             // FIX: If it's not a document, push it to the media grid!
             const mediaFiles = messageAttachments.filter(att => {
-                const s = (att.name || '').toLowerCase();
-                const u = (att.url || '').toLowerCase();
-                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
-                const isMediaExt = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u);
-                return (isMediaExt || u.includes('cloudinary.com')) && !isDoc;
+                const nameStr = (att.name || '').toLowerCase();
+                const urlStr = (att.url || '').toLowerCase();
+                
+                // Explicitly check for video extensions first
+                const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
+                
+                // If it's not a video, check if it's an image or a generic cloudinary upload (likely an image if not a known document type)
+                const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
+                
+                // Check for common document types to exclude them from being treated as media
+                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
+
+                // It's media if it's explicitly a video, explicitly an image, OR it's a cloudinary URL that is NOT a known document type.
+                return isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
             });
+            
             const docFiles = messageAttachments.filter(att => !mediaFiles.includes(att));
 
             let mediaGridHtml = mediaFiles.length > 0 ? SupportConsole.renderAttachmentGrid(mediaFiles) : '';
@@ -888,21 +899,27 @@
         // FIX: Capture everything for the right sidebar
         const mediaItemsForLightbox = visibleAttachments
             .filter(att => {
-                const s = (att.name || '').toLowerCase();
-                const u = (att.url || '').toLowerCase();
-                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
-                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDoc;
+                const nameStr = (att.name || '').toLowerCase();
+                const urlStr = (att.url || '').toLowerCase();
+                
+                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
+                const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
+                const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
+
+                return isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
             })
             .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
 
         visibleAttachments.forEach(att => {
             const fileName = att.name || 'Attachment';
-            const s = fileName.toLowerCase();
-            const u = (att.url || '').toLowerCase();
+            const nameStr = fileName.toLowerCase();
+            const urlStr = (att.url || '').toLowerCase();
             
-            const isDocument = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
-            const isMedia = (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDocument;
-            const isVid = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
+            const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
+            const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
+            const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
+            
+            const isMedia = isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
 
             if (isMedia) {
                 const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);
