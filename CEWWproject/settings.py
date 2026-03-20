@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'tickets',
     'django_extensions',
     'anymail',
+    'cloudinary_storage',
+    'cloudinary',
 ]
 
 # Session settings (in seconds)
@@ -172,13 +174,22 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-MEDIA_URL = env('MEDIA_URL', default='/media/')
+# OLD MEDIA SETTINGS (Preserved)
+# MEDIA_URL = env('MEDIA_URL', default='/media/')
+# MEDIA_ROOT = os.path.join(
+#    BASE_DIR,
+#    env('MEDIA_ROOT', default=env('MEDIA_ROOT_PATH', default='media'))
+# )
 
-# Support both MEDIA_ROOT and MEDIA_ROOT_PATH to avoid breaking env files
-MEDIA_ROOT = os.path.join(
-    BASE_DIR,
-    env('MEDIA_ROOT', default=env('MEDIA_ROOT_PATH', default='media'))
-)
+# NEW CLOUDINARY STORAGE CONFIGURATION
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
+    'API_KEY': env('CLOUDINARY_API_KEY', default=''),
+    'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
+}
+# Tell Django to route all uploaded files to Cloudinary automatically
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_URL = '/media/'
 
 # 14. Internationalization
 TIME_ZONE = 'Asia/Manila'

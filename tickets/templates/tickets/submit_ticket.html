@@ -1164,6 +1164,7 @@
             this.galleryMedia = []; 
             this.currentTicketStatus = status;
             this.ownerInfo = { name: user, email: email };
+            this._lastKnownCount = -1;
 
             document.querySelectorAll('.ticket-item').forEach(i => i.classList.remove('active-ticket-item'));
             const activeItem = document.getElementById(`ticket-item-${id}`);
@@ -1306,18 +1307,25 @@
                 if (!response.ok) return;
                 const data = await response.json();
                 
-                this.fullMessageCache = data.messages || [];
-                this.allAttachments = data.attachments || [];
+                // THE FIX: Check if we actually have new data before doing anything
+                const newCount = (data.messages ? data.messages.length : 0) + (data.attachments ? data.attachments.length : 0);
                 
-                const dynamicContainer = document.getElementById('dynamicMessages');
-                if (dynamicContainer) {
-                    if (this.activeRecipient === "GROUP_CHAT") {
-                        this.loadGroupChat();
-                    } else if (this.activeRecipient) {
-                        this.loadTechnicianConversation(this.activeRecipient);
-                    } else {
-                        this.renderFeed(this.fullMessageCache);
-                        this.updateMediaAndFilesSidebar(this.allAttachments);
+                if (newCount !== this._lastKnownCount) {
+                    this._lastKnownCount = newCount; // Save the new count
+                    
+                    this.fullMessageCache = data.messages || [];
+                    this.allAttachments = data.attachments || [];
+                    
+                    const dynamicContainer = document.getElementById('dynamicMessages');
+                    if (dynamicContainer) {
+                        if (this.activeRecipient === "GROUP_CHAT") {
+                            this.loadGroupChat();
+                        } else if (this.activeRecipient) {
+                            this.loadTechnicianConversation(this.activeRecipient);
+                        } else {
+                            this.renderFeed(this.fullMessageCache);
+                            this.updateMediaAndFilesSidebar(this.allAttachments);
+                        }
                     }
                 }
             } catch (err) {

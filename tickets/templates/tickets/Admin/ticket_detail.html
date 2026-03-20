@@ -491,8 +491,11 @@
         }, 3000);
     };
 
+    let currentMessageCount = -1;
+
     function filterByTech(username) {
         activeChatPartnerId = username;
+        currentMessageCount = -1;
         const label = document.getElementById('chattingWithLabel');
         const readOnly = document.getElementById('readOnlyIndicator');
         const inputContainer = document.getElementById('messageInputContainer');
@@ -514,7 +517,7 @@
             if(readOnly) readOnly.classList.remove('hidden');
             if(inputContainer) inputContainer.classList.add('hidden'); 
         }
-
+        
         fetchMessages(); 
     }
 
@@ -545,8 +548,15 @@
             });
             const data = await response.json();
             
-            renderChat(data.messages, data.attachments); 
-            updateAttachmentsSidebar(data.messages, data.attachments);
+            // THE FIX: Calculate total items (messages + attachments)
+            const newCount = (data.messages ? data.messages.length : 0) + (data.attachments ? data.attachments.length : 0);
+            
+            // Only re-render the HTML if the count has changed!
+            if (newCount !== currentMessageCount) {
+                currentMessageCount = newCount;
+                renderChat(data.messages, data.attachments); 
+                updateAttachmentsSidebar(data.messages, data.attachments);
+            }
         } catch (err) {
             if (err.name !== 'AbortError') console.error("Fetch failed:", err);
         }
