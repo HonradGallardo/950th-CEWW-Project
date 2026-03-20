@@ -586,32 +586,38 @@
         galleryMedia: [],
 
         init() {
-            this.initPasteFeature();
-            
-            // --- HORIZONTAL SCROLL FOR TABS ---
-            // Allows desktop users to scroll the admin list side-to-side using their normal mouse wheel
-            const staffContainer = document.getElementById('staff-threads-container');
-            if (staffContainer) {
-                staffContainer.addEventListener('wheel', (e) => {
-                    if (e.deltaY !== 0) {
-                        e.preventDefault();
-                        staffContainer.scrollLeft += e.deltaY;
-                    }
-                }, { passive: false });
+        this.initPasteFeature();
+        
+        // --- HORIZONTAL SCROLL FOR TABS ---
+        const staffContainer = document.getElementById('staff-threads-container');
+        if (staffContainer) {
+            staffContainer.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    staffContainer.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
+        
+        // --- ENTER TO SEND LOGIC ---
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        }
+
+        // --- NEW: REAL-TIME POLLING ---
+        // Quietly fetch new messages every 3 seconds
+        setInterval(() => {
+            if (this.activeTicketId) {
+                this.refreshChatData();
             }
-            
-            // --- ENTER TO SEND LOGIC ---
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) {
-                chatInput.addEventListener('keydown', (e) => {
-                    // Send on Enter, but allow Shift+Enter for new lines
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        this.sendMessage();
-                    }
-                });
-            }
-        },
+        }, 3000);
+    },
 
         // --- LIGHTBOX ENGINE ---
         openLightbox(index) {

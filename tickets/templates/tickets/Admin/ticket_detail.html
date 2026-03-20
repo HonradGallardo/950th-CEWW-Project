@@ -483,6 +483,12 @@
     window.onload = () => {
         filterByTech(MY_USERNAME); 
         SupportConsole.init();
+
+        // --- NEW: REAL-TIME POLLING ---
+        // Fetch new messages every 3 seconds
+        setInterval(() => {
+            fetchMessages();
+        }, 3000);
     };
 
     function filterByTech(username) {
