@@ -1910,25 +1910,26 @@
         },
 
         scrollToBottom() {
-            setTimeout(() => {
-                // Find the main scrolling workspace
+            const forceScroll = () => {
+                // Find the correct scroll area depending on if we are Admin or User
                 const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
                 if (scrollArea) {
-                    // Smoothly scroll to the absolute bottom of the container
-                    scrollArea.scrollTo({
-                        top: scrollArea.scrollHeight,
-                        behavior: 'smooth'
-                    });
+                    // Instant snap is much more reliable than 'smooth' when images are loading
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
                 }
                 
-                // If on mobile, ensure the input box is pushed into view
+                // Mobile input focus
                 if (window.innerWidth < 1024) {
                     const inputContainer = document.getElementById('messageInputContainer') || document.getElementById('chatMsgForm');
                     if (inputContainer) {
                         inputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
                     }
                 }
-            }, 100); // Slight delay to ensure DOM has rendered new messages
+            };
+
+            // Double-tap the scroll: once instantly, and once after the DOM paints the media
+            setTimeout(forceScroll, 50);
+            setTimeout(forceScroll, 500); 
         }
     };
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
