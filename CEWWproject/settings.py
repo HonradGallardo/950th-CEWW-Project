@@ -107,9 +107,9 @@ DATABASES = {
 # 10. Email Configuration (Securely pulled from env)
 
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587) # If 587 ever fails, Brevo also supports port 2525
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
