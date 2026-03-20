@@ -209,10 +209,10 @@
                                         <i class="fas fa-paperclip text-base"></i>
                                     </button>
                                 </div>
-                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-1 dark:focus:ring-offset-slate-900">
-                                    <span>Send</span>
-                                    <i class="fas fa-paper-plane text-xs"></i>
-                                </button>
+                                <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-1 dark:focus:ring-offset-slate-900">
+    <span>Send</span>
+    <i class="fas fa-paper-plane text-xs"></i>
+</button>
                             </div>
                         </div>
                     </form>
@@ -389,9 +389,10 @@
 
             attachments.slice(0, 4).forEach((file, index) => {
                 const fileName = file.name || file.url || 'Attachment';
-                // FIX: Removed '$'
-                const isVideo = file.url.match(/\.(mp4|webm|ogg|mov)/i);
-                const isImage = file.url.match(/\.(jpg|jpeg|png|gif|webp|jfif)/i);
+                const s = fileName.toLowerCase();
+                // FIX: Detect Cloudinary URL paths
+                const isVideo = /\.(mp4|webm|ogg|mov)/i.test(s) || s.includes('/video/upload/');
+                const isImage = /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(s) || s.includes('/image/upload/');
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
@@ -725,11 +726,6 @@
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = ''; 
 
-        // FIX: Removed '$' and checking url
-        const allMediaItems = allAttachments
-            .filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(att.name || att.url || ''))
-            .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
-
         messages.forEach(msg => {
             const isSystemUpdate = msg.message && msg.message.toUpperCase().includes('STATUS UPDATE');
             const isGroupMessage = (activeChatPartnerId === 'GROUP_CHAT' && (msg.recipient_name === "Everyone" || !msg.recipient_name));
@@ -747,9 +743,12 @@
             const hasText = msg.message && msg.message.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
             
-            // FIX: Removed '$' and checking url
-            const mediaFiles = messageAttachments.filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(att.name || att.url || ''));
-            const docFiles = messageAttachments.filter(att => /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv)/i.test(att.name || att.url || ''));
+            // FIX: Detect media and default EVERYTHING else to documents
+            const mediaFiles = messageAttachments.filter(att => {
+                const s = (att.name || att.url || '').toLowerCase();
+                return /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || s.includes('/image/upload/') || s.includes('/video/upload/');
+            });
+            const docFiles = messageAttachments.filter(att => !mediaFiles.includes(att));
 
             let mediaGridHtml = mediaFiles.length > 0 ? SupportConsole.renderAttachmentGrid(mediaFiles) : '';
 
@@ -868,16 +867,19 @@
         const sortedAttachments = [...allAttachments].reverse();
         const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(att.message_id));
 
-        // FIX: Removed '$' and checking url
+        // FIX: Extract all Cloudinary media items
         const mediaItemsForLightbox = visibleAttachments
-            .filter(att => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(att.name || att.url || ''))
+            .filter(att => {
+                const s = (att.name || att.url || '').toLowerCase();
+                return /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || s.includes('/image/upload/') || s.includes('/video/upload/');
+            })
             .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
 
         visibleAttachments.forEach(att => {
             const fileName = att.name || att.url || 'Attachment';
-            // FIX: Removed '$'
-            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(fileName || att.url);
-            const isVid = /\.(mp4|mov|webm)/i.test(fileName || att.url);
+            const s = fileName.toLowerCase();
+            const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(s) || s.includes('/image/upload/');
+            const isVid = /\.(mp4|mov|webm)/i.test(s) || s.includes('/video/upload/');
 
             if (isImg || isVid) {
                 const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);

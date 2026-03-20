@@ -1549,27 +1549,27 @@
                 let fileHtml = '';
 
                 if (attachments.length > 0) {
-                    // FIX: Removed '$' and checking url as fallback
-                    const mediaList = attachments.filter(a => /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(a.name || a.url || ''));
+                    // FIX: Detect by extension OR Cloudinary URL path
+                    const mediaList = attachments.filter(a => {
+                        const s = (a.name || a.url || '').toLowerCase();
+                        return /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || s.includes('/image/upload/') || s.includes('/video/upload/');
+                    });
+                    
+                    // FIX: Everything that isn't media is automatically a document!
                     const otherDocs = attachments.filter(a => !mediaList.includes(a));
 
                     if (mediaList.length > 0) {
-                        let gridClass = 'grid-cols-2';
-                        if (mediaList.length === 1) gridClass = 'grid-cols-1';
+                        let gridClass = mediaList.length === 1 ? 'grid-cols-1' : 'grid-cols-2';
 
                         mediaHtml = `<div class="grid ${gridClass} gap-1 mt-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-sm w-fit max-w-[260px] sm:max-w-[360px] md:max-w-[420px] ${isMe ? 'ml-auto' : 'mr-auto'}">`;
 
                         mediaList.slice(0, 4).forEach((att, index) => {
                             const globalIndex = SupportConsole.galleryMedia.findIndex(m => m.url === att.url);
-                            // FIX: Removed '$' and checking url as fallback
-                            const isVideo = /\.(mp4|mov|webm)/i.test(att.name || att.url || '');
+                            const s = (att.name || att.url || '').toLowerCase();
+                            const isVideo = /\.(mp4|mov|webm)/i.test(s) || s.includes('/video/upload/');
 
-                            let itemSpan = 'col-span-1';
-                            if (mediaList.length === 3 && index === 0) itemSpan = 'col-span-2';
-
-                            let heightClass = 'h-32 sm:h-40 w-full';
-                            if (mediaList.length === 1) heightClass = 'max-h-[350px] w-full';
-                            if (mediaList.length === 3 && index === 0) heightClass = 'h-44 sm:h-52 w-full';
+                            let itemSpan = (mediaList.length === 3 && index === 0) ? 'col-span-2' : 'col-span-1';
+                            let heightClass = mediaList.length === 1 ? 'max-h-[350px] w-full' : (mediaList.length === 3 && index === 0) ? 'h-44 sm:h-52 w-full' : 'h-32 sm:h-40 w-full';
 
                             const isLastVisible = index === 3 && mediaList.length > 4;
                             const remainingCount = mediaList.length - 4;
@@ -1586,29 +1586,26 @@
                                 </div>` : ''}
                             </div>`;
                         });
-
                         mediaHtml += `</div>`;
                     }
 
                     if (otherDocs.length > 0) {
                         fileHtml = `<div class="mt-2 flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'} w-full">`;
-
                         otherDocs.forEach(att => {
                             fileHtml += `
                             <a href="${att.url}" target="_blank" class="inline-flex items-center gap-3 p-3 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 shadow-sm transition-all max-w-[260px] sm:max-w-xs">
                                 <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
                                     <i class="fas fa-file-alt text-blue-500 text-base"></i>
                                 </div>
-                                <span class="truncate block flex-1 min-w-0">${att.name}</span>
+                                <span class="truncate block flex-1 min-w-0">${att.name || 'Document'}</span>
                             </a>`;
                         });
-
                         fileHtml += `</div>`;
                     }
                 }
 
                 return `
-                <div class="flex ${isMe ? 'justify-end' : 'justify-start'} items-end gap-2 mb-4 animate-in fade-in duration-300 w-full">
+                <div class="flex w-full gap-3 md:gap-4 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-4">
                     ${!isMe ? `<img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                     <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
                         <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${senderName}</div>
@@ -1698,17 +1695,19 @@
             }
 
             const reversedAttachments = [...new Set(attachments)].reverse(); 
-            // FIX: Removed '$' from mediaRegex
-            const mediaRegex = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i;
 
-            // FIX: Checking url as fallback
-            this.galleryMedia = reversedAttachments.filter(file => mediaRegex.test(file.name || file.url || ''));
+            // FIX: Filter using extension OR URL structure
+            this.galleryMedia = reversedAttachments.filter(file => {
+                const s = (file.name || file.url || '').toLowerCase();
+                return /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || s.includes('/image/upload/') || s.includes('/video/upload/');
+            });
 
             if (this.galleryMedia.length === 0) {
                 if (mediaGrid) mediaGrid.innerHTML = `<p class="col-span-3 text-center text-[9px] py-10 opacity-50 uppercase font-black tracking-widest">No Media Found</p>`;
             } else {
                 this.galleryMedia.forEach((file, index) => {
-                    const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(file.name || file.url || '');
+                    const s = (file.name || file.url || '').toLowerCase();
+                    const isImg = /\.(jpg|jpeg|png|webp|gif|jfif)/i.test(s) || s.includes('/image/upload/');
                     const item = document.createElement('div');
                     item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
                     
@@ -1724,7 +1723,7 @@
                 });
             }
 
-            const docs = reversedAttachments.filter(file => !mediaRegex.test(file.name || file.url || ''));
+            const docs = reversedAttachments.filter(file => !this.galleryMedia.includes(file));
             if (docs.length === 0) {
                 if (filesList) filesList.innerHTML = `<p class="text-center text-[9px] py-10 opacity-50 uppercase font-black tracking-widest">No Documents</p>`;
             } else {
@@ -1736,7 +1735,7 @@
                             <i class="fas fa-file-alt"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-[11px] font-bold truncate text-slate-700 dark:text-slate-200">${file.name}</p>
+                            <p class="text-[11px] font-bold truncate text-slate-700 dark:text-slate-200">${file.name || 'Document'}</p>
                             <a href="${file.url}" download class="text-[9px] font-black uppercase text-blue-600 hover:text-blue-400">Download Asset</a>
                         </div>`;
                     filesList.appendChild(item);
