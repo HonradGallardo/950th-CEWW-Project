@@ -1549,34 +1549,29 @@
                 let fileHtml = '';
 
                 if (attachments.length > 0) {
-                    // FIX: Refined Categorization Logic
                     const mediaList = attachments.filter(a => {
-                        const nameStr = (a.name || '').toLowerCase();
-                        const urlStr = (a.url || '').toLowerCase();
-                        
-                        const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
-                        const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
-                        const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
-
-                        return isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
+                        const s = (a.name || '').toLowerCase();
+                        const u = (a.url || '').toLowerCase();
+                        const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+                        const isMediaExt = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u);
+                        return (isMediaExt || u.includes('cloudinary.com')) && !isDoc;
                     });
                     
                     const otherDocs = attachments.filter(a => !mediaList.includes(a));
 
                     if (mediaList.length > 0) {
-                        const count = mediaList.length;
-                        let gridClass = count === 1 ? 'grid-cols-1' : 'grid-cols-2';
+                        const count = mediaList.length; // THE CRITICAL BUG FIX IS RIGHT HERE!
+                        let gridClass = count === 1 ? 'grid-cols-1' : count === 2 ? 'grid-cols-2 h-48' : 'grid-cols-2 grid-rows-2 h-56';
 
                         mediaHtml = `<div class="grid ${gridClass} gap-1 mt-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-sm w-fit max-w-[260px] sm:max-w-[360px] md:max-w-[420px] ${isMe ? 'ml-auto' : 'mr-auto'}">`;
 
                         mediaList.slice(0, 4).forEach((att, index) => {
                             const globalIndex = SupportConsole.galleryMedia.findIndex(m => m.url === att.url);
-                            const nameStr = (att.name || '').toLowerCase();
-                            const urlStr = (att.url || '').toLowerCase();
+                            const s = (att.name || '').toLowerCase();
+                            const u = (att.url || '').toLowerCase();
                             
-                            // FIX: Ensure videos are correctly identified for rendering
-                            const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
-                            const isImage = !isVideo;
+                            const isVideo = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
+                            const isImage = !isVideo && (/\.(jpg|jpeg|png|gif|webp|jfif)/i.test(s) || /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(u) || u.includes('cloudinary.com'));
 
                             let itemSpan = (count === 3 && index === 0) ? 'col-span-2' : 'col-span-1';
                             let heightClass = count === 1 ? 'max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]' : (count === 3 && index === 0) ? 'h-44 sm:h-52 w-full object-cover' : 'h-32 sm:h-40 w-full object-cover';
@@ -1597,7 +1592,7 @@
                             }
 
                             if (hasMore && isLast) {
-                                mediaHtml += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white text-2xl font-black">+${count - 3}</span></div>`;
+                                mediaHtml += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white text-2xl font-black">+${count - 4}</span></div>`;
                             }
                             mediaHtml += `</div>`;
                         });
@@ -1704,41 +1699,35 @@
             this.galleryMedia = []; 
 
             if (!attachments || attachments.length === 0) {
-                if (mediaGrid) mediaGrid.innerHTML = `<p class="col-span-3 text-center text-[9px] py-10 opacity-30 uppercase font-black tracking-widest">No Media</p>`;
-                if (filesList) filesList.innerHTML = `<p class="text-center text-[9px] py-4 opacity-30 uppercase font-black tracking-widest">No Files</p>`;
+                if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Media Found</p></div>`;
+                if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Documents</p></div>`;
                 return;
             }
 
             const reversedAttachments = [...new Set(attachments)].reverse(); 
 
-            // FIX: Identical robust media check
             this.galleryMedia = reversedAttachments.filter(file => {
-                const nameStr = (file.name || '').toLowerCase();
-                const urlStr = (file.url || '').toLowerCase();
-                
-                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
-                const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
-                const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
-
-                return isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
+                const s = (file.name || '').toLowerCase();
+                const u = (file.url || '').toLowerCase();
+                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDoc;
             });
 
             if (this.galleryMedia.length === 0) {
-                // ...
+                if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Media Found</p></div>`;
             } else {
                 this.galleryMedia.forEach((file, index) => {
-                    const nameStr = (file.name || '').toLowerCase();
-                    const urlStr = (file.url || '').toLowerCase();
-                    // FIX: Identify Video for rendering
-                    const isVid = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
+                    const s = (file.name || '').toLowerCase();
+                    const u = (file.url || '').toLowerCase();
+                    const isVid = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
                     
                     const item = document.createElement('div');
                     item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
                     
                     item.onclick = () => this.openLightbox(index);
                     let contentHtml = isVid 
-                        ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div>`
-                        : `<img src="${file.url}" class="w-full h-full object-cover p-1 transition-transform duration-300 group-hover:scale-105">`;
+                        ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${file.url}#t=0.1" class="w-full h-full object-cover"></video>`
+                        : `<img src="${file.url}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
                         
                     item.innerHTML = `
                         ${contentHtml}
@@ -1749,7 +1738,7 @@
 
             const docs = reversedAttachments.filter(file => !this.galleryMedia.includes(file));
             if (docs.length === 0) {
-                if (filesList) filesList.innerHTML = `<p class="text-center text-[9px] py-10 opacity-50 uppercase font-black tracking-widest">No Documents</p>`;
+                if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Documents Found</p></div>`;
             } else {
                 docs.forEach(file => {
                     const item = document.createElement('div');

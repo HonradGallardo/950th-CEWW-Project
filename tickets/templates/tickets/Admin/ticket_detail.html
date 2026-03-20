@@ -892,39 +892,45 @@
         if (filesList) filesList.innerHTML = '';
         if (linksList) linksList.innerHTML = '';
 
+        if (!allAttachments || allAttachments.length === 0) {
+            if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+            if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+            if (linksList) linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+            return;
+        }
+
         const visibleMessageIds = messages.map(msg => String(msg.id));
         const sortedAttachments = [...allAttachments].reverse();
         const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(String(att.message_id)));
 
-        // FIX: Capture everything for the right sidebar
         const mediaItemsForLightbox = visibleAttachments
             .filter(att => {
-                const nameStr = (att.name || '').toLowerCase();
-                const urlStr = (att.url || '').toLowerCase();
-                
-                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
-                const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
-                const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
-
-                return isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
+                const s = (att.name || '').toLowerCase();
+                const u = (att.url || '').toLowerCase();
+                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDoc;
             })
             .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
 
+        if (mediaItemsForLightbox.length === 0 && mediaGrid) {
+            mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+        }
+
+        let docCount = 0;
+
         visibleAttachments.forEach(att => {
             const fileName = att.name || 'Attachment';
-            const nameStr = fileName.toLowerCase();
-            const urlStr = (att.url || '').toLowerCase();
+            const s = fileName.toLowerCase();
+            const u = (att.url || '').toLowerCase();
             
-            const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
-            const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
-            const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
-            
-            const isMedia = isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
+            const isDocument = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+            const isMedia = (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDocument;
+            const isVid = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
 
             if (isMedia) {
                 const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);
                 let contentHtml = isVid 
-                    ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div>`
+                    ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${att.url}#t=0.1" class="w-full h-full object-cover"></video>`
                     : `<img src="${att.url}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">`;
 
                 if (mediaGrid) {
@@ -935,6 +941,7 @@
                     mediaGrid.appendChild(itemDiv);
                 }
             } else if (filesList) {
+                docCount++;
                 filesList.innerHTML += `
                     <a href="${att.url}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
                         <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-file-alt"></i></div>
@@ -943,12 +950,17 @@
             }
         });
 
-        // Link Extractor
+        if (docCount === 0 && filesList) {
+            filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+        }
+
+        let linkCount = 0;
         messages.forEach(msg => {
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             const links = msg.message.match(urlRegex);
             if (links && linksList) {
                 links.forEach(link => {
+                    linkCount++;
                     linksList.innerHTML += `
                         <a href="${link}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
                             <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-link"></i></div>
@@ -957,6 +969,10 @@
                 });
             }
         });
+
+        if (linkCount === 0 && linksList) {
+            linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+        }
     }
 
     function switchMediaTab(tab) {
