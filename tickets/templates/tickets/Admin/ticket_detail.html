@@ -781,8 +781,13 @@
                     if (/\.pdf$/i.test(fileName)) icon = 'fa-file-pdf text-red-500';
                     else if (/\.(xls|xlsx|csv)$/i.test(fileName)) icon = 'fa-file-excel text-green-600';
 
+                    // FIX: Inject Cloudinary's forced-download flag into the URL
+                    const downloadUrl = (doc.url && doc.url.includes('cloudinary.com')) 
+                        ? doc.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : doc.url;
+
                     docsListHtml += `
-                        <a href="${doc.url}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-sm">
+                        <a href="${downloadUrl}" download="${fileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-sm">
                             <i class="fas ${icon} text-lg"></i>
                             <div class="overflow-hidden">
                                 <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${fileName}</p>
@@ -925,10 +930,17 @@
         } else {
             docItems.forEach(att => {
                 if (filesList) {
+                    const fileName = att.name || 'Document';
+                    
+                    // FIX: Inject Cloudinary's forced-download flag into the URL
+                    const downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
+                        ? att.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : att.url;
+
                     filesList.innerHTML += `
-                        <a href="${att.url}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                        <a href="${downloadUrl}" download="${fileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
                             <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-file-alt"></i></div>
-                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${att.name || 'Document'}</p></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${fileName}</p></div>
                         </a>`;
                 }
             });

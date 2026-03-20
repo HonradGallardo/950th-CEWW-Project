@@ -1807,6 +1807,13 @@
                 if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Documents Found</p></div>`;
             } else {
                 docs.forEach(file => {
+                    const fileName = file.name || 'Document';
+                    
+                    // FIX: Inject Cloudinary's forced-download flag into the URL
+                    const downloadUrl = (file.url && file.url.includes('cloudinary.com')) 
+                        ? file.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : file.url;
+
                     const item = document.createElement('div');
                     item.className = "flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 mb-2 hover:border-blue-500/50 transition-colors shadow-sm";
                     item.innerHTML = `
@@ -1814,8 +1821,8 @@
                             <i class="fas fa-file-alt"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-[11px] font-bold truncate text-slate-700 dark:text-slate-200">${file.name || 'Document'}</p>
-                            <a href="${file.url}" download class="text-[9px] font-black uppercase text-blue-600 hover:text-blue-400">Download Asset</a>
+                            <p class="text-[11px] font-bold truncate text-slate-700 dark:text-slate-200">${fileName}</p>
+                            <a href="${downloadUrl}" download="${fileName}" class="text-[9px] font-black uppercase text-blue-600 hover:text-blue-400">Download Asset</a>
                         </div>`;
                     filesList.appendChild(item);
                 });
