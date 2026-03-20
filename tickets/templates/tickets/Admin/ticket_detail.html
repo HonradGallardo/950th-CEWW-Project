@@ -388,11 +388,13 @@
             const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
 
             attachments.slice(0, 4).forEach((file, index) => {
-                const fileName = file.name || file.url || 'Attachment';
-                const s = fileName.toLowerCase();
-                // FIX: Detect Cloudinary URL paths
-                const isVideo = /\.(mp4|webm|ogg|mov)/i.test(s) || s.includes('/video/upload/');
-                const isImage = /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(s) || s.includes('/image/upload/');
+                const fileName = (file.name || 'Attachment').toLowerCase();
+                const fileUrl = (file.url || '').toLowerCase();
+                
+                // FIX: Broader Cloudinary Check
+                const isVideo = /\.(mp4|webm|ogg|mov)/i.test(fileName) || /\.(mp4|webm|ogg|mov)/i.test(fileUrl) || fileUrl.includes('video/upload');
+                const isImage = !isVideo && (/\.(jpg|jpeg|png|gif|webp|jfif)/i.test(fileName) || /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(fileUrl) || fileUrl.includes('cloudinary.com'));
+                
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
@@ -407,11 +409,11 @@
                     html += `<video src="${file.url}" class="w-full h-full object-cover"></video>
                              <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
-                    html += `<div class="flex flex-col items-center p-3 text-slate-500 dark:text-slate-400"><i class="fas fa-file-alt text-xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">${fileName}</span></div>`;
+                    html += `<div class="flex flex-col items-center p-3 text-slate-500 dark:text-slate-400"><i class="fas fa-file-alt text-xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">${file.name}</span></div>`;
                 }
 
                 if (isLast && hasMore) {
-                    html += `<div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center"><span class="text-white font-bold text-lg">+${count - 3}</span></div>`;
+                    html += `<div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center"><span class="text-white font-bold text-lg">+${count - 4}</span></div>`;
                 }
                 html += `</div>`;
             });
@@ -743,11 +745,15 @@
             const hasText = msg.message && msg.message.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
             
-            // FIX: Detect media and default EVERYTHING else to documents
+            // FIX: Broader Cloudinary Check for categorization
             const mediaFiles = messageAttachments.filter(att => {
-                const s = (att.name || att.url || '').toLowerCase();
-                return /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || s.includes('/image/upload/') || s.includes('/video/upload/');
+                const s = (att.name || '').toLowerCase();
+                const u = (att.url || '').toLowerCase();
+                const isMediaExt = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u);
+                const isCloudinary = u.includes('cloudinary.com') && !/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s);
+                return isMediaExt || isCloudinary;
             });
+            
             const docFiles = messageAttachments.filter(att => !mediaFiles.includes(att));
 
             let mediaGridHtml = mediaFiles.length > 0 ? SupportConsole.renderAttachmentGrid(mediaFiles) : '';

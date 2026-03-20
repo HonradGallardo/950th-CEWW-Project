@@ -1549,24 +1549,27 @@
                 let fileHtml = '';
 
                 if (attachments.length > 0) {
-                    // FIX: Detect by extension OR Cloudinary URL path
+                    // FIX: Broader Cloudinary Check
                     const mediaList = attachments.filter(a => {
-                        const s = (a.name || a.url || '').toLowerCase();
-                        return /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || s.includes('/image/upload/') || s.includes('/video/upload/');
+                        const s = (a.name || '').toLowerCase();
+                        const u = (a.url || '').toLowerCase();
+                        const isMediaExt = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u);
+                        const isCloudinary = u.includes('cloudinary.com') && !/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s);
+                        return isMediaExt || isCloudinary;
                     });
                     
-                    // FIX: Everything that isn't media is automatically a document!
                     const otherDocs = attachments.filter(a => !mediaList.includes(a));
 
                     if (mediaList.length > 0) {
-                        let gridClass = mediaList.length === 1 ? 'grid-cols-1' : 'grid-cols-2';
+                        let gridClass = mediaList.length === 1 ? 'grid-cols-1' : count === 2 ? 'grid-cols-2 h-48' : 'grid-cols-2 grid-rows-2 h-56';
 
                         mediaHtml = `<div class="grid ${gridClass} gap-1 mt-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-sm w-fit max-w-[260px] sm:max-w-[360px] md:max-w-[420px] ${isMe ? 'ml-auto' : 'mr-auto'}">`;
 
                         mediaList.slice(0, 4).forEach((att, index) => {
                             const globalIndex = SupportConsole.galleryMedia.findIndex(m => m.url === att.url);
-                            const s = (att.name || att.url || '').toLowerCase();
-                            const isVideo = /\.(mp4|mov|webm)/i.test(s) || s.includes('/video/upload/');
+                            const s = (att.name || '').toLowerCase();
+                            const u = (att.url || '').toLowerCase();
+                            const isVideo = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
 
                             let itemSpan = (mediaList.length === 3 && index === 0) ? 'col-span-2' : 'col-span-1';
                             let heightClass = mediaList.length === 1 ? 'max-h-[350px] w-full' : (mediaList.length === 3 && index === 0) ? 'h-44 sm:h-52 w-full' : 'h-32 sm:h-40 w-full';
