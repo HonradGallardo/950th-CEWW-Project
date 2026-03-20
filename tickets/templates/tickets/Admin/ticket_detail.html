@@ -382,39 +382,52 @@
             if (!attachments || attachments.length === 0) return '';
 
             const count = attachments.length;
-            let gridClass = count === 1 ? 'grid-cols-1' : count === 2 ? 'grid-cols-2 h-48' : 'grid-cols-2 grid-rows-2 h-56';
-            let html = `<div class="grid gap-1.5 rounded-xl overflow-hidden ${gridClass} w-64 md:w-80 shadow-sm border border-slate-200 dark:border-slate-700/60 mt-2 bg-slate-200 dark:bg-slate-700">`;
+            let gridClass = 'grid-cols-1';
+            if (count >= 2) gridClass = 'grid-cols-2';
+
+            let html = `<div class="grid gap-1 mt-2 rounded-xl overflow-hidden ${gridClass} shadow-sm border border-slate-200 dark:border-slate-700/60 w-fit max-w-[280px] sm:max-w-[380px]">`;
 
             const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
 
             attachments.slice(0, 4).forEach((file, index) => {
-                const fileName = (file.name || 'Attachment').toLowerCase();
-                const fileUrl = (file.url || '').toLowerCase();
+                const s = (file.name || '').toLowerCase();
+                const u = (file.url || '').toLowerCase();
                 
-                // FIX: Broader Cloudinary Check
-                const isVideo = /\.(mp4|webm|ogg|mov)/i.test(fileName) || /\.(mp4|webm|ogg|mov)/i.test(fileUrl) || fileUrl.includes('video/upload');
-                const isImage = !isVideo && (/\.(jpg|jpeg|png|gif|webp|jfif)/i.test(fileName) || /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(fileUrl) || fileUrl.includes('cloudinary.com'));
-                
+                // FIX: Trust Cloudinary URLs as media by default
+                const isVideo = /\.(mp4|webm|ogg|mov)/i.test(s) || /\.(mp4|webm|ogg|mov)/i.test(u) || u.includes('/video/upload/');
+                const isImage = !isVideo && (/\.(jpg|jpeg|png|gif|webp|jfif)/i.test(s) || /\.(jpg|jpeg|png|gif|webp|jfif)/i.test(u) || u.includes('cloudinary.com'));
+
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
-                let cellClass = "relative bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden";
-                if (count === 3 && index === 0) cellClass += " row-span-2";
+                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
+                let heightClass = "h-40 sm:h-48 w-full object-cover";
 
-                html += `<div class="${cellClass} cursor-pointer group" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
+                // DYNAMIC LAYOUT LOGIC
+                if (count === 1) {
+                    heightClass = "max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]";
+                } else if (count === 3 && index === 0) {
+                    cellClass += " col-span-2"; 
+                    heightClass = "h-48 sm:h-56 w-full object-cover";
+                } else if (count >= 2) {
+                    heightClass = "h-32 sm:h-40 w-full object-cover";
+                }
+
+                html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
                 if (isImage) {
-                    html += `<img src="${file.url}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">`;
+                    html += `<img src="${file.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (isVideo) {
-                    html += `<video src="${file.url}" class="w-full h-full object-cover"></video>
+                    html += `<video src="${file.url}#t=0.1" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                              <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
-                    html += `<div class="flex flex-col items-center p-3 text-slate-500 dark:text-slate-400"><i class="fas fa-file-alt text-xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">${file.name}</span></div>`;
+                    html += `<div class="flex flex-col items-center p-6 text-slate-500 dark:text-slate-400 w-full h-full justify-center ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
                 }
 
-                if (isLast && hasMore) {
-                    html += `<div class="absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center"><span class="text-white font-bold text-lg">+${count - 4}</span></div>`;
+                if (hasMore && isLast) {
+                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white font-black text-2xl">+${count - 3}</span></div>`;
                 }
+                
                 html += `</div>`;
             });
             html += `</div>`;
@@ -745,15 +758,14 @@
             const hasText = msg.message && msg.message.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
             
-            // FIX: Broader Cloudinary Check for categorization
+            // FIX: If it's not a document, push it to the media grid!
             const mediaFiles = messageAttachments.filter(att => {
                 const s = (att.name || '').toLowerCase();
                 const u = (att.url || '').toLowerCase();
+                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
                 const isMediaExt = /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u);
-                const isCloudinary = u.includes('cloudinary.com') && !/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s);
-                return isMediaExt || isCloudinary;
+                return (isMediaExt || u.includes('cloudinary.com')) && !isDoc;
             });
-            
             const docFiles = messageAttachments.filter(att => !mediaFiles.includes(att));
 
             let mediaGridHtml = mediaFiles.length > 0 ? SupportConsole.renderAttachmentGrid(mediaFiles) : '';
@@ -869,18 +881,17 @@
         if (filesList) filesList.innerHTML = '';
         if (linksList) linksList.innerHTML = '';
 
-        // Enforce string matching to prevent ID mismatches
         const visibleMessageIds = messages.map(msg => String(msg.id));
         const sortedAttachments = [...allAttachments].reverse();
         const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(String(att.message_id)));
 
-        // FIX: Identical Media Check Logic
+        // FIX: Capture everything for the right sidebar
         const mediaItemsForLightbox = visibleAttachments
             .filter(att => {
                 const s = (att.name || '').toLowerCase();
                 const u = (att.url || '').toLowerCase();
-                const isDocument = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
-                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDocument;
+                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDoc;
             })
             .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
 
@@ -915,6 +926,7 @@
             }
         });
 
+        // Link Extractor
         messages.forEach(msg => {
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             const links = msg.message.match(urlRegex);

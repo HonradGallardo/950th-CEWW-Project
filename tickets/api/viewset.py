@@ -118,7 +118,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
         # FIX 1: Safely load avatars without crashing
-        def get_avatar_url(user):
+        def get_safe_avatar(user):
             try:
                 if hasattr(user, 'profile') and user.profile.image and hasattr(user.profile.image, 'url'):
                     return user.profile.image.url
@@ -133,13 +133,13 @@ class TicketViewSet(viewsets.ModelViewSet):
                     return file_obj.name.split('/')[-1]
             except Exception:
                 pass
-            return "Attached_File"
+            return "Attachment"
 
         messages_data = [{
             'id': msg.id,
             'sender': msg.sender.username,
             'sender_name': msg.sender.username,
-            'sender_avatar': get_avatar_url(msg.sender),
+            'sender_avatar': get_safe_avatar(msg.sender),
             'recipient_name': msg.recipient.username if msg.recipient else "Everyone",
             'message': msg.message,
             'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
