@@ -186,6 +186,7 @@ CLOUDINARY_STORAGE = {
     'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
     'API_KEY': env('CLOUDINARY_API_KEY', default=''),
     'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
+    'RESOURCE_TYPE': 'auto'
 }
 # Tell Django to route all uploaded files to Cloudinary automatically
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

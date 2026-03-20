@@ -616,8 +616,73 @@
             if (this.activeTicketId) {
                 this.refreshChatData();
             }
-        }, 1000);
+        }, 3000);
     },
+
+    // 1. ADD THIS HELPER FUNCTION AT THE TOP OF SUPPORTCONSOLE
+        classifyAttachment: function(att) {
+            const name = (att.name || '').toLowerCase();
+            const url = (att.url || '').toLowerCase();
+            
+            const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(name) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(url);
+            const isVideo = /\.(mp4|mov|webm|ogg)$/.test(name) || /\.(mp4|mov|webm|ogg)$/.test(url) || url.includes('/video/upload/');
+            const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(name) || /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(url) || (url.includes('cloudinary.com') && !isVideo && !isDoc);
+            
+            if (isDoc) return 'document';
+            if (isVideo) return 'video';
+            if (isImage) return 'image';
+            return 'document'; 
+        },
+
+        // 2. REPLACE renderAttachmentGrid
+        renderAttachmentGrid: function(attachments) {
+            if (!attachments || attachments.length === 0) return '';
+
+            const count = attachments.length;
+            let gridClass = 'grid-cols-1';
+            if (count >= 2) gridClass = 'grid-cols-2';
+
+            let html = `<div class="grid gap-1 mt-2 rounded-xl overflow-hidden ${gridClass} shadow-sm border border-slate-200 dark:border-slate-700/60 w-fit max-w-[280px] sm:max-w-[380px]">`;
+
+            const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
+
+            attachments.slice(0, 4).forEach((file, index) => {
+                const type = this.classifyAttachment(file);
+                const isLast = index === 3;
+                const hasMore = count > 4;
+
+                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
+                let heightClass = "h-40 sm:h-48 w-full object-cover";
+
+                if (count === 1) {
+                    heightClass = "max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]";
+                } else if (count === 3 && index === 0) {
+                    cellClass += " col-span-2"; 
+                    heightClass = "h-48 sm:h-56 w-full object-cover";
+                } else if (count >= 2) {
+                    heightClass = "h-32 sm:h-40 w-full object-cover";
+                }
+
+                html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
+
+                if (type === 'image') {
+                    html += `<img src="${file.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                } else if (type === 'video') {
+                    html += `<video src="${file.url}#t=0.1" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                             <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
+                } else {
+                    html += `<div class="flex flex-col items-center p-6 text-slate-500 dark:text-slate-400 w-full h-full justify-center ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
+                }
+
+                if (hasMore && isLast) {
+    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
+}
+                
+                html += `</div>`;
+            });
+            html += `</div>`;
+            return html;
+        },
 
         // --- LIGHTBOX ENGINE ---
         openLightbox(index) {
@@ -1689,6 +1754,7 @@
                 }
             }
         },
+        
 
         updateMediaAndFilesSidebar(attachments) {
             const mediaGrid = document.getElementById('mediaGridView');

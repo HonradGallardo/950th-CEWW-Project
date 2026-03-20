@@ -378,6 +378,21 @@
         currentLightboxIndex: 0,
         currentLightboxItems: [], 
 
+        classifyAttachment: function(att) {
+            const name = (att.name || '').toLowerCase();
+            const url = (att.url || '').toLowerCase();
+            
+            const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(name) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(url);
+            const isVideo = /\.(mp4|mov|webm|ogg)$/.test(name) || /\.(mp4|mov|webm|ogg)$/.test(url) || url.includes('/video/upload/');
+            const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(name) || /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(url) || (url.includes('cloudinary.com') && !isVideo && !isDoc);
+            
+            if (isDoc) return 'document';
+            if (isVideo) return 'video';
+            if (isImage) return 'image';
+            return 'document'; 
+        },
+
+        // 2. REPLACE renderAttachmentGrid
         renderAttachmentGrid: function(attachments) {
             if (!attachments || attachments.length === 0) return '';
 
@@ -390,21 +405,13 @@
             const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
 
             attachments.slice(0, 4).forEach((file, index) => {
-                const nameStr = (file.name || '').toLowerCase();
-                const urlStr = (file.url || '').toLowerCase();
-                
-                // FIX: Ensure videos are correctly identified for rendering
-                const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(nameStr) || /\.(mp4|webm|ogg|mov)$/i.test(urlStr) || urlStr.includes('/video/upload/');
-                // It's considered an image if it's in the media list but NOT a video
-                const isImage = !isVideo;
-
+                const type = this.classifyAttachment(file);
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
                 let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
                 let heightClass = "h-40 sm:h-48 w-full object-cover";
 
-                // DYNAMIC LAYOUT LOGIC
                 if (count === 1) {
                     heightClass = "max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]";
                 } else if (count === 3 && index === 0) {
@@ -416,9 +423,9 @@
 
                 html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
-                if (isImage) {
+                if (type === 'image') {
                     html += `<img src="${file.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
-                } else if (isVideo) {
+                } else if (type === 'video') {
                     html += `<video src="${file.url}#t=0.1" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                              <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
@@ -507,7 +514,7 @@
         // Fetch new messages every 3 seconds
         setInterval(() => {
             fetchMessages();
-        }, 1000);
+        }, 3000);
     };
 
     let currentMessageCount = -1;
@@ -759,25 +766,9 @@
             const hasText = msg.message && msg.message.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
             
-            // FIX: If it's not a document, push it to the media grid!
-            const mediaFiles = messageAttachments.filter(att => {
-                const nameStr = (att.name || '').toLowerCase();
-                const urlStr = (att.url || '').toLowerCase();
-                
-                // Explicitly check for video extensions first
-                const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(nameStr) || /\.(mp4|mov|webm|ogg)$/i.test(urlStr) || urlStr.includes('/video/upload/');
-                
-                // If it's not a video, check if it's an image or a generic cloudinary upload (likely an image if not a known document type)
-                const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(nameStr) || /\.(jpg|jpeg|png|webp|gif|jfif)$/i.test(urlStr);
-                
-                // Check for common document types to exclude them from being treated as media
-                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(nameStr) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/i.test(urlStr);
-
-                // It's media if it's explicitly a video, explicitly an image, OR it's a cloudinary URL that is NOT a known document type.
-                return isVideo || isImage || (urlStr.includes('cloudinary.com') && !isDoc);
-            });
-            
-            const docFiles = messageAttachments.filter(att => !mediaFiles.includes(att));
+            // FIX: Using the master classifier
+            const mediaFiles = messageAttachments.filter(att => SupportConsole.classifyAttachment(att) !== 'document');
+            const docFiles = messageAttachments.filter(att => SupportConsole.classifyAttachment(att) === 'document');
 
             let mediaGridHtml = mediaFiles.length > 0 ? SupportConsole.renderAttachmentGrid(mediaFiles) : '';
 
@@ -871,6 +862,7 @@
             alert("A system error occurred.");
         }
     }
+    
 
     function updateAttachmentsSidebar(messages, allAttachments = []) {
         const dynamicInquiry = document.getElementById('dynamicInquiryContent');
@@ -903,33 +895,18 @@
         const sortedAttachments = [...allAttachments].reverse();
         const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(String(att.message_id)));
 
-        const mediaItemsForLightbox = visibleAttachments
-            .filter(att => {
-                const s = (att.name || '').toLowerCase();
-                const u = (att.url || '').toLowerCase();
-                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
-                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDoc;
-            })
-            .map(att => ({ url: att.url, name: att.name || 'Attachment' }));
+        // FIX: Using the master classifier
+        const mediaItemsForLightbox = visibleAttachments.filter(att => SupportConsole.classifyAttachment(att) !== 'document');
+        const docItems = visibleAttachments.filter(att => SupportConsole.classifyAttachment(att) === 'document');
 
         if (mediaItemsForLightbox.length === 0 && mediaGrid) {
             mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
-        }
-
-        let docCount = 0;
-
-        visibleAttachments.forEach(att => {
-            const fileName = att.name || 'Attachment';
-            const s = fileName.toLowerCase();
-            const u = (att.url || '').toLowerCase();
-            
-            const isDocument = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
-            const isMedia = (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDocument;
-            const isVid = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
-
-            if (isMedia) {
+        } else {
+            mediaItemsForLightbox.forEach(att => {
+                const type = SupportConsole.classifyAttachment(att);
                 const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);
-                let contentHtml = isVid 
+                
+                let contentHtml = type === 'video' 
                     ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${att.url}#t=0.1" class="w-full h-full object-cover"></video>`
                     : `<img src="${att.url}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">`;
 
@@ -940,18 +917,21 @@
                     itemDiv.onclick = () => SupportConsole.openLightbox(mediaItemsForLightbox, currentIndex);
                     mediaGrid.appendChild(itemDiv);
                 }
-            } else if (filesList) {
-                docCount++;
-                filesList.innerHTML += `
-                    <a href="${att.url}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-                        <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-file-alt"></i></div>
-                        <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${fileName}</p></div>
-                    </a>`;
-            }
-        });
+            });
+        }
 
-        if (docCount === 0 && filesList) {
+        if (docItems.length === 0 && filesList) {
             filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+        } else {
+            docItems.forEach(att => {
+                if (filesList) {
+                    filesList.innerHTML += `
+                        <a href="${att.url}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-file-alt"></i></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${att.name || 'Document'}</p></div>
+                        </a>`;
+                }
+            });
         }
 
         let linkCount = 0;
