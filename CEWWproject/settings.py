@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'core',
     'tickets',
     'django_extensions',
+    'anymail',
 ]
 
 # Session settings (in seconds)
@@ -109,7 +110,12 @@ DATABASES = {
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # 10. Email Configuration (Securely pulled from env)
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+
+# Feed the Resend API Key directly to Anymail
+ANYMAIL = {
+    "RESEND_API_KEY": env('RESEND_API_KEY', default=''),
+}
 
 # OLD: Brevo SMTP setup (Preserved as comments)
 # EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
