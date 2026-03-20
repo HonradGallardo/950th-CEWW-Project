@@ -1,18 +1,20 @@
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny         # Added
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication  # Added
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 from ..models import Ticket, TicketMessage, TicketAttachment
 
+# CRITICAL NEW IMPORT: Directly import Cloudinary to bypass strict image rules
+import cloudinary.uploader  
+
 # --- SERIALIZERS ---
 
 class AttachmentSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
-    # Ensure full URL is generated for frontend view/download
     url = serializers.FileField(source='file') 
 
     class Meta:
@@ -26,9 +28,8 @@ class TicketMessageSerializer(serializers.ModelSerializer):
     sender_name = serializers.ReadOnlyField(source='sender.username')
     recipient_name = serializers.ReadOnlyField(source='recipient.username', default="Everyone")
     timestamp = serializers.DateTimeField(source='created_at', format='%b %d, %H:%M', read_only=True)
-    # This must be a nested serializer to provide the 'url' and 'name' for bubbles
     attachments = AttachmentSerializer(many=True, read_only=True)
-    is_me = serializers.SerializerMethodField() # Add this to match your JS usage
+    is_me = serializers.SerializerMethodField() 
 
     class Meta:
         model = TicketMessage
@@ -40,16 +41,10 @@ class TicketMessageSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
-    
-    # These fields reach into the User model to get the names
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
-    
     technician_name = serializers.CharField(source='technician.username', read_only=True, default="Unassigned")
-    
-    # This maps the model field 'last_technician' to the frontend key 'previous_technician'
     previous_technician = serializers.CharField(source='last_technician', read_only=True, default="None")
-    
     user_avatar = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(format='%b %d, %Y %H:%M', read_only=True)
 
@@ -69,22 +64,15 @@ class TicketSerializer(serializers.ModelSerializer):
             pass
         return None
 
-
 # --- VIEWSET ---
 
 class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     pagination_class = None
-    
-    # 🔒 ENFORCE AUTHENTICATION HERE 
-    #authentication_classes = [TokenAuthentication, SessionAuthentication]
-    #permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        # Allow anyone (even guests) to submit a ticket via POST
         if self.action == 'create':
             return [AllowAny()]
-        # Require login for everything else (viewing, deleting, chatting)
         return [IsAuthenticated()]
 
     def get_queryset(self):
@@ -99,7 +87,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
         chat_with_staff_username = request.GET.get('with_staff')
 
-        # select_related avoids N+1 database hits
         all_messages = ticket.messages.all().select_related('sender', 'recipient').order_by('created_at')
 
         if chat_with_staff_username == 'GROUP_CHAT':
@@ -117,7 +104,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 Q(sender=request.user) | Q(recipient=request.user) | Q(recipient__isnull=True)
             )
 
-        # FIX 1: Safely load avatars without crashing
         def get_safe_avatar(user):
             try:
                 if hasattr(user, 'profile') and user.profile.image and hasattr(user.profile.image, 'url'):
@@ -126,7 +112,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 pass
             return None
 
-        # FIX 2: Safely parse filenames without crashing
+        # FIX: Safe extraction for raw URL strings
         def get_safe_filename(file_obj):
             try:
                 if file_obj and hasattr(file_obj, 'name') and file_obj.name:
@@ -134,6 +120,16 @@ class TicketViewSet(viewsets.ModelViewSet):
             except Exception:
                 pass
             return "Attachment"
+            
+        def get_safe_url(file_obj):
+            try:
+                if file_obj and hasattr(file_obj, 'url'):
+                    return file_obj.url
+                elif file_obj and hasattr(file_obj, 'name') and file_obj.name.startswith('http'):
+                    return file_obj.name
+            except Exception:
+                pass
+            return ""
 
         messages_data = [{
             'id': msg.id,
@@ -148,14 +144,14 @@ class TicketViewSet(viewsets.ModelViewSet):
             'attachments': [{
                 'id': a.id,
                 'name': get_safe_filename(a.file),
-                'url': a.file.url if hasattr(a.file, 'url') else ""
+                'url': get_safe_url(a.file)
             } for a in msg.attachments.all()] 
         } for msg in filtered_messages]
 
         attachments_data = [{
             'id': a.id,
             'name': get_safe_filename(a.file),
-            'url': a.file.url if hasattr(a.file, 'url') else "",
+            'url': get_safe_url(a.file),
             'message_id': a.message.id if hasattr(a, 'message') and a.message else None 
         } for a in ticket.all_attachments.all()]
 
@@ -175,31 +171,31 @@ class TicketViewSet(viewsets.ModelViewSet):
         if not text and not files:
             return Response({'status': 'error', 'message': 'Empty message'}, status=400)
 
-        # Logic: If it's a group chat, recipient is None. 
-        # Otherwise, find the target user.
-        # In viewset.py -> send_reply method
         target_user = None
         if not is_group_chat:
-            # Ensure "Everyone" sent from JS results in target_user = None
             if recipient_username and recipient_username not in ["Everyone", "null", "GROUP_CHAT"]:
                 target_user = User.objects.filter(username=recipient_username).first()
-            
             if not target_user:
                 target_user = ticket.user if request.user.is_staff else ticket.technician
 
         new_msg = TicketMessage.objects.create(
             ticket=ticket, 
             sender=request.user, 
-            recipient=target_user, # Will be None if is_group_chat is true
+            recipient=target_user, 
             message=text
         )
 
         for f in files:
-            TicketAttachment.objects.create(
-                ticket=ticket, 
-                message=new_msg, 
-                file=f
-            )
+            try:
+                # FIX: Force 'auto' detection for video/pdf and save the raw URL string
+                upload_result = cloudinary.uploader.upload(f, resource_type="auto")
+                TicketAttachment.objects.create(
+                    ticket=ticket, 
+                    message=new_msg, 
+                    file=upload_result['secure_url'] 
+                )
+            except Exception as e:
+                print("File Upload Error:", e)
             
         return Response({'status': 'success'})
     
@@ -212,7 +208,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         header += "─" * 25 + "\n"
         details = []
         
-        # 1. Identity / New Account Fields
         if category == "Identity":
             details.append(f"👤 First Name: {data.get('first_name', 'N/A')}")
             details.append(f"👤 Last Name: {data.get('last_name', 'N/A')}")
@@ -220,20 +215,16 @@ class TicketViewSet(viewsets.ModelViewSet):
             details.append(f"🎖️ Rank: {data.get('rank', 'N/A')}")
             details.append(f"📞 Phone: {data.get('phone', 'N/A')}")
 
-        # 2. Security / MFA Removal Fields
         elif category == "Security":
             details.append(f"🔐 Auth ID: {data.get('auth_id', 'N/A')}")
             details.append(f"⚠️ Request Type: {data.get('removal_type', 'N/A')}")
 
-        # 3. Technical / Bug Report Fields (New)
         elif category == "Technical":
             details.append(f"📦 Impacted Module: {data.get('bug_module', 'N/A')}")
             details.append(f"🚫 Error Code: {data.get('error_code', 'None')}")
             details.append(f"🔄 Steps: {data.get('reproduce_steps', 'N/A')}")
 
-        # 4. Access / Permission Fields (New)
         elif category == "Access":
-            # Handles both Permission changes and Login/Lockout issues
             if data.get('target_resource'):
                 details.append(f"🔑 Resource: {data.get('target_resource', 'N/A')}")
                 details.append(f"📊 Level: {data.get('access_level', 'N/A')}")
@@ -261,7 +252,15 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         files = self.request.FILES.getlist('attachments')
         for f in files:
-            TicketAttachment.objects.create(ticket=ticket, file=f)
+            try:
+                # FIX: Force 'auto' detection for video/pdf and save the raw URL string
+                upload_result = cloudinary.uploader.upload(f, resource_type="auto")
+                TicketAttachment.objects.create(
+                    ticket=ticket, 
+                    file=upload_result['secure_url']
+                )
+            except Exception as e:
+                print("File Upload Error:", e)
 
     @action(detail=True, methods=['post'])
     def update_technical_details(self, request, pk=None):
@@ -269,11 +268,8 @@ class TicketViewSet(viewsets.ModelViewSet):
         old_tech = ticket.technician
         data = request.data
 
-        # 1. Update status and priority first
         ticket.status = data.get('status', ticket.status)
         ticket.priority = data.get('priority', ticket.priority)
-        
-        # 2. Capture the tech_id from the frontend
         tech_id = data.get('technician_id')
         
         if tech_id and str(tech_id).strip() != "":
@@ -281,19 +277,12 @@ class TicketViewSet(viewsets.ModelViewSet):
             if old_tech != new_tech:
                 ticket.last_technician = old_tech.username if old_tech else "None"
                 ticket.technician = new_tech
-                
-                # CRITICAL: If a tech is assigned, the ticket should no longer be 'Pending'
                 if ticket.status == 'Pending':
                     ticket.status = 'Open'
-                    
         else:
-            # UNASSIGNED LOGIC: 
-            # If no technician ID is sent (Unassigned), clear the tech and force status to Pending
             if ticket.technician:
                 ticket.last_technician = ticket.technician.username
                 ticket.technician = None
-            
-            # Force the status to Pending regardless of what the frontend sent
             ticket.status = 'Pending'
 
         ticket.save()
