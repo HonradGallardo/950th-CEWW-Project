@@ -107,18 +107,25 @@ DATABASES = {
 # 10. Email Configuration (Securely pulled from env)
 
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# 10. Email Configuration (Securely pulled from env)
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
-EMAIL_PORT = env.int('EMAIL_PORT', default=2525) # If 587 ever fails, Brevo also supports port 2525
+
+# OLD: Brevo SMTP setup (Preserved as comments)
+# EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
+# EMAIL_PORT = env.int('EMAIL_PORT', default=2525)
+# DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+
+# NEW: Resend SMTP setup
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=2525) 
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
-# Original hardcoded credentials preserved as comments
-# EMAIL_HOST_USER = 'honradg71@gmail.com'
-# EMAIL_HOST_PASSWORD = '[REDACTED_APP_PASSWORD]'
+# CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
+DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
 
-# Active secure configuration
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='honradg71@gmail.com')
+# Active secure configuration (We will update Render to feed these into the app)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
 # 11. ReCaptcha Security
