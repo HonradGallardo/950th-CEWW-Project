@@ -1911,25 +1911,22 @@
 
         scrollToBottom() {
             const forceScroll = () => {
-                // Find the correct scroll area depending on if we are Admin or User
+                // Target ONLY the inner scrolling containers (No scrollIntoView overrides!)
                 const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
-                if (scrollArea) {
-                    // Instant snap is much more reliable than 'smooth' when images are loading
-                    scrollArea.scrollTop = scrollArea.scrollHeight;
-                }
                 
-                // Mobile input focus
-                if (window.innerWidth < 1024) {
-                    const inputContainer = document.getElementById('messageInputContainer') || document.getElementById('chatMsgForm');
-                    if (inputContainer) {
-                        inputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
+                if (scrollArea) {
+                    // Force the scrollbar to the absolute bottom of the div
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
                 }
             };
 
-            // Double-tap the scroll: once instantly, and once after the DOM paints the media
-            setTimeout(forceScroll, 50);
-            setTimeout(forceScroll, 500); 
+            // 1. Fire instantly for normal text
+            forceScroll();
+            
+            // 2. Fire a few more times as the browser calculates the height of the loading images/videos
+            setTimeout(forceScroll, 100);
+            setTimeout(forceScroll, 500);
+            setTimeout(forceScroll, 1200); 
         }
     };
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());

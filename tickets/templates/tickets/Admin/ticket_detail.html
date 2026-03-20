@@ -409,26 +409,23 @@
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
-                // FIX: Added 'relative' and fixed heights to the wrapper
                 let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
-                let heightClass = "h-40 sm:h-48 w-full"; // Default container height
+                let heightClass = "h-40 sm:h-48 w-full object-cover";
 
                 if (count === 1) {
-                    heightClass = "h-[300px] sm:h-[350px] w-full";
+                    heightClass = "max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]";
                 } else if (count === 3 && index === 0) {
                     cellClass += " col-span-2"; 
-                    heightClass = "h-48 sm:h-56 w-full";
+                    heightClass = "h-48 sm:h-56 w-full object-cover";
                 } else if (count >= 2) {
-                    heightClass = "h-32 sm:h-40 w-full";
+                    heightClass = "h-32 sm:h-40 w-full object-cover";
                 }
 
-                html += `<div class="${cellClass} ${heightClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
+                html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
                 if (type === 'image') {
-                    // Images can use normal object-cover
-                    html += `<img src="${file.url}" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                    html += `<img src="${file.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (type === 'video') {
-                    // FIX: Force video to fill container absolutely so it can't stretch it
                     html += `<video src="${file.url}#t=0.1" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline preload="metadata"></video>
                              <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
@@ -513,25 +510,22 @@
         },
         scrollToBottom() {
             const forceScroll = () => {
-                // Find the correct scroll area depending on if we are Admin or User
+                // Target ONLY the inner scrolling containers (No scrollIntoView overrides!)
                 const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
-                if (scrollArea) {
-                    // Instant snap is much more reliable than 'smooth' when images are loading
-                    scrollArea.scrollTop = scrollArea.scrollHeight;
-                }
                 
-                // Mobile input focus
-                if (window.innerWidth < 1024) {
-                    const inputContainer = document.getElementById('messageInputContainer') || document.getElementById('chatMsgForm');
-                    if (inputContainer) {
-                        inputContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                    }
+                if (scrollArea) {
+                    // Force the scrollbar to the absolute bottom of the div
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
                 }
             };
 
-            // Double-tap the scroll: once instantly, and once after the DOM paints the media
-            setTimeout(forceScroll, 50);
-            setTimeout(forceScroll, 500); 
+            // 1. Fire instantly for normal text
+            forceScroll();
+            
+            // 2. Fire a few more times as the browser calculates the height of the loading images/videos
+            setTimeout(forceScroll, 100);
+            setTimeout(forceScroll, 500);
+            setTimeout(forceScroll, 1200); 
         }
     };
 
