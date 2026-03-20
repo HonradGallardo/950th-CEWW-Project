@@ -123,10 +123,13 @@ class TicketViewSet(viewsets.ModelViewSet):
             
         def get_safe_url(file_obj):
             try:
+                # 1. Check if the raw string in the database is ALREADY a full URL!
+                if file_obj and hasattr(file_obj, 'name') and file_obj.name and file_obj.name.startswith('http'):
+                    return file_obj.name
+                
+                # 2. If it's a normal file path, let Django build the Cloudinary URL
                 if file_obj and hasattr(file_obj, 'url'):
                     return file_obj.url
-                elif file_obj and hasattr(file_obj, 'name') and file_obj.name.startswith('http'):
-                    return file_obj.name
             except Exception:
                 pass
             return ""
