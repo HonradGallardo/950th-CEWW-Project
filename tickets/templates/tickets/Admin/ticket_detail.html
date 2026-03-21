@@ -177,10 +177,10 @@
                     <button type="button" onclick="switchTab('details')" id="detailsTabBtn" class="py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors">Ticket Details</button>
                 </div>
                 
-                <!-- 🚀 NEW: Universal Sidebar Toggle Button -->
-                <button type="button" onclick="toggleRightSidebar()" id="desktopSidebarToggle" class="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all focus:outline-none">
-                    <i class="fas fa-columns"></i>
-                    <span>Toggle Assets</span>
+                <!-- 🚀 UPDATED: Arrow Toggle Button (Moved to far right) -->
+                <button type="button" onclick="toggleRightSidebar()" id="desktopSidebarToggle" title="Toggle Sidebar" class="hidden lg:flex items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
+                    <!-- Arrow starts pointing left (since the sidebar is extended by default) -->
+                    <i id="sidebarToggleIcon" class="fas fa-chevron-left text-lg transition-transform duration-300"></i>
                 </button>
 
                 <!-- Mobile Paperclip Toggle -->
@@ -1066,23 +1066,41 @@
     }
 
     function toggleRightSidebar() {
-        const sidebar = document.getElementById('rightSidebar');
+        // Automatically finds the correct sidebar whether you are in submit_ticket or ticket_detail
+        const sidebar = document.getElementById('rightSidebar') || document.getElementById('rightAssetsSidebar');
         const overlay = document.getElementById('sidebarOverlay');
+        const icon = document.getElementById('sidebarToggleIcon');
         const isDesktop = window.innerWidth >= 1024; // Tailwind's 'lg' breakpoint
+
+        if (!sidebar) return; // Safety check
 
         if (isDesktop) {
             // Desktop Mode: Shrink the width to 0 and hide content
             if (sidebar.classList.contains('lg:w-0')) {
+                // Expanding the sidebar
                 sidebar.classList.remove('lg:w-0', 'lg:min-w-0', 'lg:border-l-0', 'lg:p-0', 'opacity-0');
                 sidebar.classList.add('lg:w-80', 'lg:min-w-[20rem]', 'opacity-100');
+                
+                // 🚀 Change arrow to point LEFT (Extended)
+                if (icon) {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                }
             } else {
+                // Collapsing the sidebar
                 sidebar.classList.add('lg:w-0', 'lg:min-w-0', 'lg:border-l-0', 'lg:p-0', 'opacity-0');
                 sidebar.classList.remove('lg:w-80', 'lg:min-w-[20rem]', 'opacity-100');
+                
+                // 🚀 Change arrow to point RIGHT (Collapsed)
+                if (icon) {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                }
             }
         } else {
             // Mobile Mode: Slide in/out from the right
             sidebar.classList.toggle('translate-x-full');
-            overlay.classList.toggle('hidden');
+            if (overlay) overlay.classList.toggle('hidden');
         }
     }
 
