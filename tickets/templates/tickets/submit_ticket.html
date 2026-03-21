@@ -1603,6 +1603,7 @@
                 const hasText = msg.message && msg.message.trim().length > 0;
                 const isStatus = msg.message && msg.message.toUpperCase().includes('STATUS UPDATE');
 
+                // 🚀 ADDED: loading="lazy" decoding="async" to avatar images
                 const avatar = msg.sender_avatar
                     ? msg.sender_avatar
                     : `https://ui-avatars.com/api/?name=${senderName}&background=3b82f6&color=fff`;
@@ -1644,9 +1645,11 @@
                             <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-[#020617] flex items-center justify-center ${itemSpan}" onclick="SupportConsole.openLightbox(${globalIndex})">`;
 
                             if (type === 'image') {
-                                mediaHtml += `<img src="${att.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                                // 🚀 ADDED: loading="lazy" decoding="async"
+                                mediaHtml += `<img src="${att.url}" loading="lazy" decoding="async" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                             } else if (type === 'video') {
-                                mediaHtml += `<video src="${att.url}#t=0.1" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                                // 🚀 ADDED: preload="none"
+                                mediaHtml += `<video src="${att.url}#t=0.1" preload="none" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                                          <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                             } else {
                                 mediaHtml += `<div class="flex flex-col items-center p-6 text-slate-500 dark:text-slate-400 w-full h-full justify-center ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
@@ -1684,8 +1687,7 @@
 
                 return `
                 <div class="flex w-full gap-3 md:gap-4 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-4">
-                    ${!isMe ? `<img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
-                    <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                    ${!isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                         <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${senderName}</div>
                         ${hasText ? `
                         <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
@@ -1798,7 +1800,6 @@
                     let contentHtml = isVid 
                         ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${file.url}#t=0.1" preload="none" class="w-full h-full object-cover"></video>`
                         : `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
-                        
                     item.innerHTML = `
                         ${contentHtml}
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20"></div>`;
