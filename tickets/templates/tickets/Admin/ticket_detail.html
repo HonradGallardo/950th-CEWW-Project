@@ -189,7 +189,11 @@
                     <span id="readOnlyIndicator" class="hidden text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2.5 py-1 rounded-md uppercase tracking-wide border border-red-200 dark:border-red-800/50">Read Only</span>
                 </div>
 
-                <div id="chatBox" class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 lg:p-8 space-y-6"></div>
+                <!-- THE NEW RIGID SCROLL CONTAINER -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0" id="chatBox">
+                    <!-- THE INNER PADDING WRAPPER -->
+                    <div id="dynamicMessages" class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8 space-y-6"></div>
+                </div>
 
                 <div id="messageInputContainer" class="shrink-0 p-4 md:p-6 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 z-10">
                     <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-3 mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700"></div>
@@ -791,7 +795,10 @@
     }
 
     function renderChat(messages, allAttachments = []) {
-        const chatBox = document.getElementById('chatBox');
+        // 👇 CHANGED: Now targeting the inner padding wrapper to stop layout bouncing!
+        const chatBox = document.getElementById('dynamicMessages');
+        if (!chatBox) return; // Safety check
+        
         chatBox.innerHTML = ''; 
 
         messages.forEach(msg => {
