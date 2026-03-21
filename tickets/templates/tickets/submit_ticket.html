@@ -1688,6 +1688,10 @@
                 return `
                 <div class="flex w-full gap-3 md:gap-4 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-4">
                     ${!isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
+                    
+                    <!-- THIS IS THE WRAPPER THAT GOT ACCIDENTALLY DELETED! 👇 -->
+                    <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                        
                         <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${senderName}</div>
                         ${hasText ? `
                         <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
@@ -1696,8 +1700,10 @@
                         ${mediaHtml}
                         ${fileHtml}
                         <div class="text-[9px] opacity-60 mt-1 ${isMe ? 'text-right' : ''}">${msg.timestamp}</div>
-                    </div>
-                    ${isMe ? `<img src="${avatar}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
+                    
+                    </div> <!-- 👈 Closes the wrapper -->
+                    
+                    ${isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                 </div>`;
             }).join('');
 
