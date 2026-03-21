@@ -447,6 +447,9 @@
                 <div id="staff-threads-container" class="flex-1 flex items-center gap-2 overflow-visible custom-scrollbar h-full min-w-0 scroll-smooth pr-4">
                 </div>
                 
+                <button type="button" onclick="SupportConsole.toggleAssets()" id="mainHeaderToggleBtn" title="Expand Assets" class="hidden items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto shrink-0">
+                    <i class="fas fa-chevron-left text-sm md:text-base"></i>
+                </button>
             </div>
 
             <div id="feedView" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-[#0f172a] min-h-0">
@@ -533,35 +536,35 @@
 
         <div id="assetsOverlay" onclick="SupportConsole.toggleAssets()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] xl:hidden transition-opacity"></div>
 
-        <aside id="rightAssetsSidebar" class="absolute xl:static inset-y-0 right-0 z-[60] w-[85vw] sm:w-80 bg-white dark:bg-slate-900 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 transform translate-x-full xl:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl xl:shadow-none overflow-hidden">
+        <aside id="rightAssetsSidebar" class="absolute xl:static inset-y-0 right-0 z-[60] w-[85vw] sm:w-80 bg-white dark:bg-slate-900 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 transform translate-x-full xl:translate-x-0 transition-all duration-300 ease-in-out shadow-2xl xl:shadow-none xl:w-80 xl:min-w-[20rem] overflow-hidden">
             
-            <div class="xl:hidden flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-folder-open text-blue-500"></i>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white">Ticket Assets</span>
+            <div class="shrink-0 p-4 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-folder-open text-blue-500 xl:hidden"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white xl:text-slate-500">Ticket Assets</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="SupportConsole.toggleAssets()" title="Collapse Sidebar" class="hidden xl:flex items-center justify-center w-7 h-7 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
+                            <i class="fas fa-chevron-right text-sm"></i>
+                        </button>
+                        
+                        <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors focus:outline-none">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+                    </div>
                 </div>
-                <button type="button" onclick="SupportConsole.toggleAssets()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors focus:outline-none">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
+
+                <div class="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
+                    <button type="button" onclick="SupportConsole.switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all bg-white dark:bg-slate-900 shadow-sm text-blue-600 focus:outline-none">Media</button>
+                    <button type="button" onclick="SupportConsole.switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Files</button>
+                    <button type="button" onclick="SupportConsole.switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Links</button>
+                </div>
             </div>
 
             <div id="contact-details-container" class="flex-1 flex flex-col opacity-0 transition-all duration-500 translate-x-4 overflow-hidden min-h-0">
                 <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-                    <div class="p-4 border-b border-slate-200 dark:border-slate-800 hidden xl:block shrink-0">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Assets</span>
-                            <i class="fas fa-paperclip text-[10px] text-slate-400"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="p-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-                        <div class="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
-                            <button type="button" onclick="SupportConsole.switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all bg-white dark:bg-slate-900 shadow-sm text-blue-600 focus:outline-none">Media</button>
-                            <button type="button" onclick="SupportConsole.switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Files</button>
-                            <button type="button" onclick="SupportConsole.switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Links</button>
-                        </div>
-                    </div>
-
                     <div class="flex-1 overflow-y-auto custom-scrollbar p-4 min-h-0">
                         <div id="mediaGridView" class="grid grid-cols-3 gap-2"></div>
                         <div id="filesListView" class="hidden space-y-3"></div>
@@ -832,16 +835,38 @@
         toggleAssets() {
             const sidebar = document.getElementById('rightAssetsSidebar');
             const overlay = document.getElementById('assetsOverlay');
-            if (!sidebar || !overlay) return;
-            
-            const isOpen = !sidebar.classList.contains('translate-x-full');
-            
-            if (isOpen) {
-                sidebar.classList.add('translate-x-full');
-                overlay.classList.add('hidden');
+            const mainHeaderBtn = document.getElementById('mainHeaderToggleBtn');
+            const isDesktop = window.innerWidth >= 1280; // submit_ticket uses Tailwind's 'xl' breakpoint
+
+            if (!sidebar) return;
+
+            if (isDesktop) {
+                // Desktop Mode (Smooth width collapse)
+                if (sidebar.classList.contains('xl:w-0')) {
+                    // 🚀 EXPANDING THE SIDEBAR (Opening)
+                    sidebar.classList.remove('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
+                    sidebar.classList.add('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
+                    
+                    // Hide the main header "<" button
+                    if (mainHeaderBtn) {
+                        mainHeaderBtn.classList.add('hidden');
+                        mainHeaderBtn.classList.remove('xl:flex');
+                    }
+                } else {
+                    // 🚀 COLLAPSING THE SIDEBAR (Closing)
+                    sidebar.classList.add('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
+                    sidebar.classList.remove('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
+                    
+                    // Show the main header "<" button
+                    if (mainHeaderBtn) {
+                        mainHeaderBtn.classList.remove('hidden');
+                        mainHeaderBtn.classList.add('xl:flex');
+                    }
+                }
             } else {
-                sidebar.classList.remove('translate-x-full');
-                overlay.classList.remove('hidden');
+                // Mobile Mode: Slide in/out from the right
+                sidebar.classList.toggle('translate-x-full');
+                if (overlay) overlay.classList.toggle('hidden');
             }
         },
 
