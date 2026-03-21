@@ -20,12 +20,8 @@
                 </div>
             </div>
             <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
-                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
-                    Confirm Delete
-                </button>
-                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
-                    Cancel
-                </button>
+                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">Confirm Delete</button>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">Cancel</button>
             </div>
         </div>
     </div>
@@ -74,9 +70,7 @@
                 </div>
 
                 <div class="px-4 py-4 sm:px-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between shrink-0">
-                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">
-                        Showing 0-0 of 0
-                    </span>
+                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">Showing 0-0 of 0</span>
                     <div class="flex items-center gap-2" id="paginationControls"></div>
                 </div>
             </div>
@@ -122,6 +116,21 @@
                             <div class="col-span-2 sm:col-span-1 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
                                 <label class="block text-[10px] font-black text-slate-400 uppercase mb-0.5">Incident Date</label>
                                 <p id="view_date" class="text-xs font-bold text-slate-700 dark:text-slate-300"></p>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-900/30 grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[9px] font-black text-blue-400 uppercase mb-0.5">Category</label>
+                                <p id="view_category" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">N/A</p>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-black text-blue-400 uppercase mb-0.5">Linked Asset</label>
+                                <p id="view_asset" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">N/A</p>
+                            </div>
+                            <div class="col-span-2 mt-1">
+                                <label class="block text-[9px] font-black text-blue-400 uppercase mb-0.5">Known IoCs</label>
+                                <p id="view_iocs" class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 truncate">None recorded</p>
                             </div>
                         </div>
 
@@ -174,19 +183,13 @@
 </div>
 
 <script>
-/**
- * IMPLEMENTATION: JQUERY AJAX & API SYNC FOR INCIDENTS
- */
 const IS_COMMANDER = {{ is_commander|yesno:"true,false" }};
 let allIncidents = [];
 let currentPage = 1;
 const rowsPerPage = 10;
 let currentOpenIncidentId = null;
-
-// 🚨 NEW: Variable to hold our active chat refresh timer
 let chatRefreshInterval = null; 
 
-// --- 1. API FETCH & INITIALIZATION ---
 function loadIncidents() {
     $.ajax({
         url: '/api/incidents/',
@@ -202,7 +205,6 @@ function loadIncidents() {
     });
 }
 
-// --- 2. TABLE PAGINATION & RENDERING ---
 function initTable() {
     const totalEntries = allIncidents.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
@@ -268,10 +270,13 @@ function renderTableRows(incidents) {
         const safeDesc = escapeJS(inc.description || "No description provided.");
         const safeActions = escapeJS(inc.actions_taken || "No actions logged yet.");
         const safeReporter = escapeJS(inc.reported_by_name || "System");
+        const safeCategory = escapeJS(inc.category || "Uncategorized");
+        const safeAsset = escapeJS(inc.linked_asset || "N/A");
+        const safeIocs = escapeJS(inc.iocs || "None recorded");
 
-        // Highlight the row if it's currently open
         const activeClass = currentOpenIncidentId == inc.id ? 'bg-blue-50/50 dark:bg-blue-900/20' : '';
 
+        // UPDATED ONCLICK to include new variables
         html += `
         <tr onclick="previewIncident({
                 id: '${inc.id}',
@@ -281,7 +286,10 @@ function renderTableRows(incidents) {
                 desc: '${safeDesc}',
                 actions: '${safeActions}',
                 date: '${formattedDate}',
-                reporter: '${safeReporter}'
+                reporter: '${safeReporter}',
+                category: '${safeCategory}',
+                asset: '${safeAsset}',
+                iocs: '${safeIocs}'
             })" 
             class="hover:bg-slate-50/80 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass}">
             
@@ -338,14 +346,10 @@ function renderPagination(totalPages) {
     }
 }
 
-// --- 3. PREVIEW PANEL LOGIC ---
 function previewIncident(data) {
     currentOpenIncidentId = data.id;
-
-    // Re-render table to apply the highlight to the selected row
     initTable();
 
-    // UI Visibility
     $('#emptyState').addClass('hidden');
     $('#detailContent').removeClass('hidden');
     
@@ -361,6 +365,11 @@ function previewIncident(data) {
     $('#view_date').text(data.date);
     $('#view_description').text(data.desc);
     $('#view_actions').text(data.actions);
+    
+    // NEW: Populate Threat Intel Fields
+    $('#view_category').text(data.category);
+    $('#view_asset').text(data.asset);
+    $('#view_iocs').text(data.iocs);
     
     if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${data.id}/`);
 
@@ -380,35 +389,22 @@ function previewIncident(data) {
         }
     }
 
-    // Load logs with the spinning animation
     fetchLogs(data.id, true);
 
-    // 🚨 NEW: Start polling the server for new messages every 3 seconds!
     if (chatRefreshInterval) clearInterval(chatRefreshInterval);
     chatRefreshInterval = setInterval(() => {
         if (currentOpenIncidentId) {
-            // Pass 'false' so it updates silently without showing the loading spinner
             fetchLogs(currentOpenIncidentId, false); 
         }
     }, 3000); 
 }
 
-// --- 4. DELETE MODAL API INTEGRATION ---
 const $deleteModal = $('#deleteModal');
-
-function openDeleteModal() {
-    $deleteModal.removeClass('hidden');
-    $('body').css('overflow', 'hidden');
-}
-
-function closeDeleteModal() {
-    $deleteModal.addClass('hidden');
-    $('body').css('overflow', 'auto');
-}
+function openDeleteModal() { $deleteModal.removeClass('hidden'); $('body').css('overflow', 'hidden'); }
+function closeDeleteModal() { $deleteModal.addClass('hidden'); $('body').css('overflow', 'auto'); }
 
 $('#confirmDeleteBtn').on('click', function() {
     if (!currentOpenIncidentId) return;
-    
     $.ajax({
         url: `/api/incidents/${currentOpenIncidentId}/`,
         type: 'DELETE',
@@ -418,8 +414,6 @@ $('#confirmDeleteBtn').on('click', function() {
             loadIncidents();
             $('#detailContent').addClass('hidden');
             $('#emptyState').removeClass('hidden');
-            
-            // Clear tracking variables
             currentOpenIncidentId = null;
             if(chatRefreshInterval) clearInterval(chatRefreshInterval);
         },
@@ -430,21 +424,13 @@ $('#confirmDeleteBtn').on('click', function() {
     });
 });
 
-// --- 5. REAL-TIME LOG/CHAT LOGIC ---
 let lastScrollHeight = 0;
-
 async function fetchLogs(id, showLoader = true) {
     const $container = $('#chat-container');
-    
-    if (showLoader) {
-        $container.html('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Synchronizing Logs...</p>');
-    }
+    if (showLoader) $container.html('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Synchronizing Logs...</p>');
 
     try {
-        const response = await fetch(`/api/incident-comments/?incident=${id}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        
+        const response = await fetch(`/api/incident-comments/?incident=${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         if (!response.ok) throw new Error("API Route missing");
         const data = await response.json();
         
@@ -471,7 +457,6 @@ async function fetchLogs(id, showLoader = true) {
             `);
         });
 
-        // Smart Scrolling: Only auto-scroll to the bottom if new messages appeared
         const currentScrollHeight = $container[0].scrollHeight;
         if (currentScrollHeight > lastScrollHeight || showLoader) {
             $container.scrollTop(currentScrollHeight);
@@ -480,9 +465,7 @@ async function fetchLogs(id, showLoader = true) {
 
     } catch (e) { 
         console.error("Telemetry Error", e); 
-        if (showLoader) {
-            $container.html('<p class="text-center py-10 text-[10px] text-red-400 font-bold uppercase">Failed to load logs</p>');
-        }
+        if (showLoader) $container.html('<p class="text-center py-10 text-[10px] text-red-400 font-bold uppercase">Failed to load logs</p>');
     }
 }
 
@@ -490,7 +473,6 @@ $(document).ready(function() {
     loadIncidents(); 
     setInterval(loadIncidents, 30000); 
 
-    // POST TO DRF API - INSTANT FEEL
     $('#chat-form').on('submit', function(e) {
         e.preventDefault();
         const $msg = $('#chat-message');
@@ -500,7 +482,6 @@ $(document).ready(function() {
         
         if (!text || !id) return;
 
-        // 1. Instantly draw the message on screen so the user doesn't have to wait
         const $container = $('#chat-container');
         $container.append(`
             <div class="flex flex-col items-end opacity-50">
@@ -512,22 +493,16 @@ $(document).ready(function() {
         `);
         $container.scrollTop($container[0].scrollHeight);
 
-        // 2. Lock input to prevent spamming
         $msg.val('');
         $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin text-xs"></i>');
 
-        // 3. Send data quietly
         $.ajax({
             url: "/api/incident-comments/", 
             type: "POST",
             contentType: 'application/json',
             headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-            data: JSON.stringify({
-                message: text,
-                incident: parseInt(id) 
-            }),
+            data: JSON.stringify({ message: text, incident: parseInt(id) }),
             success: function() {
-                // Instantly fetch the real data to replace our "Sending..." bubble
                 fetchLogs(id, false); 
                 $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane text-xs"></i>');
             },

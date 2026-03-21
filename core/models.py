@@ -71,22 +71,44 @@ class Maintenance(models.Model):
 class Incident(models.Model):
     SEVERITY_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High'), ('Critical', 'Critical')]
     STATUS_CHOICES = [('Open', 'Open'), ('Investigating', 'Investigating'), ('Resolved', 'Resolved')]
+    CATEGORY_CHOICES = [
+        ('Malware', 'Malware / Ransomware'), ('Phishing', 'Phishing / Social Engineering'),
+        ('Unauthorized Access', 'Unauthorized Access'), ('DDoS', 'Denial of Service (DDoS)'),
+        ('Insider Threat', 'Insider Threat'), ('Hardware Loss', 'Hardware Loss / Physical Breach'),
+        ('Other', 'Other')
+    ]
+    IMPACT_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')]
 
     title = models.CharField(max_length=100)
-    asset = models.ForeignKey(Asset, on_delete=models.SET_NULL, null=True, related_name='incidents')
+    asset = models.ForeignKey(Asset, on_delete=models.SET_NULL, null=True, blank=True, related_name='incidents')
     
-    # 1. ADD THIS FIELD to capture the data from your "Add Incident" form
-    affected_area = models.CharField(max_length=255, blank=True, null=True) 
+    # --- NEW THREAT INTEL FIELDS ---
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Other')
+    detection_source = models.CharField(max_length=50, blank=True, null=True)
+    linked_asset = models.CharField(max_length=100, blank=True, null=True) # Accepts text input like "Workstation-02"
+    iocs = models.TextField(blank=True, null=True)
+    cve_id = models.CharField(max_length=50, blank=True, null=True)
+    
+    # --- IMPACT ASSESSMENT (CIA Triad) ---
+    impact_confidentiality = models.CharField(max_length=20, choices=IMPACT_CHOICES, blank=True, null=True)
+    impact_integrity = models.CharField(max_length=20, choices=IMPACT_CHOICES, blank=True, null=True)
+    impact_availability = models.CharField(max_length=20, choices=IMPACT_CHOICES, blank=True, null=True)
 
+    # --- POST-INCIDENT WRAP-UP ---
+    root_cause = models.CharField(max_length=100, blank=True, null=True)
+    is_false_positive = models.BooleanField(default=False)
+    problems_encountered = models.TextField(blank=True, null=True)
+    solutions_applied = models.TextField(blank=True, null=True)
+
+    # --- EXISTING FIELDS ---
+    affected_area = models.CharField(max_length=255, blank=True, null=True) 
     severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
     description = models.TextField(blank=True)
     actions_taken = models.TextField(blank=True)
+    
     date = models.DateTimeField(auto_now_add=True) 
-
-    # 2. ADD THIS FIELD to track when the incident is updated
     updated_at = models.DateTimeField(auto_now=True) 
-
     reported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='reported_incidents')
 
     def __str__(self):

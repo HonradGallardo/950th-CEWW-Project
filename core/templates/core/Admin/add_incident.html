@@ -38,6 +38,34 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
+                    <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Category:</label>
+                    <div class="md:col-span-3">
+                        <select name="category" id="id_category" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
+                            <option value="Malware">Malware / Ransomware</option>
+                            <option value="Phishing">Phishing / Social Engineering</option>
+                            <option value="Unauthorized Access">Unauthorized Access</option>
+                            <option value="DDoS">Denial of Service (DDoS)</option>
+                            <option value="Insider Threat">Insider Threat</option>
+                            <option value="Hardware Loss">Hardware Loss / Physical Breach</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
+                    <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Detection Source:</label>
+                    <div class="md:col-span-3">
+                        <select name="detection_source" id="id_detection_source" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
+                            <option value="User Report">User Report</option>
+                            <option value="Antivirus / EDR">Antivirus / EDR Alert</option>
+                            <option value="Network Firewall">Network Firewall Log</option>
+                            <option value="Routine Audit">Routine System Audit</option>
+                            <option value="External Intelligence">External Intelligence / Command</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
                     <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Severity:</label>
                     <div class="md:col-span-3">
                         <select name="severity" id="id_severity" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
@@ -50,9 +78,57 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
+                    <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Impact (CIA):</label>
+                    <div class="md:col-span-3 grid grid-cols-3 gap-2">
+                        <select name="impact_confidentiality" class="w-full bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-[10px] sm:text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
+                            <option value="" disabled selected>Confidentiality</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                        <select name="impact_integrity" class="w-full bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-[10px] sm:text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
+                            <option value="" disabled selected>Integrity</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                        <select name="impact_availability" class="w-full bg-white border border-slate-200 rounded-xl px-2 py-2.5 text-[10px] sm:text-xs font-bold outline-none cursor-pointer appearance-none focus:ring-2 focus:ring-blue-500 custom-input">
+                            <option value="" disabled selected>Availability</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
                     <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Affected Area:</label>
                     <div class="md:col-span-3">
                         <input type="text" name="affected_area" id="id_affected_area" placeholder="e.g. Server Room / HR Department"
+                            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 custom-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
+                    <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Linked Asset:</label>
+                    <div class="md:col-span-3">
+                        <input type="text" name="linked_asset" id="id_linked_asset" placeholder="e.g. Workstation-HR-02 or Asset ID"
+                            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 custom-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
+                    <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">IoCs Found:</label>
+                    <div class="md:col-span-3">
+                        <input type="text" name="iocs" id="id_iocs" placeholder="e.g. IPs, URLs, File Hashes (Optional)"
+                            class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 custom-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-1 md:gap-2">
+                    <label class="text-[10px] sm:text-xs font-black text-slate-500 uppercase">Exploited CVE:</label>
+                    <div class="md:col-span-3">
+                        <input type="text" name="cve_id" id="id_cve_id" placeholder="e.g. CVE-2023-12345 (Optional)"
                             class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 custom-input">
                     </div>
                 </div>
@@ -91,44 +167,31 @@
 </div>
 
 <script>
-    /**
-     * 1. JQUERY AJAX IMPLEMENTATION (DRF API CONNECTED)
-     */
     $(document).ready(function() {
         $('#incidentForm').on('submit', function(e) {
-            e.preventDefault(); // Stop standard page reload
-
+            e.preventDefault(); 
             const $btn = $('#submitBtn');
             const originalText = $btn.html();
-
-            // 🚨 FIXED: Use FormData to properly package all fields for the API
             const formData = new FormData(this);
-
-            // UI Loading State
             $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> PROCESSING REPORT...');
 
             $.ajax({
-                url: '/api/incidents/', // 🚨 FIXED: Target the DRF endpoint directly
+                url: '/api/incidents/', 
                 type: 'POST',
                 data: formData,
-                processData: false, // Prevents jQuery from turning data into a query string
-                contentType: false, // Lets browser set the correct multipart boundary
+                processData: false, 
+                contentType: false, 
                 headers: {
                     'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                 },
                 success: function(response) {
-                    // Success UI Feedback
                     $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').html('<i class="fas fa-check mr-2"></i> REPORT SUBMITTED');
-                    
                     setTimeout(() => {
                         window.location.href = "{% url 'incident_list' %}";
                     }, 1000);
                 },
                 error: function(xhr) {
-                    // Restore button state
                     $btn.prop('disabled', false).html(originalText);
-                    
-                    // Parse exact API errors for debugging
                     let errorMsg = "System Error: Failed to submit incident. Please check required fields.";
                     if(xhr.responseJSON) {
                         const errors = Object.values(xhr.responseJSON).flat();
@@ -143,22 +206,10 @@
 </script>
 
 <style>
-    /* --- ADAPTIVE BUTTON SHADOW --- */
-    .adaptive-button {
-        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
-    }
-
-    body.dark-mode .adaptive-button {
-        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.6) !important;
-    }
-
-    /* --- DARK MODE OVERRIDES --- */
+    .adaptive-button { box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1); }
+    body.dark-mode .adaptive-button { box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.6) !important; }
     body.dark-mode .content-bg { background-color: #0f172a !important; }
-    body.dark-mode .registration-card { 
-        background-color: #111827 !important; 
-        border-color: #1f2937 !important; 
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-    }
+    body.dark-mode .registration-card { background-color: #111827 !important; border-color: #1f2937 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
     body.dark-mode .card-header-bg { background-color: #1f2937 !important; border-bottom-color: #374151 !important; }
     body.dark-mode .dark-mode-text { color: #f9fafb !important; }
     body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; color: #f3f4f6 !important; }
