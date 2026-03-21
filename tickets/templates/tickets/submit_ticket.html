@@ -667,11 +667,11 @@
                 html += `<div class="${cellClass} ${heightClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
                 if (type === 'image') {
-                    // Images can use normal object-cover
-                    html += `<img src="${file.url}" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                    // 🚀 ADDED: loading="lazy" decoding="async"
+                    html += `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (type === 'video') {
-                    // FIX: Force video to fill container absolutely so it can't stretch it
-                    html += `<video src="${file.url}#t=0.1" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline preload="metadata"></video>
+                    // 🚀 ADDED: preload="none"
+                    html += `<video src="${file.url}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                              <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
                     html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
@@ -1794,9 +1794,10 @@
                     item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
                     
                     item.onclick = () => this.openLightbox(index);
+                    // 🚀 ADDED: preload="none" for video, and loading="lazy" decoding="async" for images
                     let contentHtml = isVid 
-                        ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${file.url}#t=0.1" class="w-full h-full object-cover"></video>`
-                        : `<img src="${file.url}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
+                        ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${file.url}#t=0.1" preload="none" class="w-full h-full object-cover"></video>`
+                        : `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
                         
                     item.innerHTML = `
                         ${contentHtml}

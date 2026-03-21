@@ -424,9 +424,11 @@
                 html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
                 if (type === 'image') {
-                    html += `<img src="${file.url}" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                    // 🚀 ADDED: loading="lazy" decoding="async"
+                    html += `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (type === 'video') {
-                    html += `<video src="${file.url}#t=0.1" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline preload="metadata"></video>
+                    // 🚀 ADDED: preload="none"
+                    html += `<video src="${file.url}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                              <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
                     html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
@@ -541,16 +543,15 @@
     };
 
     let currentMessageCount = -1;
+    let tabCache = {}; // 🚀 NEW: Local memory cache for instant tab switching!
 
     function filterByTech(username) {
         activeChatPartnerId = username;
-        currentMessageCount = -1;
         const label = document.getElementById('chattingWithLabel');
         const readOnly = document.getElementById('readOnlyIndicator');
         const inputContainer = document.getElementById('messageInputContainer');
         
-        // Let the new updateActiveTabStyles function handle ALL the button coloring
-        updateActiveTabStyles(username); // <-- Fixed typo here!
+        updateActiveTabStyles(username); 
 
         // Update the header labels
         if (username === 'GROUP_CHAT') {
@@ -567,6 +568,21 @@
             if(inputContainer) inputContainer.classList.add('hidden'); 
         }
         
+        // 🚀 THE FIX: Check if we have the data saved locally. If yes, render it instantly!
+        if (tabCache[username]) {
+            currentMessageCount = tabCache[username].count;
+            renderChat(tabCache[username].messages, tabCache[username].attachments);
+            updateAttachmentsSidebar(tabCache[username].messages, tabCache[username].attachments);
+        } else {
+            currentMessageCount = -1;
+            // Show a sleek loading state so the user isn't looking at old messages while it loads
+            const chatBox = document.getElementById('chatBox');
+            if(chatBox) chatBox.innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i><p class="text-[10px] uppercase font-black tracking-widest">Decrypting Thread...</p></div>`;
+            const mediaGrid = document.getElementById('mediaGridView');
+            if(mediaGrid) mediaGrid.innerHTML = '';
+        }
+
+        // Fetch in the background to silently grab any new messages while they read the cached ones
         fetchMessages(); 
     }
 
@@ -597,10 +613,16 @@
             });
             const data = await response.json();
             
-            // THE FIX: Calculate total items (messages + attachments)
             const newCount = (data.messages ? data.messages.length : 0) + (data.attachments ? data.attachments.length : 0);
             
-            // Only re-render the HTML if the count has changed!
+            // 🚀 THE FIX: Save the freshly downloaded data into our local tabCache
+            tabCache[activeChatPartnerId] = {
+                messages: data.messages || [],
+                attachments: data.attachments || [],
+                count: newCount
+            };
+            
+            // Only re-render the HTML if the count has actually changed (prevents screen flashing)
             if (newCount !== currentMessageCount) {
                 currentMessageCount = newCount;
                 renderChat(data.messages, data.attachments); 
@@ -821,7 +843,8 @@
                 docsListHtml += `</div>`;
             }
 
-            const avatarContent = msg.sender_avatar ? `<img src="${msg.sender_avatar}" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>`;
+            // 🚀 ADDED: loading="lazy" decoding="async" to the avatar images
+            const avatarContent = msg.sender_avatar ? `<img src="${msg.sender_avatar}" loading="lazy" decoding="async" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>`;
             
             let bubbleClasses = alignRight 
                 ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
