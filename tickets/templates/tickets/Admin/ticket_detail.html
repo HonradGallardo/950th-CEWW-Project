@@ -579,8 +579,10 @@
             updateAttachmentsSidebar(tabCache[username].messages, tabCache[username].attachments);
         } else {
             currentMessageCount = -1;
-            // Show a sleek loading state so the user isn't looking at old messages while it loads
-            const chatBox = document.getElementById('chatBox');
+            
+            // 👇 THE FIX: Target 'dynamicMessages' so we don't delete our anti-bounce wrapper!
+            const chatBox = document.getElementById('dynamicMessages');
+            
             if(chatBox) chatBox.innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i><p class="text-[10px] uppercase font-black tracking-widest">Decrypting Thread...</p></div>`;
             const mediaGrid = document.getElementById('mediaGridView');
             if(mediaGrid) mediaGrid.innerHTML = '';
