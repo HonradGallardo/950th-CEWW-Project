@@ -178,9 +178,8 @@
                 </div>
                 
                 <!-- 🚀 UPDATED: Arrow Toggle Button (Moved to far right) -->
-                <button type="button" onclick="toggleRightSidebar()" id="desktopSidebarToggle" title="Toggle Sidebar" class="hidden lg:flex items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
-                    <!-- Arrow starts pointing left (since the sidebar is extended by default) -->
-                    <i id="sidebarToggleIcon" class="fas fa-chevron-left text-lg transition-transform duration-300"></i>
+                <button type="button" onclick="toggleRightSidebar()" id="mainHeaderToggleBtn" title="Expand Sidebar" class="hidden items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
+                    <i class="fas fa-chevron-left text-lg"></i>
                 </button>
 
                 <!-- Mobile Paperclip Toggle -->
@@ -313,9 +312,18 @@
             <div class="shrink-0 p-5 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-sm font-bold text-slate-800 dark:text-white">Thread Assets</h3>
-                    <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    
+                    <div class="flex items-center gap-1">
+                        <!-- 🚀 NEW: Desktop Collapse Button (Inside Sidebar) -->
+                        <button type="button" onclick="toggleRightSidebar()" title="Collapse Sidebar" class="hidden lg:flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
+                            <i class="fas fa-chevron-right text-base"></i>
+                        </button>
+                        
+                        <!-- Mobile Close Button (Existing) -->
+                        <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="flex bg-slate-100 dark:bg-[#202B3D] p-1 rounded-lg">
@@ -1066,35 +1074,33 @@
     }
 
     function toggleRightSidebar() {
-        // Automatically finds the correct sidebar whether you are in submit_ticket or ticket_detail
         const sidebar = document.getElementById('rightSidebar') || document.getElementById('rightAssetsSidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        const icon = document.getElementById('sidebarToggleIcon');
+        const mainHeaderBtn = document.getElementById('mainHeaderToggleBtn');
         const isDesktop = window.innerWidth >= 1024; // Tailwind's 'lg' breakpoint
 
-        if (!sidebar) return; // Safety check
+        if (!sidebar) return;
 
         if (isDesktop) {
-            // Desktop Mode: Shrink the width to 0 and hide content
             if (sidebar.classList.contains('lg:w-0')) {
-                // Expanding the sidebar
+                // EXPANDING THE SIDEBAR
                 sidebar.classList.remove('lg:w-0', 'lg:min-w-0', 'lg:border-l-0', 'lg:p-0', 'opacity-0');
                 sidebar.classList.add('lg:w-80', 'lg:min-w-[20rem]', 'opacity-100');
                 
-                // 🚀 Change arrow to point LEFT (Extended)
-                if (icon) {
-                    icon.classList.remove('fa-chevron-right');
-                    icon.classList.add('fa-chevron-left');
+                // Hide the main header button since the sidebar is now open
+                if (mainHeaderBtn) {
+                    mainHeaderBtn.classList.add('hidden');
+                    mainHeaderBtn.classList.remove('lg:flex');
                 }
             } else {
-                // Collapsing the sidebar
+                // COLLAPSING THE SIDEBAR
                 sidebar.classList.add('lg:w-0', 'lg:min-w-0', 'lg:border-l-0', 'lg:p-0', 'opacity-0');
                 sidebar.classList.remove('lg:w-80', 'lg:min-w-[20rem]', 'opacity-100');
                 
-                // 🚀 Change arrow to point RIGHT (Collapsed)
-                if (icon) {
-                    icon.classList.remove('fa-chevron-left');
-                    icon.classList.add('fa-chevron-right');
+                // Show the main header "<" button so the user can reopen it
+                if (mainHeaderBtn) {
+                    mainHeaderBtn.classList.remove('hidden');
+                    mainHeaderBtn.classList.add('lg:flex');
                 }
             }
         } else {
