@@ -28,12 +28,12 @@ SECRET_KEY = env('SECRET_KEY')
 # --- MERGE CONFLICT RESOLVED ---
 # Honrad-Branch (Active): Secure, environment-driven approach
 DEBUG = env.bool('DEBUG', default=False)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', '192.168.0.5'])
+# ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', '192.168.0.5'])
 
 # Christian-Branch (Preserved as comments): 
 # DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
 # CRITICAL FIX: Hardcode the allowed hosts right here, overwriting the env file completely.
-# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']
 # -------------------------------
 
 # 5. Application Definition
@@ -182,12 +182,12 @@ MIDDLEWARE = [
 # )
 
 # NEW CLOUDINARY STORAGE CONFIGURATION
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
-    'API_KEY': env('CLOUDINARY_API_KEY', default=''),
-    'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
-    'RESOURCE_TYPE': 'auto'
-}
+#CLOUDINARY_STORAGE = {
+#    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
+#    'API_KEY': env('CLOUDINARY_API_KEY', default=''),
+#    'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
+#    'RESOURCE_TYPE': 'auto'
+#}
 # Tell Django to route all uploaded files to Cloudinary automatically
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'

@@ -4,27 +4,58 @@ from ..models import Asset, IncidentComment, Maintenance, Incident, Notification
 from django.contrib.auth.password_validation import validate_password
 
 class AssetSerializer(serializers.ModelSerializer):
-    """Converts Asset model instances into JSON."""
-
+    """Converts Asset model instances into JSON with conditional logic."""
     assigned_to_name = serializers.ReadOnlyField(source='assigned_to.username')
+    
+    # Allow null/blank for fields that might be hidden by the frontend logic
+    type_of_maintenance = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    processor = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    ram_gb = serializers.IntegerField(required=False, allow_null=True)
+    storage_capacity = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    ip_address = serializers.IPAddressField(required=False, allow_null=True)
+    mac_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    firmware_version = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
     class Meta:
         model = Asset
         fields = '__all__'
+
+    def validate(self, data):
+        # Logic check: If status is maintenance, a reason should ideally be provided
+        status = data.get('status', '').lower()
+        if 'maintenance' in status and not data.get('type_of_maintenance'):
+            # We allow it in the serializer but the ViewSet will provide a fallback
+            pass
+        return data
         
 
 class MaintenanceSerializer(serializers.ModelSerializer):
-    """Includes helpful human-readable fields for the dashboard tables."""
     asset_name = serializers.ReadOnlyField(source='asset.assets_name')
     technician_name = serializers.ReadOnlyField(source='technician.username')
     asset_type = serializers.CharField(source='asset.assets_type', read_only=True)
-    
-    # 🚨 ADD THIS LINE: Fetch the string ID (e.g., AST-003)
     asset_string_id = serializers.ReadOnlyField(source='asset.assets_id')
+
+    # Define the missing fields that caused the crash
+    processor = serializers.ReadOnlyField(source='asset.processor')
+    ram_gb = serializers.ReadOnlyField(source='asset.ram_gb')
+    ip_address = serializers.ReadOnlyField(source='asset.ip_address')
+    
+    # Your existing custom fields
+    storage = serializers.ReadOnlyField(source='asset.storage_capacity') 
+    firmware_os = serializers.ReadOnlyField(source='asset.firmware_version')   
+    mac_address = serializers.ReadOnlyField(source='asset.mac_address')   
+    asset_category = serializers.ReadOnlyField(source='asset.assets_type') 
 
     class Meta:
         model = Maintenance
-        # 🚨 ADD 'asset_string_id' TO THE FIELDS LIST
-        fields = ['id', 'asset_string_id', 'asset_name', 'asset_type', 'maintenance_type', 'technician_name', 'date', 'last_modified', 'status']
+        # Successfully merged fields to include both asset_string_id and the hardware specs
+        fields = [
+            'id', 'asset_string_id', 'asset_name', 'asset_type', 
+            'maintenance_type', 'technician_name', 'date', 
+            'last_modified', 'status', 'notes',
+            'processor', 'ram_gb', 'storage', 'ip_address', 
+            'firmware_os', 'mac_address', 'asset_category',
+        ]
 
 class IncidentSerializer(serializers.ModelSerializer):
     """Prepares incident data with formatted reporting information."""
@@ -37,6 +68,7 @@ class IncidentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Incident
+        # Preserved Honrad Branch SOC/Intel field mappings
         fields = [
             'id', 'title', 'asset', 'asset_location', 'asset_id_display', 
             'affected_area', 'severity', 'status', 'description', 
@@ -50,6 +82,7 @@ class IncidentSerializer(serializers.ModelSerializer):
             # --- NEW PERSONNEL & PROGRESS FIELDS ---
             'threat_actor', 'assigned_to', 'assigned_to_name', 'actions_taken'
         ]
+    extra_kwargs = {'reported_by': {'required': False, 'allow_null': True}}
 
 class IncidentCommentSerializer(serializers.ModelSerializer):
     author_name = serializers.ReadOnlyField(source='author.username')
@@ -65,7 +98,6 @@ class IncidentCommentSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
             return obj.author == request.user
-        return False
         return False
         
 class NotificationSerializer(serializers.ModelSerializer):
@@ -90,7 +122,7 @@ class UserSerializer(serializers.ModelSerializer):
     # Map the nested profile fields
     rank = serializers.CharField(source='profile.rank', required=False, allow_blank=True, allow_null=True)
     image = serializers.ImageField(source='profile.image', required=False, allow_null=True)
-    # 🚨 NEW: Added the phone mapping
+    # NEW: Added the phone mapping
     phone = serializers.CharField(source='profile.phone', required=False, allow_blank=True, allow_null=True)
     
     # Use write_only so the password is never sent back to the browser
@@ -98,7 +130,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # 🚨 ADDED 'phone' to the fields list
+        # ADDED 'phone' to the fields list
         fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank', 'image', 'phone']
 
     def create(self, validated_data):
