@@ -380,15 +380,26 @@ class PersonnelStatsAPI(APIView):
     def get(self, request):
         total_assets = Asset.objects.count()
         
-        # Format recent maintenance tasks
-        recent_maint = Maintenance.objects.select_related('technician').order_by('-date')[:20]
+        # Format recent maintenance tasks (ADDED: asset_name and maintenance_type)
+        recent_maint = Maintenance.objects.select_related('asset', 'technician').order_by('-date')[:20]
         maint_list = [{
             'id': m.id,
             'technician_name': m.technician.username if m.technician else 'System',
-            'status': m.status
+            'status': m.status,
+            'asset_name': m.asset.assets_name if m.asset else 'Unknown Asset',
+            'maintenance_type': m.maintenance_type
         } for m in recent_maint]
 
-        # Format recent incidents for table and chart
+        # Format assigned assets (NEW: For the bottom left table)
+        assigned = Asset.objects.filter(assigned_to=request.user).order_by('-date_added')[:20]
+        asset_list = [{
+            'id': a.id,
+            'assets_name': a.assets_name,
+            'status': a.status,
+            'date_added': a.date_added.strftime('%d-%m-%Y')
+        } for a in assigned]
+
+        # Format recent incidents
         recent_inc = Incident.objects.all().order_by('-date')[:20]
         inc_list = [{
             'id': i.id,
@@ -396,14 +407,15 @@ class PersonnelStatsAPI(APIView):
             'severity': i.severity,
             'status': i.status,
             'formatted_date': i.date.strftime('%b %d, %Y'),
-            'date_label': i.date.strftime('%a') # For the chart trends
+            'date_label': i.date.strftime('%a')
         } for i in recent_inc]
 
         return Response({
             'total_assets_count': total_assets,
             'user_info': {'username': request.user.username},
             'recent_maintenance': maint_list,
-            'recent_incidents': inc_list
+            'recent_incidents': inc_list,
+            'assigned_assets': asset_list  # Added to the payload
         })
         
 class UserViewSet(viewsets.ModelViewSet):

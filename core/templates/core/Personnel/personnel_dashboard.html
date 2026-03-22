@@ -197,31 +197,28 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     $(document).ready(function() {
-        // --- 1. UNIFIED DASHBOARD SYNC ---
         window.syncDashboard = function() {
             $('#sync-indicator').removeClass('hidden').addClass('flex');
 
             $.ajax({
-                // 🚨 Match the path we just fixed in urls.py
                 url: '/api/personnel/stats/', 
                 type: 'GET',
                 success: function(data) {
-                    // Update the counters using the exact keys from your function-based view
                     $('#stat-total-assets').text(data.total_assets_count);
                     
-                    // Calculate My Tasks using the technician_name from the Serializer
                     const currentUser = data.user_info.username;
                     const myTasks = data.recent_maintenance.filter(m => 
                         m.technician_name === currentUser && m.status !== 'Completed'
                     ).length;
                     $('#stat-my-tasks').text(myTasks);
 
-                    // Update alerts count
                     const openAlerts = data.recent_incidents.filter(i => i.status === 'Open').length;
                     $('#stat-alerts').text(openAlerts);
 
-                    // Trigger table and chart refreshes
+                    // Trigger ALL table and chart refreshes
                     renderIncidentTable(data.recent_incidents);
+                    renderTaskTable(data.recent_maintenance);
+                    renderAssetTable(data.assigned_assets);
                     updateChart(data.recent_incidents);
                 },
                 error: function(xhr) {
@@ -233,34 +230,85 @@
             });
         };
 
-        // --- 2. TABLE RENDERING LOGIC ---
         function renderIncidentTable(incidents) {
             const $tbody = $('#incidentTableBody');
-            if (!incidents || incidents.length === 0) return;
+            if (!incidents || incidents.length === 0) {
+                $tbody.html('<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">No incident reports available.</td></tr>');
+                return;
+            }
 
             let html = '';
             incidents.forEach(inc => {
+                // Determine severity color
+                let sevColor = inc.severity === 'Critical' ? 'bg-red-100 text-red-700 border-red-200' : 
+                               inc.severity === 'High' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                               inc.severity === 'Medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
+                               'bg-emerald-100 text-emerald-700 border-emerald-200';
+
                 html += `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer" onclick="window.location.href='/incidents/'">
                         <td class="px-6 py-4 font-mono text-slate-400">#${inc.id}</td>
                         <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${inc.title}</td>
                         <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase border">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase border ${sevColor}">
                                 ${inc.severity}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-black uppercase">
+                            <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-black uppercase border border-blue-100">
                                 ${inc.status}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">${inc.formatted_date || 'Mar 03, 2026'}</td>
+                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">${inc.formatted_date}</td>
                     </tr>`;
             });
             $tbody.html(html);
         }
 
-        // --- 3. CHART DYNAMIC UPDATE ---
+        function renderAssetTable(assets) {
+            const $tbody = $('#assetTableBody');
+            if (!assets || assets.length === 0) {
+                $tbody.html('<tr><td colspan="3" class="p-8 text-center text-slate-400">No assets assigned to you.</td></tr>');
+                return;
+            }
+
+            let html = '';
+            assets.forEach(asset => {
+                let statusBadge = asset.status === 'Active' ? '<span class="text-emerald-500 font-black uppercase text-[10px] bg-emerald-50 px-2 py-1 rounded-lg">Active</span>' : 
+                                  asset.status === 'Maintenance' ? '<span class="text-amber-500 font-black uppercase text-[10px] bg-amber-50 px-2 py-1 rounded-lg">Maintenance</span>' : 
+                                  `<span class="text-red-500 font-black uppercase text-[10px] bg-red-50 px-2 py-1 rounded-lg">${asset.status}</span>`;
+                
+                html += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='/assets/'">
+                        <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">${asset.assets_name}</td>
+                        <td class="px-5 py-4 text-center">${statusBadge}</td>
+                        <td class="px-5 py-4 text-slate-400">${asset.date_added}</td>
+                    </tr>`;
+            });
+            $tbody.html(html);
+        }
+
+        function renderTaskTable(tasks) {
+            const $tbody = $('#taskTableBody');
+            if (!tasks || tasks.length === 0) {
+                $tbody.html('<tr><td colspan="3" class="p-8 text-center text-slate-400">No active maintenance tasks.</td></tr>');
+                return;
+            }
+
+            let html = '';
+            tasks.forEach(task => {
+                html += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='/maintenance/'">
+                        <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">${task.asset_name}</td>
+                        <td class="px-5 py-4 text-slate-500">${task.maintenance_type}</td>
+                        <td class="px-5 py-4 text-center">
+                            <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black uppercase">${task.status}</span>
+                        </td>
+                    </tr>`;
+            });
+            $tbody.html(html);
+        }
+
         function updateChart(incidents) {
             if (!window.myTrendChart) return;
             const counts = {};
@@ -273,29 +321,23 @@
             window.myTrendChart.update();
         }
 
-        // Initialize
         syncDashboard();
-        setInterval(syncDashboard, 60000); 
+        setInterval(syncDashboard, 30000); 
     });
 
-    // --- 4. CHART INITIALIZATION (Outside jQuery Ready) ---
     function initIncidentChart() {
         const chartEl = document.getElementById('incidentTrendChart');
         if (!chartEl) return;
         const ctx = chartEl.getContext('2d');
         
-        // Fallback for empty chart data
-        const labels = JSON.parse('{{ chart_labels|safe|default:"[]" }}');
-        const dataValues = JSON.parse('{{ chart_values|safe|default:"[]" }}');
-        
         if (window.myTrendChart) window.myTrendChart.destroy();
         window.myTrendChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels.length ? labels : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
                 datasets: [{
                     label: 'Incidents',
-                    data: dataValues.length ? dataValues : [0,0,0,0,0],
+                    data: [0,0,0,0,0],
                     borderColor: '#ef4444',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
                     borderWidth: 2,
