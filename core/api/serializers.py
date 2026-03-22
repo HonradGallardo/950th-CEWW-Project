@@ -48,6 +48,7 @@ class MaintenanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Maintenance
+        # Successfully merged fields to include both asset_string_id and the hardware specs
         fields = [
             'id', 'asset_string_id', 'asset_name', 'asset_type', 
             'maintenance_type', 'technician_name', 'date', 
@@ -55,23 +56,31 @@ class MaintenanceSerializer(serializers.ModelSerializer):
             'processor', 'ram_gb', 'storage', 'ip_address', 
             'firmware_os', 'mac_address', 'asset_category',
         ]
-        
-# 🚨 RESTORED: This is the missing IncidentSerializer
+
 class IncidentSerializer(serializers.ModelSerializer):
     """Prepares incident data with formatted reporting information."""
     reported_by_name = serializers.ReadOnlyField(source='reported_by.username')
+    assigned_to_name = serializers.ReadOnlyField(source='assigned_to.username') # Fetches the technician's name
     
-    # ADD THESE LINES to include details from the related Asset
+    # Include details from the related Asset
     asset_location = serializers.ReadOnlyField(source='asset.location')
     asset_id_display = serializers.ReadOnlyField(source='asset.assets_id')
     
     class Meta:
         model = Incident
-        # List all fields explicitly to ensure affected_area and updated_at are sent
+        # Preserved Honrad Branch SOC/Intel field mappings
         fields = [
             'id', 'title', 'asset', 'asset_location', 'asset_id_display', 
-            'affected_area', 'severity', 'status', 'description','actions_taken', 
-            'date', 'updated_at', 'reported_by', 'reported_by_name', 'threat_actor'
+            'affected_area', 'severity', 'status', 'description', 
+            'date', 'updated_at', 'reported_by', 'reported_by_name',
+            
+            # --- SOC & INTEL FIELDS ---
+            'category', 'detection_source', 'linked_asset', 'iocs', 'cve_id',
+            'impact_confidentiality', 'impact_integrity', 'impact_availability',
+            'root_cause', 'is_false_positive', 'problems_encountered', 'solutions_applied',
+            
+            # --- NEW PERSONNEL & PROGRESS FIELDS ---
+            'threat_actor', 'assigned_to', 'assigned_to_name', 'actions_taken'
         ]
     extra_kwargs = {'reported_by': {'required': False, 'allow_null': True}}
 
@@ -89,7 +98,6 @@ class IncidentCommentSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
             return obj.author == request.user
-        return False
         return False
         
 class NotificationSerializer(serializers.ModelSerializer):
@@ -114,7 +122,7 @@ class UserSerializer(serializers.ModelSerializer):
     # Map the nested profile fields
     rank = serializers.CharField(source='profile.rank', required=False, allow_blank=True, allow_null=True)
     image = serializers.ImageField(source='profile.image', required=False, allow_null=True)
-    # 🚨 NEW: Added the phone mapping
+    # NEW: Added the phone mapping
     phone = serializers.CharField(source='profile.phone', required=False, allow_blank=True, allow_null=True)
     
     # Use write_only so the password is never sent back to the browser
@@ -122,7 +130,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        # 🚨 ADDED 'phone' to the fields list
+        # ADDED 'phone' to the fields list
         fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'rank', 'image', 'phone']
 
     def create(self, validated_data):

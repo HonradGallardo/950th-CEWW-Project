@@ -453,7 +453,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
     queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
 
-    # 🚨 ADDED FILTER LOGIC: Matches Severity OR Status
+    # Matches Severity OR Status
     def get_queryset(self):
         queryset = super().get_queryset()
         category = self.request.query_params.get('category')
@@ -464,7 +464,20 @@ class IncidentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        # Automatically set the reporter to whoever created the ticket
         serializer.save(reported_by=self.request.user)
+
+    # 🚨 ADD THIS: Handles the "Take Over" functionality from edit_incident.html
+    def perform_update(self, serializer):
+        # Check if the frontend sent the hidden 'take_over=true' flag
+        take_over = self.request.data.get('take_over') == 'true'
+        
+        if take_over:
+            # Reassign the ticket to the current user clicking the button
+            serializer.save(assigned_to=self.request.user)
+        else:
+            # Normal save without changing ownership
+            serializer.save()
 
 class IncidentCommentViewSet(viewsets.ModelViewSet):
     serializer_class = IncidentCommentSerializer
