@@ -10,19 +10,19 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 my-6">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Total Assets</p>
-            <div id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</div>
+            <div id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">--</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-green-500/70 text-[10px] font-black mb-1 tracking-widest uppercase">Assigned</p>
-            <div id="stat-assigned-assets" class="text-3xl font-black text-green-600">{{ assigned_assets|default:"0" }}</div>
+            <div id="stat-assigned-assets" class="text-3xl font-black text-green-600">--</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Maintenance</p>
-            <div id="stat-maintenance-count" class="text-3xl font-black text-slate-800 dark:text-white">{{ maintenance_assets_count|default:"0" }}</div>
+            <div id="stat-maintenance-count" class="text-3xl font-black text-slate-800 dark:text-white">--</div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
             <p class="text-red-400 text-[10px] font-black mb-1 tracking-widest uppercase">Open Incidents</p>
-            <div id="stat-open-incidents" class="text-3xl font-black text-red-600">{{ open_incidents_count|default:"0" }}</div>
+            <div id="stat-open-incidents" class="text-3xl font-black text-red-600">--</div>
         </div>
     </div>
 
@@ -52,17 +52,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-slate-700" id="maintenanceTableBody">
-                        {% for log in recent_maintenance %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/maintenance/edit/{{ log.id }}/'">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">{{ log.asset.assets_name }}</td>
-                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400">{{ log.technician.username|default:'System' }}</td>
-                            <td class="px-6 py-4 text-right">
-                                <span class="text-[10px] font-black uppercase tracking-wider {% if log.status == 'Completed' %}text-green-500{% else %}text-orange-400{% endif %}">{{ log.status }}</span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records.</td></tr>
-                        {% endfor %}
+                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">Synchronizing...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -82,15 +72,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
-                        {% for inc in open_incidents %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/incidents/edit/{{ inc.id }}/'">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">{{ inc.title }}</td>
-                            <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider {% if inc.severity == 'Critical' %}text-red-600{% elif inc.severity == 'High' %}text-orange-500{% else %}text-slate-400{% endif %}">{{ inc.severity }}</span></td>
-                            <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents.</td></tr>
-                        {% endfor %}
+                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">Synchronizing...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -101,14 +83,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         let assetChart, incidentChart;
-
-        // Instantly load the initial chart data passed from views.py context
-        const initialChartData = {
-            asset_labels: {{ asset_labels|safe|default:"[]" }},
-            asset_totals: {{ asset_totals|safe|default:"[]" }},
-            severity_labels: {{ severity_labels|safe|default:"[]" }},
-            severity_totals: {{ severity_totals|safe|default:"[]" }}
-        };
 
         // Initialize/Update Charts
         function updateCharts(data) {
@@ -170,9 +144,6 @@
             }
         }
 
-        // Fire the charts immediately on load so they aren't blank
-        updateCharts(initialChartData);
-
         // Fetch Live Data
         function refreshDashboard() {
             $.ajax({
@@ -197,44 +168,46 @@
         }
 
         function renderMaintenanceTable(logs) {
-            let html = '';
-            if (!logs || logs.length === 0) {
-                html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records.</td></tr>';
-            } else {
-                logs.forEach(log => {
-                    const statusColor = log.status === 'Completed' ? 'text-green-500' : 'text-orange-400';
-                    html += `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/maintenance/edit/${log.id}/'">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${log.asset_name}</td>
-                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400">${log.technician_name || 'System'}</td>
-                            <td class="px-6 py-4 text-right">
-                                <span class="text-[10px] font-black uppercase tracking-wider ${statusColor}">${log.status}</span>
-                            </td>
-                        </tr>`;
-                });
-            }
-            $('#maintenanceTableBody').html(html);
-        }
+                    let html = '';
+                    if (!logs || logs.length === 0) {
+                        html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records.</td></tr>';
+                    } else {
+                        logs.forEach(log => {
+                            const statusColor = log.status === 'Completed' ? 'text-green-500' : 'text-orange-400';
+                            // Use log.id which is guaranteed by the new API view
+                            html += `
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/maintenance/edit/${log.id}/'">
+                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${log.asset_name}</td>
+                                    <td class="px-6 py-4 text-slate-500 dark:text-slate-400">${log.technician_name || 'System'}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span class="text-[10px] font-black uppercase tracking-wider ${statusColor}">${log.status}</span>
+                                    </td>
+                                </tr>`;
+                        });
+                    }
+                    $('#maintenanceTableBody').html(html);
+                }
 
-        function renderIncidentTable(incidents) {
-            let html = '';
-            if (!incidents || incidents.length === 0) {
-                html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents.</td></tr>';
-            } else {
-                incidents.forEach(inc => {
-                    const sevColor = inc.severity === 'Critical' ? 'text-red-600' : (inc.severity === 'High' ? 'text-orange-500' : 'text-slate-400');
-                    html += `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/incidents/edit/${inc.id}/'">
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${inc.title}</td>
-                            <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider ${sevColor}">${inc.severity}</span></td>
-                            <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
-                        </tr>`;
-                });
-            }
-            $('#incidentTableBody').html(html);
-        }
+                function renderIncidentTable(incidents) {
+                    let html = '';
+                    if (!incidents || incidents.length === 0) {
+                        html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents.</td></tr>';
+                    } else {
+                        incidents.forEach(inc => {
+                            const sevColor = inc.severity === 'Critical' ? 'text-red-600' : (inc.severity === 'High' ? 'text-orange-500' : 'text-slate-400');
+                            // Use inc.id which is guaranteed by the new API view
+                            html += `
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/incidents/edit/${inc.id}/'">
+                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${inc.title}</td>
+                                    <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider ${sevColor}">${inc.severity}</span></td>
+                                    <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
+                                </tr>`;
+                        });
+                    }
+                    $('#incidentTableBody').html(html);
+                }
 
-        // Keep background synchronization running every 30 seconds
+        refreshDashboard();
         setInterval(refreshDashboard, 30000); 
     });
 </script>
