@@ -80,12 +80,16 @@ class Incident(models.Model):
     IMPACT_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')]
 
     title = models.CharField(max_length=100)
-    asset = models.ForeignKey(Asset, on_delete=models.SET_NULL, null=True, blank=True, related_name='incidents')
+    asset = models.ForeignKey('Asset', on_delete=models.SET_NULL, null=True, blank=True, related_name='incidents')
     
-    # --- NEW THREAT INTEL FIELDS ---
+    # --- NEW: ASSIGNED TECHNICIAN & THREAT ACTOR ---
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_incidents')
+    threat_actor = models.CharField(max_length=100, blank=True, null=True)
+    
+    # --- THREAT INTEL FIELDS ---
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='Other')
     detection_source = models.CharField(max_length=50, blank=True, null=True)
-    linked_asset = models.CharField(max_length=100, blank=True, null=True) # Accepts text input like "Workstation-02"
+    linked_asset = models.CharField(max_length=100, blank=True, null=True) 
     iocs = models.TextField(blank=True, null=True)
     cve_id = models.CharField(max_length=50, blank=True, null=True)
     

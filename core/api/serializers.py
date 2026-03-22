@@ -29,6 +29,7 @@ class MaintenanceSerializer(serializers.ModelSerializer):
 class IncidentSerializer(serializers.ModelSerializer):
     """Prepares incident data with formatted reporting information."""
     reported_by_name = serializers.ReadOnlyField(source='reported_by.username')
+    assigned_to_name = serializers.ReadOnlyField(source='assigned_to.username') # Fetches the technician's name
     
     # Include details from the related Asset
     asset_location = serializers.ReadOnlyField(source='asset.location')
@@ -36,16 +37,18 @@ class IncidentSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Incident
-        # List all fields explicitly to ensure the new SOC fields are exposed to the frontend
         fields = [
             'id', 'title', 'asset', 'asset_location', 'asset_id_display', 
             'affected_area', 'severity', 'status', 'description', 
             'date', 'updated_at', 'reported_by', 'reported_by_name',
             
-            # --- NEW SOC FIELDS ADDED ---
+            # --- SOC & INTEL FIELDS ---
             'category', 'detection_source', 'linked_asset', 'iocs', 'cve_id',
             'impact_confidentiality', 'impact_integrity', 'impact_availability',
-            'root_cause', 'is_false_positive', 'problems_encountered', 'solutions_applied'
+            'root_cause', 'is_false_positive', 'problems_encountered', 'solutions_applied',
+            
+            # --- NEW PERSONNEL & PROGRESS FIELDS ---
+            'threat_actor', 'assigned_to', 'assigned_to_name', 'actions_taken'
         ]
 
 class IncidentCommentSerializer(serializers.ModelSerializer):
