@@ -62,6 +62,29 @@
         border-left: 4px solid #3b82f6 !important; 
     }
     #chatInput { min-height: 52px; max-height: 200px; }
+    /* Sidebar should always be above main content but potentially below modals */
+#mainSidebar {
+    z-index: 60 !important; /* Higher than header and main content */
+}
+
+#rightAssetsSidebar {
+    z-index: 60 !important;
+}
+
+/* The dark background overlays when sidebars are open on mobile */
+#sidebarOverlay, #assetsOverlay {
+    z-index: 55 !important;
+}
+
+/* Ensure the header doesn't clip the sidebars when they slide out */
+header {
+    z-index: 40 !important; 
+}
+
+/* Ensure the main content stays at the bottom of the stack */
+main {
+    z-index: 10;
+}
 </style>
 
 <div class="h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans text-slate-900 dark:text-slate-100 main-container">
