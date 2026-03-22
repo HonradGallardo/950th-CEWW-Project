@@ -54,9 +54,9 @@
                     <span class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
                 </div>
 
-                <div class="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative">
-                    <table class="w-full text-left border-collapse table-fixed lg:table-auto">
-                        <thead class="sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-sm z-10">
+                <div class="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative bg-slate-50/30 dark:bg-slate-900/20 md:bg-transparent md:dark:bg-transparent">
+                    <table class="w-full text-left border-collapse block md:table table-fixed lg:table-auto">
+                        <thead class="hidden md:table-header-group sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-sm z-10">
                             <tr class="text-[10px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/80">
                                 <th class="px-5 sm:px-6 py-4">Incident</th>
                                 <th class="hidden lg:table-cell px-4 py-4 w-28 text-left">Category</th>
@@ -68,8 +68,8 @@
                                 <th class="px-5 sm:px-6 py-4 w-24 sm:w-32 text-right">Time</th>
                             </tr>
                         </thead>
-                        <tbody id="incidentTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
-                            <tr><td colspan="8" class="p-12 text-center text-slate-400 italic"><i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...</td></tr>
+                        <tbody id="incidentTableBody" class="block md:table-row-group p-3 sm:p-4 md:p-0 space-y-4 md:space-y-0 md:divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <tr><td colspan="8" class="p-12 text-center text-slate-400 italic block md:table-cell"><i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -225,7 +225,7 @@ function loadIncidents() {
         },
         error: function(err) {
             console.error("Failed to fetch incidents:", err);
-            $('#incidentTableBody').html('<tr><td colspan="8" class="p-10 text-center text-red-400 italic">Error connecting to telemetry server.</td></tr>');
+            $('#incidentTableBody').html('<tr><td colspan="8" class="p-10 text-center text-red-400 italic block md:table-cell">Error connecting to telemetry server.</td></tr>');
         }
     });
 }
@@ -250,7 +250,7 @@ function renderTableRows(incidents) {
     let html = '';
 
     if (incidents.length === 0) {
-        $tbody.html('<tr><td colspan="8" class="p-12 text-center text-slate-400 italic">No active incidents found in database.</td></tr>');
+        $tbody.html('<tr><td colspan="8" class="p-12 text-center text-slate-400 italic block md:table-cell">No active incidents found in database.</td></tr>');
         return;
     }
 
@@ -314,7 +314,10 @@ function renderTableRows(incidents) {
         
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
-        const activeClass = currentOpenIncidentId == inc.id ? 'bg-blue-50/60 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent';
+        // Dynamic styling for active state (applies card ring on mobile, border on desktop)
+        const activeClass = currentOpenIncidentId == inc.id 
+            ? 'border-blue-500 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 md:border-transparent md:border-l-blue-500 md:border-l-4' 
+            : 'border-slate-200 dark:border-slate-700 md:border-transparent md:border-0';
 
         html += `
         <tr onclick="previewIncident({
@@ -326,59 +329,71 @@ function renderTableRows(incidents) {
                 threat_actor: '${safeThreatActor}', affected_area: '${safeAffectedArea}',
                 impact_c: '${safeImpactC}', impact_i: '${safeImpactI}', impact_a: '${safeImpactA}'
             })" 
-            class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass}">
+            class="block md:table-row bg-white dark:bg-slate-800 md:bg-transparent md:dark:bg-transparent rounded-2xl md:rounded-none shadow-md shadow-slate-200/50 dark:shadow-none md:shadow-none border md:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass} mb-4 md:mb-0 relative overflow-hidden">
             
-            <td class="px-5 sm:px-6 py-4">
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-sm">
-                        <i class="fas ${sevIcon} ${sevColor} text-[10px]"></i>
+            <td class="block md:table-cell px-4 pt-4 pb-3 md:py-4 md:px-5 sm:px-6 border-b border-slate-100 dark:border-slate-700/50 md:border-0 md:border-b-0">
+                <div class="flex items-start justify-between md:items-center md:justify-start gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 md:dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-sm">
+                            <i class="fas ${sevIcon} ${sevColor} text-[10px]"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${inc.title}</span>
+                            <span class="inline-block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 tracking-wider">INC-${String(inc.id).padStart(3, '0')}</span>
+                        </div>
                     </div>
-                    <div class="flex flex-col min-w-0">
-                        <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${inc.title}</span>
-                        <span class="hidden sm:inline-block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase mt-0.5 tracking-wider">INC-${String(inc.id).padStart(3, '0')}</span>
-                        <span class="sm:hidden text-[9px] font-black uppercase ${sevColor} mt-0.5">${inc.severity}</span>
+                    <div class="md:hidden">
+                        <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusBadge}">
+                            ${inc.status}
+                        </span>
                     </div>
                 </div>
             </td>
             
-            <td class="hidden lg:table-cell px-4 py-4 text-left">
-                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
+            <td class="flex md:table-cell justify-between items-center px-4 py-2.5 md:py-4 text-left border-b border-slate-50 dark:border-slate-700/30 md:border-0">
+                <span class="md:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Category</span>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate bg-slate-100 dark:bg-slate-900 md:dark:bg-slate-800 px-2 py-1 rounded-md text-right md:text-left">
                     ${safeCategory}
                 </span>
             </td>
 
-            <td class="hidden xl:table-cell px-4 py-4 text-left">
-                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate">
+            <td class="flex md:table-cell justify-between items-center px-4 py-2.5 md:py-4 text-left border-b border-slate-50 dark:border-slate-700/30 md:border-0">
+                <span class="md:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Detection</span>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate text-right md:text-left">
                     ${safeDetection}
                 </span>
             </td>
             
-            <td class="hidden xl:table-cell px-4 py-4 text-left">
-                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate block w-full max-w-[140px]">
+            <td class="flex md:table-cell justify-between items-center px-4 py-2.5 md:py-4 text-left border-b border-slate-50 dark:border-slate-700/30 md:border-0">
+                <span class="md:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Target/Asset</span>
+                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate block md:w-full md:max-w-[140px] text-right md:text-left">
                     ${displayAsset}
                 </span>
             </td>
             
-            <td class="hidden sm:table-cell px-4 py-4 text-center">
+            <td class="flex md:table-cell justify-between items-center px-4 py-2.5 md:py-4 text-center md:text-center border-b border-slate-50 dark:border-slate-700/30 md:border-0">
+                <span class="md:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Severity</span>
                 <span class="inline-block px-3 py-1 rounded-md border text-[9px] font-black uppercase tracking-wider ${sevBadge}">
                     ${inc.severity}
                 </span>
             </td>
             
-            <td class="px-4 py-4 text-center">
+            <td class="hidden md:table-cell px-4 py-4 text-center">
                 <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusBadge}">
                     ${inc.status}
                 </span>
             </td>
             
-            <td class="hidden md:table-cell px-4 py-4 text-center">
+            <td class="flex md:table-cell justify-between items-center px-4 py-2.5 md:py-4 text-center md:text-center md:border-0">
+                <span class="md:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Tech</span>
                 <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">
                     ${safeAssigned}
                 </span>
             </td>
             
-            <td class="px-5 sm:px-6 py-4 text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold text-right whitespace-nowrap">
-                ${formattedDate}
+            <td class="flex md:table-cell justify-between items-center px-4 py-3 md:py-4 md:px-5 sm:px-6 text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 font-bold text-right whitespace-nowrap bg-slate-50/50 dark:bg-slate-900/20 md:bg-transparent md:dark:bg-transparent mt-1 md:mt-0 border-t border-slate-100 dark:border-slate-700/50 md:border-0">
+                <span class="md:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Time Logged</span>
+                <span>${formattedDate}</span>
             </td>
         </tr>`;
     });
