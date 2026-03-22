@@ -278,87 +278,91 @@ class VerifyMFAAPI(APIView):
 class DashboardStatsAPI(APIView):
     """Provides live data for dashboard counters, charts, and tables."""
     def get(self, request):
-        # 1. Base Summary Metrics
-        total_assets = Asset.objects.count()
-        assigned_assets = Asset.objects.exclude(status='Inactive').count()
-        maintenance_count = Maintenance.objects.filter(status='In Progress').count()
-        open_incidents_count = Incident.objects.filter(status='Open').count()
+        try:
+            # 1. Base Summary Metrics
+            total_assets = Asset.objects.count()
+            assigned_assets = Asset.objects.exclude(status='Inactive').count()
+            maintenance_count = Maintenance.objects.filter(status='In Progress').count()
+            open_incidents_count = Incident.objects.filter(status='Open').count()
 
-        # 2. Asset Distribution (Bar Chart)
-        asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
-        asset_labels = [item['assets_type'] for item in asset_qs]
-        asset_totals = [item['total'] for item in asset_qs]
+            # 2. Asset Distribution (Bar Chart)
+            asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
+            asset_labels = [item['assets_type'] for item in asset_qs]
+            asset_totals = [item['total'] for item in asset_qs]
 
-        # 3. Incident Severity (Doughnut Chart)
-        severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
-        severity_labels = [item['severity'] for item in severity_qs]
-        severity_totals = [item['total'] for item in severity_qs]
+            # 3. Incident Severity (Doughnut Chart)
+            severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
+            severity_labels = [item['severity'] for item in severity_qs]
+            severity_totals = [item['total'] for item in severity_qs]
 
-        # 4. Table Data: Recent Maintenance
-        recent_maint = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
-        maint_list = [{
-            'id': m.id,
-            'asset_name': m.asset.assets_name,
-            'technician_name': m.technician.username if m.technician else 'System',
-            'status': m.status
-        } for m in recent_maint]
+            # 4. Table Data: Recent Maintenance
+            recent_maint = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
+            maint_list = [{
+                'id': m.id,
+                # Safe Check: Prevents crash if the DB relationship is missing
+                'asset_name': m.asset.assets_name if m.asset else 'Unknown Asset',
+                'technician_name': m.technician.username if m.technician else 'System',
+                'status': m.status
+            } for m in recent_maint]
 
-        # 5. Table Data: Open Incidents
-        open_inc_qs = Incident.objects.filter(status='Open').order_by('-date')[:5]
-        inc_list = [{
-            'id': i.id,
-            'title': i.title,
-            'severity': i.severity,
-        } for i in open_inc_qs]
+            # 5. Table Data: Open Incidents
+            open_inc_qs = Incident.objects.filter(status='Open').order_by('-date')[:5]
+            inc_list = [{
+                'id': i.id,
+                'title': i.title,
+                'severity': i.severity,
+            } for i in open_inc_qs]
 
-        # --- 🟢 NEW: ADDED LOGIC FOR COMMANDER TREND CHARTS ---
-        
-        # 6. Incident Trend Data (Last 7 Days)
-        today = timezone.now().date()
-        date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
-        trend_labels = [d.strftime('%a') for d in date_list]  # e.g., ['Mon', 'Tue', 'Wed', ...]
-        date_to_idx = {d: i for i, d in enumerate(date_list)}
+            # 6. Incident Trend Data (Last 7 Days)
+            today = timezone.now().date()
+            date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
+            trend_labels = [d.strftime('%a') for d in date_list]  
+            date_to_idx = {d: i for i, d in enumerate(date_list)}
 
-        trend_values = [0] * 7
-        inc_trend_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
-            .values('date__date').annotate(count=Count('id'))
-        for item in inc_trend_qs:
-            idx = date_to_idx.get(item['date__date'])
-            if idx is not None:
-                trend_values[idx] = item['count']
+            trend_values = [0] * 7
+            inc_trend_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
+                .values('date__date').annotate(count=Count('id'))
+            for item in inc_trend_qs:
+                idx = date_to_idx.get(item['date__date'])
+                if idx is not None:
+                    trend_values[idx] = item['count']
 
-        # 7. Maintenance Metrics Data (Completed vs Pending last 7 Days)
-        m_completed = [0] * 7
-        m_pending = [0] * 7
-        maint_trend_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
-            .values('date__date', 'status').annotate(count=Count('id'))
-        for item in maint_trend_qs:
-            idx = date_to_idx.get(item['date__date'])
-            if idx is not None:
-                if item['status'] == 'Completed':
-                    m_completed[idx] = item['count']
-                else:
-                    m_pending[idx] = item['count']
+            # 7. Maintenance Metrics Data
+            m_completed = [0] * 7
+            m_pending = [0] * 7
+            maint_trend_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
+                .values('date__date', 'status').annotate(count=Count('id'))
+            for item in maint_trend_qs:
+                idx = date_to_idx.get(item['date__date'])
+                if idx is not None:
+                    if item['status'] == 'Completed':
+                        m_completed[idx] = item['count']
+                    else:
+                        m_pending[idx] = item['count']
 
-        return Response({
-            'total_assets': total_assets,
-            'assigned_assets': assigned_assets,
-            'maintenance_count': maintenance_count,
-            'open_incidents': open_incidents_count,
-            'asset_labels': asset_labels,
-            'asset_totals': asset_totals,
-            'severity_labels': severity_labels,
-            'severity_totals': severity_totals,
-            'recent_maintenance': maint_list,
-            'open_incidents_list': inc_list,
+            return Response({
+                'total_assets': total_assets,
+                'assigned_assets': assigned_assets,
+                'maintenance_count': maintenance_count,
+                'open_incidents': open_incidents_count,
+                'asset_labels': asset_labels,
+                'asset_totals': asset_totals,
+                'severity_labels': severity_labels,
+                'severity_totals': severity_totals,
+                'recent_maintenance': maint_list,
+                'open_incidents_list': inc_list,
+                'trend_labels': trend_labels,
+                'trend_values': trend_values,
+                'm_labels': trend_labels, 
+                'm_completed': m_completed,
+                'm_pending': m_pending,
+            })
             
-            # --- 🟢 NEW: RETURNING THE CALCULATED TREND DATA ---
-            'trend_labels': trend_labels,
-            'trend_values': trend_values,
-            'm_labels': trend_labels, # Reusing the 7-day labels for the X-axis
-            'm_completed': m_completed,
-            'm_pending': m_pending,
-        })
+        except Exception as e:
+            # THIS IS CRITICAL: It stops silent failures and prints the error to your terminal
+            import traceback
+            print("DASHBOARD API CRASHED:", traceback.format_exc())
+            return Response({"error": str(e)}, status=500)
 
 class PersonnelStatsAPI(APIView):
     """Provides live data specifically for the Personnel Dashboard."""

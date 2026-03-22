@@ -22,24 +22,26 @@ router.register(r'report/maintenance', MaintenanceViewSet, basename='report-main
 router.register(r'report/incident', IncidentViewSet, basename='report-incident')
 
 urlpatterns = [
-    # --- API DATA HUB ---
+    # --- 1. CUSTOM API ENDPOINTS (MUST BE ABOVE THE ROUTER) ---
+    path('api/verify-mfa/', VerifyMFAAPI.as_view(), name='api_verify_mfa'),
+    path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
+    path('api/personnel/stats/', PersonnelStatsAPI.as_view(), name='personnel_stats_api'),
+    path('api/monitoring-data/', MonitoringDataAPI.as_view(), name='monitoring_data_api'),
+    path('api/forgot-password/', ForgotPasswordAPI.as_view(), name='api_forgot_password'),
+    path('api/change-password/', ChangePasswordAPI.as_view(), name='api_change_password'),
+
+    # --- 2. API DATA HUB ---
     # Because of this line below, the router automatically adds "/api/" 
     # to "report/it-asset", making it exactly what your Javascript wants!
     path('api/', include(router.urls)),
     path('api/core/', include(router.urls)),
 
-    # --- CORE PAGES ---
+    # --- 3. CORE PAGES ---
     path('', views.landing, name='landing'),
     path('login/', APILoginView.as_view(), name='login'),
-    path('api/verify-mfa/', VerifyMFAAPI.as_view(), name='api_verify_mfa'),
-    path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
     path('dashboard/', views.dashboard, name='dashboard'),
-    path('api/personnel/stats/', PersonnelStatsAPI.as_view(), name='personnel_stats_api'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('profile/', views.profile_view, name='profile'),
-    
-    #---ANALYTICS & MONITORING ---
-    path('api/monitoring-data/', MonitoringDataAPI.as_view(), name='monitoring_data_api'),
     
     # --- ASSETS ---
     path('assets/', views.asset_list, name='asset_list'),
@@ -69,12 +71,9 @@ urlpatterns = [
     path('notifications/read-all/', views.mark_all_as_read, name='mark_all_read'),
     path('settings/password/', TemplateView.as_view(template_name='core/Admin/password_change.html'), name='custom_password_change'),
     path('forgot_password/', views.forgot_password_view, name='forgot_password'),
-    path('api/forgot-password/', ForgotPasswordAPI.as_view(), name='api_forgot_password'),
     
     # Note: I left this duplicate login path as it was in your file, 
     # but normally you only want one 'login/' path!
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    
-    path('api/change-password/', ChangePasswordAPI.as_view(), name='api_change_password'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
