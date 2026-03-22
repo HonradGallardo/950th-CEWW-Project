@@ -62,7 +62,7 @@
                                 <th class="hidden lg:table-cell px-4 py-4 w-32 text-left">Category</th>
                                 <th class="hidden sm:table-cell px-4 py-4 w-28 text-center">Severity</th>
                                 <th class="px-4 py-4 w-24 sm:w-32 text-center">Status</th>
-                                <th class="hidden md:table-cell px-4 py-4 w-32 text-center">Reporter</th>
+                                <th class="hidden md:table-cell px-4 py-4 w-32 text-center">Assigned Tech</th>
                                 <th class="px-5 sm:px-6 py-4 w-24 sm:w-40 text-right">Time</th>
                             </tr>
                         </thead>
@@ -112,22 +112,26 @@
                     </div>
 
                     <div class="space-y-6 flex-1 overflow-y-auto p-6 custom-scrollbar">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                             <div class="bg-slate-50 dark:bg-slate-900/50 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
                                 <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Status</label>
                                 <p id="view_status" class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wide"></p>
                             </div>
                             <div class="bg-slate-50 dark:bg-slate-900/50 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
-                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Reporter</label>
-                                <p id="view_reporter" class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase truncate"></p>
+                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Assigned Tech</label>
+                                <p id="view_assigned" class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase truncate"></p>
                             </div>
-                            <div class="col-span-2 sm:col-span-1 bg-slate-50 dark:bg-slate-900/50 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
+                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Reporter</label>
+                                <p id="view_reporter" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase truncate"></p>
+                            </div>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
                                 <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Incident Date</label>
-                                <p id="view_date" class="text-xs font-bold text-slate-700 dark:text-slate-300"></p>
+                                <p id="view_date" class="text-[10px] font-bold text-slate-700 dark:text-slate-300"></p>
                             </div>
                         </div>
 
-                        <!-- ENHANCED THREAT INTEL CARD -->
                         <div class="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 p-5 rounded-2xl border border-blue-100/80 dark:border-blue-800/50 shadow-sm">
                             <h4 class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                                 <i class="fas fa-radar text-blue-500"></i> Threat Intelligence
@@ -138,24 +142,38 @@
                                     <p id="view_category" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
                                 </div>
                                 <div>
+                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Threat Actor</label>
+                                    <p id="view_threat_actor" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Unknown</p>
+                                </div>
+                                <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Detection Source</label>
-                                    <p id="view_detection" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                    <p id="view_detection" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Affected Area</label>
+                                    <p id="view_affected_area" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
                                 </div>
                                 <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Linked Asset</label>
-                                    <p id="view_asset" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                    <p id="view_asset" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
                                 </div>
+                                <div>
+                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Impact (CIA)</label>
+                                    <p id="view_impact" class="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                </div>
+
                                 <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50">
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Known IoCs</label>
-                                    <p id="view_iocs" class="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 truncate">None recorded</p>
+                                    <p id="view_iocs" class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 truncate">None recorded</p>
                                 </div>
                                 <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50">
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Exploited CVE</label>
-                                    <p id="view_cve" class="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 truncate">None</p>
+                                    <p id="view_cve" class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 truncate">None</p>
                                 </div>
                                 <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50">
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Root Cause</label>
-                                    <p id="view_root_cause" class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">Pending RCA</p>
+                                    <p id="view_root_cause" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 truncate">Pending RCA</p>
                                 </div>
                             </div>
                         </div>
@@ -167,31 +185,35 @@
                             <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed min-h-[80px]" id="view_description"></div>
                         </div>
 
-                        <div class="space-y-2.5">
+                        <div class="space-y-2.5 hidden" id="actions_taken_container">
                             <label class="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                <i class="fas fa-clipboard-check"></i> Actions Taken
+                                <i class="fas fa-history"></i> Legacy Actions Taken
                             </label>
-                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed italic" id="view_actions"></div>
+                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed" id="view_actions"></div>
                         </div>
 
-                        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm flex flex-col h-[350px] overflow-hidden relative group">
+                        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm flex flex-col h-[400px] overflow-hidden relative group">
                             <div class="absolute top-0 left-0 right-0 p-3 border-b border-slate-100 dark:border-slate-700/80 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md z-10 flex items-center justify-between shadow-sm">
                                 <h3 class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <i class="fas fa-terminal text-blue-500"></i> Resolution Log
+                                    <i class="fas fa-terminal text-blue-500"></i> Resolution Log Feed
                                 </h3>
                             </div>
-                            <!-- Padded top to account for sticky header -->
+                            
                             <div class="flex-1 overflow-y-auto p-4 pt-14 space-y-4 bg-slate-50/30 dark:bg-slate-900/10 custom-scrollbar" id="chat-container"></div>
                             
                             {% if not is_commander %}
                             <form id="chat-form" class="p-3 border-t border-slate-100 dark:border-slate-700/80 bg-white dark:bg-slate-800 shrink-0">
                                 {% csrf_token %}
                                 <input type="hidden" name="incident_id" id="incident_id">
-                                <div class="relative flex items-end gap-2">
-                                    <textarea name="message" id="chat-message" placeholder="Document new steps or findings..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none" rows="2"></textarea>
-                                    <button type="submit" id="chatSubmitBtn" class="bg-blue-600 hover:bg-blue-700 text-white h-[42px] w-[42px] rounded-xl flex items-center justify-center transition-colors shadow-sm active:scale-95 shrink-0">
-                                        <i class="fas fa-paper-plane text-xs"></i>
-                                    </button>
+                                <div class="space-y-2">
+                                    <input type="text" id="chat_issue" placeholder="Current issue..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-[11px] font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                                    <input type="text" id="chat_action" placeholder="Action taken..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-[11px] font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                                    <div class="relative flex items-center gap-2">
+                                        <input type="text" id="chat_result" placeholder="Result / outcome..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-[11px] font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                                        <button type="submit" id="chatSubmitBtn" class="bg-blue-600 hover:bg-blue-700 text-white h-[34px] w-[36px] rounded-lg flex items-center justify-center transition-colors shadow-sm active:scale-95 shrink-0">
+                                            <i class="fas fa-paper-plane text-xs"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                             {% else %}
@@ -301,15 +323,22 @@ function renderTableRows(incidents) {
 
         const safeTitle = escapeJS(inc.title);
         const safeDesc = escapeJS(inc.description || "No description provided.");
-        const safeActions = escapeJS(inc.actions_taken || "No actions logged yet.");
+        const safeActions = escapeJS(inc.actions_taken || "");
         const safeReporter = escapeJS(inc.reported_by_name || "System");
         const safeCategory = escapeJS(inc.category || "Uncategorized");
         const safeAsset = escapeJS(inc.linked_asset || "N/A");
         const safeIocs = escapeJS(inc.iocs || "None recorded");
         
+        // Mapped SOC variables including assigned tech and new threat fields
         const safeDetection = escapeJS(inc.detection_source || "Unknown");
         const safeCve = escapeJS(inc.cve_id || "None");
         const safeRootCause = escapeJS(inc.root_cause || "Pending RCA");
+        const safeAssigned = escapeJS(inc.assigned_to_name || "Unassigned");
+        const safeThreatActor = escapeJS(inc.threat_actor || "Unknown");
+        const safeAffectedArea = escapeJS(inc.affected_area || "N/A");
+        const safeImpactC = escapeJS(inc.impact_confidentiality || "N/A");
+        const safeImpactI = escapeJS(inc.impact_integrity || "N/A");
+        const safeImpactA = escapeJS(inc.impact_availability || "N/A");
 
         const activeClass = currentOpenIncidentId == inc.id ? 'bg-blue-50/60 dark:bg-blue-900/20 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent';
 
@@ -319,7 +348,9 @@ function renderTableRows(incidents) {
                 status: '${inc.status}', desc: '${safeDesc}', actions: '${safeActions}',
                 date: '${formattedDate}', reporter: '${safeReporter}', category: '${safeCategory}',
                 asset: '${safeAsset}', iocs: '${safeIocs}', detection: '${safeDetection}',
-                cve: '${safeCve}', root_cause: '${safeRootCause}'
+                cve: '${safeCve}', root_cause: '${safeRootCause}', assigned: '${safeAssigned}',
+                threat_actor: '${safeThreatActor}', affected_area: '${safeAffectedArea}',
+                impact_c: '${safeImpactC}', impact_i: '${safeImpactI}', impact_a: '${safeImpactA}'
             })" 
             class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass}">
             
@@ -355,7 +386,7 @@ function renderTableRows(incidents) {
             
             <td class="hidden md:table-cell px-4 py-4 text-center">
                 <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">
-                    ${safeReporter}
+                    ${safeAssigned}
                 </span>
             </td>
             
@@ -398,9 +429,16 @@ function previewIncident(data) {
     $('#view_title').text(data.title);
     $('#view_status').text(data.status);
     $('#view_reporter').text(data.reporter);
+    $('#view_assigned').text(data.assigned);
     $('#view_date').text(data.date);
     $('#view_description').text(data.desc);
-    $('#view_actions').text(data.actions);
+    
+    if(data.actions) {
+        $('#actions_taken_container').removeClass('hidden');
+        $('#view_actions').text(data.actions);
+    } else {
+        $('#actions_taken_container').addClass('hidden');
+    }
     
     $('#view_category').text(data.category);
     $('#view_asset').text(data.asset);
@@ -408,6 +446,9 @@ function previewIncident(data) {
     $('#view_detection').text(data.detection);
     $('#view_cve').text(data.cve);
     $('#view_root_cause').text(data.root_cause);
+    $('#view_threat_actor').text(data.threat_actor);
+    $('#view_affected_area').text(data.affected_area);
+    $('#view_impact').text(`C: ${data.impact_c} | I: ${data.impact_i} | A: ${data.impact_a}`);
     
     if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${data.id}/`);
 
@@ -485,11 +526,12 @@ async function fetchLogs(id, showLoader = true) {
                 : 'bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-2xl rounded-tl-sm shadow-sm';
             const authorClass = c.is_current_user ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400';
 
+            // NOTE: whitespace-pre-wrap ensures the line breaks from the structured input are rendered
             $container.append(`
                 <div class="flex flex-col ${sideClass} animate-fade-in-up">
                     <div class="max-w-[85%] ${bubbleClass} px-4 py-3 relative">
-                        <p class="text-[8px] font-black ${authorClass} uppercase tracking-wider mb-1">${c.author_name} • ${c.formatted_time}</p>
-                        <p class="text-xs font-medium leading-relaxed">${c.message}</p>
+                        <p class="text-[8px] font-black ${authorClass} uppercase tracking-wider mb-2">${c.author_name} • ${c.formatted_time}</p>
+                        <p class="text-[11px] font-mono leading-relaxed whitespace-pre-wrap">${c.message}</p>
                     </div>
                 </div>
             `);
@@ -511,27 +553,43 @@ $(document).ready(function() {
     loadIncidents(); 
     setInterval(loadIncidents, 30000); 
 
+    // UPDATED: Process the three specific text inputs and format them perfectly
     $('#chat-form').on('submit', function(e) {
         e.preventDefault();
-        const $msg = $('#chat-message');
         const id = $('#incident_id').val();
-        const text = $msg.val().trim();
+        
+        const issue = $('#chat_issue').val().trim();
+        const action = $('#chat_action').val().trim();
+        const result = $('#chat_result').val().trim();
+        
         const $submitBtn = $('#chatSubmitBtn');
         
-        if (!text || !id) return;
+        // Prevent submission if all fields are completely blank
+        if (!id || (!issue && !action && !result)) return;
+
+        // Construct the multiline block
+        let textToSend = "";
+        if (issue) textToSend += `Current issue: ${issue}\n`;
+        if (action) textToSend += `Action taken: ${action}\n`;
+        if (result) textToSend += `Result / outcome: ${result}\n`;
+        textToSend = textToSend.trim();
 
         const $container = $('#chat-container');
         $container.append(`
             <div class="flex flex-col items-end opacity-60 animate-fade-in-up">
                 <div class="max-w-[85%] bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-md relative">
-                    <p class="text-[8px] font-black text-blue-200 uppercase tracking-wider mb-1">Sending <i class="fas fa-spinner fa-spin ml-1"></i></p>
-                    <p class="text-xs font-medium leading-relaxed">${text}</p>
+                    <p class="text-[8px] font-black text-blue-200 uppercase tracking-wider mb-2">Sending <i class="fas fa-spinner fa-spin ml-1"></i></p>
+                    <p class="text-[11px] font-mono leading-relaxed whitespace-pre-wrap">${textToSend}</p>
                 </div>
             </div>
         `);
         $container.scrollTop($container[0].scrollHeight);
 
-        $msg.val('');
+        // Clear inputs immediately
+        $('#chat_issue').val('');
+        $('#chat_action').val('');
+        $('#chat_result').val('');
+        
         $submitBtn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin text-xs"></i>');
 
         $.ajax({
@@ -539,7 +597,7 @@ $(document).ready(function() {
             type: "POST",
             contentType: 'application/json',
             headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-            data: JSON.stringify({ message: text, incident: parseInt(id) }),
+            data: JSON.stringify({ message: textToSend, incident: parseInt(id) }),
             success: function() {
                 fetchLogs(id, false); 
                 $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane text-xs"></i>');
