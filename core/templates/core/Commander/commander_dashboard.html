@@ -160,15 +160,28 @@
 
                     // 2. Update Charts using the specific keys from your APIView
                     if (charts['assetChart']) {
-                        charts['assetChart'].data.labels = data.asset_labels;
-                        charts['assetChart'].data.datasets[0].data = data.asset_totals;
-                        charts['assetChart'].update();
-                    }
-                    if (charts['severityChart']) {
-                        charts['severityChart'].data.labels = data.severity_labels;
-                        charts['severityChart'].data.datasets[0].data = data.severity_totals;
-                        charts['severityChart'].update();
-                    }
+        charts['assetChart'].data.labels = data.asset_labels;
+        charts['assetChart'].data.datasets[0].data = data.asset_totals;
+        charts['assetChart'].update();
+    }
+    if (charts['severityChart']) {
+        charts['severityChart'].data.labels = data.severity_labels;
+        charts['severityChart'].data.datasets[0].data = data.severity_totals;
+        charts['severityChart'].update();
+    }
+    
+    // --- 🟢 NEW: UPDATE THE TREND AND MAINTENANCE CHARTS ---
+    if (charts['trendChart'] && data.trend_labels) {
+        charts['trendChart'].data.labels = data.trend_labels;
+        charts['trendChart'].data.datasets[0].data = data.trend_values;
+        charts['trendChart'].update();
+    }
+    if (charts['maintenanceChart'] && data.m_labels) {
+        charts['maintenanceChart'].data.labels = data.m_labels;
+        charts['maintenanceChart'].data.datasets[0].data = data.m_completed;
+        charts['maintenanceChart'].data.datasets[1].data = data.m_pending;
+        charts['maintenanceChart'].update();
+    }
                 },
                 complete: function() {
                     setTimeout(() => $('#sync-status').addClass('hidden'), 2000);

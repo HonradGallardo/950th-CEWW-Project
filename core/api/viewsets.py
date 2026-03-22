@@ -311,6 +311,35 @@ class DashboardStatsAPI(APIView):
             'severity': i.severity,
         } for i in open_inc_qs]
 
+        # --- 🟢 NEW: ADDED LOGIC FOR COMMANDER TREND CHARTS ---
+        
+        # 6. Incident Trend Data (Last 7 Days)
+        today = timezone.now().date()
+        date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
+        trend_labels = [d.strftime('%a') for d in date_list]  # e.g., ['Mon', 'Tue', 'Wed', ...]
+        date_to_idx = {d: i for i, d in enumerate(date_list)}
+
+        trend_values = [0] * 7
+        inc_trend_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
+            .values('date__date').annotate(count=Count('id'))
+        for item in inc_trend_qs:
+            idx = date_to_idx.get(item['date__date'])
+            if idx is not None:
+                trend_values[idx] = item['count']
+
+        # 7. Maintenance Metrics Data (Completed vs Pending last 7 Days)
+        m_completed = [0] * 7
+        m_pending = [0] * 7
+        maint_trend_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
+            .values('date__date', 'status').annotate(count=Count('id'))
+        for item in maint_trend_qs:
+            idx = date_to_idx.get(item['date__date'])
+            if idx is not None:
+                if item['status'] == 'Completed':
+                    m_completed[idx] = item['count']
+                else:
+                    m_pending[idx] = item['count']
+
         return Response({
             'total_assets': total_assets,
             'assigned_assets': assigned_assets,
@@ -321,7 +350,45 @@ class DashboardStatsAPI(APIView):
             'severity_labels': severity_labels,
             'severity_totals': severity_totals,
             'recent_maintenance': maint_list,
-            'open_incidents_list': inc_list
+            'open_incidents_list': inc_list,
+            
+            # --- 🟢 NEW: RETURNING THE CALCULATED TREND DATA ---
+            'trend_labels': trend_labels,
+            'trend_values': trend_values,
+            'm_labels': trend_labels, # Reusing the 7-day labels for the X-axis
+            'm_completed': m_completed,
+            'm_pending': m_pending,
+        })
+
+class PersonnelStatsAPI(APIView):
+    """Provides live data specifically for the Personnel Dashboard."""
+    def get(self, request):
+        total_assets = Asset.objects.count()
+        
+        # Format recent maintenance tasks
+        recent_maint = Maintenance.objects.select_related('technician').order_by('-date')[:20]
+        maint_list = [{
+            'id': m.id,
+            'technician_name': m.technician.username if m.technician else 'System',
+            'status': m.status
+        } for m in recent_maint]
+
+        # Format recent incidents for table and chart
+        recent_inc = Incident.objects.all().order_by('-date')[:20]
+        inc_list = [{
+            'id': i.id,
+            'title': i.title,
+            'severity': i.severity,
+            'status': i.status,
+            'formatted_date': i.date.strftime('%b %d, %Y'),
+            'date_label': i.date.strftime('%a') # For the chart trends
+        } for i in recent_inc]
+
+        return Response({
+            'total_assets_count': total_assets,
+            'user_info': {'username': request.user.username},
+            'recent_maintenance': maint_list,
+            'recent_incidents': inc_list
         })
         
 class UserViewSet(viewsets.ModelViewSet):

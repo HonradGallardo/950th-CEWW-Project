@@ -61,6 +61,14 @@ def dashboard(request):
         # Recent Activity for Tables
         'recent_maintenance': recent_maintenance,
         'open_incidents': open_incidents_qs[:5],
+
+        # Add these so the Commander charts don't render empty on first load!
+        'chart_labels': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        'chart_values': [0, 0, 0, 0, 0],
+        'm_labels': ['Routine', 'Emergency'],
+        'm_completed': [0, 0],
+        'm_pending': [0, 0],
+        
     }
 
     user_groups = request.user.groups.values_list('name', flat=True)

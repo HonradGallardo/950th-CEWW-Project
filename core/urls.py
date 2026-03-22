@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from . import views
 from django.contrib.auth import views as auth_views
 # Import modular viewsets
-from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI
+from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI, PersonnelStatsAPI
 
 router = DefaultRouter()
 router.register(r'assets', AssetViewSet)
@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/verify-mfa/', VerifyMFAAPI.as_view(), name='api_verify_mfa'),
     path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('api/personnel/stats/', PersonnelStatsAPI.as_view(), name='personnel_stats_api'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('profile/', views.profile_view, name='profile'),
     
