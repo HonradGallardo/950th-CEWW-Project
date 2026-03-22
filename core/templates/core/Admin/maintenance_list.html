@@ -134,6 +134,12 @@
                         </div>
                     </div>
 
+                    <div class="mb-5">
+                        <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-2">Technical Hardware</label>
+                        <div id="hardware-grid" class="grid grid-cols-2 gap-2">
+                            </div>
+                    </div>
+
                     <div>
                         <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-2">Technical Notes</label>
                         <div class="bg-slate-50/50 dark:bg-slate-800/30 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
@@ -229,7 +235,6 @@ function renderTableRows(logs) {
 
     logs.forEach(log => {
         const isCompleted = log.status === 'Completed';
-        
         const statusPillClass = isCompleted 
             ? "bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400" 
             : "bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400";
@@ -239,11 +244,13 @@ function renderTableRows(logs) {
             : "hover:border-blue-400 hover:ring-4 hover:ring-blue-500/20 dark:hover:border-blue-500 dark:hover:ring-blue-500/30";
 
         const accentLine = isCompleted ? "bg-emerald-500" : "bg-blue-500";
-        const isActive = currentOpenLogId == log.id ? `ring-2 ring-blue-500 border-blue-500` : `border-slate-200 dark:border-slate-700`;
+        const isActive = currentOpenLogId == log.id ? `ring-2 ring-blue-500 border-blue-500 shadow-lg` : `border-slate-200 dark:border-slate-700`;
         const textDim = isCompleted ? "opacity-60" : "";
         
-        const iconClass = getAssetIconClass(log.asset_name + " " + log.maintenance_type);
+        const iconClass = getAssetIconClass(log.asset_name + " " + (log.maintenance_type || ''));
         const safeNotes = (log.notes || "No technical notes.").replace(/'/g, "\\'");
+        const safeFirmware = (log.firmware_os || 'N/A').replace(/'/g, "\\'");
+        const safeMac = (log.mac_address || 'N/A').replace(/'/g, "\\'");
 
         let displayDate = 'N/A';
         let displayTime = '--:--';
@@ -253,7 +260,6 @@ function renderTableRows(logs) {
             displayTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
-        // 🚨 UPDATED HTML: LARGE SPACING, BIGGER ICONS, AND 2-COLUMN GRID (Matches Original Asset Page)
         html += `
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive} ${hoverColorClass}"
              onclick="showDetails({
@@ -266,7 +272,13 @@ function renderTableRows(logs) {
                  date: '${displayDate}',
                  time: '${displayTime}',
                  a_type: '${log.maintenance_type}',
-                 editUrl: '/maintenance/edit/${log.id}/'
+                 asset_category: '${log.asset_category || 'Workstation'}',
+                 processor: '${log.processor || 'N/A'}',
+                 ram: '${log.ram_gb || '0'}GB',
+                 storage: '${log.storage || 'N/A'}',
+                 ip: '${log.ip_address || 'Not Assigned'}',
+                 firmware: '${safeFirmware}',
+                 mac: '${safeMac}'
              })">
             
             <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4 ${textDim}">
@@ -275,7 +287,7 @@ function renderTableRows(logs) {
                         <i class="fas ${iconClass} text-2xl"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight truncate max-w-[200px] sm:max-w-[180px]">${log.asset_name}</h3>
+                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight truncate max-w-[180px]">${log.asset_name}</h3>
                         <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${log.asset_string_id}</span>
                     </div>
                 </div>
@@ -284,21 +296,17 @@ function renderTableRows(logs) {
                     <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusPillClass}">
                         ${log.status}
                     </span>
-                    <div class="text-slate-300 dark:text-slate-600 transition-colors group-hover:text-blue-400 mt-1">
-                        <i class="fas fa-tools text-lg"></i>
-                    </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10 ${textDim} mt-auto">
-                <div class="col-span-2 sm:col-span-1">
+                <div class="col-span-1">
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Service Type</label>
                     <p class="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">${log.maintenance_type}</p>
                 </div>
-                <div class="col-span-2 sm:col-span-1">
+                <div class="col-span-1">
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Technician</label>
                     <p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate">
-                        <i class="fas fa-user-cog text-slate-300 dark:text-slate-600 text-xs mr-1"></i> 
                         ${log.technician_name || 'System Generated'}
                     </p>
                 </div>
@@ -317,12 +325,10 @@ function renderTableRows(logs) {
 
 function showDetails(data) {
     currentOpenLogId = data.logId;
-    
     $('#placeholder-content').addClass('hidden');
     $('#detail-content').removeClass('hidden');
     
-    initTable(); 
-    
+    // 1. Update Standard Fields
     $('#det-id').text(data.name);
     $('#det-asset-type').text(data.a_type);
     $('#det-date').text(data.date);
@@ -330,19 +336,53 @@ function showDetails(data) {
     $('#det-tech').text(data.tech);
     $('#det-status').text(data.status);
     $('#det-notes').text(data.notes);
-    $('#det-edit-link').attr('href', data.editUrl);
+
+    // 2. FIX: Update the Edit Link URL dynamically
+    $('#det-edit-link').attr('href', `/maintenance/edit/${data.logId}/`);
+    
+    // 3. FIX: Show the hidden delete button form
+    $('#delete-log-form').removeClass('hidden');
+
+    // 4. FIX: Hardware Logic separation
+    const hardwareContainer = $('#hardware-grid');
+    const type = (data.asset_category || '').toUpperCase();
+
+    if (type.includes('SERVER') || type.includes('ROUTER') || type.includes('SWITCH')) {
+        // Infrastructure View (Shows Firmware)
+        hardwareContainer.html(`
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="text-[8px] text-slate-400 uppercase font-bold">IP Address</p>
+                <p class="text-[15px] font-bold text-blue-500 font-mono">${data.ip}</p>
+            </div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="text-[8px] text-slate-400 uppercase font-bold">Firmware / OS</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.firmware}</p>
+            </div>
+            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="text-[8px] text-slate-400 uppercase font-bold">MAC Address</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200 font-mono">${data.mac}</p>
+            </div>
+        `);
+    } else {
+        // Workstation View (Hides Firmware, Shows Hardware Specs)
+        hardwareContainer.html(`
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="text-[8px] text-slate-400 uppercase font-bold">Processor</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.processor}</p>
+            </div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="text-[8px] text-slate-400 uppercase font-bold">RAM</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.ram}</p>
+            </div>
+            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="text-[8px] text-slate-400 uppercase font-bold">Storage</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.storage}</p>
+            </div>
+        `);
+    }
 
     const detIconClass = getAssetIconClass(data.name + " " + data.a_type);
     $('#det-icon').removeClass().addClass(`fas ${detIconClass} text-blue-500 dark:text-blue-400 text-xl`);
-
-    const statusEl = document.getElementById('det-status');
-    if (data.status === 'Completed') {
-        statusEl.className = "text-[11px] font-black text-emerald-500 uppercase";
-        $('#delete-log-form').removeClass('hidden'); 
-    } else {
-        statusEl.className = "text-[11px] font-black text-blue-500 uppercase";
-        $('#delete-log-form').addClass('hidden');
-    }
 }
 
 function renderPagination(totalPages) {

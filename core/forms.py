@@ -48,15 +48,14 @@ class MaintenanceForm(forms.ModelForm):
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        # 1. Added all technical hardware fields to the list
+        # Added the technical fields to the list so they can be saved
         fields = [
             'assets_name', 'assets_type', 'location', 'status', 
-            'assigned_to', 'maintenance_reason',
-            'processor', 'ram_gb', 'storage_capacity',
-            'ip_address', 'mac_address', 'firmware_version'
+            'assigned_to', 'maintenance_reason', 'processor', 
+            'ram_gb', 'storage_capacity', 'ip_address', 
+            'mac_address', 'firmware_version'
         ]
         
-        # 2. Defined widgets for the new fields to match your UI style
         widgets = {
             'assets_name': forms.TextInput(attrs={'placeholder': 'Asset Name', 'class': 'w-full p-2 border rounded text-sm'}),
             'assets_type': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
@@ -64,17 +63,16 @@ class AssetForm(forms.ModelForm):
             'assigned_to': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
             'status': forms.RadioSelect(),
             'maintenance_reason': forms.TextInput(attrs={
-                'placeholder': 'Maintenance Reason (Optional)', 
+                'placeholder': 'Maintenance Reason', 
                 'class': 'w-full p-2 border rounded text-sm'
             }),
-            
-            # --- NEW TECHNICAL HARDWARE WIDGETS ---
-            'processor': forms.TextInput(attrs={'placeholder': 'e.g. Intel i7-12700K', 'class': 'w-full p-2 border rounded text-sm'}),
-            'ram_gb': forms.NumberInput(attrs={'placeholder': 'RAM (GB)', 'class': 'w-full p-2 border rounded text-sm', 'min': '0'}),
-            'storage_capacity': forms.TextInput(attrs={'placeholder': 'e.g. 512GB SSD', 'class': 'w-full p-2 border rounded text-sm'}),
-            'ip_address': forms.TextInput(attrs={'placeholder': 'IPv4/IPv6 Address', 'class': 'w-full p-2 border rounded text-sm'}),
+            # Technical Specification Widgets
+            'processor': forms.TextInput(attrs={'placeholder': 'Processor (e.g. Intel i7)', 'class': 'w-full p-2 border rounded text-sm'}),
+            'ram_gb': forms.NumberInput(attrs={'placeholder': 'RAM in GB', 'class': 'w-full p-2 border rounded text-sm'}),
+            'storage_capacity': forms.TextInput(attrs={'placeholder': 'Storage (e.g. 512GB SSD)', 'class': 'w-full p-2 border rounded text-sm'}),
+            'ip_address': forms.TextInput(attrs={'placeholder': 'IP Address', 'class': 'w-full p-2 border rounded text-sm'}),
             'mac_address': forms.TextInput(attrs={'placeholder': 'MAC Address', 'class': 'w-full p-2 border rounded text-sm'}),
-            'firmware_version': forms.TextInput(attrs={'placeholder': 'Firmware or OS Version', 'class': 'w-full p-2 border rounded text-sm'}),
+            'firmware_version': forms.TextInput(attrs={'placeholder': 'Firmware/OS Version', 'class': 'w-full p-2 border rounded text-sm'}),
         }
         
 class UserForm(forms.ModelForm):
