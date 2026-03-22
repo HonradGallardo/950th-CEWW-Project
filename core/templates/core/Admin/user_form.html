@@ -30,7 +30,7 @@
                 <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 relative z-10 w-full text-left uppercase tracking-wider text-[11px] opacity-70">Avatar</h3>
                 
                 <div class="relative group z-10 w-full flex flex-col items-center">
-                    {% if form.instance.profile.image and 'default.jpg' not in form.instance.profile.image.url %}
+                    {% if form.instance.pk and form.instance.profile.image and 'default.jpg' not in form.instance.profile.image.url %}
                         <div class="relative mb-6">
                             <img src="{{ form.instance.profile.image.url }}" class="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white dark:border-slate-800 bg-white dark:bg-slate-800">
                             <div class="absolute -bottom-2 right-1/2 translate-x-1/2 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30 whitespace-nowrap shadow-sm">
@@ -50,7 +50,7 @@
                 </div>
             </div>
             
-            </div>
+        </div>
 
         <div class="w-full lg:w-2/3">
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 shadow-sm">
@@ -64,7 +64,7 @@
                             Phone Number
                         </label>
                         <div class="relative group">
-                            <input type="tel" name="phone" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);" placeholder="09XXXXXXXXX" value="{{ form.instance.profile.phone|default:'' }}" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
+                            <input type="tel" name="phone" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);" placeholder="09XXXXXXXXX" value="{% if form.instance.pk %}{{ form.instance.profile.phone|default:'' }}{% endif %}" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
                         </div>
                     </div>
 
@@ -74,33 +74,33 @@
                         </label>
                         <div class="relative group">
                             <select name="rank" id="acc_rank" onchange="if(typeof updateRankBadge === 'function') updateRankBadge(this)" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
-                                <option value="" disabled {% if not form.instance.profile.rank %}selected{% endif %}>Select Rank</option>
+                                <option value="" disabled {% if not form.instance.pk or not form.instance.profile.rank %}selected{% endif %}>Select Rank</option>
                                 <optgroup label="Enlisted">
-                                    <option value="Airman" {% if form.instance.profile.rank == 'Airman' %}selected{% endif %}>Airman</option>
-                                    <option value="Airman Second Class" {% if form.instance.profile.rank == 'Airman Second Class' %}selected{% endif %}>Airman Second Class</option>
-                                    <option value="Airman First Class" {% if form.instance.profile.rank == 'Airman First Class' %}selected{% endif %}>Airman First Class</option>
-                                    <option value="Sergeant" {% if form.instance.profile.rank == 'Sergeant' %}selected{% endif %}>Sergeant</option>
+                                    <option value="Airman" {% if form.instance.pk and form.instance.profile.rank == 'Airman' %}selected{% endif %}>Airman</option>
+                                    <option value="Airman Second Class" {% if form.instance.pk and form.instance.profile.rank == 'Airman Second Class' %}selected{% endif %}>Airman Second Class</option>
+                                    <option value="Airman First Class" {% if form.instance.pk and form.instance.profile.rank == 'Airman First Class' %}selected{% endif %}>Airman First Class</option>
+                                    <option value="Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Sergeant' %}selected{% endif %}>Sergeant</option>
                                 </optgroup>
                                 <optgroup label="Non-Commissioned Officers">
-                                    <option value="Staff Sergeant" {% if form.instance.profile.rank == 'Staff Sergeant' %}selected{% endif %}>Staff Sergeant</option>
-                                    <option value="Technical Sergeant" {% if form.instance.profile.rank == 'Technical Sergeant' %}selected{% endif %}>Technical Sergeant</option>
-                                    <option value="Master Sergeant" {% if form.instance.profile.rank == 'Master Sergeant' %}selected{% endif %}>Master Sergeant</option>
-                                    <option value="Senior Master Sergeant" {% if form.instance.profile.rank == 'Senior Master Sergeant' %}selected{% endif %}>Senior Master Sergeant</option>
-                                    <option value="Chief Master Sergeant" {% if form.instance.profile.rank == 'Chief Master Sergeant' %}selected{% endif %}>Chief Master Sergeant</option>
+                                    <option value="Staff Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Staff Sergeant' %}selected{% endif %}>Staff Sergeant</option>
+                                    <option value="Technical Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Technical Sergeant' %}selected{% endif %}>Technical Sergeant</option>
+                                    <option value="Master Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Master Sergeant' %}selected{% endif %}>Master Sergeant</option>
+                                    <option value="Senior Master Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Senior Master Sergeant' %}selected{% endif %}>Senior Master Sergeant</option>
+                                    <option value="Chief Master Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Chief Master Sergeant' %}selected{% endif %}>Chief Master Sergeant</option>
                                 </optgroup>
                                 <optgroup label="Officers">
-                                    <option value="Second Lieutenant" {% if form.instance.profile.rank == 'Second Lieutenant' %}selected{% endif %}>Second Lieutenant</option>
-                                    <option value="First Lieutenant" {% if form.instance.profile.rank == 'First Lieutenant' %}selected{% endif %}>First Lieutenant</option>
-                                    <option value="Captain" {% if form.instance.profile.rank == 'Captain' %}selected{% endif %}>Captain</option>
-                                    <option value="Major" {% if form.instance.profile.rank == 'Major' %}selected{% endif %}>Major</option>
-                                    <option value="Lieutenant Colonel" {% if form.instance.profile.rank == 'Lieutenant Colonel' %}selected{% endif %}>Lieutenant Colonel</option>
-                                    <option value="Colonel" {% if form.instance.profile.rank == 'Colonel' %}selected{% endif %}>Colonel</option>
+                                    <option value="Second Lieutenant" {% if form.instance.pk and form.instance.profile.rank == 'Second Lieutenant' %}selected{% endif %}>Second Lieutenant</option>
+                                    <option value="First Lieutenant" {% if form.instance.pk and form.instance.profile.rank == 'First Lieutenant' %}selected{% endif %}>First Lieutenant</option>
+                                    <option value="Captain" {% if form.instance.pk and form.instance.profile.rank == 'Captain' %}selected{% endif %}>Captain</option>
+                                    <option value="Major" {% if form.instance.pk and form.instance.profile.rank == 'Major' %}selected{% endif %}>Major</option>
+                                    <option value="Lieutenant Colonel" {% if form.instance.pk and form.instance.profile.rank == 'Lieutenant Colonel' %}selected{% endif %}>Lieutenant Colonel</option>
+                                    <option value="Colonel" {% if form.instance.pk and form.instance.profile.rank == 'Colonel' %}selected{% endif %}>Colonel</option>
                                 </optgroup>
                                 <optgroup label="General Officers">
-                                    <option value="Brigadier General" {% if form.instance.profile.rank == 'Brigadier General' %}selected{% endif %}>Brigadier General</option>
-                                    <option value="Major General" {% if form.instance.profile.rank == 'Major General' %}selected{% endif %}>Major General</option>
-                                    <option value="Lieutenant General" {% if form.instance.profile.rank == 'Lieutenant General' %}selected{% endif %}>Lieutenant General</option>
-                                    <option value="General" {% if form.instance.profile.rank == 'General' %}selected{% endif %}>General</option>
+                                    <option value="Brigadier General" {% if form.instance.pk and form.instance.profile.rank == 'Brigadier General' %}selected{% endif %}>Brigadier General</option>
+                                    <option value="Major General" {% if form.instance.pk and form.instance.profile.rank == 'Major General' %}selected{% endif %}>Major General</option>
+                                    <option value="Lieutenant General" {% if form.instance.pk and form.instance.profile.rank == 'Lieutenant General' %}selected{% endif %}>Lieutenant General</option>
+                                    <option value="General" {% if form.instance.pk and form.instance.profile.rank == 'General' %}selected{% endif %}>General</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -111,11 +111,13 @@
                             System Role
                         </label>
                         <div class="relative group">
+                            <!-- SAFEGUARDED M2M RELATIONSHIP LOOP -->
                             <select name="role_name" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
-                                <option value="" disabled {% if not form.instance.groups.all %}selected{% endif %}>Select Role</option>
-                                <option value="Admin" {% for group in form.instance.groups.all %}{% if group.name == 'Admin' %}selected{% endif %}{% endfor %}>Admin</option>
-                                <option value="Commander" {% for group in form.instance.groups.all %}{% if group.name == 'Commander' %}selected{% endif %}{% endfor %}>Commander</option>
-                                <option value="Personnel" {% for group in form.instance.groups.all %}{% if group.name == 'Personnel' %}selected{% endif %}{% endfor %}>Personnel</option>
+                                <option value="" disabled {% if not form.instance.pk %}selected{% endif %}>Select Role</option>
+                                
+                                <option value="Admin" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Admin' %}selected{% endif %}{% endfor %}{% endif %}>Admin</option>
+                                <option value="Commander" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Commander' %}selected{% endif %}{% endfor %}{% endif %}>Commander</option>
+                                <option value="Personnel" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Personnel' %}selected{% endif %}{% endfor %}{% endif %}>Personnel</option>
                             </select>
                         </div>
                     </div>
@@ -181,7 +183,7 @@ $(document).ready(function() {
     $form.on('submit', function(e) {
         e.preventDefault();
 
-        // 🚨 ADD THIS EMAIL VALIDATION BLOCK 🚨
+        // 🚨 EMAIL VALIDATION BLOCK 🚨
         const $emailInput = $('input[name="email"]');
         const emailValue = $emailInput.val();
         const originalText = $text.text();
@@ -253,27 +255,6 @@ $(document).ready(function() {
         });
     });
 });
-
-/**
- * 2. VANILLA JAVASCRIPT ALTERNATIVE (Commented Reference)
- */
-/*
-document.addEventListener('DOMContentLoaded', function() {
-    const userForm = document.querySelector('#userPersonnelForm');
-    userForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(userForm);
-        try {
-            const response = await fetch(window.location.href, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            if (response.ok) window.location.href = "/users/";
-        } catch (err) { console.error("API error:", err); }
-    });
-});
-*/
 </script>
 
 <style>

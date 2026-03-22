@@ -55,25 +55,8 @@
                     </div>
                 </div>
             </div>
-            <div id="computing-specs" class="hidden space-y-3 pt-2">
-            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Hardware Specifications</span>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="flex-1">{{ form.processor }}</div>
-                <div class="flex-1">{{ form.ram_gb }}</div>
-            </div>
-            <div class="w-full">{{ form.storage_capacity }}</div>
-        </div>
 
-<<<<<<< HEAD
-        <div id="networking-specs" class="hidden space-y-3 pt-2">
-            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Network Configuration</span>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="flex-1">{{ form.ip_address }}</div>
-                <div class="flex-1">{{ form.mac_address }}</div>
-            </div>
-            <div class="w-full">{{ form.firmware_version }}</div>
-        </div>
-=======
+            <!-- Unified Technical Specs Container -->
             <div id="specs-logic-container" class="space-y-4 py-2 border-t border-slate-100 dark:border-slate-700 mt-4 hidden">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Technical Specifications</span>
                 
@@ -110,7 +93,6 @@
                 </div>
             </div>
 
->>>>>>> 1adb23cb10ea700ff5e053d0126d3532f553aa02
             <div class="py-2">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Status</span>
                 <div class="flex flex-wrap gap-4 sm:justify-between items-center bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 status-container">
@@ -159,7 +141,6 @@ $(document).ready(function() {
 
     // 1. DYNAMIC SPECIFICATIONS LOGIC
     function toggleSpecs() {
-        // We use .toLowerCase() to ensure it matches regardless of casing in your database
         const type = $('select[name="assets_type"]').val() ? $('select[name="assets_type"]').val().toLowerCase() : "";
         
         // Reset all specs first
@@ -177,16 +158,10 @@ $(document).ready(function() {
 
     // 2. MAINTENANCE LOGIC
     function checkMaintenance() {
-        // Select the checked radio and get its value AND its label text
         const selectedRadio = $('input[name="status"]:checked');
         const selectedValue = (selectedRadio.val() || "").toLowerCase();
-        
-        // Also check the visible label text as a fallback
         const labelText = selectedRadio.closest('label').find('.status-label').text().toLowerCase();
 
-        console.log("Value:", selectedValue, "Label:", labelText); // Check your console (F12)
-
-        // Match if 'maintenance' appears in the database value OR the UI label
         if (selectedValue.includes('maintenance') || labelText.includes('maintenance')) {
             $('#maintenance-logic-container').stop(true, true).removeClass('hidden').hide().slideDown(300);
         } else {
@@ -204,54 +179,8 @@ $(document).ready(function() {
     $('select[name="assets_type"]').on('change', toggleSpecs);
     $('input[name="status"]').on('change', checkMaintenance);
 
-    // 3. API SUBMIT LOGIC
-$('#assetForm').on('submit', function(e) {
-    e.preventDefault();
-    const $submitBtn = $('#submitBtn');
-    $submitBtn.prop('disabled', true).addClass('opacity-50').text('SAVING...');
-
-    const apiUrl = isEdit ? `/api/assets/${assetPk}/` : '/api/assets/';
-    const apiMethod = isEdit ? 'PUT' : 'POST';
-
-    // Capture the maintenance reason specifically
-    const maintenanceReason = $('[name="type_of_maintenance"]').val();
-
-    const payload = {
-        assets_name: $('input[name="assets_name"]').val(),
-        assets_type: $('select[name="assets_type"]').val(),
-        location: $('input[name="location"]').val(),
-        status: $('input[name="status"]:checked').val(),
-        type_of_maintenance: maintenanceReason || 'Auto-Generated Repair',
-        
-        // Specification Fields (Send null if empty to satisfy the Serializer)
-        processor: $('input[name="processor"]').val() || null,
-        ram_gb: $('input[name="ram_gb"]').val() || null,
-        storage_capacity: $('input[name="storage_capacity"]').val() || null,
-        ip_address: $('input[name="ip_address"]').val() || null,
-        mac_address: $('input[name="mac_address"]').val() || null,
-        firmware_version: $('input[name="firmware_version"]').val() || null
-    };
-
-    $.ajax({
-        url: apiUrl,
-        type: apiMethod,
-        headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
-        data: JSON.stringify(payload),
-        contentType: 'application/json',
-        success: function() { 
-            // Redirect to Maintenance to see the auto-generated log immediately
-            window.location.href = '/assets/'; 
-        },
-        error: function(xhr) {
-            $submitBtn.prop('disabled', false).removeClass('opacity-50').text('SAVE ASSET ENTRY');
-            alert("Error: " + (xhr.responseJSON?.detail || "Could not save asset."));
-        }
-    });
-});
-
-<<<<<<< HEAD
     // 3. API Save/Update Logic
-$('#assetForm').on('submit', function(e) {
+    $('#assetForm').on('submit', function(e) {
         e.preventDefault();
         const $submitBtn = $('#submitBtn');
         $submitBtn.prop('disabled', true).addClass('opacity-50').text('SAVING...');
@@ -259,8 +188,6 @@ $('#assetForm').on('submit', function(e) {
         const apiUrl = isEdit ? `/api/assets/${assetPk}/` : '/api/assets/';
         const apiMethod = isEdit ? 'PATCH' : 'POST';
 
-        // --- UPDATED: Payload includes new technical fields ---
-        // ... inside the submit function
         const payload = {
             assets_name: $('input[name="assets_name"]').val(),
             assets_type: $('select[name="assets_type"]').val(),
@@ -291,9 +218,6 @@ $('#assetForm').on('submit', function(e) {
     });
 
     // 4. API Delete Logic
-=======
-    // 4. API DELETE LOGIC
->>>>>>> 1adb23cb10ea700ff5e053d0126d3532f553aa02
     $('#deleteBtn').on('click', function() {
         if (confirm("Are you sure? This action cannot be undone.")) {
             $.ajax({
