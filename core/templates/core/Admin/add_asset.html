@@ -55,7 +55,23 @@
                     </div>
                 </div>
             </div>
+            <div id="computing-specs" class="hidden space-y-3 pt-2">
+            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Hardware Specifications</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="flex-1">{{ form.processor }}</div>
+                <div class="flex-1">{{ form.ram_gb }}</div>
+            </div>
+            <div class="w-full">{{ form.storage_capacity }}</div>
+        </div>
 
+        <div id="networking-specs" class="hidden space-y-3 pt-2">
+            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Network Configuration</span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="flex-1">{{ form.ip_address }}</div>
+                <div class="flex-1">{{ form.mac_address }}</div>
+            </div>
+            <div class="w-full">{{ form.firmware_version }}</div>
+        </div>
             <div class="py-2">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Status</span>
                 <div class="flex flex-wrap gap-4 sm:justify-between items-center bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 status-container">
@@ -77,7 +93,7 @@
                         <span class="text-[10px] font-black uppercase">Maintenance Reason</span>
                     </div>
                     <div class="w-full">
-                        {{ form.type_of_maintenance }}
+                        {{ form.maintenance_reason }}
                     </div>
                 </div>
             </div>
@@ -102,6 +118,22 @@ $(document).ready(function() {
     const assetPk = "{{ asset.pk|default:'' }}";
     const isEdit = assetPk !== "";
 
+    // --- NEW: Toggle Logic for Asset Types ---
+    function toggleTechFields() {
+        const assetType = $('select[name="assets_type"]').val();
+        $('#computing-specs, #networking-specs').addClass('hidden');
+
+        if (assetType === 'PC' || assetType === 'Laptop') {
+            $('#computing-specs').removeClass('hidden');
+        } else if (assetType === 'Router' || assetType === 'Server') {
+            $('#networking-specs').removeClass('hidden');
+        }
+    }
+
+    // Run on change and on initial load (for edits)
+    $('select[name="assets_type"]').on('change', toggleTechFields);
+    toggleTechFields();
+
     // 1. Initial State Check (Important for Edits)
     if ($('input[name="status"]:checked').val() === 'Maintenance') {
         $('#maintenance-logic-container').removeClass('hidden').show();
@@ -117,20 +149,29 @@ $(document).ready(function() {
     });
 
     // 3. API Save/Update Logic
-    $('#assetForm').on('submit', function(e) {
+$('#assetForm').on('submit', function(e) {
         e.preventDefault();
         const $submitBtn = $('#submitBtn');
         $submitBtn.prop('disabled', true).addClass('opacity-50').text('SAVING...');
 
         const apiUrl = isEdit ? `/api/assets/${assetPk}/` : '/api/assets/';
-        const apiMethod = isEdit ? 'PUT' : 'POST';
+        const apiMethod = isEdit ? 'PATCH' : 'POST';
 
+        // --- UPDATED: Payload includes new technical fields ---
+        // ... inside the submit function
         const payload = {
             assets_name: $('input[name="assets_name"]').val(),
             assets_type: $('select[name="assets_type"]').val(),
             location: $('input[name="location"]').val(),
             status: $('input[name="status"]:checked').val(),
-            type_of_maintenance: $('select[name="type_of_maintenance"]').val()
+            maintenance_reason: $('input[name="maintenance_reason"]').val() || null,
+
+            processor: $('input[name="processor"]').val() || null,
+            ram_gb: parseInt($('input[name="ram_gb"]').val()) || null,
+            storage_capacity: $('input[name="storage_capacity"]').val() || null,
+            ip_address: $('input[name="ip_address"]').val() || null,
+            mac_address: $('input[name="mac_address"]').val() || null,
+            firmware_version: $('input[name="firmware_version"]').val() || null
         };
 
         $.ajax({
@@ -142,7 +183,7 @@ $(document).ready(function() {
             success: function() { window.location.href = '/assets/'; },
             error: function(xhr) {
                 $submitBtn.prop('disabled', false).removeClass('opacity-50').text('SAVE ASSET ENTRY');
-                alert("API Error: " + (xhr.responseJSON?.detail || "Verification failed."));
+                alert("API Error: " + (xhr.responseJSON?.detail || "Update failed."));
             }
         });
     });

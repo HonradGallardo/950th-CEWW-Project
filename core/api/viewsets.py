@@ -394,24 +394,24 @@ class AssetViewSet(viewsets.ModelViewSet):
         self.handle_maintenance_logic(asset)
 
     def handle_maintenance_logic(self, asset):
-        # 1. Look directly at the saved asset's status, not just the raw request data
         if asset.status == 'Maintenance':
-            
-            # 2. Provide a default fallback if 'type_of_maintenance' isn't in the form
-            maint_type = self.request.data.get('type_of_maintenance', 'Auto-Generated Repair')
-            
-            # 3. Prevent duplicate logs: Check if there's already an active log for this asset
+            maint_type = self.request.data.get('maintenance_reason', 'Auto-Generated Repair')
+
+            # ✅ Always update asset field
+            asset.maintenance_reason = maint_type
+            asset.save(update_fields=['maintenance_reason'])
+
             exists = Maintenance.objects.filter(asset=asset).exclude(status='Completed').exists()
-            
+
             if not exists:
                 Maintenance.objects.create(
                     asset=asset,
                     technician=self.request.user,
                     maintenance_type=maint_type,
-                    status='In Progress', # You can also set this to 'Queued' if you prefer
-                    notes=f"System auto-generated log: {asset.assets_name} was marked as 'Maintenance' from the Asset Registry."
+                    status='In Progress',
+                    notes=f"System auto-generated log: {asset.assets_name} was marked as 'Maintenance'."
                 )
-            
+                
 class MaintenanceViewSet(viewsets.ModelViewSet):
     queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer

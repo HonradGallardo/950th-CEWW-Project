@@ -4,12 +4,12 @@ from ..models import Asset, IncidentComment, Maintenance, Incident, Notification
 from django.contrib.auth.password_validation import validate_password
 
 class AssetSerializer(serializers.ModelSerializer):
-    """Converts Asset model instances into JSON."""
-
     assigned_to_name = serializers.ReadOnlyField(source='assigned_to.username')
+
     class Meta:
         model = Asset
         fields = '__all__'
+        read_only_fields = ['assigned_to']   # ✅ ADD THIS to prevent changes via API
         
 
 class MaintenanceSerializer(serializers.ModelSerializer):

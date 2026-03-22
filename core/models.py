@@ -15,21 +15,36 @@ class UserPasskey(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.name}"
     
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
 class Asset(models.Model):
     ASSET_TYPES = [('PC', 'PC'), ('Laptop', 'Laptop'), ('Server', 'Server'), ('Router', 'Router')]
     STATUS_CHOICES = [('Active', 'Active'), ('Inactive', 'Inactive'), ('Maintenance', 'Under Maintenance')]
 
     assets_id = models.CharField(max_length=10, unique=True, editable=False)
     assets_name = models.CharField(max_length=100)
-    # AUTOMATIC: Links to the User who created/updated it
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     assets_type = models.CharField(max_length=20, choices=ASSET_TYPES)
     location = models.CharField(max_length=100)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
     maintenance_reason = models.TextField(blank=True, null=True)
     
-    # AUTOMATIC: auto_now_add captures date AND time on creation
+    # --- TECHNICAL HARDWARE FIELDS ---
+    # For PC/Laptop/Server
+    processor = models.CharField(max_length=100, blank=True, null=True)
+    ram_gb = models.IntegerField(help_text="RAM in GB", blank=True, null=True)
+    storage_capacity = models.CharField(max_length=50, help_text="e.g., 512GB SSD", blank=True, null=True)
+    
+    # For Router/Server/Networking
+    ip_address = models.GenericIPAddressField(protocol='both', unpack_ipv4=True, blank=True, null=True)
+    mac_address = models.CharField(max_length=17, blank=True, null=True)
+    firmware_version = models.CharField(max_length=50, blank=True, null=True)
+    
+    # --- TIMESTAMPS ---
     date_added = models.DateTimeField(default=timezone.now)
+    date_updated = models.DateTimeField(auto_now=True) # Automatically updates on every save
 
     def save(self, *args, **kwargs):
         if not self.assets_id:
@@ -43,12 +58,13 @@ class Asset(models.Model):
                     new_number = last_number + 1
                     self.assets_id = f'AST-{new_number:03d}'
                 except (IndexError, ValueError):
-                    self.assets_id = f'AST-{last_asset.id + 1:03d}'
+                    # Fallback to ID if string parsing fails
+                    self.assets_id = f'AST-{self.id + 1:03d}' if self.id else f'AST-{Asset.objects.count() + 1:03d}'
         super(Asset, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.assets_id} - {self.assets_name}"
-
+    
 class Maintenance(models.Model):
     STATUS_CHOICES = [
         ('In Progress', 'In Progress'),
