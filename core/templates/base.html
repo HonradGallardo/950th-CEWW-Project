@@ -40,14 +40,13 @@
             transition: background-color var(--transition);
         }
 
-        /* --- UPDATED SIDEBAR CSS FOR HOVER EFFECT --- */
         #sidebar {
             width: var(--sb-width);
             transition: width var(--transition), transform var(--transition);
             position: fixed; top: 0; left: 0; height: 100vh;
             background-color: #1e293b; 
             z-index: 50; display: flex; flex-direction: column;
-            overflow-x: hidden; /* Prevent horizontal scroll when collapsed */
+            overflow-x: hidden; 
         }
         
         #main-content { 
@@ -57,18 +56,11 @@
             min-height: 100vh; display: flex; flex-direction: column;
         }
 
-        /* The Hover Magic applies when the sidebar is formally 'collapsed' */
         @media (min-width: 1025px) {
             .sidebar-collapsed #sidebar { 
                 width: var(--sb-collapsed); 
             }
             
-            /* When hovering over the collapsed sidebar, it expands over the content */
-            .sidebar-collapsed #sidebar:hover {
-                width: var(--sb-width);
-                box-shadow: 4px 0 15px rgba(0,0,0,0.2); /* Add shadow to show it's floating */
-            }
-
             .sidebar-collapsed #main-content { 
                 margin-left: var(--sb-collapsed); 
                 width: calc(100% - var(--sb-collapsed));
@@ -103,23 +95,16 @@
         
         /* Hide text when collapsed */
         .sidebar-collapsed #sidebar .sidebar-text { opacity: 0; pointer-events: none; width: 0; }
-        
-        /* Show text again when hovering over the collapsed sidebar */
-        .sidebar-collapsed #sidebar:hover .sidebar-text { opacity: 1; pointer-events: auto; width: auto;}
 
         /* Icon alignment */
         .sidebar-collapsed #sidebar .nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
-        .sidebar-collapsed #sidebar:hover .nav-item { justify-content: flex-start; padding-left: 0.75rem; padding-right: 0.75rem; }
-        
         .sidebar-collapsed #sidebar .nav-item i { margin-right: 0; font-size: 1.25rem; }
-        .sidebar-collapsed #sidebar:hover .nav-item i { margin-right: 0.75rem; font-size: 1rem; }
         
         .nav-item i { flex-shrink: 0; transition: margin 0.2s, font-size 0.2s; }
 
-        /* Hide Theme Switcher when collapsed, show on hover */
+        /* Hide Theme Switcher when collapsed */
         .theme-switch-container { padding: 0 1rem; margin-bottom: 1.5rem; transition: opacity 0.2s; }
         .sidebar-collapsed #sidebar .theme-switch-container { opacity: 0; pointer-events: none; }
-        .sidebar-collapsed #sidebar:hover .theme-switch-container { opacity: 1; pointer-events: auto; }
 
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -155,7 +140,7 @@
         <div id="sidebar" class="text-white flex flex-col">
             <div class="px-6 h-[73px] border-b border-slate-600/50 flex items-center justify-between shrink-0">
                 <h2 class="text-sm font-bold tracking-tight uppercase sidebar-text text-white">950th CEWW System</h2>
-                <!-- Icon to show when collapsed. Hidden on hover -->
+                <!-- Icon to show when collapsed -->
                 <i class="fas fa-shield-alt hidden sidebar-icon-only text-xl mx-auto transition-opacity duration-200"></i>
                 <button id="closeSidebarMobile" class="lg:hidden text-slate-400 p-2">
                     <i class="fas fa-times"></i>
@@ -319,22 +304,6 @@
                     $('.sidebar-icon-only').addClass('hidden').css('opacity', '0');
                 }
             }
-
-            // Bind Hover Events specifically for the Header Icon toggle
-            $('#sidebar').hover(
-                function() { // mouseenter
-                    if ($('body').hasClass('sidebar-collapsed')) {
-                        $('#sidebar h2').removeClass('hidden');
-                        $('.sidebar-icon-only').addClass('hidden').css('opacity', '0');
-                    }
-                }, 
-                function() { // mouseleave
-                    if ($('body').hasClass('sidebar-collapsed')) {
-                        $('#sidebar h2').addClass('hidden');
-                        $('.sidebar-icon-only').removeClass('hidden').css('opacity', '1');
-                    }
-                }
-            );
 
             // Trigger the initial check
             handleSidebarIcons();
