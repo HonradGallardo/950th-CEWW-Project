@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework.views import APIView, settings
+from django.conf import settings
 from django.db.models import Q, Count
 from datetime import timedelta
 from django.utils import timezone
@@ -35,8 +36,12 @@ from core.api.serializers import (
 )
 
 # Ensure these match your local environment
-RP_ID = "localhost" 
-ORIGIN = "http://localhost:8000"
+if settings.DEBUG:
+    RP_ID = "localhost"
+    ORIGIN = "http://localhost:8000"
+else:
+    RP_ID = "nine50ceww-aims.onrender.com"
+    ORIGIN = "https://nine50ceww-aims.onrender.com"
 
 # ==========================================
 # PASSKEY REGISTRATION (For Profile Page)
