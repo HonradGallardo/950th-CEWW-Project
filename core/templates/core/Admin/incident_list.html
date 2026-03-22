@@ -189,54 +189,9 @@
 
                         <div class="space-y-2.5 hidden" id="actions_taken_container">
                             <label class="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                <i class="fas fa-history"></i> Legacy Actions Taken
+                                <i class="fas fa-history"></i> Progress & Actions Log
                             </label>
                             <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed shadow-inner" id="view_actions"></div>
-                        </div>
-
-                        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm flex flex-col h-[450px] overflow-hidden relative">
-                            <div class="absolute top-0 left-0 right-0 p-3 border-b border-slate-100 dark:border-slate-700/80 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md z-10 flex items-center justify-between shadow-sm">
-                                <h3 class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                    <i class="fas fa-terminal text-blue-500"></i> Resolution Log Feed
-                                </h3>
-                            </div>
-                            
-                            <div class="flex-1 overflow-y-auto p-4 pt-14 space-y-4 bg-slate-50/30 dark:bg-slate-900/10 custom-scrollbar" id="chat-container"></div>
-                            
-                            {% if not is_commander %}
-                            <form id="chat-form" class="p-3 border-t border-slate-100 dark:border-slate-700/80 bg-white dark:bg-slate-800 shrink-0">
-                                {% csrf_token %}
-                                <input type="hidden" name="incident_id" id="incident_id">
-                                
-                                <!-- ELEVATED RESOLUTION LOG INPUT FORM -->
-                                <div class="bg-slate-100 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 space-y-2 relative">
-                                    
-                                    <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg px-3 py-0.5 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all shadow-sm">
-                                        <i class="fas fa-crosshairs text-slate-400 text-[10px] w-4 text-center"></i>
-                                        <input type="text" id="chat_issue" placeholder="Current issue..." class="w-full bg-transparent border-none text-[11px] font-bold text-slate-700 dark:text-slate-200 focus:ring-0 outline-none py-1.5 ml-1">
-                                    </div>
-                                    
-                                    <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg px-3 py-0.5 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all shadow-sm">
-                                        <i class="fas fa-wrench text-slate-400 text-[10px] w-4 text-center"></i>
-                                        <input type="text" id="chat_action" placeholder="Action taken..." class="w-full bg-transparent border-none text-[11px] font-bold text-slate-700 dark:text-slate-200 focus:ring-0 outline-none py-1.5 ml-1">
-                                    </div>
-                                    
-                                    <div class="flex items-center gap-2">
-                                        <div class="flex-1 flex items-center bg-white dark:bg-slate-800 rounded-lg px-3 py-0.5 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all shadow-sm">
-                                            <i class="fas fa-check-circle text-slate-400 text-[10px] w-4 text-center"></i>
-                                            <input type="text" id="chat_result" placeholder="Result / outcome..." class="w-full bg-transparent border-none text-[11px] font-bold text-slate-700 dark:text-slate-200 focus:ring-0 outline-none py-1.5 ml-1">
-                                        </div>
-                                        <button type="submit" id="chatSubmitBtn" class="bg-blue-600 hover:bg-blue-700 text-white h-[32px] w-[40px] rounded-lg flex items-center justify-center transition-all shadow-md active:scale-95 shrink-0 hover:shadow-blue-500/30">
-                                            <i class="fas fa-paper-plane text-[10px]"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                            {% else %}
-                            <div class="p-4 text-center text-[10px] font-black text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700/80">
-                                Read-Only Mode: Log updates disabled
-                            </div>
-                            {% endif %}
                         </div>
                     </div>
 
@@ -259,7 +214,6 @@ let allIncidents = [];
 let currentPage = 1;
 const rowsPerPage = 10;
 let currentOpenIncidentId = null;
-let chatRefreshInterval = null; 
 
 function loadIncidents() {
     $.ajax({
@@ -460,6 +414,7 @@ function previewIncident(data) {
     $('#incident_id').val(data.id);
     $('#view_id').text("ID: INC-" + String(data.id).padStart(3, '0'));
     $('#view_title').text(data.title);
+    $('#view_status').text(data.status);
     $('#view_reporter').text(data.reporter);
     $('#view_assigned').text(data.assigned);
     $('#view_date').text(data.date);
@@ -508,15 +463,6 @@ function previewIncident(data) {
             $('#deleteIncidentIconBtn').addClass('hidden'); 
         }
     }
-
-    fetchLogs(data.id, true);
-
-    if (chatRefreshInterval) clearInterval(chatRefreshInterval);
-    chatRefreshInterval = setInterval(() => {
-        if (currentOpenIncidentId) {
-            fetchLogs(currentOpenIncidentId, false); 
-        }
-    }, 3000); 
 }
 
 const $deleteModal = $('#deleteModal');
@@ -535,7 +481,6 @@ $('#confirmDeleteBtn').on('click', function() {
             $('#detailContent').addClass('hidden');
             $('#emptyState').removeClass('opacity-0 pointer-events-none');
             currentOpenIncidentId = null;
-            if(chatRefreshInterval) clearInterval(chatRefreshInterval);
         },
         error: function(err) {
             console.error("Failed to delete incident", err);
@@ -544,107 +489,9 @@ $('#confirmDeleteBtn').on('click', function() {
     });
 });
 
-let lastScrollHeight = 0;
-async function fetchLogs(id, showLoader = true) {
-    const $container = $('#chat-container');
-    if (showLoader) $container.html('<p class="text-center py-10 text-[10px] text-slate-400 font-bold uppercase animate-pulse">Synchronizing Logs...</p>');
-
-    try {
-        const response = await fetch(`/api/incident-comments/?incident=${id}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        if (!response.ok) throw new Error("API Route missing");
-        const data = await response.json();
-        
-        $container.empty();
-        if (data.length === 0) {
-            $container.append('<div class="flex flex-col items-center justify-center py-10 opacity-50"><i class="fas fa-comment-slash text-2xl text-slate-300 dark:text-slate-600 mb-2"></i><p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">No logs recorded</p></div>');
-            return;
-        }
-
-        data.forEach(c => {
-            const sideClass = c.is_current_user ? 'items-end' : 'items-start';
-            const bubbleClass = c.is_current_user 
-                ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-blue-500/20' 
-                : 'bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-2xl rounded-tl-sm shadow-sm';
-            const authorClass = c.is_current_user ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400';
-
-            $container.append(`
-                <div class="flex flex-col ${sideClass} animate-fade-in-up">
-                    <div class="max-w-[85%] ${bubbleClass} px-4 py-3 relative">
-                        <p class="text-[8px] font-black ${authorClass} uppercase tracking-wider mb-2">${c.author_name} • ${c.formatted_time}</p>
-                        <p class="text-[11px] font-mono leading-relaxed whitespace-pre-wrap">${c.message}</p>
-                    </div>
-                </div>
-            `);
-        });
-
-        const currentScrollHeight = $container[0].scrollHeight;
-        if (currentScrollHeight > lastScrollHeight || showLoader) {
-            $container.scrollTop(currentScrollHeight);
-            lastScrollHeight = currentScrollHeight;
-        }
-
-    } catch (e) { 
-        console.error("Telemetry Error", e); 
-        if (showLoader) $container.html('<p class="text-center py-10 text-[10px] text-red-400 font-bold uppercase">Failed to load logs</p>');
-    }
-}
-
 $(document).ready(function() {
     loadIncidents(); 
     setInterval(loadIncidents, 30000); 
-
-    $('#chat-form').on('submit', function(e) {
-        e.preventDefault();
-        const id = $('#incident_id').val();
-        
-        const issue = $('#chat_issue').val().trim();
-        const action = $('#chat_action').val().trim();
-        const result = $('#chat_result').val().trim();
-        
-        const $submitBtn = $('#chatSubmitBtn');
-        
-        if (!id || (!issue && !action && !result)) return;
-
-        let textToSend = "";
-        if (issue) textToSend += `Current issue: ${issue}\n`;
-        if (action) textToSend += `Action taken: ${action}\n`;
-        if (result) textToSend += `Result / outcome: ${result}\n`;
-        textToSend = textToSend.trim();
-
-        const $container = $('#chat-container');
-        $container.append(`
-            <div class="flex flex-col items-end opacity-60 animate-fade-in-up">
-                <div class="max-w-[85%] bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-md relative">
-                    <p class="text-[8px] font-black text-blue-200 uppercase tracking-wider mb-2">Sending <i class="fas fa-spinner fa-spin ml-1"></i></p>
-                    <p class="text-[11px] font-mono leading-relaxed whitespace-pre-wrap">${textToSend}</p>
-                </div>
-            </div>
-        `);
-        $container.scrollTop($container[0].scrollHeight);
-
-        $('#chat_issue').val('');
-        $('#chat_action').val('');
-        $('#chat_result').val('');
-        
-        $submitBtn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin text-xs"></i>');
-
-        $.ajax({
-            url: "/api/incident-comments/", 
-            type: "POST",
-            contentType: 'application/json',
-            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-            data: JSON.stringify({ message: textToSend, incident: parseInt(id) }),
-            success: function() {
-                fetchLogs(id, false); 
-                $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane text-xs"></i>');
-            },
-            error: function(err) { 
-                console.error("API Rejected Log:", err.responseText);
-                alert("Transmission Failure: Terminal disconnected."); 
-                $submitBtn.prop('disabled', false).html('<i class="fas fa-paper-plane text-xs"></i>');
-            }
-        });
-    });
 });
 </script>
 
