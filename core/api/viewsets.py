@@ -20,6 +20,7 @@ import requests
 import json, base64
 from django.http import HttpResponse
 from webauthn import generate_authentication_options, verify_authentication_response
+from rest_framework.authentication import SessionAuthentication
 from webauthn.helpers.options_to_json import options_to_json
 from core.models import UserPasskey
 from webauthn.helpers.structs import PublicKeyCredentialDescriptor
@@ -277,6 +278,9 @@ class VerifyMFAAPI(APIView):
 
 class DashboardStatsAPI(APIView):
     """Provides live data for dashboard counters, charts, and tables."""
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [AllowAny]
+
     def get(self, request):
         try:
             # 1. Base Summary Metrics
@@ -359,13 +363,15 @@ class DashboardStatsAPI(APIView):
             })
             
         except Exception as e:
-            # THIS IS CRITICAL: It stops silent failures and prints the error to your terminal
             import traceback
             print("DASHBOARD API CRASHED:", traceback.format_exc())
             return Response({"error": str(e)}, status=500)
 
 class PersonnelStatsAPI(APIView):
     """Provides live data specifically for the Personnel Dashboard."""
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         total_assets = Asset.objects.count()
         

@@ -167,10 +167,17 @@ function refreshDashboard() {
             renderIncidentTable(data.open_incidents_list);
         },
         error: function(xhr, status, error) { 
-            // This visually injects the error onto the screen so you aren't guessing!
-            console.error("Dashboard Sync Error:", xhr.responseText);
-            $('#stat-total-assets').text('ERR');
-            $('#maintenanceTableBody').html(`<tr><td colspan="3" class="px-6 py-10 text-center text-red-500 font-bold uppercase tracking-widest text-[10px]">API Connection Failed. Press F12 to check console.</td></tr>`);
+            // 🟢 This will literally print the error code (e.g., "403" or "500") on the dashboard counter!
+            $('#stat-total-assets').text("HTTP " + xhr.status); 
+            
+            // 🟢 This will print the raw Python error inside the table!
+            $('#maintenanceTableBody').html(`
+                <tr>
+                    <td colspan="3" class="px-6 py-10 text-center text-red-500 font-bold uppercase tracking-widest text-[10px]">
+                        API REJECTED: ${xhr.responseText}
+                    </td>
+                </tr>
+            `);
         }
     });
 }
