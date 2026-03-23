@@ -128,10 +128,12 @@ DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
 # NEW: Resend SMTP setup
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
-EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_USE_TLS = True
 
-EMAIL_TIMEOUT = 10
+# --- NETWORK BLOCK FIX ---
+EMAIL_PORT = env.int('EMAIL_PORT', default=465)  # Changed to 465
+EMAIL_USE_TLS = False                            # Changed to False
+EMAIL_USE_SSL = True                             # Added SSL
+EMAIL_TIMEOUT = 10                               # Timeout preserved
 
 # CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
 #DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
