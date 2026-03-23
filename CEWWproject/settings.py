@@ -122,7 +122,7 @@ ANYMAIL = {
 }
 
 # Use the verified Gmail address from your Brevo account
-DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+# DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
 # OLD: Brevo SMTP setup (Preserved as comments)
 # EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
@@ -131,15 +131,17 @@ DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
 # NEW: Resend SMTP setup
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
-EMAIL_PORT = env.int('EMAIL_PORT', default=587) # Port 587 is generally more reliable on Render than 2525
+# Use Port 587 for TLS; Port 2525 is often blocked or throttled on cloud hosts
+EMAIL_PORT = env.int('EMAIL_PORT', default=587) 
 EMAIL_USE_TLS = True
-
 # CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
 #DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
 
 # Active secure configuration (We will update Render to feed these into the app)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='950th CEWW System <honradg71@gmail.com>')
 
 # 11. ReCaptcha Security
 # Original hardcoded credentials preserved as comments

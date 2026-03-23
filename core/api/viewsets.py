@@ -207,58 +207,39 @@ class APILoginView(LoginView):
                 if not user.email or user.email.strip() == "":
                     return JsonResponse({
                         'status': 'error',
-                        'message': 'MFA is required, but no email is registered to this account. Please contact your system administrator.'
+                        'message': 'MFA is required, but no email is registered. Contact admin.'
                     }, status=400)
 
-                # 1. Generate a 6-digit OTP
                 generated_otp = str(random.randint(100000, 999999))
-                
-                # 2. Store pre-auth info in the session securely
                 self.request.session['mfa_user_id'] = user.id
                 self.request.session['mfa_expected_otp'] = generated_otp
 
-                # 3. Send the OTP via Email
                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
-                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
+                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
                 
                 try:
-                    # We set fail_silently=False so we can catch the timeout/error explicitly
+                    # CRITICAL: fail_silently=False allows us to catch the timeout immediately
                     send_mail(
                         subject, 
                         message,
                         getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
                         [user.email], 
-                        fail_silently=False,
+                        fail_silently=False, 
                     )
                 except Exception as e:
-                    # Log the error and return a response instead of hanging until Gunicorn kills the worker
-                    print(f"CRITICAL SMTP ERROR: {e}")
+                    # This block prevents the "Worker Timeout" crash
+                    print(f"Login Email Failed: {e}")
                     return JsonResponse({
                         'status': 'error',
-                        'message': 'The notification server is currently unreachable. Please try again in a few moments.'
+                        'message': 'The mail server is not responding. Login temporarily unavailable.'
                     }, status=503)
 
-                # 4. Tell the frontend to show the MFA form!
-                return JsonResponse({
-                    'status': 'success',
-                    'mfa_required': True 
-                })
+                return JsonResponse({'status': 'success', 'mfa_required': True})
             else:
-                # Standard Login (No MFA)
                 login(self.request, user)
-                return JsonResponse({
-                    'status': 'success',
-                    'redirect_url': '/role-redirect/',
-                    'mfa_required': False 
-                })
+                return JsonResponse({'status': 'success', 'redirect_url': '/role-redirect/', 'mfa_required': False})
                 
         return super().form_valid(form)
-
-    def form_invalid(self, form):
-        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'message': 'Invalid credentials.'}, status=400)
-        return super().form_invalid(form)
-
 
 class VerifyMFAAPI(APIView):
     """Endpoint to verify the OTP entered during login."""
