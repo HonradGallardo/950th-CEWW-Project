@@ -109,8 +109,10 @@ DATABASES = {
 
 # 10. Email Configuration (Securely pulled from env)
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# 10. Email Configuration (Securely pulled from env)
+
+EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
 
 # Feed the Resend API Key directly to Anymail
 ANYMAIL = {
@@ -128,12 +130,8 @@ DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
 
 # NEW: Resend SMTP setup
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
-
-# --- NETWORK BLOCK FIX ---
-EMAIL_PORT = env.int('EMAIL_PORT', default=2465)  # Update this from 465 to 2465
-EMAIL_USE_TLS = False                            # Changed to False
-EMAIL_USE_SSL = True                             # Added SSL
-EMAIL_TIMEOUT = 10                               # Timeout preserved
+EMAIL_PORT = env.int('EMAIL_PORT', default=2525) 
+EMAIL_USE_TLS = True
 
 # CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
 #DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
