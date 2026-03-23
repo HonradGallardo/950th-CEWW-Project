@@ -112,7 +112,7 @@ DATABASES = {
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # 10. Email Configuration (Securely pulled from env)
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
 
 # Feed the Resend API Key directly to Anymail
 ANYMAIL = {
@@ -121,7 +121,7 @@ ANYMAIL = {
 }
 
 # Use the verified Gmail address from your Brevo account
-DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
+DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
 # OLD: Brevo SMTP setup (Preserved as comments)
 # EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
