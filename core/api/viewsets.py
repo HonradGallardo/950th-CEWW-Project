@@ -35,7 +35,7 @@ from core.api.serializers import (
     NotificationSerializer,
 )
 
-# Ensure these match your local environment
+# viewsets.py snippet
 if settings.DEBUG:
     RP_ID = "localhost"
     ORIGIN = "http://localhost:8000"

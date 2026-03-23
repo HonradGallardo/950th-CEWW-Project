@@ -107,40 +107,62 @@ DATABASES = {
     'default': env.db(),
 }
 
-# 10. Email Configuration (Securely pulled from env)
 
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# 10. Email Configuration (Securely pulled from env)
+# ==============================================================================
+# 10. Email Configuration (ACTIVE GMAIL SMTP SETUP)
+# ==============================================================================
 
-EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-
-# Feed the Resend API Key directly to Anymail
-ANYMAIL = {
-    # FIX APPLIED HERE: Using the variable name, not the actual secret key
-    "BREVO_API_KEY": env('BREVO_API_KEY', default=''),
-}
-
-# Use the verified Gmail address from your Brevo account
-DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
-
-# OLD: Brevo SMTP setup (Preserved as comments)
-# EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
-# EMAIL_PORT = env.int('EMAIL_PORT', default=2525)
-# DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
-
-# NEW: Resend SMTP setup
-EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
-EMAIL_PORT = env.int('EMAIL_PORT', default=2525) 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-# CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
-#DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
+# Securely pull from .env. The password MUST be a 16-character App Password.
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='honradg71@gmail.com')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='') 
+DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
-# Active secure configuration (We will update Render to feed these into the app)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+# ------------------------------------------------------------------------------
+# PREVIOUS EMAIL CONFIGURATIONS (Preserved as comments per instructions)
+# ------------------------------------------------------------------------------
 
+# if DEBUG:
+#     # This sends emails to your terminal console instead of the internet
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# else:
+#     # Production uses Brevo/Anymail
+#     EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+
+# # Feed the Resend API Key directly to Anymail
+# ANYMAIL = {
+#     # FIX APPLIED HERE: Using the variable name, not the actual secret key
+#     "BREVO_API_KEY": env('BREVO_API_KEY', default=''),
+# }
+
+# # Use the verified Gmail address from your Brevo account
+# # DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+
+# # OLD: Brevo SMTP setup (Preserved as comments)
+# # EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
+# # EMAIL_PORT = env.int('EMAIL_PORT', default=2525)
+# # DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+
+# # NEW: Resend SMTP setup
+# # EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
+# # EMAIL_PORT = env.int('EMAIL_PORT', default=2525) 
+# # EMAIL_USE_TLS = True
+
+# # CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
+# #DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
+
+# # Active secure configuration (We will update Render to feed these into the app)
+# # EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
+# # EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+
+
+# ==============================================================================
 # 11. ReCaptcha Security
+# ==============================================================================
 # Original hardcoded credentials preserved as comments
 # RECAPTCHA_SITE_KEY = '6LfZKoksAAAAAIQa-R-ifpRM-KAWlH6GURcjcT5D'
 # RECAPTCHA_SECRET_KEY = '6LfZKoksAAAAAI2kvj1d2d-5KlL1dNDsC_YNn_Xo'
@@ -175,11 +197,11 @@ MIDDLEWARE = [
 ]
 
 # OLD MEDIA SETTINGS (Preserved)
-# MEDIA_URL = env('MEDIA_URL', default='/media/')
-# MEDIA_ROOT = os.path.join(
-#    BASE_DIR,
-#    env('MEDIA_ROOT', default=env('MEDIA_ROOT_PATH', default='media'))
-# )
+MEDIA_URL = env('MEDIA_URL', default='/media/')
+MEDIA_ROOT = os.path.join(
+    BASE_DIR,
+    env('MEDIA_ROOT', default=env('MEDIA_ROOT_PATH', default='media'))
+ )
 
 # NEW CLOUDINARY STORAGE CONFIGURATION
 #CLOUDINARY_STORAGE = {
