@@ -210,7 +210,6 @@ class APILoginView(LoginView):
                         'status': 'error',
                         'message': 'MFA is required, but no email is registered to this account. Please contact your system administrator.'
                     }, status=400)
-                
                 # 1. Generate a 6-digit OTP
                 generated_otp = str(random.randint(100000, 999999))
                 
@@ -225,23 +224,16 @@ class APILoginView(LoginView):
                     send_mail(
                         subject, message,
                         getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
-                        [user.email], 
-                        fail_silently=False, # CHANGED to False
+                        [user.email], fail_silently=True,
                     )
                 except Exception as e:
                     print(f"Failed to send MFA email: {e}")
-                    # ADDED: This returns a clean error to the user instead of hanging the server
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': 'The mail server is currently unreachable. Please try again in a few moments.'
-                    }, status=503)
 
-                # 4. >>> ADDED THIS BACK <<< Tell the frontend to show the MFA form!
+                # 4. Tell the frontend to show the MFA form!
                 return JsonResponse({
                     'status': 'success',
                     'mfa_required': True 
                 })
-
             else:
                 # Standard Login (No MFA)
                 login(self.request, user)
