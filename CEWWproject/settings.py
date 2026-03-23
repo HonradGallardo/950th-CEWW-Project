@@ -112,7 +112,7 @@ DATABASES = {
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # 10. Email Configuration (Securely pulled from env)
 
-EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Feed the Resend API Key directly to Anymail
 ANYMAIL = {
