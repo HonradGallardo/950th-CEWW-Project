@@ -35,13 +35,10 @@ from core.api.serializers import (
     NotificationSerializer,
 )
 
-# viewsets.py snippet
-if settings.DEBUG:
-    RP_ID = "localhost"
-    ORIGIN = "http://localhost:8000"
-else:
-    RP_ID = "nine50ceww-aims.onrender.com"
-    ORIGIN = "https://nine50ceww-aims.onrender.com"
+# Ensure these match your local environment
+
+RP_ID = "nine50ceww-aims.onrender.com"
+ORIGIN = "https://nine50ceww-aims.onrender.com"
 
 # ==========================================
 # PASSKEY REGISTRATION (For Profile Page)
