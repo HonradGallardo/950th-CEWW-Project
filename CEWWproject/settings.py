@@ -130,7 +130,7 @@ DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
 
 # --- NETWORK BLOCK FIX ---
-EMAIL_PORT = env.int('EMAIL_PORT', default=465)  # Changed to 465
+EMAIL_PORT = env.int('EMAIL_PORT', default=2465)  # Update this from 465 to 2465
 EMAIL_USE_TLS = False                            # Changed to False
 EMAIL_USE_SSL = True                             # Added SSL
 EMAIL_TIMEOUT = 10                               # Timeout preserved
