@@ -1,0 +1,1122 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Case #0000{{ ticket.id }} | 950th CEWW{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    
+    <header class="shrink-0 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between z-10 relative">
+        <div class="flex items-center gap-3 md:gap-4">
+            <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white shadow-sm">
+                <i class="fas fa-ticket-alt text-sm"></i>
+            </div>
+
+            <button type="button" onclick="navigator.clipboard.writeText('0000{{ ticket.id }}')" class="group flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95">
+                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">ID: 0000{{ ticket.id }}</span>
+                <i class="fas fa-copy text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="{% url 'tickets:admin_tickets' %}" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition-all">
+                <span>Exit Case</span>
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden relative">
+        
+        <aside id="leftSidebar" class="absolute inset-y-0 left-0 z-20 w-80 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none">
+            
+            <div class="shrink-0 p-5 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Case Subject</p>
+                        <h2 class="text-base font-bold leading-snug line-clamp-2">{{ ticket.subject }}</h2>
+                    </div>
+                    <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md">
+                        <i class="fas fa-chevron-left text-sm"></i>
+                    </button>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <span id="sidebarStatusBadge" 
+                        class="px-2.5 py-1 rounded-md text-xs font-medium border
+                        {% if ticket.status == 'In Progress' or ticket.status == 'Under Review' %}
+                            bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20
+                        {% elif ticket.status == 'Resolved' or ticket.status == 'Completed' %}
+                            bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20
+                        {% else %}
+                            bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20
+                        {% endif %}">
+                        {{ ticket.status }}
+                    </span>
+                    <span class="px-2.5 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 {% if ticket.priority == 'High' or ticket.priority == 'Critical' %}text-red-600 dark:text-red-400{% else %}text-slate-600 dark:text-slate-300{% endif %}">
+                        <i class="fas fa-bolt mr-1 text-[10px]"></i> {{ ticket.priority|default:"Medium" }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                
+                <div class="p-5 border-b border-slate-200 dark:border-slate-800">
+    <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Staff Conversations</h3>
+    <div class="space-y-2" id="techTabsContainer">
+        
+        <button type="button" onclick="filterByTech('GROUP_CHAT'); closeMobileSidebar();" id="tab-GROUP_CHAT" 
+                data-active-bg="bg-indigo-50 dark:bg-indigo-900/20" data-active-border="border-indigo-200 dark:border-indigo-800"
+                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
+            <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="text-left overflow-hidden flex-1">
+                <p class="text-sm font-semibold truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Group Discussion</p>
+                <p class="text-xs text-slate-500 truncate">All Staff & User</p>
+            </div>
+        </button>
+
+        <div class="h-px bg-slate-200 dark:bg-slate-800 my-3"></div>
+        
+        <button type="button" onclick="filterByTech('{{ request.user.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ request.user.username }}" 
+                data-active-bg="bg-blue-50 dark:bg-blue-900/20" data-active-border="border-blue-200 dark:border-blue-800"
+                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
+            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800">
+                {% if request.user.profile.image %}
+                    <img src="{{ request.user.profile.image.url }}" class="w-full h-full object-cover">
+                {% else %}
+                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400">ME</span>
+                {% endif %}
+            </div>
+            <div class="text-left overflow-hidden flex-1">
+                <p class="text-sm font-semibold truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">My Chat</p>
+                <p class="text-xs text-slate-500 truncate">{{ request.user.username }}</p>
+            </div>
+        </button>
+
+        {% for admin in other_admins %}
+        <button type="button" onclick="filterByTech('{{ admin.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ admin.username }}" 
+                data-active-bg="bg-emerald-50 dark:bg-emerald-900/20" data-active-border="border-emerald-200 dark:border-emerald-800"
+                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
+            <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-300 dark:group-hover:border-emerald-600 transition-colors">
+                {% if admin.profile.image %}
+                    <img src="{{ admin.profile.image.url }}" class="w-full h-full object-cover">
+                {% else %}
+                    <span class="text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors">{{ admin.username|slice:":2" }}</span>
+                {% endif %}
+            </div>
+            <div class="text-left overflow-hidden flex-1">
+                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ admin.get_full_name|default:admin.username }}</p>
+                <p class="text-xs text-slate-500 truncate">{{ admin.username }}</p>
+            </div>
+        </button>
+        {% endfor %}
+    </div>
+</div> 
+
+                <div class="p-5" id="sidebarDescription">
+                    <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fas fa-info-circle"></i> Case Metadata
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50">
+                            <div class="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700/50">
+                                <p class="text-xs text-slate-500 mb-1">Ticket Type</p>
+                                <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{ ticket.ticket_type|default:"New Account Provisioning" }}</p>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500">Submitted By</span>
+                                    <span class="text-sm font-medium">{{ ticket.user.username|default:"SR-000007" }} <span class="text-xs text-slate-400 ml-1">({{ ticket.user.profile.rank|default:"Airman" }})</span></span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-500">Contact</span>
+                                    <span class="text-sm font-medium truncate">{{ ticket.user.email|default:"admin@email.com" }}</span>
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">{{ ticket.user.profile.phone|default:"+63 123 4567 890" }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if ticket.ticket_type == 'Account Creation' %}
+                            <div class="space-y-1.5 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/50">
+                                <div class="grid grid-cols-3 gap-2 text-sm">
+                                    <span class="text-slate-500">First:</span>
+                                    <span class="col-span-2 font-medium">{{ ticket.first_name }}</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-sm">
+                                    <span class="text-slate-500">Last:</span>
+                                    <span class="col-span-2 font-medium">{{ ticket.last_name }}</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-sm">
+                                    <span class="text-slate-500">Rank:</span>
+                                    <span class="col-span-2 font-medium">{{ ticket.rank|default:"N/A" }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div id="dynamicInquiryContent" class="mt-4">
+                            <p class="text-sm text-slate-500 italic">Loading conversation details...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 relative z-0">
+            
+            <div class="shrink-0 flex items-center px-4 md:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#1E293B] backdrop-blur-md sticky top-0 z-10 w-full">
+                <div class="flex gap-6 md:gap-8 flex-1">
+                    <button type="button" onclick="switchTab('feed')" id="feedTabBtn" class="py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors">Feed</button>
+                    <button type="button" onclick="switchTab('details')" id="detailsTabBtn" class="py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors">Ticket Details</button>
+                </div>
+                
+                <!-- 🚀 UPDATED: Arrow Toggle Button (Moved to far right) -->
+                <button type="button" onclick="toggleRightSidebar()" id="mainHeaderToggleBtn" title="Expand Sidebar" class="hidden items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
+                    <i class="fas fa-chevron-left text-lg"></i>
+                </button>
+
+                <!-- Mobile Paperclip Toggle -->
+                <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+            </div>
+
+            <div id="feedView" class="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-900/20">
+                <div class="shrink-0 px-6 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center shadow-sm z-0">
+                    <span id="chattingWithLabel" class="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                    </span>
+                    <span id="readOnlyIndicator" class="hidden text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2.5 py-1 rounded-md uppercase tracking-wide border border-red-200 dark:border-red-800/50">Read Only</span>
+                </div>
+
+                <!-- THE NEW RIGID SCROLL CONTAINER -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0" id="chatBox">
+                    <!-- THE INNER PADDING WRAPPER -->
+                    <div id="dynamicMessages" class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8 space-y-6"></div>
+                </div>
+
+                <div id="messageInputContainer" class="shrink-0 p-4 md:p-6 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 z-10">
+                    <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-3 mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700"></div>
+                    
+                    <form onsubmit="sendMessage(event)" id="chatForm" class="max-w-5xl mx-auto flex items-end gap-3">
+                        {% csrf_token %}
+                        <div class="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500 transition-all shadow-sm flex flex-col">
+                            <textarea id="messageText" rows="1" placeholder="Type your message..." 
+                                class="w-full bg-transparent border-none px-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none resize-none custom-scrollbar min-h-[50px] max-h-[200px]"
+                                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
+                                onkeydown="handleEnterKey(event)"></textarea>
+                            
+                            <div class="px-3 py-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-800/30">
+                                <div class="flex items-center">
+                                    <input type="file" id="chatFileInput" multiple class="hidden" onchange="handleFilePreview(event)">
+                                    <button type="button" onclick="document.getElementById('chatFileInput').click()" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50" title="Attach Files">
+                                        <i class="fas fa-paperclip text-base"></i>
+                                    </button>
+                                </div>
+                                <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-1 dark:focus:ring-offset-slate-900">
+    <span>Send</span>
+    <i class="fas fa-paper-plane text-xs"></i>
+</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 p-6 md:p-8 lg:p-12">
+                <form id="editTicketForm" onsubmit="updateTicketAdmin(event)" class="max-w-4xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8">
+                    {% csrf_token %}
+                    
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                <i class="fas fa-sliders-h text-blue-500"></i> Technical Details
+                            </h3>
+                            <p class="text-sm text-slate-500 mt-1">Manage routing, priority, and internal notes.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button type="button" onclick="deleteTicket()" class="px-4 py-2 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50">
+                                Delete Case
+                            </button>
+                            <button type="submit" id="saveDetailsBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50 active:scale-95">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Subject</label>
+                            <input type="text" id="editSubject" value="{{ ticket.subject }}" readonly class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-500 cursor-not-allowed focus:outline-none">
+                        </div>
+
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Assign Technician</label>
+                            <select id="editTechnician" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow">
+                                <option value="">Unassigned</option>
+                                {% for admin in all_admins %}
+                                    <option value="{{ admin.id }}" {% if ticket.technician.id == admin.id %}selected{% endif %}>
+                                        {{ admin.username }}{% if admin == request.user %} (Me){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            
+                            <div class="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/50 text-xs">
+                                <i class="fas fa-history text-slate-400"></i>
+                                <span class="text-slate-500">Previous Handler:</span>
+                                <span id="lastTechDisplay" class="font-medium text-slate-700 dark:text-slate-300">{{ ticket.last_technician|default:"Unlogged" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Ticket Status</label>
+                            <select name="status" id="editStatus" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow">
+                                <option value="Pending" {% if ticket.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="In Progress" {% if ticket.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                <option value="Under Review" {% if ticket.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                                <option value="Unresolved" {% if ticket.status == 'Unresolved' %}selected{% endif %}>Unresolved</option>
+                                <option value="Completed" {% if ticket.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                <option value="Resolved" {% if ticket.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Priority Level</label>
+                            <select name="priority" id="editPriority" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow">
+                                <option value="Low" {% if ticket.priority == 'Low' %}selected{% endif %}>Low</option>
+                                <option value="Medium" {% if ticket.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                                <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>High</option>
+                                <option value="Critical" {% if ticket.priority == 'Critical' %}selected{% endif %}>Critical</option>
+                            </select>
+                        </div>
+
+                        <div class="md:col-span-2 space-y-2 mt-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Internal Technical Description</label>
+                            <textarea name="description" id="editDesc" rows="6" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow custom-scrollbar">{{ ticket.description }}</textarea>
+                            <p class="text-xs text-slate-500">Only visible to internal staff members.</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <aside id="rightSidebar" class="absolute inset-y-0 right-0 z-20 w-80 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 flex flex-col transform translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none lg:static lg:w-80 lg:min-w-[20rem] overflow-hidden">
+            
+            <div class="shrink-0 p-5 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">Thread Assets</h3>
+                    
+                    <div class="flex items-center gap-1">
+                        <!-- 🚀 NEW: Desktop Collapse Button (Inside Sidebar) -->
+                        <button type="button" onclick="toggleRightSidebar()" title="Collapse Sidebar" class="hidden lg:flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
+                            <i class="fas fa-chevron-right text-base"></i>
+                        </button>
+                        
+                        <!-- Mobile Close Button (Existing) -->
+                        <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex bg-slate-100 dark:bg-[#202B3D] p-1 rounded-lg">
+                    <button type="button" onclick="switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50">Media</button>
+                    <button type="button" onclick="switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Files</button>
+                    <button type="button" onclick="switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Links</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-5">
+                <div id="mediaGridView" class="grid grid-cols-3 gap-2">
+                    {% for media in ticket_media %}
+                    <div class="aspect-square rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 group cursor-pointer relative">
+                        <img src="{{ media.file.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div id="filesListView" class="hidden flex flex-col gap-2"></div>
+                <div id="linksListView" class="hidden flex flex-col gap-2"></div>
+            </div>
+        </aside>
+
+        <div id="sidebarOverlay" onclick="closeAllSidebars()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[15] hidden lg:hidden transition-opacity"></div>
+    </div>
+</div>
+
+<div id="chatLightbox" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
+    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none">
+        <i class="fas fa-times"></i>
+    </button>
+    
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <div id="lightboxContent" class="w-full h-full flex items-center justify-center"></div>
+    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10"></div>
+</div>
+
+<style>
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Chat bubble animations */
+    #chatBox > div { animation: fadeIn 0.3s ease-out forwards; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<script>
+    // PRESERVED JAVASCRIPT LOGIC - ALL IDs AND FUNCTIONS KEPT INTACT
+
+    const MY_USERNAME = "{{ request.user.username|escapejs }}";
+    const CLIENT_USERNAME = "{{ ticket.user.username|escapejs }}";
+    const activeTicketId = "{{ ticket.id|escapejs }}";
+    let activeChatPartnerId = "{{ request.user.username|escapejs }}"; 
+    let currentTicketStatus = "{{ ticket.status|escapejs }}"; 
+
+    const SupportConsole = {
+        currentLightboxIndex: 0,
+        currentLightboxItems: [], 
+
+        classifyAttachment: function(att) {
+            const name = (att.name || '').toLowerCase();
+            const url = (att.url || '').toLowerCase();
+            
+            const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(name) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(url);
+            const isVideo = /\.(mp4|mov|webm|ogg)$/.test(name) || /\.(mp4|mov|webm|ogg)$/.test(url) || url.includes('/video/upload/');
+            const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(name) || /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(url) || (url.includes('cloudinary.com') && !isVideo && !isDoc);
+            
+            if (isDoc) return 'document';
+            if (isVideo) return 'video';
+            if (isImage) return 'image';
+            return 'document'; 
+        },
+
+        // 2. REPLACE renderAttachmentGrid
+        renderAttachmentGrid: function(attachments) {
+            if (!attachments || attachments.length === 0) return '';
+
+            const count = attachments.length;
+            let gridClass = 'grid-cols-1';
+            if (count >= 2) gridClass = 'grid-cols-2';
+
+            let html = `<div class="grid gap-1 mt-2 rounded-xl overflow-hidden ${gridClass} shadow-sm border border-slate-200 dark:border-slate-700/60 w-fit max-w-[280px] sm:max-w-[380px]">`;
+
+            const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
+
+            attachments.slice(0, 4).forEach((file, index) => {
+                const type = this.classifyAttachment(file);
+                const isLast = index === 3;
+                const hasMore = count > 4;
+
+                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
+                let heightClass = "h-40 sm:h-48 w-full object-cover";
+
+                if (count === 1) {
+                    heightClass = "max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]";
+                } else if (count === 3 && index === 0) {
+                    cellClass += " col-span-2"; 
+                    heightClass = "h-48 sm:h-56 w-full object-cover";
+                } else if (count >= 2) {
+                    heightClass = "h-32 sm:h-40 w-full object-cover";
+                }
+
+                html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
+
+                if (type === 'image') {
+                    // 🚀 ADDED: loading="lazy" decoding="async"
+                    html += `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                } else if (type === 'video') {
+                    // 🚀 ADDED: preload="none"
+                    html += `<video src="${file.url}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                             <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
+                } else {
+                    html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
+                }
+
+                if (hasMore && isLast) {
+                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-20"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
+                }
+                
+                html += `</div>`;
+            });
+            html += `</div>`;
+            return html;
+        },
+
+        init() {
+            document.addEventListener('keydown', (e) => {
+                const lightbox = document.getElementById('chatLightbox');
+                if (lightbox && !lightbox.classList.contains('hidden')) {
+                    if (e.key === 'ArrowRight') this.nextLightbox();
+                    if (e.key === 'ArrowLeft') this.prevLightbox();
+                    if (e.key === 'Escape') this.closeLightbox();
+                }
+            });
+        },
+
+        openLightbox(items, index) {
+            this.currentLightboxItems = items;
+            this.currentLightboxIndex = index;
+            const lb = document.getElementById('chatLightbox');
+            if(lb) lb.classList.remove('hidden');
+            this.renderLightboxItem();
+        },
+
+        closeLightbox() {
+            const lb = document.getElementById('chatLightbox');
+            if(lb) {
+                lb.classList.add('hidden');
+                const container = document.getElementById('lightboxContent');
+                if(container) container.innerHTML = '';
+            }
+        },
+
+        renderLightboxItem() {
+            const container = document.getElementById('lightboxContent');
+            const item = this.currentLightboxItems[this.currentLightboxIndex];
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (prevBtn) prevBtn.style.display = (this.currentLightboxIndex === 0) ? 'none' : 'flex';
+            if (nextBtn) nextBtn.style.display = (this.currentLightboxIndex === this.currentLightboxItems.length - 1) ? 'none' : 'flex';
+
+            if (!container || !item) return;
+
+            // FIX: Use our new master classifier
+            const type = this.classifyAttachment(item);
+            
+            if (type === 'video') {
+                container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
+            } else {
+                // Default everything else to an image tag
+                container.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
+            }
+            
+            const caption = document.getElementById('lightboxCaption');
+            if (caption) caption.innerText = item.name || `Attachment ${this.currentLightboxIndex + 1}`;
+        },
+
+        nextLightbox() {
+            if (this.currentLightboxIndex < this.currentLightboxItems.length - 1) {
+                this.currentLightboxIndex++;
+                this.renderLightboxItem();
+            }
+        },
+
+        prevLightbox() {
+            if (this.currentLightboxIndex > 0) {
+                this.currentLightboxIndex--;
+                this.renderLightboxItem();
+            }
+        },
+        scrollToBottom() {
+            const forceScroll = () => {
+                // Target ONLY the inner scrolling containers (No scrollIntoView overrides!)
+                const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+                
+                if (scrollArea) {
+                    // Force the scrollbar to the absolute bottom of the div
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                }
+            };
+
+            // 1. Fire instantly for normal text
+            forceScroll();
+            
+            // 2. Fire a few more times as the browser calculates the height of the loading images/videos
+            setTimeout(forceScroll, 100);
+            setTimeout(forceScroll, 500);
+            setTimeout(forceScroll, 1200); 
+        }
+    };
+
+    window.onload = () => {
+        filterByTech(MY_USERNAME); 
+        SupportConsole.init();
+
+        // --- NEW: REAL-TIME POLLING ---
+        // Fetch new messages every 3 seconds
+        setInterval(() => {
+            fetchMessages();
+        }, 3000);
+    };
+
+    let currentMessageCount = -1;
+    let tabCache = {}; // 🚀 NEW: Local memory cache for instant tab switching!
+
+    function filterByTech(username) {
+        activeChatPartnerId = username;
+        const label = document.getElementById('chattingWithLabel');
+        const readOnly = document.getElementById('readOnlyIndicator');
+        const inputContainer = document.getElementById('messageInputContainer');
+        
+        updateActiveTabStyles(username); 
+
+        // Update the header labels
+        if (username === 'GROUP_CHAT') {
+            label.innerHTML = '<i class="fas fa-users text-indigo-500 mr-2"></i> Group Discussion';
+            if(readOnly) readOnly.classList.add('hidden');
+            if(inputContainer) inputContainer.classList.remove('hidden');
+        } else if (username === MY_USERNAME) {
+            label.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Viewing: My Conversation';
+            if(readOnly) readOnly.classList.add('hidden');
+            if(inputContainer) inputContainer.classList.remove('hidden');
+        } else {
+            label.innerText = `Viewing: @${username}'s Private Thread`;
+            if(readOnly) readOnly.classList.remove('hidden');
+            if(inputContainer) inputContainer.classList.add('hidden'); 
+        }
+        
+        // 🚀 THE FIX: Check if we have the data saved locally. If yes, render it instantly!
+        if (tabCache[username]) {
+            currentMessageCount = tabCache[username].count;
+            renderChat(tabCache[username].messages, tabCache[username].attachments);
+            updateAttachmentsSidebar(tabCache[username].messages, tabCache[username].attachments);
+        } else {
+            currentMessageCount = -1;
+            
+            // 👇 THE FIX: Target 'dynamicMessages' so we don't delete our anti-bounce wrapper!
+            const chatBox = document.getElementById('dynamicMessages');
+            
+            if(chatBox) chatBox.innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i><p class="text-[10px] uppercase font-black tracking-widest">Decrypting Thread...</p></div>`;
+            const mediaGrid = document.getElementById('mediaGridView');
+            if(mediaGrid) mediaGrid.innerHTML = '';
+        }
+
+        // Fetch in the background to silently grab any new messages while they read the cached ones
+        fetchMessages(); 
+    }
+
+    function handleEnterKey(event) {
+        const input = event.target;
+        input.style.height = 'auto';
+        input.style.height = (input.scrollHeight) + 'px';
+
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            if (!event.shiftKey) {
+                event.preventDefault(); 
+                sendMessage(new Event('submit'));
+            }
+        }
+    }
+
+    let currentFetchController = null;
+    async function fetchMessages() {
+        if (currentFetchController) currentFetchController.abort();
+        currentFetchController = new AbortController();
+        
+        let url = `/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/chat_thread/?with_staff=${encodeURIComponent(activeChatPartnerId)}`;
+        
+        try {
+            const response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: currentFetchController.signal
+            });
+            const data = await response.json();
+            
+            const newCount = (data.messages ? data.messages.length : 0) + (data.attachments ? data.attachments.length : 0);
+            
+            // 🚀 THE FIX: Save the freshly downloaded data into our local tabCache
+            tabCache[activeChatPartnerId] = {
+                messages: data.messages || [],
+                attachments: data.attachments || [],
+                count: newCount
+            };
+            
+            // Only re-render the HTML if the count has actually changed (prevents screen flashing)
+            if (newCount !== currentMessageCount) {
+                currentMessageCount = newCount;
+                renderChat(data.messages, data.attachments); 
+                updateAttachmentsSidebar(data.messages, data.attachments);
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') console.error("Fetch failed:", err);
+        }
+    }
+
+    async function sendMessage(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('messageText');
+        const fileInput = document.getElementById('chatFileInput');
+        const message = input.value.trim();
+        
+        if (!message && fileInput.files.length === 0) return;
+
+        const formData = new FormData();
+        formData.append('message', message);
+        
+        if (activeChatPartnerId === 'GROUP_CHAT') {
+            formData.append('recipient', 'Everyone'); 
+            formData.append('is_group_chat', 'true');
+        } else {
+            formData.append('recipient', activeChatPartnerId === MY_USERNAME ? CLIENT_USERNAME : activeChatPartnerId);
+            formData.append('is_group_chat', 'false');
+        }
+        
+        Array.from(fileInput.files).forEach(f => formData.append('attachments', f));
+
+        try {
+            const response = await fetch(`/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/send_reply/`, {
+                method: 'POST',
+                body: formData,
+                headers: { 
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest' 
+                }
+            });
+            if (response.ok) {
+                input.value = '';
+                input.style.height = ''; 
+                fileInput.value = '';
+                const preview = document.getElementById('chat-attachment-preview');
+                if (preview) preview.classList.add('hidden');
+                fetchMessages(); 
+            }
+        } catch (err) { console.error("Send error:", err); }
+    }
+
+    async function updateTicketAdmin(e) {
+        if (e) e.preventDefault();
+        const btn = document.getElementById('saveDetailsBtn');
+        const newStatus = document.getElementById('editStatus').value;
+        const newPriority = document.getElementById('editPriority').value;
+
+        const payload = {
+            status: newStatus,
+            priority: newPriority,
+            description: document.getElementById('editDesc').value,
+            technician_id: document.getElementById('editTechnician').value
+        };
+
+        const originalText = btn.innerText;
+        btn.innerText = "Saving...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/update_technical_details/`, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const result = await response.json();
+            if (response.ok && result.status === 'success') {
+                btn.innerText = "Saved ✓";
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                setTimeout(() => { window.location.reload(); }, 600);
+            } else {
+                throw new Error("Update failed");
+            }
+        } catch (err) { 
+            console.error("Update error:", err);
+            btn.innerText = "Error";
+            btn.classList.add('bg-red-600');
+            btn.disabled = false;
+            setTimeout(() => { 
+                btn.innerText = originalText;
+                btn.classList.remove('bg-red-600'); 
+            }, 2000);
+        }
+    }
+
+    function updateActiveTabStyles(activeTechName) {
+    // 1. Get all the buttons
+    const allTabs = document.querySelectorAll('.tech-tab-btn');
+
+    // 2. Loop through and completely remove any active colors from all of them
+    allTabs.forEach(btn => {
+        // Reset border back to transparent
+        btn.classList.add('border-transparent');
+        // Remove Indigo, Blue, and Emerald active classes
+        btn.classList.remove(
+            'bg-indigo-50', 'dark:bg-indigo-900/20', 'border-indigo-200', 'dark:border-indigo-800',
+            'bg-blue-50', 'dark:bg-blue-900/20', 'border-blue-200', 'dark:border-blue-800',
+            'bg-emerald-50', 'dark:bg-emerald-900/20', 'border-emerald-200', 'dark:border-emerald-800'
+        );
+    });
+
+    // 3. Find the specific button that was just clicked
+    const activeBtn = document.getElementById('tab-' + activeTechName);
+    
+    if (activeBtn) {
+        // Remove transparent border
+        activeBtn.classList.remove('border-transparent');
+
+        // Grab the specific colors we defined in the HTML data-attributes
+        const bgClasses = activeBtn.getAttribute('data-active-bg').split(' ');
+        const borderClasses = activeBtn.getAttribute('data-active-border').split(' ');
+
+        // Apply those specific colors to this button
+        activeBtn.classList.add(...bgClasses, ...borderClasses);
+    }
+}
+
+    function handleFilePreview(event) {
+        const container = document.getElementById('chat-attachment-preview');
+        const files = Array.from(event.target.files);
+        container.innerHTML = '';
+        
+        if (files.length > 0) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+            return;
+        }
+
+        files.forEach((file) => {
+            const reader = new FileReader();
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+
+            const previewItem = document.createElement('div');
+            previewItem.className = "relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800";
+            
+            if (isImage) {
+                const img = document.createElement('img');
+                img.className = "w-full h-full object-cover";
+                reader.onload = (e) => { img.src = e.target.result; };
+                reader.readAsDataURL(file);
+                previewItem.appendChild(img);
+            } else if (isVideo) {
+                previewItem.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500"><i class="fas fa-video mb-1 text-sm"></i></div>`;
+            } else {
+                previewItem.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-500"><i class="fas fa-file-alt text-sm"></i><span class="text-[8px] truncate w-full px-1 text-center font-medium mt-1">${file.name}</span></div>`;
+            }
+            container.appendChild(previewItem);
+        });
+    }
+
+    function renderChat(messages, allAttachments = []) {
+        // 👇 CHANGED: Now targeting the inner padding wrapper to stop layout bouncing!
+        const chatBox = document.getElementById('dynamicMessages');
+        if (!chatBox) return; // Safety check
+        
+        chatBox.innerHTML = ''; 
+
+        messages.forEach(msg => {
+            const isSystemUpdate = msg.message && msg.message.toUpperCase().includes('STATUS UPDATE');
+            const isGroupMessage = (activeChatPartnerId === 'GROUP_CHAT' && (msg.recipient_name === "Everyone" || !msg.recipient_name));
+            const isPrivateMessage = (msg.sender_name === activeChatPartnerId || msg.recipient_name === activeChatPartnerId);
+            
+            if (!isSystemUpdate && !isGroupMessage && !isPrivateMessage) return; 
+
+            if (isSystemUpdate) {
+                chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center my-4"><span class="text-xs bg-slate-200 dark:bg-slate-800 px-4 py-1.5 rounded-full font-medium text-slate-600 dark:text-slate-400 shadow-sm border border-slate-300 dark:border-slate-700"><i class="fas fa-info-circle mr-1.5 opacity-70"></i> ${msg.message}</span></div>`);
+                return;
+            }
+
+            const isMe = msg.sender_name === MY_USERNAME;
+            const alignRight = isMe; 
+            const hasText = msg.message && msg.message.trim().length > 0;
+            const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
+            
+            // FIX: Using the master classifier
+            const mediaFiles = messageAttachments.filter(att => SupportConsole.classifyAttachment(att) !== 'document');
+            const docFiles = messageAttachments.filter(att => SupportConsole.classifyAttachment(att) === 'document');
+
+            let mediaGridHtml = mediaFiles.length > 0 ? SupportConsole.renderAttachmentGrid(mediaFiles) : '';
+
+            let docsListHtml = '';
+            if (docFiles.length > 0) {
+                docsListHtml = `<div class="flex flex-col gap-2 mt-2 w-64 md:w-80">`;
+                docFiles.forEach(doc => {
+                    const fileName = doc.name || 'Document';
+                    let icon = 'fa-file-alt text-slate-500';
+                    if (/\.pdf$/i.test(fileName)) icon = 'fa-file-pdf text-red-500';
+                    else if (/\.(xls|xlsx|csv)$/i.test(fileName)) icon = 'fa-file-excel text-green-600';
+
+                    // FIX: Inject Cloudinary's forced-download flag into the URL
+                    const downloadUrl = (doc.url && doc.url.includes('cloudinary.com')) 
+                        ? doc.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : doc.url;
+
+                    docsListHtml += `
+                        <a href="${downloadUrl}" download="${fileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-sm">
+                            <i class="fas ${icon} text-lg"></i>
+                            <div class="overflow-hidden">
+                                <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${fileName}</p>
+                                <p class="text-xs text-slate-500">Download</p>
+                            </div>
+                        </a>`;
+                });
+                docsListHtml += `</div>`;
+            }
+
+            // 🚀 ADDED: loading="lazy" decoding="async" to the avatar images
+            const avatarContent = msg.sender_avatar ? `<img src="${msg.sender_avatar}" loading="lazy" decoding="async" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>`;
+            
+            let bubbleClasses = alignRight 
+                ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
+                : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-tl-sm shadow-sm';
+
+            let html = `
+                <div class="flex w-full gap-3 md:gap-4 ${alignRight ? 'flex-row-reverse' : 'flex-row'} mb-2">
+                    <div class="shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden ${alignRight ? 'bg-blue-700' : 'bg-slate-300 dark:bg-slate-700'} flex items-center justify-center text-xs text-white shadow-sm mt-1">
+                        ${avatarContent}
+                    </div>
+                    <div class="flex flex-col ${alignRight ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[75%]">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1 px-1">
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${msg.sender_name}</span> • ${msg.timestamp}
+                        </div>
+                        ${hasText ? `<div class="px-4 py-2.5 ${bubbleClasses}"><p class="whitespace-pre-wrap break-words text-[15px] leading-relaxed">${msg.message}</p></div>` : ''}
+                        ${mediaGridHtml}
+                        ${docsListHtml}
+                    </div>
+                </div>`;
+                
+            chatBox.insertAdjacentHTML('beforeend', html);
+        });
+
+        SupportConsole.scrollToBottom();
+    }
+
+    function switchTab(tab) {
+        document.getElementById('feedView').classList.toggle('hidden', tab !== 'feed');
+        document.getElementById('detailsView').classList.toggle('hidden', tab !== 'details');
+
+        const feedBtn = document.getElementById('feedTabBtn');
+        const detailsBtn = document.getElementById('detailsTabBtn');
+
+        if (tab === 'feed') {
+            feedBtn.className = "py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors";
+            detailsBtn.className = "py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors";
+        } else {
+            detailsBtn.className = "py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors";
+            feedBtn.className = "py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors";
+        }
+    }
+    
+    async function deleteTicket() {
+        const confirmDelete = confirm("CRITICAL: Are you sure you want to permanently delete this case? This action cannot be undone.");
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch(`/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                alert("Case successfully deleted.");
+                window.location.href = "{% url 'tickets:admin_tickets' %}";
+            } else {
+                const data = await response.json();
+                alert("Deletion Error: " + (data.message || "Unauthorized access."));
+            }
+        } catch (err) {
+            console.error("Delete failed:", err);
+            alert("A system error occurred.");
+        }
+    }
+    
+
+    function updateAttachmentsSidebar(messages, allAttachments = []) {
+        const dynamicInquiry = document.getElementById('dynamicInquiryContent');
+        if (dynamicInquiry) {
+            const rawDescription = "{{ ticket.description|escapejs }}";
+            dynamicInquiry.innerHTML = `
+                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
+                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Original User Concern</p>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">${rawDescription}</p>
+                </div>
+            `;
+        }
+
+        const mediaGrid = document.getElementById('mediaGridView');
+        const filesList = document.getElementById('filesListView');
+        const linksList = document.getElementById('linksListView');
+        
+        if (mediaGrid) mediaGrid.innerHTML = '';
+        if (filesList) filesList.innerHTML = '';
+        if (linksList) linksList.innerHTML = '';
+
+        if (!allAttachments || allAttachments.length === 0) {
+            if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+            if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+            if (linksList) linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+            return;
+        }
+
+        const visibleMessageIds = messages.map(msg => String(msg.id));
+        const sortedAttachments = [...allAttachments].reverse();
+        const visibleAttachments = sortedAttachments.filter(att => !att.message_id || visibleMessageIds.includes(String(att.message_id)));
+
+        // FIX: Using the master classifier
+        const mediaItemsForLightbox = visibleAttachments.filter(att => SupportConsole.classifyAttachment(att) !== 'document');
+        const docItems = visibleAttachments.filter(att => SupportConsole.classifyAttachment(att) === 'document');
+
+        if (mediaItemsForLightbox.length === 0 && mediaGrid) {
+            mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+        } else {
+            mediaItemsForLightbox.forEach(att => {
+                const type = SupportConsole.classifyAttachment(att);
+                const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);
+                
+                let contentHtml = type === 'video' 
+                    ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${att.url}#t=0.1" class="w-full h-full object-cover"></video>`
+                    : `<img src="${att.url}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">`;
+
+                if (mediaGrid) {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = "aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden cursor-pointer relative group border border-slate-200 dark:border-slate-700";
+                    itemDiv.innerHTML = `${contentHtml}<div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20"></div>`;
+                    itemDiv.onclick = () => SupportConsole.openLightbox(mediaItemsForLightbox, currentIndex);
+                    mediaGrid.appendChild(itemDiv);
+                }
+            });
+        }
+
+        if (docItems.length === 0 && filesList) {
+            filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+        } else {
+            docItems.forEach(att => {
+                if (filesList) {
+                    const fileName = att.name || 'Document';
+                    
+                    // FIX: Inject Cloudinary's forced-download flag into the URL
+                    const downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
+                        ? att.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : att.url;
+
+                    filesList.innerHTML += `
+                        <a href="${downloadUrl}" download="${fileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-file-alt"></i></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${fileName}</p></div>
+                        </a>`;
+                }
+            });
+        }
+
+        let linkCount = 0;
+        messages.forEach(msg => {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const links = msg.message.match(urlRegex);
+            if (links && linksList) {
+                links.forEach(link => {
+                    linkCount++;
+                    linksList.innerHTML += `
+                        <a href="${link}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-link"></i></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-blue-600 dark:text-blue-400 truncate">${link}</p></div>
+                        </a>`;
+                });
+            }
+        });
+
+        if (linkCount === 0 && linksList) {
+            linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+        }
+    }
+
+    function switchMediaTab(tab) {
+        const categories = ['media', 'files', 'links'];
+        categories.forEach(cat => {
+            const view = document.getElementById(cat + 'ListView') || document.getElementById(cat + 'GridView');
+            const btn = document.getElementById(cat + 'TabBtn');
+            if (view && btn) {
+                if (cat === tab) {
+                    view.classList.remove('hidden');
+                    if (cat !== 'media') view.classList.add('flex');
+                    btn.className = "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50";
+                } else {
+                    view.classList.add('hidden');
+                    if (cat !== 'media') view.classList.remove('flex');
+                    btn.className = "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent";
+                }
+            }
+        });
+    }
+
+    function quickTakeOver() {
+        const techSelect = document.getElementById('editTechnician');
+        const myId = "{{ request.user.id|default:'null' }}"; 
+        if (techSelect && myId) {
+            techSelect.value = myId;
+            updateTicketAdmin();
+        }
+    }
+
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('leftSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+
+    function toggleRightSidebar() {
+        const sidebar = document.getElementById('rightSidebar') || document.getElementById('rightAssetsSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const mainHeaderBtn = document.getElementById('mainHeaderToggleBtn');
+        const isDesktop = window.innerWidth >= 1024; // Tailwind's 'lg' breakpoint
+
+        if (!sidebar) return;
+
+        if (isDesktop) {
+            if (sidebar.classList.contains('lg:w-0')) {
+                // EXPANDING THE SIDEBAR
+                sidebar.classList.remove('lg:w-0', 'lg:min-w-0', 'lg:border-l-0', 'lg:p-0', 'opacity-0');
+                sidebar.classList.add('lg:w-80', 'lg:min-w-[20rem]', 'opacity-100');
+                
+                // Hide the main header button since the sidebar is now open
+                if (mainHeaderBtn) {
+                    mainHeaderBtn.classList.add('hidden');
+                    mainHeaderBtn.classList.remove('lg:flex');
+                }
+            } else {
+                // COLLAPSING THE SIDEBAR
+                sidebar.classList.add('lg:w-0', 'lg:min-w-0', 'lg:border-l-0', 'lg:p-0', 'opacity-0');
+                sidebar.classList.remove('lg:w-80', 'lg:min-w-[20rem]', 'opacity-100');
+                
+                // Show the main header "<" button so the user can reopen it
+                if (mainHeaderBtn) {
+                    mainHeaderBtn.classList.remove('hidden');
+                    mainHeaderBtn.classList.add('lg:flex');
+                }
+            }
+        } else {
+            // Mobile Mode: Slide in/out from the right
+            sidebar.classList.toggle('translate-x-full');
+            if (overlay) overlay.classList.toggle('hidden');
+        }
+    }
+
+    function closeAllSidebars() {
+        document.getElementById('leftSidebar').classList.add('-translate-x-full');
+        document.getElementById('rightSidebar').classList.add('translate-x-full');
+        document.getElementById('sidebarOverlay').classList.add('hidden');
+    }
+
+    function closeMobileSidebar() {
+        if (window.innerWidth < 1024) closeAllSidebars();
+    }
+</script>
+{% endblock %}

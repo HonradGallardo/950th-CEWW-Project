@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[80vh] p-2 sm:p-6 bg-slate-100 dark:bg-[#0f172a] transition-colors duration-300 content-bg">
+    <div class="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-slate-800 transition-all registration-card">
+        <div class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 py-4 text-center card-header-bg">
+            <h2 class="text-lg sm:text-xl font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 dark-mode-text">
+                {% if log_id %} Update Service Log {% else %} Create Service Log {% endif %}
+            </h2>
+        </div>
+
+        <form method="POST" class="p-4 sm:p-8 space-y-6" id="serviceLogForm" novalidate>
+            {% csrf_token %}
+            
+            <div class="flex justify-between items-start text-[11px] font-bold text-slate-500 italic">
+                <div class="space-y-1">
+                    <p class="text-slate-600 dark:text-slate-400 dark-mode-subtext font-black">Technician: <span class="text-blue-500 font-bold">{{ request.user.username }}</span></p>
+                    <p class="text-slate-800 dark:text-slate-400 dark-mode-subtext font-black">Date / Time: <span class="text-gray-500 font-bold">{% now "d-m-Y | H:i" %}</span></p>
+                </div>
+                <a href="{% url 'maintenance_list' %}" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all flex items-center gap-2 not-italic text-[10px] font-black uppercase border border-slate-200 dark:border-slate-700">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 pt-2">Select Asset:</label>
+                    <div class="md:col-span-2 relative">
+                        <div class="relative w-full custom-dropdown" id="dropdown-asset">
+                            <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
+                                <span class="selected-label">
+                                    {% if form.instance.asset %}{{ form.instance.asset.assets_id }} - {{ form.instance.asset.assets_name }}{% else %}Select Asset ID / Name{% endif %}
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                            </button>
+                            <div class="dropdown-list hidden absolute z-[110] mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl overflow-hidden">
+                                <div class="p-2 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                                    <input type="text" id="assetSearch" placeholder="Search ID or Name..." class="w-full px-3 py-1.5 text-xs rounded border dark:bg-slate-900 dark:border-slate-600 outline-none focus:ring-1 focus:ring-blue-500">
+                                </div>
+                                <div id="asset-options-container" class="max-h-[180px] overflow-y-auto">
+                                    <div class="p-4 text-center text-xs text-slate-400 italic">Syncing with registry...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="hidden">
+                                {{ form.asset }}
+                                <input type="hidden" id="custom-asset-tracker" value="{{ form.instance.asset.id|default_if_none:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start md:items-center gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Maintenance Type:</label>
+                    <div class="md:col-span-2">{{ form.maintenance_type }}</div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 pt-2">Status:</label>
+                    <div class="md:col-span-2 relative">
+                        <div class="relative w-full custom-dropdown" id="dropdown-status">
+                            <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
+                                <span class="selected-label">
+                                    {% if form.instance.status %}{{ form.instance.status }}{% else %}---------{% endif %}
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                            </button>
+                            <div class="dropdown-list hidden absolute z-[100] mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl max-h-[150px] overflow-y-auto">
+                                {% for value, label in form.status.field.choices %}
+                                    <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0" data-value="{{ value }}">
+                                        {{ label }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="hidden">
+                                {{ form.status }}
+                                <input type="hidden" id="custom-status-tracker" value="{{ form.instance.status|default_if_none:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 block">Description / Technical Notes</label>
+                    <div class="w-full">
+                        {{ form.notes }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 sm:py-3 rounded-lg transition active:scale-[0.98] shadow-lg shadow-blue-500/30 uppercase tracking-widest text-xs">
+                    Submit Service Record
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    const logId = "{{ log_id|default:'' }}";
+    const isEdit = logId !== "";
+
+    // 1. FORCE-REMOVE 'REQUIRED' FROM NATIVE FIELDS
+    $('select[name="asset"], select[name="status"]').removeAttr('required').prop('required', false);
+
+    // 2. DYNAMIC ASSET FETCH
+    function fetchAssets() {
+        $.ajax({
+            url: '/api/assets/',
+            type: 'GET',
+            success: function(data) {
+                let html = '';
+                data.forEach(asset => {
+                    html += `
+                        <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0" 
+                             data-value="${asset.id}" data-search="${asset.assets_id} ${asset.assets_name}">
+                            <span class="font-black text-blue-600 dark:text-blue-400">${asset.assets_id}</span> 
+                            <span class="mx-2 text-slate-300">|</span> 
+                            <span class="text-xs font-bold text-slate-500">${asset.assets_name}</span>
+                        </div>`;
+                });
+                $('#asset-options-container').html(html || '<div class="p-4 text-center">No assets found.</div>');
+            }
+        });
+    }
+    fetchAssets();
+
+    // 3. DROPDOWN UI LOGIC
+    $(document).on('click', '.dropdown-toggle', function(e) {
+        e.stopPropagation();
+        const $list = $(this).next('.dropdown-list');
+        $('.dropdown-list').not($list).addClass('hidden');
+        $list.toggleClass('hidden');
+        if(!$list.hasClass('hidden')) $list.find('input').focus();
+    });
+
+    $(document).on('click', '.dropdown-item', function() {
+        const val = $(this).data('value');
+        const $dropdown = $(this).closest('.custom-dropdown');
+        
+        $dropdown.find('.selected-label').html($(this).html());
+        
+        // 🚨 UPDATE OUR GUARANTEED HIDDEN INPUTS INSTEAD OF NATIVE SELECTS
+        if ($dropdown.attr('id') === 'dropdown-asset') {
+            $('#custom-asset-tracker').val(val);
+        } else if ($dropdown.attr('id') === 'dropdown-status') {
+            $('#custom-status-tracker').val(val);
+        }
+        
+        $('.dropdown-list').addClass('hidden');
+    });
+
+    $('#assetSearch').on('keyup', function() {
+        const val = $(this).val().toLowerCase();
+        $('#asset-options-container .dropdown-item').filter(function() {
+            $(this).toggle($(this).data('search').toLowerCase().indexOf(val) > -1);
+        });
+    });
+
+    $(document).on('click', function() { $('.dropdown-list').addClass('hidden'); });
+
+    // 4. API SUBMISSION
+    $('#serviceLogForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Grab values from our guaranteed trackers
+        const assetPk = $('#custom-asset-tracker').val();
+        const statusVal = $('#custom-status-tracker').val();
+        const maintTypeVal = $('[name="maintenance_type"]').val();
+        const notesVal = $('textarea[name="notes"]').val();
+
+        if (!assetPk || assetPk === "" || !statusVal || statusVal === "") {
+            alert("Verification Failed: Please select an Asset and a Status.");
+            return;
+        }
+
+        const $btn = $('#submitBtn');
+        $btn.prop('disabled', true).text('SYNCHRONIZING...');
+
+        const apiUrl = isEdit ? `/api/maintenance/${logId}/` : '/api/maintenance/';
+        const apiMethod = isEdit ? 'PUT' : 'POST';
+
+        $.ajax({
+            url: apiUrl,
+            type: apiMethod,
+            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+            data: JSON.stringify({
+                asset: parseInt(assetPk),
+                status: statusVal,
+                maintenance_type: maintTypeVal,
+                notes: notesVal
+            }),
+            contentType: 'application/json',
+            success: function() { 
+                window.location.href = '/maintenance/'; 
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).text('RETRY SUBMISSION');
+                console.error("API Error Response:", xhr.responseText);
+                alert("Submission Refused: " + (xhr.responseJSON?.detail || "Check form details."));
+            }
+        });
+    });
+});
+</script>
+
+<style>
+    /* Light/Dark consistency for form controls */
+    #serviceLogForm select, #serviceLogForm textarea { 
+        width: 100% !important; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; 
+    }
+    body.dark-mode #serviceLogForm select, body.dark-mode #serviceLogForm textarea {
+        background-color: #1f2937; border-color: #374151; color: #f1f5f9;
+    }
+    #asset-options-container::-webkit-scrollbar { width: 4px; }
+    #asset-options-container::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+</style>
+{% endblock %}

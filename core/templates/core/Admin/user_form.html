@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="POST" id="userPersonnelForm" class="w-full max-w-5xl mx-auto mt-8 px-4 sm:px-0 mb-16 transition-colors duration-300" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+        <div>
+            <a href="{% url 'user_list' %}" class="text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 text-sm font-semibold transition-colors inline-flex items-center mb-2">
+                <i class="fas fa-arrow-left mr-2 text-xs"></i> Back to Directory
+            </a>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{{ title }}</h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage personnel profile and system access levels.</p>
+        </div>
+        
+        <div class="hidden sm:block">
+            <button type="button" onclick="document.getElementById('saveUserBtn').click()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20 px-5 py-2.5 rounded-xl font-semibold transition-colors flex items-center text-sm">
+                Quick Save
+            </button>
+        </div>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+        
+        <div class="w-full lg:w-1/3 flex flex-col gap-6">
+            
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-indigo-50 to-slate-50 dark:from-slate-800 dark:to-slate-900"></div>
+                
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 relative z-10 w-full text-left uppercase tracking-wider text-[11px] opacity-70">Avatar</h3>
+                
+                <div class="relative group z-10 w-full flex flex-col items-center">
+                    {% if form.instance.pk and form.instance.profile.image and 'default.jpg' not in form.instance.profile.image.url %}
+                        <div class="relative mb-6">
+                            <img src="{{ form.instance.profile.image.url }}" class="w-32 h-32 rounded-full object-cover shadow-lg border-4 border-white dark:border-slate-800 bg-white dark:bg-slate-800">
+                            <div class="absolute -bottom-2 right-1/2 translate-x-1/2 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30 whitespace-nowrap shadow-sm">
+                                <i class="fas fa-check-circle mr-1"></i> Active
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="w-32 h-32 rounded-full shadow-inner border-4 border-slate-50 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 mb-6 flex items-center justify-center text-slate-300 dark:text-slate-600">
+                            <i class="fas fa-user text-4xl"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="w-full">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Upload New Photo</label>
+                        <input type="file" name="profile_picture" accept="image/*" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white dark:file:bg-slate-800 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-slate-100 dark:hover:file:bg-slate-700 file:shadow-sm file:transition-colors text-slate-600 dark:text-slate-400">
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="w-full lg:w-2/3">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 shadow-sm">
+                
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800 uppercase tracking-wider text-[11px] opacity-70">Identity & Access</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            Phone Number
+                        </label>
+                        <div class="relative group">
+                            <input type="tel" name="phone" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);" placeholder="09XXXXXXXXX" value="{% if form.instance.pk %}{{ form.instance.profile.phone|default:'' }}{% endif %}" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            Rank Code
+                        </label>
+                        <div class="relative group">
+                            <select name="rank" id="acc_rank" onchange="if(typeof updateRankBadge === 'function') updateRankBadge(this)" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
+                                <option value="" disabled {% if not form.instance.pk or not form.instance.profile.rank %}selected{% endif %}>Select Rank</option>
+                                <optgroup label="Enlisted">
+                                    <option value="Airman" {% if form.instance.pk and form.instance.profile.rank == 'Airman' %}selected{% endif %}>Airman</option>
+                                    <option value="Airman Second Class" {% if form.instance.pk and form.instance.profile.rank == 'Airman Second Class' %}selected{% endif %}>Airman Second Class</option>
+                                    <option value="Airman First Class" {% if form.instance.pk and form.instance.profile.rank == 'Airman First Class' %}selected{% endif %}>Airman First Class</option>
+                                    <option value="Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Sergeant' %}selected{% endif %}>Sergeant</option>
+                                </optgroup>
+                                <optgroup label="Non-Commissioned Officers">
+                                    <option value="Staff Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Staff Sergeant' %}selected{% endif %}>Staff Sergeant</option>
+                                    <option value="Technical Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Technical Sergeant' %}selected{% endif %}>Technical Sergeant</option>
+                                    <option value="Master Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Master Sergeant' %}selected{% endif %}>Master Sergeant</option>
+                                    <option value="Senior Master Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Senior Master Sergeant' %}selected{% endif %}>Senior Master Sergeant</option>
+                                    <option value="Chief Master Sergeant" {% if form.instance.pk and form.instance.profile.rank == 'Chief Master Sergeant' %}selected{% endif %}>Chief Master Sergeant</option>
+                                </optgroup>
+                                <optgroup label="Officers">
+                                    <option value="Second Lieutenant" {% if form.instance.pk and form.instance.profile.rank == 'Second Lieutenant' %}selected{% endif %}>Second Lieutenant</option>
+                                    <option value="First Lieutenant" {% if form.instance.pk and form.instance.profile.rank == 'First Lieutenant' %}selected{% endif %}>First Lieutenant</option>
+                                    <option value="Captain" {% if form.instance.pk and form.instance.profile.rank == 'Captain' %}selected{% endif %}>Captain</option>
+                                    <option value="Major" {% if form.instance.pk and form.instance.profile.rank == 'Major' %}selected{% endif %}>Major</option>
+                                    <option value="Lieutenant Colonel" {% if form.instance.pk and form.instance.profile.rank == 'Lieutenant Colonel' %}selected{% endif %}>Lieutenant Colonel</option>
+                                    <option value="Colonel" {% if form.instance.pk and form.instance.profile.rank == 'Colonel' %}selected{% endif %}>Colonel</option>
+                                </optgroup>
+                                <optgroup label="General Officers">
+                                    <option value="Brigadier General" {% if form.instance.pk and form.instance.profile.rank == 'Brigadier General' %}selected{% endif %}>Brigadier General</option>
+                                    <option value="Major General" {% if form.instance.pk and form.instance.profile.rank == 'Major General' %}selected{% endif %}>Major General</option>
+                                    <option value="Lieutenant General" {% if form.instance.pk and form.instance.profile.rank == 'Lieutenant General' %}selected{% endif %}>Lieutenant General</option>
+                                    <option value="General" {% if form.instance.pk and form.instance.profile.rank == 'General' %}selected{% endif %}>General</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            System Role
+                        </label>
+                        <div class="relative group">
+                            <!-- SAFEGUARDED M2M RELATIONSHIP LOOP -->
+                            <select name="role_name" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
+                                <option value="" disabled {% if not form.instance.pk %}selected{% endif %}>Select Role</option>
+                                
+                                <option value="Admin" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Admin' %}selected{% endif %}{% endfor %}{% endif %}>Admin</option>
+                                <option value="Commander" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Commander' %}selected{% endif %}{% endfor %}{% endif %}>Commander</option>
+                                <option value="Personnel" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Personnel' %}selected{% endif %}{% endfor %}{% endif %}>Personnel</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 mt-4 mb-2">
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 pb-4 border-b border-slate-100 dark:border-slate-800 uppercase tracking-wider text-[11px] opacity-70">Core Credentials</h3>
+                    </div>
+
+                    {% for field in form %}
+                        {% if field.name != 'role' and field.name != 'groups' %}
+                            <div class="space-y-2 {% if field.name == 'email' or field.name == 'username' %}md:col-span-2{% endif %}">
+                                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                    {{ field.label }}
+                                </label>
+                                
+                                <div class="relative group">
+                                    {{ field }}
+                                </div>
+                                
+                                {% if field.help_text %}
+                                    <p class="text-slate-500 dark:text-slate-400 text-xs mt-1.5">{{ field.help_text }}</p>
+                                {% endif %}
+                                
+                                <div id="error-{{ field.name }}" class="field-error-container">
+                                    {% if field.errors %}
+                                        <div class="space-y-1 mt-2">
+                                            {% for error in field.errors %}
+                                                <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20">
+                                                    <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+                                                </p>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="pt-8 mt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+                    <a href="{% url 'user_list' %}" class="w-full sm:w-auto text-center text-slate-600 dark:text-slate-300 bg-white hover:bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:hover:bg-slate-800 font-semibold text-sm px-6 py-3 rounded-xl transition-colors">
+                        Cancel Changes
+                    </a>
+                    <button type="submit" id="saveUserBtn" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold transition-all flex items-center justify-center text-sm shadow-md shadow-indigo-600/20 dark:shadow-none active:scale-[0.98]">
+                        <i id="saveIcon" class="fas fa-save mr-2 text-xs"></i> <span id="btnText">Save Personnel Record</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+$(document).ready(function() {
+    const $form = $('#userPersonnelForm');
+    const $btn = $('#saveUserBtn');
+    const $icon = $('#saveIcon');
+    const $text = $('#btnText');
+    const userId = "{{ form.instance.id }}";
+    const isEdit = userId && userId !== "None";
+
+    // --- 1. JQUERY AJAX: ASYNC USER CREATION ---
+    $form.on('submit', function(e) {
+        e.preventDefault();
+
+        // 🚨 EMAIL VALIDATION BLOCK 🚨
+        const $emailInput = $('input[name="email"]');
+        const emailValue = $emailInput.val();
+        const originalText = $text.text();
+
+        if (emailValue && !emailValue.includes('@')) {
+            $(`#error-email`).html(`
+                <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center mt-2 bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20">
+                    <i class="fas fa-exclamation-circle mr-2"></i> Invalid email format. Use 'user@domain.com'
+                </p>
+            `);
+            $emailInput.addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10').focus();
+            return; // STOP the submission
+        }
+
+        // Clear previous AJAX errors
+        $('.field-error-container').empty();
+        $('input').removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10');
+        
+        // UI Loading State
+        $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
+        $icon.removeClass('fa-save').addClass('fa-circle-notch fa-spin');
+        $text.text('Saving Record...');
+
+        // Set up FormData to handle the new file input
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: window.location.href, 
+            type: 'POST',
+            data: formData,             
+            processData: false,         
+            contentType: false,         
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                // Success visual confirmation
+                $icon.removeClass('fa-circle-notch fa-spin').addClass('fa-check');
+                $text.text('Saved Successfully');
+                $btn.removeClass('bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 shadow-md').addClass('bg-emerald-600 hover:bg-emerald-600 dark:bg-emerald-500 dark:hover:bg-emerald-500');
+                
+                setTimeout(() => {
+                    window.location.href = "{% url 'user_list' %}";
+                }, 1000);
+            },
+            error: function(xhr) {
+                // Revert UI
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
+                $icon.removeClass('fa-circle-notch fa-spin').addClass('fa-save');
+                $text.text(originalText);
+
+                // Handle Django Form Errors returned as JSON
+                if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.errors) {
+                    const errors = xhr.responseJSON.errors;
+                    for (let fieldName in errors) {
+                        const errorHtml = errors[fieldName].map(err => `
+                            <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center mt-2 bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20">
+                                <i class="fas fa-exclamation-circle mr-2"></i> ${err}
+                            </p>
+                        `).join('');
+                        $(`#error-${fieldName}`).html(errorHtml);
+                        $(`input[name="${fieldName}"]`).addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20');
+                    }
+                } else {
+                    alert("System Error: Failed to commit user record to database.");
+                }
+            }
+        });
+    });
+});
+</script>
+
+<style>
+    /* Django-rendered Input Theming - Unified with Indigo/Slate Theme */
+    input, select, textarea {
+        width: 100% !important;
+        font-size: 0.875rem !important; 
+        padding: 0.75rem 1rem !important;
+        border-radius: 0.75rem !important; /* Matches rounded-xl */
+        border: 1px solid #e2e8f0 !important;
+        background-color: #f8fafc !important; /* slate-50 */
+        color: #1e293b !important; /* slate-800 */
+        transition: all 0.2s ease !important;
+        outline: none !important;
+    }
+
+    .dark input, .dark select, .dark textarea {
+        background-color: rgba(15, 23, 42, 0.5) !important; /* slate-900/50 */
+        border-color: #334155 !important; /* slate-700 */
+        color: #e2e8f0 !important; /* slate-200 */
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: #6366f1 !important; /* indigo-500 */
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+    }
+
+    .dark input:focus, .dark select:focus, .dark textarea:focus {
+        border-color: #6366f1 !important; /* indigo-500 */
+        background-color: #0f172a !important;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
+    }
+
+    /* Checkbox refinement */
+    input[type="checkbox"] {
+        width: 1.125rem !important;
+        height: 1.125rem !important;
+        padding: 0 !important;
+        margin-right: 0.75rem !important;
+        border-radius: 0.25rem !important;
+        accent-color: #4f46e5 !important; /* indigo-600 */
+        cursor: pointer;
+    }
+    
+    select {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

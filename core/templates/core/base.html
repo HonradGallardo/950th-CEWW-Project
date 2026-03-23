@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}950th CEWW System{% endblock %}</title>
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+
+        // Initialize theme immediately to prevent flashing
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        body { transition: background-color 0.3s ease, color 0.3s ease; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
+
+    <div class="fixed top-5 right-5 z-50 flex items-center gap-3">
+        <div id="global-api-indicator" class="hidden flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl">
+            <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></div>
+            <span class="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400">Secure Link</span>
+        </div>
+
+        <button id="theme-toggle" class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl hover:scale-110 transition-all group">
+            <i id="theme-toggle-dark-icon" class="fas fa-moon text-slate-600 hidden group-hover:text-blue-600"></i>
+            <i id="theme-toggle-light-icon" class="fas fa-sun text-yellow-400 hidden"></i>
+        </button>
+    </div>
+
+    <div class="flex min-h-screen">
+        <main class="flex-1 flex flex-col min-w-0">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <div class="relative inline-block">
+        <button id="notification-button" class="p-2 text-slate-500 hover:text-blue-600 dark:text-slate-400 transition-colors">
+            <i class="fas fa-bell"></i>
+            <span id="notification-count" class="absolute top-0 right-0 hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-slate-900">
+                0
+            </span>
+        </button>
+
+        <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 z-50">
+            <div class="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                <span class="text-xs font-black uppercase tracking-wider">Recent Alerts</span>
+                <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-500 hover:underline">Clear All</a>
+            </div>
+            <ul id="notification-list" class="max-h-60 overflow-y-auto custom-scrollbar"></ul>
+            <div class="p-2 border-t border-slate-100 dark:border-slate-700 text-center">
+                <a href="#" class="text-[10px] text-slate-400 uppercase font-bold">View All Notifications</a>
+            </div>
+        </div>
+    </div>
+
+{% if user.is_authenticated %}
+    <script>
+        /**
+         * 1. THEME ENGINE
+         */
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        function updateToggleIcons() {
+            if (document.documentElement.classList.contains('dark')) {
+                lightIcon.classList.remove('hidden');
+                darkIcon.classList.add('hidden');
+            } else {
+                lightIcon.classList.add('hidden');
+                darkIcon.classList.remove('hidden');
+            }
+        }
+
+        updateToggleIcons();
+
+        themeToggleBtn.addEventListener('click', function() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            }
+            updateToggleIcons();
+            document.dispatchEvent(new Event('themeChanged'));
+        });
+
+        /**
+         * 2. INACTIVITY LOGOUT TIMER (30 Minutes)
+         */
+        (function() {
+            const idleTimeout = 30 * 60 * 1000; // 30 minutes
+            let idleTimer;
+
+            function handleInactivity() {
+                alert("Security Protocol: You have been logged out due to 30 minutes of inactivity.");
+                window.location.href = "{% url 'logout' %}";
+            }
+
+            function resetTimer() {
+                clearTimeout(idleTimer);
+                idleTimer = setTimeout(handleInactivity, idleTimeout);
+            }
+
+            const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            
+            resetTimer();
+            activityEvents.forEach(event => {
+                document.addEventListener(event, resetTimer, false);
+            });
+        })();
+
+        /**
+         * 3. JQUERY AJAX: NOTIFICATION ENGINE & CSRF
+         */
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+
+        $(document).ready(function() {
+            const $btn = $('#notification-button');
+            const $dropdown = $('#notification-dropdown');
+
+            $btn.on('click', function(e) {
+                e.stopPropagation();
+                $dropdown.toggleClass('hidden');
+            });
+
+            $(document).on('click', function() {
+                $dropdown.addClass('hidden');
+            });
+
+            window.updateNotifications = function() {
+                const $indicator = $('#global-api-indicator');
+                
+                $.ajax({
+                    url: '/api/notifications/',
+                    type: 'GET',
+                    success: function(data) {
+                        $indicator.removeClass('hidden').fadeIn();
+                        
+                        const unread = data.filter(n => !n.is_read);
+                        const $bellCount = $('#notification-count');
+                        
+                        if (unread.length > 0) {
+                            $bellCount.text(unread.length).removeClass('hidden');
+                        } else {
+                            $bellCount.addClass('hidden');
+                        }
+
+                        let listHtml = '';
+                        if (data.length === 0) {
+                            listHtml = '<li class="p-4 text-center text-xs text-slate-400 italic">No new alerts</li>';
+                        } else {
+                            data.slice(0, 5).forEach(n => {
+                                listHtml += `
+                                    <li class="p-3 border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                                        <p class="text-xs ${n.is_read ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100 font-semibold'}">${n.message}</p>
+                                        <span class="text-[9px] text-slate-400 font-mono">${n.timestamp}</span>
+                                    </li>`;
+                            });
+                        }
+                        $('#notification-list').html(listHtml);
+                        setTimeout(() => $indicator.fadeOut(), 3000);
+                    },
+                    error: function() {
+                        $indicator.addClass('hidden');
+                    }
+                });
+            }
+
+            setInterval(updateNotifications, 30000);
+            updateNotifications();
+        });
+
+        /**
+         * 4. VANILLA JS API: GLOBAL UTILITIES
+         */
+        const SystemAPI = {
+            async fetchJson(url) {
+                try {
+                    const response = await fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    return await response.json();
+                } catch (error) {
+                    console.error("API Protocol Breach:", error);
+                }
+            }
+        };
+    </script>
+{% endif %}
+</body>
+</html>

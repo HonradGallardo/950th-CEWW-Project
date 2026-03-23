@@ -1,0 +1,2008 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Custom Scrollbar for a premium feel */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+
+    /* Fix for mobile height issues & safe area for iOS/Android home bars */
+    .main-container { 
+        height: 100vh; 
+        height: 100dvh; /* Better mobile viewport handling */
+        max-height: 100vh;
+        max-height: 100dvh;
+        min-height: 0 !important; /* This stops the flex-expansion dead in its tracks */
+        width: 100%;
+        padding-bottom: env(safe-area-inset-bottom); /* Added for mobile responsiveness */
+        padding-top: env(safe-area-inset-top); /* Added for mobile responsiveness */
+    }
+    
+    /* Ensure images don't break layouts */
+    img { max-width: 100%; height: auto; }
+
+    /* Utility for hidden scrollbars but keep functionality */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { 
+        display: none; 
+    }
+    .custom-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    #sidebar-ticket-details {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
+
+    #sidebar-ticket-details::-webkit-scrollbar {
+        display: none;             /* Chrome, Safari and Opera */
+    }
+
+    .active-ticket-item { 
+        background-color: #f1f5f9 !important; 
+        border-color: #cbd5e1 !important; 
+        border-left: 4px solid #2563eb !important;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+    .dark .active-ticket-item { 
+        background-color: #1e293b !important; 
+        border-color: #334155 !important; 
+        border-left: 4px solid #3b82f6 !important; 
+    }
+    #chatInput { min-height: 52px; max-height: 200px; }
+    /* Sidebar should always be above main content but potentially below modals */
+#mainSidebar {
+    z-index: 60 !important; /* Higher than header and main content */
+}
+
+#rightAssetsSidebar {
+    z-index: 60 !important;
+}
+
+/* The dark background overlays when sidebars are open on mobile */
+#sidebarOverlay, #assetsOverlay {
+    z-index: 55 !important;
+}
+
+/* Ensure the header doesn't clip the sidebars when they slide out */
+header {
+    z-index: 40 !important; 
+}
+
+/* Ensure the main content stays at the bottom of the stack */
+main {
+    z-index: 10;
+}
+</style>
+
+<div class="h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans text-slate-900 dark:text-slate-100 main-container">
+    
+    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 md:px-8 shrink-0 z-30 shadow-sm relative">
+        <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto overflow-hidden">
+            <button type="button" onclick="SupportConsole.toggleSidebar()" class="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+            
+            <div class="bg-blue-600 p-1.5 md:p-2 rounded-xl shadow-lg shadow-blue-500/30 shrink-0">
+                <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <div class="truncate min-w-0 flex-1">
+                <h1 class="text-xs md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.15em] text-slate-800 dark:text-white truncate">950th CEWW System</h1>
+                <p class="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">Enterprise v2.0</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2 md:gap-4 shrink-0 pl-2">
+            <div class="hidden sm:block text-right leading-tight">
+                <p class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ request.user.username|default:"Staff Member" }}</p>
+                <p class="text-[10px] font-bold text-emerald-500 uppercase flex items-center justify-end gap-1">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
+                </p>
+            </div>
+            <div class="relative group">
+                <img src="https://ui-avatars.com/api/?name={{ request.user.username|default:'U' }}&background=3b82f6&color=fff&bold=true" 
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden h-full relative min-h-0">
+        
+        <aside id="mainSidebar" class="absolute lg:static inset-y-0 left-0 z-50 w-[85vw] sm:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-hidden">
+            <div class="p-4 md:p-5 space-y-4 shrink-0">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Conversations</span>
+                    <button type="button" onclick="SupportConsole.openAssistant()" 
+                            class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm focus:outline-none">
+                        <i class="fas fa-plus mr-1"></i> New Ticket
+                    </button>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
+                    <input type="text" id="sidebarSearch" oninput="SupportConsole.filterSidebar()" 
+                           placeholder="Search tickets..." 
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all">
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1.5 pb-2" id="sidebarTicketContainer">
+                {% for ticket in user_tickets %}
+                <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}', '{{ ticket.technician.username|default:'Unassigned' }}')" 
+                     id="ticket-item-{{ ticket.id }}"
+                     class="ticket-item p-3 md:p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-transparent shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500 border border-slate-200 dark:border-slate-700">#{{ ticket.id|stringformat:"04d" }}</span>
+                        <span class="text-[9px] font-black uppercase tracking-tighter 
+                            {% if ticket.status == 'Completed' %}text-emerald-500{% else %}text-blue-500{% endif %}">
+                            {{ ticket.status }}
+                        </span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ ticket.subject }}</p>
+                    <p class="text-[9px] text-slate-400 mt-1 font-medium">{{ ticket.created_at|date:'M d' }} • {{ ticket.priority }} Priority</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div id="sidebar-ticket-details" class="scrollbar-hide h-[40%] min-h-[200px] flex flex-col overflow-y-auto border-t border-slate-200 dark:border-slate-800 p-4 md:p-5 bg-slate-50/50 dark:bg-slate-900/50 shrink-0 relative">
+                <div id="ticket-details-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <i class="fas fa-info-circle text-slate-300 dark:text-slate-700 text-2xl mb-3"></i>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Select a ticket to view details</p>
+                </div>
+
+                <div id="contact-details-inner" class="hidden flex-col pb-4 h-full">
+                    <div class="flex items-center gap-2 mb-4 shrink-0">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Initial Inquiry</span>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3 flex-1 overflow-y-auto custom-scrollbar">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-ticket-alt text-blue-500 text-xs shrink-0"></i>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate w-full">Ticket Type: <span id="detailCategory" class="text-blue-600 dark:text-blue-400">--</span></span>
+                        </div>
+                        
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
+                        
+                        <div class="grid grid-cols-2 gap-3 text-[10px] shrink-0">
+                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
+                                <i class="fas fa-user text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Name: <span id="contactName" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
+                                <i class="fas fa-medal text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Rank: <span id="contactRank" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                            <div class="col-span-2 flex items-center gap-2 truncate">
+                                <i class="fas fa-envelope text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Email: <span id="contactEmail" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                            <div class="col-span-2 flex items-center gap-2 truncate">
+                                <i class="fas fa-phone text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Phone: <span id="contactPhone" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                        </div>
+
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full mt-3 mb-2 shrink-0"></div>
+                        
+                        <div class="mt-2">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">User Concern:</span>
+                            <p id="detailConcern" class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium break-words">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div id="sidebarOverlay" onclick="SupportConsole.toggleSidebar()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[45]"></div>
+
+        <section class="flex-1 flex flex-col bg-white dark:bg-[#0f172a] relative overflow-hidden w-full min-w-0 min-h-0 h-full">
+            
+            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-[70] flex flex-col p-4 md:p-8 overflow-y-auto">
+                <div class="max-w-4xl mx-auto w-full flex flex-col h-full min-h-fit pb-8 animate-in fade-in zoom-in-95 duration-300">
+                    <div class="flex justify-between items-center mb-6 md:mb-8 shrink-0 bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm">
+                        <div class="flex items-center gap-3 md:gap-4">
+                            <div class="w-10 h-10 md:w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
+                                <i class="fas fa-robot text-white text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Smart Assistant</h2>
+                                <p class="text-[8px] md:text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Neural Link Active
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="SupportConsole.closeAssistant()" class="w-8 h-8 md:w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500/50">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="assistant-chat" class="flex-1 overflow-y-auto space-y-4 md:space-y-6 mb-6 custom-scrollbar px-2 min-h-[30vh]"></div>
+                    
+                    <div id="assistant-interaction" class="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm shrink-0">
+                        <div id="assistant-options" class="flex flex-wrap gap-2 md:gap-3 mb-2"></div>
+                        
+                        <form id="newTicketForm" class="hidden flex flex-col gap-5 animate-in slide-in-from-bottom-4 duration-500" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
+                                <p id="form-context-msg" class="text-[10px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fas fa-layer-group"></i> <span></span>
+                                </p>
+                            </div>
+                            
+                            <input type="hidden" name="category" id="newCat" value="General">
+                            <input type="hidden" name="priority" id="newPriority" value="Medium">
+
+                            <div id="account-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/50">
+                                <div class="flex items-center gap-3 col-span-1 sm:col-span-2 mb-1">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-id-card text-blue-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest">Identity Support</p>
+                                        <p class="text-[8px] text-blue-600/70 dark:text-blue-500/70 font-bold uppercase">Profile Provisioning</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">First Name</label>
+                                    <input type="text" name="first_name" id="acc_fname" maxlength="25" placeholder="John" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Last Name</label>
+                                    <input type="text" name="last_name" id="acc_lname" maxlength="25" placeholder="Doe" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Inst. Email</label>
+                                    <input type="email" name="email" id="acc_email" maxlength="50" placeholder="john.doe@company.com" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Phone Number</label>
+                                    <input type="tel" name="phone" id="acc_phone" maxlength="11" placeholder="09123456789" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Requested Rank</label>
+                                    <select name="rank" id="acc_rank" onchange="if(typeof updateRankBadge === 'function') updateRankBadge(this)" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer">
+                                        <option value="" disabled selected>Select Rank</option>
+                                        <optgroup label="Enlisted">
+                                            <option value="Airman">Airman</option>
+                                            <option value="Airman Second Class">Airman Second Class</option>
+                                            <option value="Airman First Class">Airman First Class</option>
+                                            <option value="Sergeant">Sergeant</option>
+                                        </optgroup>
+                                        <optgroup label="Non-Commissioned Officers">
+                                            <option value="Staff Sergeant">Staff Sergeant</option>
+                                            <option value="Technical Sergeant">Technical Sergeant</option>
+                                            <option value="Master Sergeant">Master Sergeant</option>
+                                            <option value="Senior Master Sergeant">Senior Master Sergeant</option>
+                                            <option value="Chief Master Sergeant">Chief Master Sergeant</option>
+                                        </optgroup>
+                                        <optgroup label="Officers">
+                                            <option value="Second Lieutenant">Second Lieutenant</option>
+                                            <option value="First Lieutenant">First Lieutenant</option>
+                                            <option value="Captain">Captain</option>
+                                            <option value="Major">Major</option>
+                                            <option value="Lieutenant Colonel">Lieutenant Colonel</option>
+                                            <option value="Colonel">Colonel</option>
+                                        </optgroup>
+                                        <optgroup label="General Officers">
+                                            <option value="Brigadier General">Brigadier General</option>
+                                            <option value="Major General">Major General</option>
+                                            <option value="Lieutenant General">Lieutenant General</option>
+                                            <option value="General">General</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="security-removal-fields" class="hidden flex flex-col gap-4 p-5 bg-amber-50/50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-shield-alt text-amber-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">Security Clearance</p>
+                                        <p class="text-[8px] text-amber-600/70 dark:text-amber-500/70 font-bold uppercase">Authorization Required</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-500">Identifier</label>
+                                        <input type="text" name="auth_id" placeholder="ID or Username" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-500">Action Type</label>
+                                        <select name="removal_type" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all appearance-none cursor-pointer">
+                                            <option value="OTP">OTP Reset</option>
+                                            <option value="MFA">Complete MFA Removal</option>
+                                            <option value="Hardware">Hardware Token Unlink</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="bug-fields" class="hidden flex flex-col gap-4 p-5 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-bug text-red-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-red-600 dark:text-red-500 uppercase tracking-widest">System Anomaly</p>
+                                        <p class="text-[8px] text-red-600/70 dark:text-red-500/70 font-bold uppercase">Diagnostics & Routing</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Impacted Module</label>
+                                        <select name="bug_module" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all appearance-none cursor-pointer">
+                                            <option value="Dashboard">Dashboard / Analytics</option>
+                                            <option value="Tickets">Ticket System</option>
+                                            <option value="Assets">IT Assets</option>
+                                            <option value="Authentication">Authentication</option>
+                                            <option value="Other">Other Component</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Error Code (If any)</label>
+                                        <input type="text" name="error_code" placeholder="e.g. ERR_500 or Hex Code" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5 sm:col-span-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Steps to Reproduce</label>
+                                        <textarea name="reproduce_steps" rows="2" placeholder="1. Go to... 2. Click on... 3. Error appears" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="permission-fields" class="hidden flex flex-col gap-4 p-5 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-key text-emerald-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Access Control</p>
+                                        <p class="text-[8px] text-emerald-600/70 dark:text-emerald-500/70 font-bold uppercase">Role Modification</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Target Resource</label>
+                                        <input type="text" name="target_resource" placeholder="System/Database Name" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Requested Level</label>
+                                        <select name="access_level" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none cursor-pointer">
+                                            <option value="Read-Only">Read-Only (Viewer)</option>
+                                            <option value="Contributor">Contributor (Editor)</option>
+                                            <option value="Administrator">Administrator (Elevated)</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5 sm:col-span-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Approving Officer</label>
+                                        <input type="text" name="approving_officer" placeholder="Name or Reference Number of Approval" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="access-fields" class="hidden flex flex-col gap-4 p-5 bg-purple-50/50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-sign-in-alt text-purple-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-purple-600 dark:text-purple-500 uppercase tracking-widest">Authentication Issue</p>
+                                        <p class="text-[8px] text-purple-600/70 dark:text-purple-500/70 font-bold uppercase">Login Diagnostics</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-500">Affected ID / Username</label>
+                                        <input type="text" name="affected_id" placeholder="Your Service ID" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-500">Contact Method</label>
+                                        <input type="text" name="alt_contact" placeholder="Alternate Email / Phone" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Subject</label>
+                                    <input type="text" name="subject" id="newSub" required class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm">
+                                </div>
+                                
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Description</label>
+                                    <textarea name="description" id="newDescInput" required rows="4" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none shadow-sm"></textarea>
+                                </div>
+                                
+                                <div class="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-6 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all text-center">
+                                    <input type="file" name="attachments" multiple class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="SupportConsole.updateFileList(this)">
+                                    <div class="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-blue-500 transition-colors">
+                                        <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-800 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-all">
+                                            <i class="fas fa-cloud-upload-alt text-lg"></i>
+                                        </div>
+                                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest mt-1" id="file-label">Attach Files or Media</span>
+                                    </div>
+                                    <div id="file-preview-list" class="mt-4 flex flex-wrap gap-2 justify-center empty:hidden"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" onclick="SupportConsole.finalizeTicketSubmission()" 
+                                    class="w-full bg-blue-600 text-white py-3.5 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] transition-all mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                                Initialize Dispatch
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="no-chat-selected" class="absolute inset-0 bg-white dark:bg-[#0f172a] z-20 flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-16 h-16 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <i class="fas fa-comments text-2xl md:text-4xl text-slate-200 dark:text-slate-800"></i>
+                </div>
+                <h3 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Secure Line Ready</h3>
+                <p class="text-[10px] md:text-xs text-slate-400 mt-2 max-w-[200px] leading-relaxed">Select a thread or start a new assistant session.</p>
+            </div>
+
+            <div class="h-12 md:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-2 md:px-6 shrink-0 z-30 w-full min-w-0 relative shadow-sm">
+                
+                <div class="flex items-center border-r border-slate-200 dark:border-slate-800 mr-2 md:mr-4 h-full shrink-0">
+                    <button type="button" onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Activity</button>
+                    <button type="button" onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Case Details</button>
+                    
+                    <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden px-3 md:px-4 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-600 focus:outline-none flex items-center gap-1.5">
+                        <i class="fas fa-folder-open"></i> <span class="hidden sm:inline">Assets</span>
+                    </button>
+                </div>
+                
+                <div id="staff-threads-container" class="flex-1 flex items-center gap-2 overflow-visible custom-scrollbar h-full min-w-0 scroll-smooth pr-4">
+                </div>
+                
+                <button type="button" onclick="SupportConsole.toggleAssets()" id="mainHeaderToggleBtn" title="Expand Assets" class="hidden items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto shrink-0">
+                    <i class="fas fa-chevron-left text-sm md:text-base"></i>
+                </button>
+            </div>
+
+            <div id="feedView" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-[#0f172a] min-h-0">
+                <div class="px-4 md:px-8 pt-4 md:pt-6 shrink-0">
+                    <div id="feed-header-label" class="flex items-center gap-3 mb-3 md:mb-4">
+                        <span class="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] whitespace-nowrap truncate">Chatting with: <span id="active-chat-id">#0000</span></span>
+                        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto no-scrollbar px-3 md:px-8 py-4 min-h-0" id="workspaceScroll">
+                    <div id="messageContainer" class="max-w-4xl mx-auto space-y-6 md:space-y-8"></div>
+                </div>
+
+                <div class="p-3 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 z-10 mb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <div class="max-w-4xl mx-auto">
+                        <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-2 mb-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"></div>
+                        <form onsubmit="SupportConsole.sendMessage(event)" id="chatMsgForm" class="relative group flex items-end" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="file" id="chatFileInput" name="attachments" multiple class="hidden" onchange="SupportConsole.handleChatFileSelect(this)">
+                            
+                            <div class="flex-1 relative">
+                                <textarea id="chatInput" rows="1" 
+                                          class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-[4.5rem] md:pr-28 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all resize-none shadow-sm" 
+                                          placeholder="Type your message here..."></textarea>
+                                
+                                <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none">
+                                    <i class="fas fa-paperclip text-base md:text-lg"></i>
+                                </button>
+                            </div>
+
+                            <button type="submit" id="shareBtn" class="absolute right-2 top-2 bottom-2 bg-blue-600 px-4 md:px-6 rounded-xl text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                                Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a] min-h-0 mb-[env(safe-area-inset-bottom)]">
+                <div class="max-w-3xl mx-auto p-4 md:p-10">
+                    <form id="editTicketForm" onsubmit="SupportConsole.updateTicket(event)" class="space-y-6 md:space-y-10">
+                        {% csrf_token %}
+                        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-6 gap-4 text-center md:text-left">
+                            <div>
+                                <h3 class="text-xs md:text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Case Management</h3>
+                                <p class="text-[10px] md:text-xs text-slate-400 mt-1">Modify internal descriptions.</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <button type="button" onclick="SupportConsole.deleteTicket()" class="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors focus:outline-none">
+                                    Delete Ticket
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                            <div class="md:col-span-2">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Subject</label>
+                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-slate-500 cursor-not-allowed outline-none shadow-sm">
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Technician (Locked)</label>
+                                <input type="text" id="editTechnician" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-blue-600 cursor-not-allowed outline-none shadow-sm">
+                            </div>
+
+                            <div>
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Status</label>
+                                <input type="text" name="status" id="editStatus" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Priority</label>
+                                <input type="text" name="priority" id="editPriority" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-[9px] md:text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Internal Summary</label>
+                                <textarea id="editDesc" name="description" rows="5" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 shadow-sm transition-all resize-none"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <div id="assetsOverlay" onclick="SupportConsole.toggleAssets()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] xl:hidden transition-opacity"></div>
+
+        <aside id="rightAssetsSidebar" class="absolute xl:static inset-y-0 right-0 z-[60] w-[85vw] sm:w-80 bg-white dark:bg-slate-900 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 transform translate-x-full xl:translate-x-0 transition-all duration-300 ease-in-out shadow-2xl xl:shadow-none xl:w-80 xl:min-w-[20rem] overflow-hidden">
+            
+            <div class="shrink-0 p-4 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-folder-open text-blue-500 xl:hidden"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white xl:text-slate-500">Ticket Assets</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="SupportConsole.toggleAssets()" title="Collapse Sidebar" class="hidden xl:flex items-center justify-center w-7 h-7 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
+                            <i class="fas fa-chevron-right text-sm"></i>
+                        </button>
+                        
+                        <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors focus:outline-none">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
+                    <button type="button" onclick="SupportConsole.switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all bg-white dark:bg-slate-900 shadow-sm text-blue-600 focus:outline-none">Media</button>
+                    <button type="button" onclick="SupportConsole.switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Files</button>
+                    <button type="button" onclick="SupportConsole.switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Links</button>
+                </div>
+            </div>
+
+            <div id="contact-details-container" class="flex-1 flex flex-col opacity-0 transition-all duration-500 translate-x-4 overflow-hidden min-h-0">
+                <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 min-h-0">
+                        <div id="mediaGridView" class="grid grid-cols-3 gap-2"></div>
+                        <div id="filesListView" class="hidden space-y-3"></div>
+                        <div id="linksListView" class="hidden space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+</div>
+
+<script>
+    const SupportConsole = {
+        activeTicketId: null,
+        activeRecipient: null,
+        fullMessageCache: [],
+        currentTicketStatus: "",
+        ownerInfo: { name: "", email: "" },
+
+        currentLightboxIndex: 0,
+        currentLightboxItems: [],
+        galleryMedia: [],
+
+        init() {
+        this.initPasteFeature();
+        
+        // --- HORIZONTAL SCROLL FOR TABS ---
+        const staffContainer = document.getElementById('staff-threads-container');
+        if (staffContainer) {
+            staffContainer.addEventListener('wheel', (e) => {
+                if (e.deltaY !== 0) {
+                    e.preventDefault();
+                    staffContainer.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
+        
+        // --- ENTER TO SEND LOGIC ---
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        }
+
+        // --- NEW: REAL-TIME POLLING ---
+        // Quietly fetch new messages every 3 seconds
+        setInterval(() => {
+            if (this.activeTicketId) {
+                this.refreshChatData();
+            }
+        }, 3000);
+    },
+
+    // 1. ADD THIS HELPER FUNCTION AT THE TOP OF SUPPORTCONSOLE
+        classifyAttachment: function(att) {
+            const name = (att.name || '').toLowerCase();
+            const url = (att.url || '').toLowerCase();
+            
+            const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(name) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)$/.test(url);
+            const isVideo = /\.(mp4|mov|webm|ogg)$/.test(name) || /\.(mp4|mov|webm|ogg)$/.test(url) || url.includes('/video/upload/');
+            const isImage = /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(name) || /\.(jpg|jpeg|png|webp|gif|jfif)$/.test(url) || (url.includes('cloudinary.com') && !isVideo && !isDoc);
+            
+            if (isDoc) return 'document';
+            if (isVideo) return 'video';
+            if (isImage) return 'image';
+            return 'document'; 
+        },
+
+        // 2. REPLACE renderAttachmentGrid
+        renderAttachmentGrid: function(attachments) {
+            if (!attachments || attachments.length === 0) return '';
+
+            const count = attachments.length;
+            let gridClass = 'grid-cols-1';
+            if (count >= 2) gridClass = 'grid-cols-2';
+
+            let html = `<div class="grid gap-1 mt-2 rounded-xl overflow-hidden ${gridClass} shadow-sm border border-slate-200 dark:border-slate-700/60 w-fit max-w-[280px] sm:max-w-[380px]">`;
+
+            const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
+
+            attachments.slice(0, 4).forEach((file, index) => {
+                const type = this.classifyAttachment(file);
+                const isLast = index === 3;
+                const hasMore = count > 4;
+
+                // FIX: Added 'relative' and fixed heights to the wrapper
+                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
+                let heightClass = "h-40 sm:h-48 w-full"; // Default container height
+
+                if (count === 1) {
+                    heightClass = "h-[300px] sm:h-[350px] w-full";
+                } else if (count === 3 && index === 0) {
+                    cellClass += " col-span-2"; 
+                    heightClass = "h-48 sm:h-56 w-full";
+                } else if (count >= 2) {
+                    heightClass = "h-32 sm:h-40 w-full";
+                }
+
+                html += `<div class="${cellClass} ${heightClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
+
+                if (type === 'image') {
+                    // 🚀 ADDED: loading="lazy" decoding="async"
+                    html += `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                } else if (type === 'video') {
+                    // 🚀 ADDED: preload="none"
+                    html += `<video src="${file.url}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                             <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
+                } else {
+                    html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
+                }
+
+                if (hasMore && isLast) {
+                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-20"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
+                }
+                
+                html += `</div>`;
+            });
+            html += `</div>`;
+            return html;
+        },
+
+        // --- LIGHTBOX ENGINE ---
+        openLightbox(index) {
+            this.currentLightboxIndex = index < 0 ? 0 : index;
+            
+            const lightbox = document.getElementById('chatLightbox');
+            if (!lightbox || !this.galleryMedia || this.galleryMedia.length === 0) return;
+
+            lightbox.classList.remove('hidden');
+            this.updateLightboxContent();
+            
+            if (this._boundKeyHandler) window.removeEventListener('keydown', this._boundKeyHandler);
+
+            this._boundKeyHandler = (e) => {
+                if (e.key === "ArrowRight") this.nextLightbox();
+                if (e.key === "ArrowLeft") this.prevLightbox();
+                if (e.key === "Escape") this.closeLightbox();
+            };
+            window.addEventListener('keydown', this._boundKeyHandler);
+        },
+
+        closeLightbox() {
+            const lightbox = document.getElementById('chatLightbox');
+            if (lightbox) {
+                lightbox.classList.add('hidden');
+                document.getElementById('lightboxContent').innerHTML = ''; 
+            }
+            
+            if (this._boundKeyHandler) {
+                window.removeEventListener('keydown', this._boundKeyHandler);
+                this._boundKeyHandler = null;
+            }
+        },
+
+        updateLightboxContent() {
+            const content = document.getElementById('lightboxContent');
+            const info = document.getElementById('lightboxInfo');
+            const file = this.galleryMedia[this.currentLightboxIndex];
+
+            const nextBtn = document.querySelector('[onclick="SupportConsole.nextLightbox()"]');
+            const prevBtn = document.querySelector('[onclick="SupportConsole.prevLightbox()"]');
+
+            if (prevBtn) {
+                const isFirst = this.currentLightboxIndex === 0;
+                prevBtn.style.opacity = isFirst ? "0" : "1";
+                prevBtn.style.pointerEvents = isFirst ? "none" : "auto";
+            }
+
+            if (nextBtn) {
+                const isLast = this.currentLightboxIndex === this.galleryMedia.length - 1;
+                nextBtn.style.opacity = isLast ? "0" : "1";
+                nextBtn.style.pointerEvents = isLast ? "none" : "auto";
+            }
+            
+            if (!file) return;
+
+            // FIX: Use our new master classifier
+            const type = this.classifyAttachment(file);
+            
+            if (type === 'video') {
+                content.innerHTML = `<video src="${file.url}" controls autoplay class="max-w-full max-h-full object-contain"></video>`;
+            } else {
+                // Default everything else to an image tag
+                content.innerHTML = `<img src="${file.url}" class="max-w-full max-h-full object-contain animate-in fade-in zoom-in duration-300">`;
+            }
+
+            info.innerHTML = `
+                <p class="text-white font-black uppercase text-[10px] tracking-widest">${file.name || 'Media'}</p>
+                <p class="text-white/50 text-[8px] uppercase font-bold mt-1">File ${this.currentLightboxIndex + 1} of ${this.galleryMedia.length}</p>
+            `;
+        },
+
+        renderLightboxItem() {
+            const container = document.getElementById('lightboxContent');
+            const item = this.currentLightboxItems[this.currentLightboxIndex];
+            
+            // FIX: Removed '$' and checking url as fallback
+            const isVideo = /\.(mp4|mov|webm)/i.test(item.name || item.url || '');
+            
+            container.innerHTML = isVideo 
+                ? `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-lg"></video>`
+                : `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-lg animate-in zoom-in duration-300">`;
+            
+            document.getElementById('lightboxCaption').innerText = item.name;
+            document.getElementById('lightboxCounter').innerText = `${this.currentLightboxIndex + 1} OF ${this.currentLightboxItems.length}`;
+        },
+        
+        nextLightbox() {
+            if (this.currentLightboxIndex < this.galleryMedia.length - 1) {
+                this.currentLightboxIndex++;
+                this.updateLightboxContent();
+            }
+        },
+
+        prevLightbox() {
+            if (this.currentLightboxIndex > 0) {
+                this.currentLightboxIndex--;
+                this.updateLightboxContent();
+            }
+        },
+
+        switchMediaTab(tab) {
+            const tabs = ['media', 'files', 'links'];
+            const buttons = {
+                media: document.getElementById('mediaTabBtn'),
+                files: document.getElementById('filesTabBtn'),
+                links: document.getElementById('linksTabBtn')
+            };
+            const views = {
+                media: document.getElementById('mediaGridView'),
+                files: document.getElementById('filesListView'),
+                links: document.getElementById('linksListView')
+            };
+
+            tabs.forEach(t => {
+                if (buttons[t]) {
+                    buttons[t].classList.remove('bg-white', 'dark:bg-slate-900', 'shadow-sm', 'text-blue-600');
+                    buttons[t].classList.add('text-slate-500');
+                }
+                if (views[t]) views[t].classList.add('hidden');
+            });
+
+            if (buttons[tab]) {
+                buttons[tab].classList.add('bg-white', 'dark:bg-slate-900', 'shadow-sm', 'text-blue-600');
+                buttons[tab].classList.remove('text-slate-500');
+            }
+            if (views[tab]) views[tab].classList.remove('hidden');
+        },
+
+        toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const isOpen = !sidebar.classList.contains('-translate-x-full');
+            
+            if (isOpen) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            }
+        },
+
+        toggleAssets() {
+            const sidebar = document.getElementById('rightAssetsSidebar');
+            const overlay = document.getElementById('assetsOverlay');
+            const mainHeaderBtn = document.getElementById('mainHeaderToggleBtn');
+            const isDesktop = window.innerWidth >= 1280; // submit_ticket uses Tailwind's 'xl' breakpoint
+
+            if (!sidebar) return;
+
+            if (isDesktop) {
+                // Desktop Mode (Smooth width collapse)
+                if (sidebar.classList.contains('xl:w-0')) {
+                    // 🚀 EXPANDING THE SIDEBAR (Opening)
+                    sidebar.classList.remove('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
+                    sidebar.classList.add('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
+                    
+                    // Hide the main header "<" button
+                    if (mainHeaderBtn) {
+                        mainHeaderBtn.classList.add('hidden');
+                        mainHeaderBtn.classList.remove('xl:flex');
+                    }
+                } else {
+                    // 🚀 COLLAPSING THE SIDEBAR (Closing)
+                    sidebar.classList.add('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
+                    sidebar.classList.remove('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
+                    
+                    // Show the main header "<" button
+                    if (mainHeaderBtn) {
+                        mainHeaderBtn.classList.remove('hidden');
+                        mainHeaderBtn.classList.add('xl:flex');
+                    }
+                }
+            } else {
+                // Mobile Mode: Slide in/out from the right
+                sidebar.classList.toggle('translate-x-full');
+                if (overlay) overlay.classList.toggle('hidden');
+            }
+        },
+
+        openAssistant() {
+            const overlay = document.getElementById('new-ticket-overlay');
+            overlay.classList.remove('hidden');
+            document.getElementById('assistant-chat').innerHTML = '';
+            
+            this.hideForms();
+
+            this.appendBotMessage("Welcome to Global Support. How may I assist you with your technical requirements today?");
+            this.showMainOptions();
+            if(window.innerWidth < 1024 && !document.getElementById('mainSidebar').classList.contains('-translate-x-full')) {
+                this.toggleSidebar();
+            }
+        },
+
+        closeAssistant() { 
+            document.getElementById('new-ticket-overlay').classList.add('hidden'); 
+            location.reload(); 
+        },
+
+        showMainOptions() {
+            this.setBotOptions([
+                { label: "👤 New Account", action: "handle_account_creation" },
+                { label: "🔒 Security/Auth Reset", action: "handle_security" },
+                { label: "🛠️ Technical Support", action: "handle_tech_menu" },
+                { label: "📝 Other Concerns", action: "handle_custom" }
+            ]);
+        },
+
+        setBotOptions(opts) {
+            const container = document.getElementById('assistant-options');
+            
+            container.className = "grid grid-cols-2 gap-2 md:gap-3 mb-4";
+            
+            container.innerHTML = opts.map((o, index) => {
+                const isBack = o.label === "Back";
+                const isOnlyOption = opts.length === 1;
+                const colSpanClass = (isBack || isOnlyOption) ? "col-span-2" : "col-span-1";
+                
+                const colorClasses = isBack
+                    ? "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700"
+                    : "text-blue-600 bg-white hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-500/20 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
+
+                let displayHtml = o.label;
+                const parts = o.label.split(' ');
+                
+                if (parts.length > 1 && parts[0].codePointAt(0) > 255) {
+                    displayHtml = `
+                        <span class="text-[14px] sm:text-base mb-1.5 sm:mb-0 sm:mr-2 block sm:inline-block drop-shadow-sm">${parts[0]}</span>
+                        <span class="leading-[1.3]">${parts.slice(1).join(' ')}</span>
+                    `;
+                } else if (isBack) {
+                    displayHtml = `
+                        <i class="fas fa-arrow-left text-[10px] sm:text-xs mb-1.5 sm:mb-0 sm:mr-2 block sm:inline-block"></i>
+                        <span class="leading-[1.3]">${o.label}</span>
+                    `;
+                } else {
+                    displayHtml = `<span class="leading-[1.3]">${o.label}</span>`;
+                }
+
+                return `
+                <button type="button" onclick="SupportConsole.${o.action}()" 
+                        class="${colSpanClass} w-full flex flex-col sm:flex-row items-center justify-center p-3 sm:px-5 sm:py-3 border rounded-xl text-[8.5px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest transition-all active:scale-[0.98] ${colorClasses} text-center min-h-[64px] sm:min-h-0 h-full whitespace-normal break-words focus:outline-none">
+                    ${displayHtml}
+                </button>`;
+            }).join('');
+        },
+        
+        hideForms() {
+            document.getElementById('newTicketForm').classList.add('hidden');
+            document.getElementById('account-fields').classList.add('hidden');
+            document.getElementById('security-removal-fields').classList.add('hidden');
+            document.getElementById('bug-fields').classList.add('hidden');
+            document.getElementById('permission-fields').classList.add('hidden');
+            document.getElementById('access-fields').classList.add('hidden');
+            document.getElementById('newTicketForm').reset();
+        },
+
+        handle_account_creation() {
+            this.appendUserMessage("I need to create a new user account.");
+            this.appendBotMessage("Understood. Please provide the profile details below for administrative review.");
+            this.triggerForm("Identity", "New Account Provisioning", "Requested profile creation.", "cancelFormToMain");
+            document.getElementById('account-fields').classList.remove('hidden');
+        },
+
+        handle_security() {
+            this.appendBotMessage("Security protocols selected. Which layer requires modification?");
+            this.setBotOptions([
+                { label: "OTP Removal", action: "handle_otp" },
+                { label: "MFA Reset", action: "handle_mfa" },
+                { label: "Forgot Password", action: "handle_password" },
+                { label: "Account Locked", action: "handle_locked" },
+                { label: "Back", action: "showMainOptions" } 
+            ]);
+        },
+
+        handle_tech_menu() {
+            this.appendBotMessage("Diagnostic mode active. Select the incident type:");
+            this.setBotOptions([
+                { label: "Software Bugs", action: "handle_bug" },
+                { label: "Login Issues", action: "handle_login" },
+                { label: "Permissions", action: "handle_perms" },
+                { label: "Back", action: "showMainOptions" }
+            ]);
+        },
+
+        handle_otp() {
+            this.appendUserMessage("Requesting OTP Removal.");
+            this.triggerForm("Security", "OTP Removal Request", "User cannot access OTP device.", "cancelFormToSecurity");
+            document.getElementById('security-removal-fields').classList.remove('hidden');
+        },
+
+        handle_mfa() {
+            this.appendUserMessage("MFA Reset required.");
+            this.triggerForm("Security", "MFA Reset / Removal", "Complete MFA overhaul requested.", "cancelFormToSecurity");
+            document.getElementById('security-removal-fields').classList.remove('hidden');
+        },
+
+        handle_password() {
+            this.appendUserMessage("I forgot my password.");
+            this.triggerForm("Access", "Password Reset Request", "User requested manual credential reset.", "cancelFormToSecurity");
+            document.getElementById('access-fields').classList.remove('hidden');
+        },
+
+        handle_locked() {
+            this.appendUserMessage("My account is locked/disabled.");
+            this.triggerForm("Access", "Account Unlock Request", "System lock-out detected.", "cancelFormToSecurity");
+            document.getElementById('access-fields').classList.remove('hidden');
+        },
+
+        handle_bug() {
+            this.appendUserMessage("Reporting a Software Error/Bug.");
+            this.triggerForm("Technical", "Software Bug Report", "Application behavior anomaly detected.", "cancelFormToTech");
+            document.getElementById('bug-fields').classList.remove('hidden');
+        },
+
+        handle_login() {
+            this.appendUserMessage("System login issues.");
+            this.triggerForm("Technical", "System Authentication Failure", "Login loop or access denied.", "cancelFormToTech");
+            document.getElementById('access-fields').classList.remove('hidden');
+        },
+
+        handle_perms() {
+            this.appendUserMessage("Requesting Role/Permission Change.");
+            this.triggerForm("Access", "Role Modification", "User requires elevated privileges.", "cancelFormToTech");
+            document.getElementById('permission-fields').classList.remove('hidden');
+        },
+
+        handle_custom() {
+            this.appendUserMessage("I have another concern.");
+            this.triggerForm("General", "Custom Support Request", "", "cancelFormToMain");
+        },
+
+        cancelFormToMain() {
+            this.hideForms();
+            this.showMainOptions();
+        },
+
+        cancelFormToSecurity() {
+            this.hideForms();
+            this.handle_security();
+        },
+
+        cancelFormToTech() {
+            this.hideForms();
+            this.handle_tech_menu();
+        },
+
+        appendUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = "flex justify-end mb-4 animate-in slide-in-from-right-4 duration-300";
+            div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3 rounded-2xl rounded-tr-none text-xs font-bold shadow-lg shadow-blue-500/10 max-w-[80%]">${text}</div>`;
+            document.getElementById('assistant-chat').appendChild(div);
+            this.scrollToAssistantBottom();
+        },
+
+        appendBotMessage(text) {
+            const div = document.createElement('div');
+            div.className = "flex justify-start mb-4 animate-in slide-in-from-left-4 duration-300";
+            div.innerHTML = `
+                <div class="flex gap-3 max-w-[85%]">
+                    <div class="w-8 h-8 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <i class="fas fa-robot text-xs text-blue-500"></i>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-2xl rounded-tl-none text-xs font-medium shadow-sm leading-relaxed">${text}</div>
+                </div>`;
+            document.getElementById('assistant-chat').appendChild(div);
+            this.scrollToAssistantBottom();
+        },
+
+        scrollToAssistantBottom() {
+            const chat = document.getElementById('assistant-chat');
+            chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+        },
+
+        updateFileList(input) {
+            const preview = document.getElementById('file-preview-list');
+            const label = document.getElementById('file-label');
+            preview.innerHTML = '';
+            if (input.files.length > 0) {
+                label.innerText = `${input.files.length} Files Selected`;
+                Array.from(input.files).forEach(file => {
+                    const span = document.createElement('span');
+                    span.className = "px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-[9px] font-bold rounded text-blue-600 truncate max-w-[100px]";
+                    span.innerText = file.name;
+                    preview.appendChild(span);
+                });
+            } else {
+                label.innerText = "Attach Image, Video or Files";
+            }
+        },
+
+        triggerForm(category, subject, descPrefix, backAction = "cancelFormToMain") {
+            this.setBotOptions([
+                { label: "Back", action: backAction }
+            ]);
+            const form = document.getElementById('newTicketForm');
+            form.classList.remove('hidden');
+            document.getElementById('newCat').value = category;
+            document.getElementById('newSub').value = subject;
+            document.getElementById('newDescInput').value = descPrefix;
+            document.getElementById('form-context-msg').innerHTML = `<i class="fas fa-layer-group"></i> <span>Department: ${category} Support</span>`;
+        },
+
+        async finalizeTicketSubmission() {
+            const form = document.getElementById('newTicketForm');
+            const btn = form.querySelector('button[onclick="SupportConsole.finalizeTicketSubmission()"]');
+            
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...';
+            }
+            
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            try {
+                const res = await fetch('/tickets/api/support-api/', { 
+                    method: 'POST', 
+                    body: formData, 
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    } 
+                });
+
+                if (res.ok) {
+                    SupportConsole.appendBotMessage("✅ Dispatch successful.");
+                    setTimeout(() => location.reload(), 1000);
+                    return;
+                } else {
+                    const errData = await res.json();
+                    console.error("Submission failed:", errData);
+                    throw new Error("Dispatch failed");
+                }
+            } catch (err) { 
+                console.error(err);
+                if (btn) {
+                    btn.disabled = false; 
+                    btn.innerHTML = 'Initialize Dispatch'; 
+                }
+                SupportConsole.appendBotMessage("❌ Error submitting dispatch. Please try again.");
+            }
+        },
+
+        filterSidebar() {
+            const term = document.getElementById('sidebarSearch').value.toLowerCase();
+            document.querySelectorAll('.ticket-item').forEach(item => {
+                const isVisible = item.innerText.toLowerCase().includes(term);
+                item.classList.toggle('hidden', !isVisible);
+            });
+        },
+
+        switchTab(view) {
+            const feedView = document.getElementById('feedView'), detailsView = document.getElementById('detailsView');
+            const feedBtn = document.getElementById('feedTabBtn'), detailsBtn = document.getElementById('detailsTabBtn');
+            const activeClasses = ['border-blue-600', 'text-blue-600'];
+            const inactiveClasses = ['text-slate-400', 'border-transparent'];
+            if (view === 'feed') {
+                feedView.classList.remove('hidden'); detailsView.classList.add('hidden');
+                feedBtn.classList.add(...activeClasses); feedBtn.classList.remove(...inactiveClasses);
+                detailsBtn.classList.remove(...activeClasses); detailsBtn.classList.add(...inactiveClasses);
+            } else {
+                feedView.classList.add('hidden'); detailsView.classList.remove('hidden');
+                detailsBtn.classList.add(...activeClasses); detailsBtn.classList.remove(...inactiveClasses);
+                feedBtn.classList.remove(...activeClasses); feedBtn.classList.add(...inactiveClasses);
+            }
+        },
+
+        initPasteFeature: function() {
+            const chatInput = document.getElementById('chatInput');
+            const fileInput = document.getElementById('chatFileInput');
+
+            if (!chatInput || !fileInput) return;
+
+            chatInput.addEventListener('paste', (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                const dataTransfer = new DataTransfer();
+
+                if (fileInput.files.length > 0) {
+                    Array.from(fileInput.files).forEach(file => dataTransfer.items.add(file));
+                }
+
+                let hasFiles = false;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].kind === 'file') {
+                        const blob = items[i].getAsFile();
+                        if (blob) {
+                            const ext = blob.type.split('/')[1] || 'png';
+                            const file = new File([blob], `pasted_${Date.now()}.${ext}`, { type: blob.type });
+                            dataTransfer.items.add(file);
+                            hasFiles = true;
+                        }
+                    }
+                }
+
+                if (hasFiles) {
+                    fileInput.files = dataTransfer.files;
+                    if (this.handleChatFileSelect) {
+                        this.handleChatFileSelect(fileInput);
+                    }
+                }
+            });
+        },
+
+        handleChatFileSelect(input) {
+            const preview = document.getElementById('chat-attachment-preview');
+            preview.innerHTML = '';
+            if (input.files.length > 0) {
+                preview.classList.remove('hidden');
+                Array.from(input.files).forEach((file, index) => {
+                    const isImage = file.type.startsWith('image/');
+                    const isVideo = file.type.startsWith('video/');
+                    const item = document.createElement('div');
+                    item.className = "relative w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group";
+                    
+                    if (isImage) {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(file);
+                        img.className = "w-full h-full object-contain bg-slate-100 dark:bg-slate-800";
+                        item.appendChild(img);
+                    } else {
+                        const icon = document.createElement('div');
+                        icon.className = "flex flex-col items-center justify-center h-full";
+                        icon.innerHTML = `<i class="${isVideo ? 'fas fa-video text-purple-500' : 'fas fa-file-alt text-blue-500'} text-lg"></i><span class="text-[8px] mt-1 font-bold text-slate-500 truncate w-12 text-center px-1">${file.name}</span>`;
+                        item.appendChild(icon);
+                    }
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = "absolute top-0 right-0 bg-red-500 text-white w-5 h-5 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center focus:outline-none";
+                    removeBtn.innerHTML = '<i class="fas fa-times text-[10px]"></i>';
+                    removeBtn.onclick = () => {
+                        const dt = new DataTransfer();
+                        for (let i = 0; i < input.files.length; i++) {
+                            if (i !== index) dt.items.add(input.files[i]);
+                        }
+                        input.files = dt.files;
+                        this.handleChatFileSelect(input);
+                    };
+                    item.appendChild(removeBtn);
+                    preview.appendChild(item);
+                });
+            } else {
+                preview.classList.add('hidden');
+            }
+        },
+
+        async loadChat(id, subject, desc, user, email, status, priority, date, technician) {
+            document.getElementById('messageContainer').innerHTML = '';
+            document.getElementById('mediaGridView').innerHTML = '';
+            document.getElementById('filesListView').innerHTML = '';
+            document.getElementById('staff-threads-container').innerHTML = '';
+            document.getElementById('feed-header-label').innerHTML = '';
+            
+            document.getElementById('contact-details-container').classList.add('opacity-0');
+
+            document.getElementById('ticket-details-empty').classList.add('hidden');
+            document.getElementById('contact-details-inner').classList.remove('hidden');
+            document.getElementById('contact-details-inner').classList.add('flex');
+            
+            document.getElementById('detailCategory').innerText = subject.split(' - ')[0] || "Identity"; 
+            document.getElementById('contactName').innerText = user;
+            document.getElementById('contactRank').innerText = "Airman"; 
+            document.getElementById('contactEmail').innerText = email;
+            document.getElementById('contactPhone').innerText = "+63 123 4567 890"; 
+            document.getElementById('detailConcern').innerText = desc;
+
+            this.activeTicketId = id;
+            this.activeRecipient = null; 
+            this.fullMessageCache = [];
+            this.allAttachments = [];
+            this.galleryMedia = []; 
+            this.currentTicketStatus = status;
+            this.ownerInfo = { name: user, email: email };
+            this._lastKnownCount = -1;
+
+            document.querySelectorAll('.ticket-item').forEach(i => i.classList.remove('active-ticket-item'));
+            const activeItem = document.getElementById(`ticket-item-${id}`);
+            if(activeItem) activeItem.classList.add('active-ticket-item');
+
+            document.querySelectorAll('.feed-filter').forEach(btn => {
+                btn.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.add('text-slate-400');
+            });
+            const allCommsBtn = document.querySelector('[onclick*="filterFeed(\'all\')"]');
+            if (allCommsBtn) {
+                allCommsBtn.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+            }
+
+            document.getElementById('editSubject').value = subject;
+            document.getElementById('editStatus').value = status;
+            document.getElementById('editPriority').value = priority;
+            document.getElementById('editDesc').value = desc;
+            document.getElementById('editTechnician').value = technician || "Unassigned";
+            document.getElementById('no-chat-selected').classList.add('hidden');
+            this.switchTab('feed');
+
+            if(window.innerWidth < 1024) {
+                const sidebar = document.getElementById('mainSidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                    if (overlay) overlay.classList.add('hidden');
+                }
+            }
+
+            document.getElementById('messageContainer').innerHTML = `
+                <div class="flex flex-col items-center justify-center py-32 text-slate-400 animate-pulse">
+                    <div class="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                    <p class="text-[10px] font-black uppercase tracking-widest">Refreshing Workspace...</p>
+                </div>`;
+
+            try {
+                const response = await fetch(`/tickets/api/support-api/${id}/chat_thread/`);
+                if (!response.ok) throw new Error("Sync Error");
+                const data = await response.json();
+                
+                if (this.activeTicketId !== id) return;
+
+                this.fullMessageCache = data.messages || [];
+                this.allAttachments = data.attachments || []; 
+
+                this.updateMediaAndFilesSidebar(this.allAttachments);
+                
+                const staffNames = [...new Set(this.fullMessageCache
+                    .filter(msg => !msg.is_me && !msg.message.toUpperCase().includes('STATUS UPDATE'))
+                    .map(msg => msg.sender_name))];
+                this.renderStaffSidebar(staffNames);
+
+                document.getElementById('contact-details-container').classList.remove('opacity-0');
+                document.getElementById('contact-details-container').classList.remove('translate-x-4');
+
+                if (this.fullMessageCache.length > 0) {
+                    const lastMsg = this.fullMessageCache[this.fullMessageCache.length - 1];
+                    
+                    if (lastMsg.recipient_name === "Everyone" || lastMsg.message.toUpperCase().includes('STATUS UPDATE')) {
+                        this.loadGroupChat();
+                    } else {
+                        const techName = lastMsg.is_me ? lastMsg.recipient_name : lastMsg.sender_name;
+                        this.loadTechnicianConversation(techName);
+                    }
+                } else {
+                    this.loadGroupChat();
+                }
+
+            } catch (err) { 
+                console.error(err);
+                document.getElementById('messageContainer').innerHTML = `<p class="text-center py-20 text-red-500 font-bold uppercase text-[10px]">Failed to load ticket data</p>`;
+            }
+        },
+        loadTechnicianConversation(techName) {
+            this.activeRecipient = techName;
+
+            document.querySelectorAll('.staff-thread-item').forEach(item => {
+                item.classList.remove('active', 'bg-blue-600', 'text-white');
+                item.classList.add('bg-slate-50', 'dark:bg-slate-900/50');
+            });
+
+            const selectedElement = document.getElementById(`staff-item-${techName}`);
+            if (selectedElement) {
+                selectedElement.classList.remove('bg-slate-50', 'dark:bg-slate-900/50');
+                selectedElement.classList.add('active', 'bg-blue-600', 'text-white');
+            }
+
+            document.getElementById('feed-header-label').innerHTML = `
+                <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Chatting with: ${techName}</span>
+                <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4"></div>`;
+
+            const techMessages = this.fullMessageCache.filter(msg => {
+                const isStatusUpdate = msg.message.toUpperCase().includes('STATUS UPDATE');
+                if (isStatusUpdate) return true;
+                
+                return (msg.sender_name === techName && msg.recipient_name !== "Everyone") || 
+                       (msg.is_me && msg.recipient_name === techName);
+            });
+
+            const filteredAttachments = this.allAttachments.filter(att => {
+                return techMessages.some(msg => msg.attachments && msg.attachments.some(ma => ma.id === att.id));
+            });
+            
+            const initialAtts = this.allAttachments.filter(a => !this.fullMessageCache.some(m => 
+                m.attachments && m.attachments.some(ma => ma.id === a.id)
+            ));
+            
+            const combinedSidebarAssets = [...initialAtts, ...filteredAttachments];
+            this.updateMediaAndFilesSidebar(combinedSidebarAssets); 
+
+            const container = document.getElementById('messageContainer');
+            let initMediaHtml = '';
+            initialAtts.forEach(att => {
+                if (/\.(jpg|jpeg|png|webp|gif)$/i.test(att.name)) {
+                    initMediaHtml += `<img src="${att.url}" class="max-w-[200px] rounded-lg mt-2 shadow-sm border border-slate-200 dark:border-slate-700">`;
+                }
+            });
+
+            container.innerHTML = `<div id="dynamicMessages" class="space-y-6"></div>`;
+
+            if (techMessages.length > 0) {
+                this.renderFeed(techMessages);
+            } else {
+                document.getElementById('dynamicMessages').innerHTML = `
+                    <div class="py-10 text-center">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Beginning of conversation with ${techName}</p>
+                    </div>`;
+            }
+            
+            this.scrollToBottom();
+        },
+
+        async refreshChatData() {
+            if (!this.activeTicketId) return;
+            
+            try {
+                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/`);
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                // THE FIX: Check if we actually have new data before doing anything
+                const newCount = (data.messages ? data.messages.length : 0) + (data.attachments ? data.attachments.length : 0);
+                
+                if (newCount !== this._lastKnownCount) {
+                    this._lastKnownCount = newCount; // Save the new count
+                    
+                    this.fullMessageCache = data.messages || [];
+                    this.allAttachments = data.attachments || [];
+                    
+                    const dynamicContainer = document.getElementById('dynamicMessages');
+                    if (dynamicContainer) {
+                        if (this.activeRecipient === "GROUP_CHAT") {
+                            this.loadGroupChat();
+                        } else if (this.activeRecipient) {
+                            this.loadTechnicianConversation(this.activeRecipient);
+                        } else {
+                            this.renderFeed(this.fullMessageCache);
+                            this.updateMediaAndFilesSidebar(this.allAttachments);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Auto-refresh failed:", err);
+            }
+        },
+
+        renderStaffSidebar(staffAdmins) {
+            const container = document.getElementById('staff-threads-container');
+            if (!container) return;
+
+            container.classList.remove('overflow-x-auto');
+            container.classList.add('overflow-visible');
+
+            const groupChatHtml = `
+                <div onclick="SupportConsole.loadGroupChat()" id="staff-item-GROUP_CHAT"
+                    class="staff-thread-item flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 p-1.5 md:px-3 md:py-1.5 rounded-full border border-blue-500/30 cursor-pointer hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shrink-0">
+                    <div class="w-6 h-6 md:w-5 md:h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-[12px] md:text-[10px] shrink-0 shadow-sm">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="hidden md:flex flex-col justify-center pr-2 md:pr-0">
+                        <span class="text-[10px] font-black uppercase tracking-tighter leading-tight">Group Chat</span>
+                        <span class="text-[8px] opacity-70 font-bold uppercase leading-tight">Public Channel</span>
+                    </div>
+                </div>
+            `;
+
+            if (staffAdmins.length === 0) {
+                container.innerHTML = groupChatHtml;
+                return;
+            }
+
+            const generateAdminItem = (name) => {
+                const userMsg = this.fullMessageCache.find(m => m.sender_name === name && m.sender_avatar);
+                const avatarSrc = userMsg ? userMsg.sender_avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
+
+                return `
+                <div onclick="SupportConsole.loadTechnicianConversation('${name}')" id="staff-item-${name}"
+                    class="staff-thread-item flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all w-full overflow-hidden border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <div class="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
+                        <img src="${avatarSrc}" onerror="this.onerror=null; this.outerHTML='<i class=\\'fas fa-user text-[10px]\\'></i>';" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex flex-col justify-center min-w-0 flex-1">
+                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight truncate block">${name}</span>
+                    </div>
+                </div>
+                `;
+            };
+
+            let finalHtml = groupChatHtml;
+
+            finalHtml += `
+                <div class="relative group shrink-0" tabindex="0">
+                    <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-1.5 md:px-3 md:py-1.5 rounded-full border border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-all whitespace-nowrap shadow-sm">
+                        <div class="w-6 h-6 md:w-5 md:h-5 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 text-[12px] md:text-[10px] shrink-0">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="hidden md:flex flex-col justify-center text-left pr-2 md:pr-0">
+                            <span class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight">Private Chats</span>
+                            <span class="text-[8px] text-slate-400 font-black uppercase tracking-tighter leading-tight">${staffAdmins.length} Technicians</span>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute right-0 sm:left-0 top-full pt-2 hidden group-hover:block z-[100] min-w-[180px] max-w-[80vw] sm:max-w-none">
+                        <div class="flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl py-2 max-h-[50vh] overflow-y-auto custom-scrollbar">
+                            ${staffAdmins.map(name => generateAdminItem(name)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = finalHtml;
+        },
+
+        loadGroupChat() {
+            this.activeRecipient = "GROUP_CHAT"; 
+            
+            document.querySelectorAll('.staff-thread-item').forEach(item => {
+                item.classList.remove('active', 'bg-blue-600', 'text-white');
+                item.classList.add('bg-slate-50', 'dark:bg-slate-900/50');
+            });
+            
+            const groupBtn = document.getElementById('staff-item-GROUP_CHAT');
+            if (groupBtn) groupBtn.classList.add('active', 'bg-blue-600', 'text-white');
+
+            document.getElementById('feed-header-label').innerHTML = `
+                <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Public Group Chat</span>
+                <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4"></div>`;
+
+            const groupMessages = this.fullMessageCache.filter(msg => {
+                return msg.recipient_name === "Everyone" || msg.message.toUpperCase().includes('STATUS UPDATE');
+            });
+
+            const filteredAttachments = this.allAttachments.filter(att => {
+                return groupMessages.some(msg => msg.attachments && msg.attachments.some(ma => ma.id === att.id));
+            });
+            
+            const initialAtts = this.allAttachments.filter(a => !this.fullMessageCache.some(m => 
+                m.attachments && m.attachments.some(ma => ma.id === a.id)
+            ));
+            
+            const combinedSidebarAssets = [...initialAtts, ...filteredAttachments];
+            this.updateMediaAndFilesSidebar(combinedSidebarAssets);
+
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div id="dynamicMessages" class="space-y-6"></div>`;
+
+            if (groupMessages.length > 0) {
+                this.renderFeed(groupMessages);
+            } else {
+                document.getElementById('dynamicMessages').innerHTML = `
+                    <div class="py-10 text-center">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Beginning of Group Chat</p>
+                    </div>`;
+            }
+            
+            this.scrollToBottom();
+        },
+
+        loadChatDataOnly() {
+            this.activeRecipient = null;
+            this.renderFeed(this.fullMessageCache);
+            this.updateMediaAndFilesSidebar(this.allAttachments);
+            document.getElementById('feed-header-label').innerHTML = `
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Awaiting Technician Assignment</span>
+                <div class="flex-1 h-px bg-slate-200 dark:border-slate-800 ml-4"></div>`;
+        },
+
+        filterByStaff(adminName) {
+            this.activeRecipient = adminName;
+            const ticketOwner = this.ownerInfo.name;
+
+            document.querySelectorAll('.staff-thread-item').forEach(item => {
+                item.classList.remove('active', 'bg-blue-600', 'text-white');
+                item.classList.add('bg-slate-50', 'dark:bg-slate-900/50');
+            });
+
+            const selectedElement = document.getElementById(`staff-item-${adminName}`);
+            if (selectedElement) {
+                selectedElement.classList.remove('bg-slate-50', 'dark:bg-slate-900/50');
+                selectedElement.classList.add('active', 'bg-blue-600', 'text-white');
+            }
+
+            const filteredMessages = this.fullMessageCache.filter(m => {
+                const isStatusUpdate = m.message.toUpperCase().includes('STATUS UPDATE');
+                if (isStatusUpdate) return true;
+                const isAdminToUser = (m.sender_name === adminName && (m.recipient_name === ticketOwner || m.recipient_name === "Everyone"));
+                const isUserToAdmin = (m.sender_name === ticketOwner && m.recipient_name === adminName);
+                const isMeToAdmin = (m.is_me && m.recipient_name === adminName);
+                return isAdminToUser || isUserToAdmin || isMeToAdmin;
+            });
+
+            this.renderFeed(filteredMessages);
+            this.updateMediaAndFilesSidebar(this.allAttachments);
+
+            const headerLabel = document.getElementById('feed-header-label');
+            if (headerLabel) {
+                headerLabel.innerHTML = `<span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Thread with: ${adminName}</span>`;
+            }
+        },
+
+        filterFeed(type) {
+            document.querySelectorAll('.feed-filter').forEach(btn => {
+                btn.classList.remove('active', 'text-blue-600', 'border-b-2', 'border-blue-600'); 
+                btn.classList.add('text-slate-400');
+            });
+            event.currentTarget.classList.add('active', 'text-blue-600', 'border-b-2', 'border-blue-600');
+            
+            let filtered = this.fullMessageCache;
+
+            if (type === 'text') {
+                filtered = filtered.filter(m => !m.message.toUpperCase().includes('STATUS UPDATE'));
+            } else if (type === 'status') {
+                filtered = filtered.filter(m => m.message.toUpperCase().includes('STATUS UPDATE'));
+            }
+
+            if (this.activeRecipient === "GROUP_CHAT") {
+                filtered = filtered.filter(m => m.recipient_name === "Everyone" || m.message.toUpperCase().includes('STATUS UPDATE'));
+            } else if (this.activeRecipient) {
+                const techName = this.activeRecipient;
+                filtered = filtered.filter(m => {
+                    const isStatus = m.message.toUpperCase().includes('STATUS UPDATE');
+                    const isPrivate = (m.sender_name === techName && m.recipient_name !== "Everyone") || 
+                                      (m.is_me && m.recipient_name === techName);
+                    return isStatus || isPrivate;
+                });
+            }
+
+            this.renderFeed(filtered);
+        },
+
+        renderFeed(messages) {
+            const messageDiv = document.getElementById('dynamicMessages');
+            if (!messageDiv) return;
+
+            messageDiv.innerHTML = messages.map(msg => {
+                const senderName = msg.sender_name;
+                const isMe = msg.is_me;
+                const attachments = msg.attachments || [];
+
+                const hasText = msg.message && msg.message.trim().length > 0;
+                const isStatus = msg.message && msg.message.toUpperCase().includes('STATUS UPDATE');
+
+                // 🚀 ADDED: loading="lazy" decoding="async" to avatar images
+                const avatar = msg.sender_avatar
+                    ? msg.sender_avatar
+                    : `https://ui-avatars.com/api/?name=${senderName}&background=3b82f6&color=fff`;
+
+                if (isStatus) {
+                    return `
+                    <div class="flex justify-center py-2 animate-in fade-in duration-500 w-full">
+                        <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm">
+                            ${msg.message}
+                        </span>
+                    </div>`;
+                }
+
+                let mediaHtml = '';
+                let fileHtml = '';
+
+                if (attachments.length > 0) {
+                    // 1. Use your master classifier!
+                    const mediaList = attachments.filter(a => SupportConsole.classifyAttachment(a) !== 'document');
+                    const otherDocs = attachments.filter(a => SupportConsole.classifyAttachment(a) === 'document');
+
+                    if (mediaList.length > 0) {
+                        const count = mediaList.length;
+                        let gridClass = count === 1 ? 'grid-cols-1' : count === 2 ? 'grid-cols-2 h-48' : 'grid-cols-2 grid-rows-2 h-56';
+
+                        mediaHtml = `<div class="grid ${gridClass} gap-1 mt-2 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-sm w-fit max-w-[260px] sm:max-w-[360px] md:max-w-[420px] ${isMe ? 'ml-auto' : 'mr-auto'}">`;
+
+                        mediaList.slice(0, 4).forEach((att, index) => {
+                            const globalIndex = SupportConsole.galleryMedia.findIndex(m => m.url === att.url);
+                            const type = SupportConsole.classifyAttachment(att);
+
+                            let itemSpan = (count === 3 && index === 0) ? 'col-span-2' : 'col-span-1';
+                            let heightClass = count === 1 ? 'max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]' : (count === 3 && index === 0) ? 'h-44 sm:h-52 w-full object-cover' : 'h-32 sm:h-40 w-full object-cover';
+
+                            const isLast = index === 3;
+                            const hasMore = count > 4;
+
+                            mediaHtml += `
+                            <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-[#020617] flex items-center justify-center ${itemSpan}" onclick="SupportConsole.openLightbox(${globalIndex})">`;
+
+                            if (type === 'image') {
+                                // 🚀 ADDED: loading="lazy" decoding="async"
+                                mediaHtml += `<img src="${att.url}" loading="lazy" decoding="async" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                            } else if (type === 'video') {
+                                // 🚀 ADDED: preload="none"
+                                mediaHtml += `<video src="${att.url}#t=0.1" preload="none" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                                         <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
+                            } else {
+                                mediaHtml += `<div class="flex flex-col items-center p-6 text-slate-500 dark:text-slate-400 w-full h-full justify-center ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
+                            }
+
+                            if (hasMore && isLast) {
+                                mediaHtml += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center"><span class="text-white text-2xl font-black">+${count - 4}</span></div>`;
+                            }
+                            mediaHtml += `</div>`;
+                        });
+                        mediaHtml += `</div>`;
+                    }
+
+                    if (otherDocs.length > 0) {
+                        fileHtml = `<div class="mt-2 flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'} w-full">`;
+                        otherDocs.forEach(att => {
+                            const fileName = att.name || 'Document';
+                            
+                            // 2. FORCE DOWNLOAD TRICK IN THE CHAT BUBBLES
+                            const downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
+                                ? att.url.replace('/upload/', '/upload/fl_attachment/') 
+                                : att.url;
+
+                            fileHtml += `
+                            <a href="${downloadUrl}" download="${fileName}" class="inline-flex items-center gap-3 p-3 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 shadow-sm transition-all max-w-[260px] sm:max-w-xs">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                                    <i class="fas fa-file-alt text-blue-500 text-base"></i>
+                                </div>
+                                <span class="truncate block flex-1 min-w-0">${fileName}</span>
+                            </a>`;
+                        });
+                        fileHtml += `</div>`;
+                    }
+                }
+
+                return `
+                <div class="flex w-full gap-3 md:gap-4 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-4">
+                    ${!isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
+                    
+                    <!-- THIS IS THE WRAPPER THAT GOT ACCIDENTALLY DELETED! 👇 -->
+                    <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                        
+                        <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${senderName}</div>
+                        ${hasText ? `
+                        <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
+                            ${msg.message}
+                        </div>` : ''}
+                        ${mediaHtml}
+                        ${fileHtml}
+                        <div class="text-[9px] opacity-60 mt-1 ${isMe ? 'text-right' : ''}">${msg.timestamp}</div>
+                    
+                    </div> <!-- 👈 Closes the wrapper -->
+                    
+                    ${isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
+                </div>`;
+            }).join('');
+
+            this.scrollToBottom();
+        },
+
+        async sendMessage(e) {
+            if (e) e.preventDefault();
+            
+            const input = document.getElementById('chatInput');
+            const fileInput = document.getElementById('chatFileInput');
+            const sendBtn = document.getElementById('shareBtn'); 
+            
+            if (!input.value.trim() && fileInput.files.length === 0) return; 
+
+            if (sendBtn) {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+
+            const formData = new FormData();
+            formData.append('message', input.value.trim());
+            
+            if (this.activeRecipient === "GROUP_CHAT") {
+                formData.append('recipient', 'Everyone');
+                formData.append('is_group_chat', 'true');
+            } else {
+                formData.append('recipient', this.activeRecipient || "Everyone");
+                formData.append('is_group_chat', 'false');
+            }
+            
+            const csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+            if(csrf) formData.append('csrfmiddlewaretoken', csrf.value);
+
+            if (fileInput.files.length > 0) {
+                Array.from(fileInput.files).forEach(f => formData.append('attachments', f));
+            }
+
+            try {
+                const res = await fetch(`/tickets/api/support-api/${this.activeTicketId}/send_reply/`, { 
+                    method: 'POST', 
+                    body: formData 
+                });
+
+                if (res.ok) {
+                    input.value = '';
+                    fileInput.value = '';
+                    const preview = document.getElementById('chat-attachment-preview');
+                    if(preview) preview.classList.add('hidden');
+                    
+                    await this.refreshChatData();
+                }
+            } catch (err) { 
+                console.error("Failed to send message:", err); 
+            } finally {
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                    sendBtn.innerHTML = 'Send'; 
+                }
+            }
+        },
+        
+
+        updateMediaAndFilesSidebar(attachments) {
+            const mediaGrid = document.getElementById('mediaGridView');
+            const filesList = document.getElementById('filesListView');
+            
+            if (mediaGrid) mediaGrid.innerHTML = '';
+            if (filesList) filesList.innerHTML = '';
+            this.galleryMedia = []; 
+
+            if (!attachments || attachments.length === 0) {
+                if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Media Found</p></div>`;
+                if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Documents</p></div>`;
+                return;
+            }
+
+            const reversedAttachments = [...new Set(attachments)].reverse(); 
+
+            this.galleryMedia = reversedAttachments.filter(file => {
+                const s = (file.name || '').toLowerCase();
+                const u = (file.url || '').toLowerCase();
+                const isDoc = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(s) || /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv|zip|rar)/i.test(u);
+                return (/\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(s) || /\.(jpg|jpeg|png|webp|gif|jfif|mp4|mov|webm)/i.test(u) || u.includes('cloudinary.com')) && !isDoc;
+            });
+
+            if (this.galleryMedia.length === 0) {
+                if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Media Found</p></div>`;
+            } else {
+                this.galleryMedia.forEach((file, index) => {
+                    const s = (file.name || '').toLowerCase();
+                    const u = (file.url || '').toLowerCase();
+                    const isVid = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
+                    
+                    const item = document.createElement('div');
+                    item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
+                    
+                    item.onclick = () => this.openLightbox(index);
+                    // 🚀 ADDED: preload="none" for video, and loading="lazy" decoding="async" for images
+                    let contentHtml = isVid 
+                        ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${file.url}#t=0.1" preload="none" class="w-full h-full object-cover"></video>`
+                        : `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
+                    item.innerHTML = `
+                        ${contentHtml}
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20"></div>`;
+                    mediaGrid.appendChild(item);
+                });
+            }
+
+            const docs = reversedAttachments.filter(file => !this.galleryMedia.includes(file));
+            if (docs.length === 0) {
+                if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Documents Found</p></div>`;
+            } else {
+                docs.forEach(file => {
+                    const fileName = file.name || 'Document';
+                    
+                    // FIX: Inject Cloudinary's forced-download flag into the URL
+                    const downloadUrl = (file.url && file.url.includes('cloudinary.com')) 
+                        ? file.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : file.url;
+
+                    const item = document.createElement('div');
+                    item.className = "flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 mb-2 hover:border-blue-500/50 transition-colors shadow-sm";
+                    item.innerHTML = `
+                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[11px] font-bold truncate text-slate-700 dark:text-slate-200">${fileName}</p>
+                            <a href="${downloadUrl}" download="${fileName}" class="text-[9px] font-black uppercase text-blue-600 hover:text-blue-400">Download Asset</a>
+                        </div>`;
+                    filesList.appendChild(item);
+                });
+            }
+        },
+        
+        async deleteTicket() {
+            if (!this.activeTicketId) return;
+            
+            if (!confirm("Are you sure you want to delete this ticket?")) return;
+
+            try {
+                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    }
+                });
+
+                if (response.ok) {
+                    alert("Ticket deleted.");
+                    location.reload(); 
+                } else {
+                    alert("Delete failed. Check permissions.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        },
+
+        async updateTicket(e) {
+            e.preventDefault();
+            const btn = document.getElementById('saveDetailsBtn');
+            const newStatus = document.getElementById('editStatus').value;
+            const newPriority = document.getElementById('editPriority').value;
+            const newDesc = document.getElementById('editDesc').value;
+            const currentSub = document.getElementById('editSubject').value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const payload = { 
+                subject: currentSub, 
+                status: newStatus, 
+                priority: newPriority, 
+                description: newDesc 
+            };
+
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> Updating...';
+                btn.disabled = true;
+            }
+
+            try {
+                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/update_technical_details/`, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload), 
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' } 
+                });
+
+                if (response.ok) { 
+                    if (newStatus !== this.currentTicketStatus) {
+                        const logMsg = new FormData();
+                        logMsg.append('message', `STATUS UPDATE: Case changed from ${this.currentTicketStatus} to ${newStatus}`);
+                        logMsg.append('csrfmiddlewaretoken', csrfToken);
+                        await fetch(`/tickets/api/support-api/${this.activeTicketId}/send_reply/`, { method: 'POST', body: logMsg });
+                    }
+
+                    this.currentTicketStatus = newStatus;
+                    await this.loadChat(this.activeTicketId, currentSub, newDesc, this.ownerInfo.name, this.ownerInfo.email, newStatus, newPriority, "", document.getElementById('editTechnician').value);
+                    this.switchTab('feed');
+                    if (btn) {
+                        btn.innerHTML = 'Update Case';
+                        btn.disabled = false;
+                    }
+                }
+            } catch (err) { 
+                console.error(err);
+                if (btn) {
+                    btn.innerText = "Error"; 
+                    btn.disabled = false; 
+                }
+            }
+        },
+
+        scrollToBottom() {
+            const forceScroll = () => {
+                // Target ONLY the inner scrolling containers (No scrollIntoView overrides!)
+                const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+                
+                if (scrollArea) {
+                    // Force the scrollbar to the absolute bottom of the div
+                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                }
+            };
+
+            // 1. Fire instantly for normal text
+            forceScroll();
+            
+            // 2. Fire a few more times as the browser calculates the height of the loading images/videos
+            setTimeout(forceScroll, 100);
+            setTimeout(forceScroll, 500);
+            setTimeout(forceScroll, 1200); 
+        }
+    };
+    document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
+</script>
+
+<div id="chatLightbox" class="fixed inset-0 z-[9999] hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
+    <button type="button" onclick="SupportConsole.closeLightbox()" 
+            class="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 p-4 focus:outline-none transition-colors">
+        <i class="fas fa-times"></i>
+    </button>
+    
+    <button type="button" onclick="SupportConsole.prevLightbox()" class="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 focus:outline-none transition-colors">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+    <button type="button" onclick="SupportConsole.nextLightbox()" class="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 focus:outline-none transition-colors">
+        <i class="fas fa-chevron-right"></i>
+    </button>
+
+    <div id="lightboxContent" class="w-full h-full flex items-center justify-center"></div>
+
+    <div id="lightboxInfo" class="absolute bottom-10 left-0 right-0 text-center"></div>
+</div>
+{% endblock %}

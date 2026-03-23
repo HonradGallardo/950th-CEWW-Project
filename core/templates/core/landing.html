@@ -1,0 +1,757 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Asset & Cybersecurity System</title>
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --slate-900: #0f172a;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: var(--slate-900);
+            background-color: #ffffff;
+        }
+
+        .hero-bg {
+            background: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .hero-image-container {
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .floating-laptop {
+            filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.1));
+            animation: float 6s ease-in-out infinite;
+            transition: transform 0.5s ease;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotateX(0deg); }
+            50% { transform: translateY(-20px) rotateX(2deg); }
+        }
+
+        .feature-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #f1f5f9;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(37, 99, 235, 0.2);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-gradient:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        .text-balance { text-wrap: balance; }
+
+        /* Widget Custom Scrollbar */
+        .widget-scrollbar::-webkit-scrollbar { width: 6px; }
+        .widget-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .widget-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .widget-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Widget Entry Animation */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .widget-anim-enter {
+            animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        .chat-pill {
+            transition: all 0.2s;
+        }
+        .chat-pill:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body class="antialiased relative">
+
+    <nav class="glass-nav sticky top-0 z-40 px-6 md:px-16 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2 rounded-lg">
+                <i class="fas fa-shield-halved text-white text-lg"></i>
+            </div>
+            <span class="font-extrabold text-lg tracking-tight text-slate-900">
+                950th CEWW <span class="text-blue-600">Assets & Incident Monitoring System</span>
+            </span>
+        </div>
+        
+        <div class="flex items-center space-x-6">
+            <div id="network-status" class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest transition-opacity duration-500">
+                <span id="status-dot" class="w-2 h-2 bg-slate-300 rounded-full mr-2"></span>
+                <span id="status-text">Network Sync...</span>
+            </div>
+            <a href="{% url 'login' %}" class="btn-gradient text-white px-7 py-2.5 rounded-full font-bold text-sm flex items-center shadow-lg">
+                <i class="fas fa-lock-open mr-2 text-xs"></i> Portal Login
+            </a>
+        </div>
+    </nav>
+
+    <section class="hero-bg px-6 md:px-24 pt-16 md:pt-28 pb-24 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        <div class="w-full lg:w-3/5 space-y-8 text-center lg:text-left">
+            <div class="inline-flex items-center space-x-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full">
+                <span class="text-blue-700 text-[10px] font-extrabold uppercase tracking-wider">Enterprise Security</span>
+                <i class="fas fa-chevron-right text-blue-300 text-[10px]"></i>
+            </div>
+            
+            <h1 class="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight text-balance">
+                The Standard in <span class="text-blue-600">Infrastructure</span> Oversight
+            </h1>
+            
+            <p class="text-slate-500 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
+                A unified, air-gapped ecosystem for the rigorous management of IT assets and high-fidelity cybersecurity incident tracking.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-10 py-4 rounded-2xl font-bold text-lg shadow-xl active:scale-95 text-center">
+                    Get Started
+                </a>
+                <div class="flex items-center space-x-4 text-slate-400 font-semibold px-6 py-4">
+                    <i class="fas fa-network-wired"></i>
+                    <span class="text-sm">Local Area Access Only</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-2/5 hero-image-container">
+            <img src="{% static 'image_2.png' %}" 
+                 alt="System Infographic" 
+                 class="w-full h-auto floating-laptop rounded-3xl">
+            
+            <div class="absolute -top-4 left-4 md:-top-10 md:-left-10 bg-white/90 backdrop-blur px-5 py-4 rounded-2xl shadow-2xl border border-white/50 flex items-center space-x-4">
+                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+                    <i class="fas fa-fingerprint text-white text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Protocol</p>
+                    <p class="text-sm font-bold text-slate-800 tracking-tight">Encrypted Logs</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="px-6 md:px-16 py-24 bg-white relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20 space-y-4">
+                <h2 class="text-xs font-extrabold text-blue-600 uppercase tracking-[0.3em]">Core Capabilities</h2>
+                <h3 class="text-3xl md:text-5xl font-extrabold text-slate-900">Integrated Control Center</h3>
+                <div class="w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="feature-card bg-slate-50/50 p-10 rounded-[2.5rem] flex flex-col items-start">
+                    <div class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                        <i class="fas fa-cubes text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-extrabold text-xl text-slate-900 mb-4">Asset Ledger</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">Automated cataloging and lifecycle tracking for mission-critical hardware and software nodes.</p>
+                </div>
+
+                <div class="feature-card bg-slate-50/50 p-10 rounded-[2.5rem] flex flex-col items-start">
+                    <div class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                        <i class="fas fa-screwdriver-wrench text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-extrabold text-xl text-slate-900 mb-4">Maintenance Core</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">Predictive logging and historical audit trails to ensure 24/7 infrastructure availability.</p>
+                </div>
+
+                <div class="feature-card bg-slate-50/50 p-10 rounded-[2.5rem] flex flex-col items-start">
+                    <div class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mb-8 shadow-sm">
+                        <i class="fas fa-shield-virus text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-extrabold text-xl text-slate-900 mb-4">Incident Matrix</h4>
+                    <p class="text-slate-500 leading-relaxed font-medium">High-security logging of network anomalies and cybersecurity events with rapid triage tools.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 border-t border-slate-100 px-6 bg-slate-50/30">
+        <div class="max-w-7xl mx-auto flex flex-col items-center space-y-6">
+            <div class="w-full max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">System Readiness</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-xs font-bold text-slate-700">All Nodes Active</span>
+                    </div>
+                </div>
+                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Local Uplink</p>
+                    <p id="local-time-display" class="text-xs font-bold text-slate-700 font-mono">--:--:--</p>
+                </div>
+                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Server Uptime</p>
+                    <p id="server-uptime-display" class="text-xs font-bold text-blue-600 font-mono">--h --m</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4 grayscale opacity-50 pt-4">
+                <i class="fas fa-shield-halved text-2xl"></i>
+                <span class="font-bold text-lg">950TH CEWW</span>
+            </div>
+            <p class="text-slate-400 text-[10px] font-extrabold tracking-[0.2em] uppercase text-center">
+                &copy; 2026 OFFICIAL USE ONLY - SECURE OFFLINE ARCHITECTURE
+            </p>
+        </div>
+    </footer>
+
+    <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-50">
+        <i class="fas fa-comment-dots text-2xl"></i>
+    </button>
+
+    <div id="chatWidgetContainer" class="hidden fixed bottom-24 right-6 w-[360px] max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-8rem)] bg-slate-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200 origin-bottom-right">
+        
+        <div class="bg-white px-5 py-4 flex justify-between items-center shadow-sm shrink-0 relative z-10 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <img src="https://ui-avatars.com/api/?name=Smart+Assistant&background=2563eb&color=fff&bold=true" alt="Avatar" class="w-10 h-10 rounded-full border border-slate-200 object-cover">
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 leading-tight">Smart Assistant</h3>
+                    <p class="text-[10px] text-slate-500">The team can also help</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="text-slate-400 hover:text-slate-600 transition-colors px-2">
+                    <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <button onclick="ChatWidget.toggle()" class="text-slate-400 hover:text-slate-600 transition-colors px-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="chatWidgetBody" class="flex-1 overflow-y-auto widget-scrollbar p-5 space-y-4 flex flex-col scroll-smooth">
+            </div>
+
+        <div id="hiddenForms" class="hidden">
+            <form id="newTicketForm" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mt-2 flex flex-col gap-4" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="category" id="newCat" value="General">
+                <input type="hidden" name="priority" id="newPriority" value="Medium">
+
+                <div class="border-b border-slate-100 pb-2">
+                    <p id="form-context-msg" class="text-[10px] font-bold text-blue-600 uppercase tracking-widest"></p>
+                </div>
+
+                <div id="account-fields" class="hidden flex flex-col gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-6 h-6 rounded bg-blue-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-id-card text-blue-600 text-[10px]"></i>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Identity Support</p>
+                        </div>
+                    </div>
+                    <input type="text" name="first_name" maxlength="25" placeholder="First Name" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <input type="text" name="last_name" maxlength="25" placeholder="Last Name" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <input type="email" name="email" maxlength="50" placeholder="Inst. Email" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <input type="tel" name="phone" maxlength="11" placeholder="Phone Number" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    
+                    <select name="rank" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none">
+                        <option value="" disabled selected>Requested Rank</option>
+                        <optgroup label="Enlisted">
+                            <option value="Airman">Airman</option>
+                            <option value="Airman Second Class">Airman Second Class</option>
+                            <option value="Airman First Class">Airman First Class</option>
+                            <option value="Sergeant">Sergeant</option>
+                        </optgroup>
+                        <optgroup label="Non-Commissioned Officers">
+                            <option value="Staff Sergeant">Staff Sergeant</option>
+                            <option value="Technical Sergeant">Technical Sergeant</option>
+                            <option value="Master Sergeant">Master Sergeant</option>
+                            <option value="Senior Master Sergeant">Senior Master Sergeant</option>
+                            <option value="Chief Master Sergeant">Chief Master Sergeant</option>
+                        </optgroup>
+                        <optgroup label="Officers">
+                            <option value="Second Lieutenant">Second Lieutenant</option>
+                            <option value="First Lieutenant">First Lieutenant</option>
+                            <option value="Captain">Captain</option>
+                            <option value="Major">Major</option>
+                            <option value="Lieutenant Colonel">Lieutenant Colonel</option>
+                            <option value="Colonel">Colonel</option>
+                        </optgroup>
+                        <optgroup label="General Officers">
+                            <option value="Brigadier General">Brigadier General</option>
+                            <option value="Major General">Major General</option>
+                            <option value="Lieutenant General">Lieutenant General</option>
+                            <option value="General">General</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div id="security-removal-fields" class="hidden flex flex-col gap-3 p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-6 h-6 rounded bg-amber-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-shield-alt text-amber-600 text-[10px]"></i>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Security Clearance</p>
+                        </div>
+                    </div>
+                    <input type="text" name="auth_id" placeholder="Identifier (ID/Username)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+                    <select name="removal_type" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 appearance-none">
+                        <option value="OTP">OTP Reset</option>
+                        <option value="MFA">Complete MFA Removal</option>
+                        <option value="Hardware">Hardware Token Unlink</option>
+                    </select>
+                </div>
+
+                <div id="bug-fields" class="hidden flex flex-col gap-3 p-4 bg-red-50/50 rounded-xl border border-red-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-6 h-6 rounded bg-red-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-bug text-red-600 text-[10px]"></i>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-red-600 uppercase tracking-widest">System Anomaly</p>
+                        </div>
+                    </div>
+                    <select name="bug_module" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 appearance-none">
+                        <option value="Dashboard">Dashboard / Analytics</option>
+                        <option value="Tickets">Ticket System</option>
+                        <option value="Assets">IT Assets</option>
+                        <option value="Authentication">Authentication</option>
+                        <option value="Other">Other Component</option>
+                    </select>
+                    <input type="text" name="error_code" placeholder="Error Code (If any)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
+                    <textarea name="reproduce_steps" rows="2" placeholder="Steps to reproduce..." class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 resize-none"></textarea>
+                </div>
+
+                <div id="permission-fields" class="hidden flex flex-col gap-3 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-6 h-6 rounded bg-emerald-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-key text-emerald-600 text-[10px]"></i>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Access Control</p>
+                        </div>
+                    </div>
+                    <input type="text" name="target_resource" placeholder="Target Resource" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    <select name="access_level" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 appearance-none">
+                        <option value="Read-Only">Read-Only (Viewer)</option>
+                        <option value="Contributor">Contributor (Editor)</option>
+                        <option value="Administrator">Administrator (Elevated)</option>
+                    </select>
+                    <input type="text" name="approving_officer" placeholder="Approving Officer Ref" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                </div>
+
+                <div id="access-fields" class="hidden flex flex-col gap-3 p-4 bg-purple-50/50 rounded-xl border border-purple-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="w-6 h-6 rounded bg-purple-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-sign-in-alt text-purple-600 text-[10px]"></i>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-purple-600 uppercase tracking-widest">Auth Diagnostics</p>
+                        </div>
+                    </div>
+                    <input type="text" name="affected_id" placeholder="Affected ID / Username" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                    <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <input type="text" name="subject" id="newSub" placeholder="Subject" required class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-800">
+                    <textarea name="description" id="newDescInput" placeholder="Detailed Description..." required rows="3" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"></textarea>
+                    
+                    <label class="border-2 border-dashed border-slate-200 bg-slate-50 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 transition-colors group">
+                        <input type="file" name="attachments" multiple class="hidden" onchange="ChatWidget.updateFileLabel(this)">
+                        <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 mx-auto mb-2 group-hover:border-blue-500/30">
+                            <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+                        </div>
+                        <span id="widget-file-label" class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-500 transition-colors">Attach Media</span>
+                        <div id="file-preview-list" class="mt-2 flex flex-wrap gap-1 justify-center empty:hidden"></div>
+                    </label>
+                </div>
+
+                <button type="button" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg shadow-blue-500/20 mt-1">
+                    Initialize Dispatch
+                </button>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // --- SYSTEM READINESS WIDGET (Preserved) ---
+    function updateLocalClock() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-PH', { 
+            timeZone: 'Asia/Manila',
+            hour12: false, 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        });
+        $('#local-time-display').text(timeString);
+    }
+    setInterval(updateLocalClock, 1000);
+    updateLocalClock();
+    
+    function syncServerUptime() {
+        $.ajax({
+            url: '/api/dashboard-stats/?include_uptime=true', 
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if(data.server_uptime) {
+                    $('#server-uptime-display').text(data.server_uptime);
+                }
+            }
+        });
+    }
+    setInterval(syncServerUptime, 60000);
+    syncServerUptime();
+
+    // --- CHAT WIDGET SYSTEM LOGIC ---
+    const ChatWidget = {
+        isOpen: false,
+        hasInitialized: false,
+        container: document.getElementById('chatWidgetContainer'),
+        body: document.getElementById('chatWidgetBody'),
+
+        toggle() {
+            this.isOpen = !this.isOpen;
+            if (this.isOpen) {
+                this.container.classList.remove('hidden');
+                this.container.classList.add('widget-anim-enter');
+                if (!this.hasInitialized) {
+                    this.initChat();
+                    this.hasInitialized = true;
+                }
+            } else {
+                this.container.classList.add('hidden');
+                this.container.classList.remove('widget-anim-enter');
+            }
+        },
+
+        initChat() {
+            this.body.innerHTML = '';
+            this.appendBotMessage("Welcome to Global Support. How may I assist you with your technical requirements today?");
+            this.showMainOptions();
+        },
+
+        scrollToBottom() {
+            setTimeout(() => {
+                this.body.scrollTop = this.body.scrollHeight;
+            }, 50);
+        },
+
+        appendBotMessage(text) {
+            const div = document.createElement('div');
+            div.className = "flex justify-start w-full mb-2";
+            div.innerHTML = `
+                <div class="bg-white border border-slate-100 text-slate-700 px-4 py-3 rounded-2xl rounded-tl-sm text-[13px] shadow-sm leading-relaxed max-w-[90%]">
+                    ${text}
+                </div>`;
+            this.body.appendChild(div);
+            this.scrollToBottom();
+            return div; 
+        },
+
+        appendUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = "flex justify-end w-full mb-2";
+            div.innerHTML = `
+                <div class="bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-sm text-[13px] shadow-sm max-w-[85%]">
+                    ${text}
+                </div>`;
+            this.body.appendChild(div);
+            this.scrollToBottom();
+        },
+
+        setBotOptions(options) {
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = "flex flex-wrap gap-2 mt-2 w-full justify-end";
+            
+            optionsDiv.innerHTML = options.map(o => `
+                <button type="button" onclick="ChatWidget.${o.action}()" 
+                        class="chat-pill bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-full text-xs font-medium hover:bg-slate-50 transition-colors">
+                    ${o.label}
+                </button>
+            `).join('');
+            
+            this.body.appendChild(optionsDiv);
+            this.scrollToBottom();
+        },
+
+        removeLastOptions() {
+            const optionContainers = this.body.querySelectorAll('.flex.flex-wrap.gap-2.mt-2.w-full.justify-end');
+            if (optionContainers.length > 0) {
+                const last = optionContainers[optionContainers.length - 1];
+                last.remove();
+            }
+        },
+
+        showMainOptions() {
+            this.setBotOptions([
+                { label: "👤 New Account", action: "handle_account_creation" },
+                { label: "🔒 Security/Auth Reset", action: "handle_security" },
+                { label: "🛠️ Technical Support", action: "handle_tech_menu" },
+                { label: "📝 Other Concerns", action: "handle_custom" }
+            ]);
+        },
+
+        hideAllForms() {
+            document.getElementById('account-fields').classList.add('hidden');
+            document.getElementById('security-removal-fields').classList.add('hidden');
+            document.getElementById('bug-fields').classList.add('hidden');
+            document.getElementById('permission-fields').classList.add('hidden');
+            document.getElementById('access-fields').classList.add('hidden');
+            
+            // Safely move the form back to the hidden container before anything gets wiped
+            const form = document.getElementById('newTicketForm');
+            if (form) {
+                form.reset();
+                form.classList.add('hidden');
+                document.getElementById('hiddenForms').appendChild(form); 
+            }
+            
+            const fileLabel = document.getElementById('widget-file-label');
+            if (fileLabel) {
+                fileLabel.innerText = "Attach Media";
+                fileLabel.classList.remove('text-blue-600');
+            }
+            const previewList = document.getElementById('file-preview-list');
+            if (previewList) previewList.innerHTML = '';
+        },
+
+        // --- Mapped Bot Handlers from submit_ticket.html ---
+        
+        handle_account_creation() {
+            this.removeLastOptions();
+            this.appendUserMessage("I need to create a new user account.");
+            setTimeout(() => {
+                this.appendBotMessage("Understood. Please provide the profile details below for administrative review.");
+                this.triggerForm("Identity", "New Account Provisioning", "Requested profile creation.", "account-fields");
+            }, 500);
+        },
+
+        handle_security() {
+            this.removeLastOptions();
+            this.appendUserMessage("Security/Auth Reset");
+            setTimeout(() => {
+                this.appendBotMessage("Security protocols selected. Which layer requires modification?");
+                this.setBotOptions([
+                    { label: "OTP Removal", action: "handle_otp" },
+                    { label: "MFA Reset", action: "handle_mfa" },
+                    { label: "Forgot Password", action: "handle_password" },
+                    { label: "Account Locked", action: "handle_locked" },
+                    { label: "Start over", action: "restart" } 
+                ]);
+            }, 500);
+        },
+
+        handle_tech_menu() {
+            this.removeLastOptions();
+            this.appendUserMessage("Technical Support");
+            setTimeout(() => {
+                this.appendBotMessage("Diagnostic mode active. Select the incident type:");
+                this.setBotOptions([
+                    { label: "Software Bugs", action: "handle_bug" },
+                    { label: "Login Issues", action: "handle_login" },
+                    { label: "Permissions", action: "handle_perms" },
+                    { label: "Start over", action: "restart" }
+                ]);
+            }, 500);
+        },
+
+        handle_otp() {
+            this.removeLastOptions();
+            this.appendUserMessage("Requesting OTP Removal.");
+            setTimeout(() => {
+                this.appendBotMessage("Please provide your authorization details.");
+                this.triggerForm("Security", "OTP Removal Request", "User cannot access OTP device.", "security-removal-fields");
+            }, 500);
+        },
+
+        handle_mfa() {
+            this.removeLastOptions();
+            this.appendUserMessage("MFA Reset required.");
+            setTimeout(() => {
+                this.appendBotMessage("Please provide your authorization details.");
+                this.triggerForm("Security", "MFA Reset / Removal", "Complete MFA overhaul requested.", "security-removal-fields");
+            }, 500);
+        },
+
+        handle_password() {
+            this.removeLastOptions();
+            this.appendUserMessage("I forgot my password.");
+            setTimeout(() => {
+                this.appendBotMessage("Please provide your access details.");
+                this.triggerForm("Access", "Password Reset Request", "User requested manual credential reset.", "access-fields");
+            }, 500);
+        },
+
+        handle_locked() {
+            this.removeLastOptions();
+            this.appendUserMessage("My account is locked/disabled.");
+            setTimeout(() => {
+                this.appendBotMessage("Please provide your access details.");
+                this.triggerForm("Access", "Account Unlock Request", "System lock-out detected.", "access-fields");
+            }, 500);
+        },
+
+        handle_bug() {
+            this.removeLastOptions();
+            this.appendUserMessage("Reporting a Software Error/Bug.");
+            setTimeout(() => {
+                this.appendBotMessage("Please provide the bug diagnostics below.");
+                this.triggerForm("Technical", "Software Bug Report", "Application behavior anomaly detected.", "bug-fields");
+            }, 500);
+        },
+
+        handle_login() {
+            this.removeLastOptions();
+            this.appendUserMessage("System login issues.");
+            setTimeout(() => {
+                this.appendBotMessage("Let's get that fixed. Fill out this access request.");
+                this.triggerForm("Technical", "System Authentication Failure", "Login loop or access denied.", "access-fields");
+            }, 500);
+        },
+
+        handle_perms() {
+            this.removeLastOptions();
+            this.appendUserMessage("Requesting Role/Permission Change.");
+            setTimeout(() => {
+                this.appendBotMessage("Please specify your target resource and clearance level.");
+                this.triggerForm("Access", "Role Modification", "User requires elevated privileges.", "permission-fields");
+            }, 500);
+        },
+
+        handle_custom() {
+            this.removeLastOptions();
+            this.appendUserMessage("Other Concerns");
+            setTimeout(() => {
+                this.appendBotMessage("How can we help? Please describe your issue below.");
+                this.triggerForm("General", "Custom Support Request", "", null);
+            }, 500);
+        },
+
+        restart() {
+            this.hideAllForms(); 
+            this.initChat();
+        },
+
+        triggerForm(category, subject, descPrefix, fieldIdToShow) {
+            this.hideAllForms();
+            
+            const form = document.getElementById('newTicketForm');
+            document.getElementById('newCat').value = category;
+            document.getElementById('newSub').value = subject;
+            document.getElementById('newDescInput').value = descPrefix;
+            document.getElementById('form-context-msg').innerText = `Department: ${category} Support`;
+            
+            if(fieldIdToShow) {
+                document.getElementById(fieldIdToShow).classList.remove('hidden');
+            }
+
+            // Move form inside the chat body at the bottom
+            this.body.appendChild(form);
+            form.classList.remove('hidden');
+            
+            // Add a "Start over" button after the form
+            this.setBotOptions([{ label: "Start over", action: "restart" }]);
+            this.scrollToBottom();
+        },
+
+        updateFileLabel(input) {
+            const preview = document.getElementById('file-preview-list');
+            const label = document.getElementById('widget-file-label');
+            preview.innerHTML = '';
+            
+            if (input.files.length > 0) {
+                label.innerText = `${input.files.length} Files Selected`;
+                label.classList.add('text-blue-600');
+                Array.from(input.files).forEach(file => {
+                    const span = document.createElement('span');
+                    span.className = "px-2 py-1 bg-blue-50 text-[9px] font-bold rounded text-blue-600 truncate max-w-[100px]";
+                    span.innerText = file.name;
+                    preview.appendChild(span);
+                });
+            } else {
+                label.innerText = "Attach Media";
+                label.classList.remove('text-blue-600');
+            }
+        },
+
+        async finalizeTicketSubmission() {
+            const form = document.getElementById('newTicketForm');
+            const btn = form.querySelector('button');
+            
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...';
+            
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            try {
+                const res = await fetch('/tickets/api/support-api/', { 
+                    method: 'POST', 
+                    body: formData, 
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    } 
+                });
+
+                if (res.ok) {
+                    form.classList.add('hidden');
+                    document.getElementById('hiddenForms').appendChild(form); // Move it back safely
+                    this.removeLastOptions();
+                    this.appendBotMessage("✅ Dispatch successful. Our team will review your report shortly.");
+                    this.setBotOptions([{ label: "Start over", action: "restart" }]);
+                } else {
+                    throw new Error("Dispatch failed");
+                }
+            } catch (err) { 
+                console.error(err);
+                btn.disabled = false; 
+                btn.innerHTML = originalText; 
+                this.appendBotMessage("❌ Error submitting dispatch. Please try again.");
+            }
+        }
+    };
+</script>
+
+</body>
+</html>

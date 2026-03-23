@@ -1,0 +1,888 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<div class="flex flex-col min-h-screen lg:h-full p-4 sm:p-6 lg:p-8 bg-slate-50/50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-200 transition-colors duration-300 font-sans space-y-6 relative">
+    
+    <div id="page-top-anchor" class="absolute top-0 left-0 w-full h-0 pointer-events-none"></div>
+    
+    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 no-print bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 sm:p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm relative overflow-hidden z-10 w-full">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"></div>
+        
+        <div class="w-full xl:w-auto">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+                <div class="p-2 sm:p-2.5 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/20 text-blue-600 dark:text-blue-400 rounded-xl shadow-inner border border-blue-100 dark:border-blue-800/50 flex-shrink-0">
+                    <i class="fas fa-chart-line text-lg"></i>
+                </div>
+                System Reports
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium flex items-center gap-2">
+                Generate, filter, and export comprehensive system data.
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap gap-2 sm:gap-3 w-full xl:w-auto items-center">
+            <div id="api-status-badge" class="col-span-2 sm:col-span-1 sm:mr-auto lg:mr-0 flex justify-center items-center px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm transition-all duration-500 group cursor-default hover:border-emerald-300 dark:hover:border-emerald-700/50 w-full sm:w-auto">
+                <div class="relative flex h-3 w-3 mr-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                </div>
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">Live Sync</span>
+            </div>
+            
+            <button id="export-excel-btn" class="flex-1 w-full sm:w-auto flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-300 dark:hover:border-emerald-700/50 hover:text-emerald-700 dark:hover:text-emerald-400 text-slate-700 dark:text-slate-200 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm group whitespace-nowrap">
+                <i class="fas fa-file-excel mr-1.5 sm:mr-2 text-emerald-500 group-hover:scale-110 transition-transform"></i> <span class="hidden sm:inline">Export</span> Excel
+            </button>
+
+            <button id="export-pdf-btn" class="flex-1 w-full sm:w-auto flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-300 dark:hover:border-rose-700/50 hover:text-rose-700 dark:hover:text-rose-400 text-slate-700 dark:text-slate-200 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm group whitespace-nowrap">
+                <i class="fas fa-file-pdf mr-1.5 sm:mr-2 text-rose-500 group-hover:scale-110 transition-transform"></i> <span class="hidden sm:inline">Export</span> PDF
+            </button>
+
+            <button id="export-word-btn" class="flex-1 w-full sm:w-auto flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-700/50 hover:text-blue-700 dark:hover:text-blue-400 text-slate-700 dark:text-slate-200 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-sm group whitespace-nowrap">
+                <i class="fas fa-file-word mr-1.5 sm:mr-2 text-blue-500 group-hover:scale-110 transition-transform"></i> <span class="hidden sm:inline">Export</span> Word
+            </button>
+        </div>
+    </div>
+
+    <div class="no-print bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-3 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-4 z-10 w-full">
+        
+        <div class="flex w-full overflow-x-auto no-scrollbar pb-1 2xl:pb-0 2xl:w-auto" id="report-tabs-container">
+            <div class="inline-flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-2xl w-max min-w-full sm:min-w-0 shadow-inner border border-slate-200/50 dark:border-slate-700/50" id="report-tabs">
+                <a href="#" onclick="updateReportType('it_asset', event, this)" class="tab-link shrink-0 whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex-1 text-center {% if report_type == 'it_asset' %}bg-white dark:bg-slate-700 shadow-md text-blue-600 dark:text-blue-400 ring-1 ring-slate-200 dark:ring-slate-600 active-tab{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50{% endif %}">
+                    <i class="fas fa-server mr-1.5 opacity-80"></i> IT Assets
+                </a>
+                <a href="#" onclick="updateReportType('maintenance', event, this)" class="tab-link shrink-0 whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex-1 text-center {% if report_type == 'maintenance' %}bg-white dark:bg-slate-700 shadow-md text-blue-600 dark:text-blue-400 ring-1 ring-slate-200 dark:ring-slate-600 active-tab{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50{% endif %}">
+                    <i class="fas fa-tools mr-1.5 opacity-80"></i> Maintenance
+                </a>
+                <a href="#" onclick="updateReportType('incident', event, this)" class="tab-link shrink-0 whitespace-nowrap px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex-1 text-center {% if report_type == 'incident' %}bg-white dark:bg-slate-700 shadow-md text-blue-600 dark:text-blue-400 ring-1 ring-slate-200 dark:ring-slate-600 active-tab{% else %}text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50{% endif %}">
+                    <i class="fas fa-exclamation-triangle mr-1.5 opacity-80"></i> Incidents
+                </a>
+            </div>
+        </div>
+
+        <form method="GET" id="filterForm" class="flex flex-col sm:flex-row flex-wrap items-center gap-3 w-full 2xl:w-auto">
+            <input type="hidden" name="report_type" id="form_report_type" value="{{ report_type }}">
+            
+            <div class="relative w-full sm:w-auto sm:flex-1 lg:flex-none lg:w-56 group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none transition-colors group-focus-within:text-blue-500">
+                    <i class="fas fa-search text-slate-400"></i>
+                </div>
+                <input type="text" name="search" id="searchInput" placeholder="Search ID or Name..." class="w-full text-sm pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-semibold shadow-sm hover:border-slate-300 dark:hover:border-slate-600 placeholder-slate-400 dark:placeholder-slate-500">
+            </div>
+
+            <div class="relative w-full sm:w-auto sm:flex-1 lg:flex-none lg:w-48 group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none transition-colors group-focus-within:text-blue-500">
+                    <i class="fas fa-filter text-slate-400"></i>
+                </div>
+                <select name="category" id="categorySelect" class="w-full text-sm pl-11 pr-10 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all appearance-none cursor-pointer font-semibold shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
+                    <option value="All">All Categories</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                </div>
+            </div>
+
+            <div class="relative w-full sm:w-auto sm:flex-1 lg:flex-none lg:w-48 group">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none transition-colors group-focus-within:text-blue-500">
+                    <i class="fas fa-calendar-alt text-slate-400"></i>
+                </div>
+                <select name="sort_date" id="sortDateSelect" class="w-full text-sm pl-11 pr-10 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all appearance-none cursor-pointer font-semibold shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
+                    <option value="desc">Newest First</option>
+                    <option value="asc">Oldest First</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <i class="fas fa-chevron-down text-slate-400 text-xs"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full sm:w-auto bg-slate-800 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-900 dark:hover:bg-slate-100 px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg whitespace-nowrap transform hover:-translate-y-0.5 mt-2 sm:mt-0">
+                Apply Filters
+            </button>
+        </form>
+    </div>
+
+    <div class="flex-1 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col overflow-hidden relative z-10">
+        
+        <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50/50 dark:bg-slate-800/30">
+            <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2" id="table-title">
+                {% if report_type == 'it_asset' %}
+                    <i class="fas fa-list text-blue-500"></i> Asset Directory
+                {% elif report_type == 'maintenance' %}
+                    <i class="fas fa-clipboard-list text-blue-500"></i> Maintenance Registry
+                {% else %}
+                    <i class="fas fa-clipboard-list text-blue-500"></i> Incident Log
+                {% endif %}
+            </h2>
+            <div class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl shadow-sm flex items-center gap-2">
+                <i class="fas fa-database text-slate-400"></i> Showing <span id="total-records-display" class="text-blue-600 dark:text-blue-400 text-xs sm:text-sm">{{ total_count }}</span> Records
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-x-auto custom-scrollbar w-full p-2 lg:p-0">
+            <div class="w-full min-w-full lg:min-w-[1000px]"> 
+                <table class="w-full text-left border-collapse responsive-table">
+                    <thead class="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 shadow-sm">
+                        <tr class="text-[10px] sm:text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                            {% if report_type == 'it_asset' %}
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-hashtag mr-1"></i> Asset ID</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-laptop mr-1"></i> Asset Name</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-tags mr-1"></i> Asset Type</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-map-marker-alt mr-1"></i> Location</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-user-plus mr-1"></i> Added By</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-calendar-plus mr-1"></i> Date Added</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-info-circle mr-1"></i> Status</th>
+                            {% elif report_type == 'maintenance' %}
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-hashtag mr-1"></i> Asset ID</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-laptop mr-1"></i> Asset Name</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-tags mr-1"></i> Asset Type</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-tools mr-1"></i> Maint. Type</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-user-cog mr-1"></i> Technician</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-calendar-plus mr-1"></i> Date Created</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-history mr-1"></i> Last Updated</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-info-circle mr-1"></i> Status</th>
+                            {% else %}
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-hashtag mr-1"></i> Incident ID</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-exclamation-circle mr-1"></i> Severity</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-heading mr-1"></i> Title</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-map-marker-alt mr-1"></i> Affected Area</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-user-shield mr-1"></i> Logged By</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-calendar-plus mr-1"></i> Date Logged</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-history mr-1"></i> Last Updated</th>
+                                <th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-info-circle mr-1"></i> Status</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody id="report-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900 whitespace-nowrap">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+            <div class="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm w-full sm:w-auto text-center">
+                Showing <span id="page-start-display" class="font-black text-slate-900 dark:text-white">0</span> to <span id="page-end-display" class="font-black text-slate-900 dark:text-white">0</span>
+            </div>
+
+            <div id="pagination-controls" class="flex flex-wrap justify-center items-center gap-1 sm:gap-2">
+                </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print z-10 w-full">
+        
+        <div class="lg:col-span-2 p-4 sm:p-6 md:p-8 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm min-h-[350px] flex flex-col relative overflow-hidden">
+            <h3 id="chart-title" class="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4">
+                <i class="fas fa-chart-pie text-blue-500"></i> Distribution Overview
+            </h3>
+            <div class="flex-1 relative w-full h-full min-h-[250px] sm:min-h-[220px]">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="p-6 md:p-8 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl border border-blue-400/50 shadow-xl shadow-blue-900/20 flex flex-col items-center justify-center text-white relative overflow-hidden group">
+            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+            <div class="absolute bottom-0 left-0 -mb-16 -ml-16 w-48 h-48 bg-black opacity-20 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+            
+            <div class="text-center relative z-10 w-full">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 mx-auto bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-3 sm:mb-4 border border-white/20 shadow-inner">
+                    <i class="fas fa-server text-lg sm:text-xl text-blue-100"></i>
+                </div>
+                <div class="text-[10px] sm:text-xs font-black text-blue-200 uppercase tracking-widest mb-1 sm:mb-2 opacity-90">Live Database Count</div>
+                <div id="api-total-display" class="text-5xl sm:text-7xl font-black tracking-tighter drop-shadow-md">{{ total_count }}</div>
+                
+                <div class="mt-6 sm:mt-8 w-full border-t border-white/20 pt-5 sm:pt-6">
+                    <button id="manualSyncBtn" class="w-full px-4 sm:px-5 py-3 sm:py-3.5 bg-white/10 hover:bg-white/20 border border-white/30 rounded-xl text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider transition-all flex items-center justify-center group-button backdrop-blur-md hover:shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                        <i class="fas fa-sync-alt mr-2 sync-icon transition-transform duration-700"></i> Force Data Sync
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Prevent overall horizontal scroll while keeping inner components scrollable */
+    body { overflow-x: hidden; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border: 2px solid transparent; background-clip: padding-box; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .sync-icon.fa-spin { animation: fa-spin 1s linear infinite; }
+
+    /* --- MOBILE RESPONSIVE TABLE (CARD LAYOUT) --- */
+    @media (max-width: 1023px) {
+        .responsive-table, .responsive-table thead, .responsive-table tbody, .responsive-table th, .responsive-table td, .responsive-table tr {
+            display: block;
+            width: 100%;
+        }
+        .responsive-table thead tr {
+            position: absolute; top: -9999px; left: -9999px; /* Hide headers visually but keep for screen readers */
+        }
+        .responsive-table tr {
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.75rem;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .dark .responsive-table tr {
+            border-color: #334155;
+            background-color: #0f172a;
+        }
+        .responsive-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f8fafc;
+            padding: 0.75rem 1rem !important;
+            text-align: right;
+            white-space: normal !important;
+        }
+        .dark .responsive-table td {
+            border-bottom-color: #1e293b;
+        }
+        .responsive-table td:last-child { 
+            border-bottom: 0; 
+        }
+        .responsive-table td::before {
+            content: attr(data-label);
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            text-align: left;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        .dark .responsive-table td::before {
+            color: #94a3b8;
+        }
+        /* Target inner flex containers inside TDs on mobile */
+        .responsive-table td > div {
+            justify-content: flex-end;
+            text-align: right;
+        }
+    }
+    
+    @media print {
+        .no-print { display: none !important; }
+        body { background: white !important; padding: 0 !important; color: black !important; font-size: 10pt; }
+        .rounded-2xl, .rounded-xl { border: 1px solid #cbd5e1 !important; border-radius: 4px !important; box-shadow: none !important; }
+        .flex-1 { overflow: visible !important; }
+        table { width: 100% !important; border-collapse: collapse; page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        th { background-color: #f8fafc !important; color: #334155 !important; border-bottom: 2px solid #cbd5e1 !important; font-weight: bold !important; }
+        th, td { border-bottom: 1px solid #e2e8f0 !important; padding: 10px !important; text-align: left !important; }
+    }
+</style>
+
+<script>
+    /**
+     * CORE: CHART INITIALIZATION
+     */
+    const ctxStatus = document.getElementById('statusChart').getContext('2d');
+    
+    const isDarkMode = document.documentElement.classList.contains('dark') || 
+                       window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const textColor = isDarkMode ? '#94a3b8' : '#64748b';
+
+    const statusChart = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|safe|default:"[]" }},
+            datasets: [{
+                data: {{ status_counts|safe|default:"[]" }},
+                backgroundColor: ['#3b82f6', '#06b6d4', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#64748b'],
+                hoverBackgroundColor: ['#2563eb', '#0891b2', '#7c3aed', '#059669', '#d97706', '#dc2626', '#475569'],
+                borderColor: isDarkMode ? '#0f172a' : '#ffffff',
+                borderWidth: 3,
+                hoverOffset: 6
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            cutout: '75%',
+            layout: { padding: 10 },
+            plugins: {
+                legend: { 
+                    position: window.innerWidth < 640 ? 'bottom' : 'right', 
+                    labels: { 
+                        boxWidth: 14, 
+                        usePointStyle: true,
+                        padding: 20,
+                        font: { size: 12, family: "'Inter', system-ui, sans-serif", weight: '600' },
+                        color: textColor
+                    } 
+                },
+                tooltip: {
+                    backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                    titleColor: isDarkMode ? '#f8fafc' : '#0f172a',
+                    bodyColor: isDarkMode ? '#cbd5e1' : '#475569',
+                    borderColor: isDarkMode ? '#334155' : '#e2e8f0',
+                    borderWidth: 1,
+                    padding: 14,
+                    boxPadding: 8,
+                    usePointStyle: true,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13, weight: '500' }
+                }
+            }
+        }
+    });
+
+    /**
+     * API CONNECTION, PAGINATION & LIVE TABLE RENDERING
+     */
+    $(document).ready(function() {
+        let currentReportType = "{{ report_type }}";
+        window.allExportData = []; 
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentPage = parseInt(urlParams.get('page')) || 1;
+        const pageSize = 10; 
+
+        const filterOptions = {
+            'it_asset': [
+                {% for val, name in asset_types %}
+                { value: "{{ val }}", label: "{{ name }}" },
+                {% endfor %}
+                { value: 'Active', label: 'Status: Active' },
+                { value: 'Inactive', label: 'Status: Inactive' },
+                { value: 'Maintenance', label: 'Status: Maintenance' }
+            ],
+            'maintenance': [
+                { value: 'Repair', label: 'Type: Repair' },
+                { value: 'Preventive', label: 'Type: Preventive' },
+                { value: 'Upgrade', label: 'Type: Upgrade' },
+                { value: 'Scheduled', label: 'Status: Scheduled' },
+                { value: 'In Progress', label: 'Status: In Progress' },
+                { value: 'Completed', label: 'Status: Completed' }
+            ],
+            'incident': [
+                { value: 'Critical', label: 'Severity: Critical' },
+                { value: 'High', label: 'Severity: High' },
+                { value: 'Medium', label: 'Severity: Medium' },
+                { value: 'Low', label: 'Severity: Low' },
+                { value: 'Open', label: 'Status: Open' },
+                { value: 'Investigating', label: 'Status: Investigating' },
+                { value: 'Resolved', label: 'Status: Resolved' }
+            ]
+        };
+
+        function updateFilterDropdown(type) {
+            const select = $('#categorySelect');
+            select.empty();
+            select.append('<option value="All">All Categories / Filters</option>');
+            
+            if (filterOptions[type]) {
+                filterOptions[type].forEach(opt => {
+                    select.append(`<option value="${opt.value}">${opt.label}</option>`);
+                });
+            }
+        }
+
+        window.updateReportType = function(type, event, element) {
+            if (event) event.preventDefault();
+            
+            currentReportType = type;
+            currentPage = 1; 
+            $('input[name="report_type"]').val(type); 
+            
+            updateFilterDropdown(type);
+            $('#searchInput').val(''); 
+            
+            $('.tab-link').removeClass('bg-white dark:bg-slate-700 shadow-md text-blue-600 dark:text-blue-400 ring-1 ring-slate-200 dark:ring-slate-600 active-tab')
+                          .addClass('text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50');
+            $(element).removeClass('text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50')
+                      .addClass('bg-white dark:bg-slate-700 shadow-md text-blue-600 dark:text-blue-400 ring-1 ring-slate-200 dark:ring-slate-600 active-tab');
+
+            let html = '<tr class="text-[10px] sm:text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap">';
+            if(type === 'it_asset') {
+                html += '<th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-hashtag mr-1"></i> Asset ID</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-laptop mr-1"></i> Asset Name</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-tags mr-1"></i> Asset Type</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-map-marker-alt mr-1"></i> Location</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-user-plus mr-1"></i> Added By</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-calendar-plus mr-1"></i> Date Added</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-info-circle mr-1"></i> Status</th>';
+                $('#table-title').html('<i class="fas fa-list text-blue-500"></i> Asset Directory');
+            } else if(type === 'maintenance') {
+                html += '<th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-hashtag mr-1"></i> Asset ID</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-laptop mr-1"></i> Asset Name</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-tags mr-1"></i> Asset Type</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-tools mr-1"></i> Maint. Type</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-user-cog mr-1"></i> Technician</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-calendar-plus mr-1"></i> Date Created</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-history mr-1"></i> Last Updated</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-info-circle mr-1"></i> Status</th>';
+                $('#table-title').html('<i class="fas fa-clipboard-list text-blue-500"></i> Maintenance Registry');
+            } else {
+                html += '<th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-hashtag mr-1"></i> Incident ID</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-exclamation-circle mr-1"></i> Severity</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-heading mr-1"></i> Title</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-map-marker-alt mr-1"></i> Affected Area</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-user-shield mr-1"></i> Logged By</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-calendar-plus mr-1"></i> Date Logged</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-history mr-1"></i> Last Updated</th><th class="py-3 sm:py-4 px-4 sm:px-6"><i class="fas fa-info-circle mr-1"></i> Status</th>';
+                $('#table-title').html('<i class="fas fa-clipboard-list text-blue-500"></i> Incident Log');
+            }
+            html += '</tr>';
+            $('thead').html(html);
+
+            syncDataViaAPI();
+        };
+
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            syncDataViaAPI();
+        });
+
+        // ----------------------------------------------------
+        // PAGINATION FUNCTION UPDATED TO SCROLL TO TOP
+        // ----------------------------------------------------
+        window.changePage = function(page) {
+            currentPage = page;
+            syncDataViaAPI().then(() => {
+                // Using scrollIntoView to seamlessly target the hidden anchor we added at the top
+                const anchor = document.getElementById('page-top-anchor');
+                if (anchor) {
+                    anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        };
+
+        window.syncDataViaAPI = async function() {
+            let endpoint = `/api/report/it-asset/`;
+            if (currentReportType === 'maintenance') endpoint = `/api/report/maintenance/`;
+            if (currentReportType === 'incident') endpoint = `/api/report/incident/`;
+
+            const category = $('#categorySelect').val();
+            const sortOrder = $('#sortDateSelect').val(); 
+            const searchQuery = $('#searchInput').val().trim();
+            
+            let queryParams = new URLSearchParams();
+            if (category && category !== "All") queryParams.append('category', category);
+            if (searchQuery) queryParams.append('search', searchQuery); 
+            
+            const dateField = currentReportType === 'it_asset' ? 'date_added' : 'date';
+            const orderingParam = sortOrder === 'desc' ? `-${dateField}` : dateField;
+            queryParams.append('ordering', orderingParam);
+            
+            queryParams.append('page', currentPage); 
+
+            try {
+                const response = await fetch(`${endpoint}?${queryParams.toString()}`, { 
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' } 
+                });
+                
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                const isServerPaginated = data.results !== undefined;
+                let allResults = isServerPaginated ? data.results : data;
+
+                if (searchQuery) {
+                    const lowerQuery = searchQuery.toLowerCase();
+                    allResults = allResults.filter(item => {
+                        const idStr = String(item.assets_id || item.asset_string_id || `INC-${item.id}`).toLowerCase();
+                        const nameStr = String(item.assets_name || item.asset_name || item.title || '').toLowerCase();
+                        return idStr.includes(lowerQuery) || nameStr.includes(lowerQuery);
+                    });
+                }
+                
+                allResults.sort((a, b) => {
+                    const dateA = new Date(a.date_added || a.date || 0);
+                    const dateB = new Date(b.date_added || b.date || 0);
+                    return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+                });
+
+                window.allExportData = allResults; 
+
+                let counts = {};
+                let chartTitleText = 'Distribution Overview';
+
+                allResults.forEach(item => {
+                    let val = 'Unknown';
+                    if (currentReportType === 'it_asset') {
+                        val = item.status || 'Unknown';
+                        chartTitleText = 'Asset Status Distribution';
+                    } else if (currentReportType === 'maintenance') {
+                        val = item.maintenance_type || 'Repair';
+                        chartTitleText = 'Maintenance Type Distribution';
+                    } else if (currentReportType === 'incident') {
+                        val = item.severity || 'Unknown';
+                        chartTitleText = 'Incident Severity Distribution';
+                    }
+                    counts[val] = (counts[val] || 0) + 1;
+                });
+
+                $('#chart-title').html(`<i class="fas fa-chart-pie text-blue-500"></i> ${chartTitleText}`);
+                statusChart.data.labels = Object.keys(counts);
+                statusChart.data.datasets[0].data = Object.values(counts);
+                statusChart.update();
+
+                const totalCount = isServerPaginated ? data.count : allResults.length;
+
+                let displayResults = allResults;
+                if (!isServerPaginated) {
+                    const startIndex = (currentPage - 1) * pageSize;
+                    displayResults = allResults.slice(startIndex, startIndex + pageSize);
+                }
+
+                $('#api-total-display, #total-records-display').fadeOut(150, function() {
+                    $(this).text(totalCount).fadeIn(150);
+                });
+
+                let tableHtml = '';
+                if (displayResults.length > 0) {
+                    displayResults.forEach(item => {
+                        if (currentReportType === 'it_asset') tableHtml += renderAssetRow(item);
+                        else if (currentReportType === 'maintenance') tableHtml += renderMaintRow(item);
+                        else if (currentReportType === 'incident') tableHtml += renderIncidentRow(item);
+                    });
+                } else {
+                    tableHtml = '<tr><td colspan="8" class="py-10 sm:py-20 text-center text-slate-500"><div class="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-folder-open text-xl sm:text-2xl text-slate-400"></i></div><p class="font-semibold text-sm">No records found matching your filters or search.</p></td></tr>';
+                }
+                $('#report-table-body').html(tableHtml);
+
+                const startIdx = totalCount === 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+                const endIdx = Math.min(currentPage * pageSize, totalCount);
+                $('#page-start-display').text(startIdx);
+                $('#page-end-display').text(endIdx);
+
+                renderPaginationButtons(totalCount);
+                $('#api-status-badge').removeClass('border-red-500/50').addClass('border-slate-200 dark:border-slate-700');
+            } catch (error) {
+                console.error("API Sync Error:", error);
+                $('#api-status-badge').addClass('border-red-500/50');
+            }
+        };
+
+        $('#export-excel-btn').on('click', function(e) {
+            e.preventDefault();
+            
+            if (!window.allExportData || window.allExportData.length === 0) {
+                alert('No data available to export.');
+                return;
+            }
+
+            const escapeCSV = (val) => {
+                if (val === null || val === undefined) return '""';
+                const str = String(val).replace(/"/g, '""');
+                return `"${str}"`;
+            };
+
+            let csvContent = "";
+            let headers = [];
+            let rows = [];
+
+            if (currentReportType === 'it_asset') {
+                headers = ['Asset ID', 'Asset Name', 'Asset Type', 'Location', 'Added By', 'Date Added', 'Status'];
+                rows = window.allExportData.map(item => [
+                    escapeCSV(item.assets_id),
+                    escapeCSV(item.assets_name),
+                    escapeCSV(item.assets_type || 'N/A'),
+                    escapeCSV(item.location),
+                    escapeCSV(item.assigned_to_name || 'System'),
+                    escapeCSV(new Date(item.date_added).toLocaleString()),
+                    escapeCSV(item.status)
+                ]);
+            } else if (currentReportType === 'maintenance') {
+                headers = ['Asset ID', 'Asset Name', 'Asset Type', 'Maintenance Type', 'Technician', 'Date Created', 'Last Updated', 'Status'];
+                rows = window.allExportData.map(item => [
+                    escapeCSV(item.asset_string_id),
+                    escapeCSV(item.asset_name),
+                    escapeCSV(item.asset_type || item.assets_type || 'N/A'),
+                    escapeCSV(item.maintenance_type || 'Repair'),
+                    escapeCSV(item.technician_name || 'Unassigned'),
+                    escapeCSV(new Date(item.date).toLocaleString()),
+                    escapeCSV(new Date(item.last_modified).toLocaleString()),
+                    escapeCSV(item.status)
+                ]);
+            } else {
+                headers = ['Incident ID', 'Severity', 'Title', 'Affected Area', 'Logged By', 'Date Logged', 'Last Updated', 'Status'];
+                rows = window.allExportData.map(item => [
+                    escapeCSV(`INC-${item.id}`),
+                    escapeCSV(item.severity),
+                    escapeCSV(item.title),
+                    escapeCSV(item.affected_area || item.asset_location || 'N/A'),
+                    escapeCSV(item.reported_by_name || 'System'),
+                    escapeCSV(new Date(item.date).toLocaleString()),
+                    escapeCSV(item.updated_at ? new Date(item.updated_at).toLocaleString() : new Date(item.date).toLocaleString()),
+                    escapeCSV(item.status)
+                ]);
+            }
+
+            csvContent += headers.join(",") + "\n";
+            rows.forEach(row => { csvContent += row.join(",") + "\n"; });
+
+            const bom = "\uFEFF";
+            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${currentReportType}_report_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        $('#export-pdf-btn').on('click', function(e) {
+            e.preventDefault();
+            
+            if (!window.allExportData || window.allExportData.length === 0) {
+                alert('No data available to export.');
+                return;
+            }
+
+            let headers = [];
+            let rows = [];
+
+            if (currentReportType === 'it_asset') {
+                headers = ['Asset ID', 'Asset Name', 'Asset Type', 'Location', 'Added By', 'Date Added', 'Status'];
+                rows = window.allExportData.map(item => [
+                    item.assets_id,
+                    item.assets_name,
+                    item.assets_type || 'N/A',
+                    item.location,
+                    item.assigned_to_name || 'System',
+                    new Date(item.date_added).toLocaleString(),
+                    item.status
+                ]);
+            } else if (currentReportType === 'maintenance') {
+                headers = ['Asset ID', 'Asset Name', 'Asset Type', 'Maintenance Type', 'Technician', 'Date Created', 'Last Updated', 'Status'];
+                rows = window.allExportData.map(item => [
+                    item.asset_string_id,
+                    item.asset_name,
+                    item.asset_type || item.assets_type || 'N/A',
+                    item.maintenance_type || 'Repair',
+                    item.technician_name || 'Unassigned',
+                    new Date(item.date).toLocaleString(),
+                    new Date(item.last_modified).toLocaleString(),
+                    item.status
+                ]);
+            } else {
+                headers = ['Incident ID', 'Severity', 'Title', 'Affected Area', 'Logged By', 'Date Logged', 'Last Updated', 'Status'];
+                rows = window.allExportData.map(item => [
+                    `INC-${item.id}`,
+                    item.severity,
+                    item.title,
+                    item.affected_area || item.asset_location || 'N/A',
+                    item.reported_by_name || 'System',
+                    new Date(item.date).toLocaleString(),
+                    item.updated_at ? new Date(item.updated_at).toLocaleString() : new Date(item.date).toLocaleString(),
+                    item.status
+                ]);
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            doc.text(`${currentReportType.toUpperCase()} REPORT`, 14, 15);
+            
+            doc.autoTable({
+                head: [headers],
+                body: rows,
+                startY: 20,
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [59, 130, 246] }
+            });
+
+            doc.save(`${currentReportType}_report_${new Date().toISOString().slice(0,10)}.pdf`);
+        });
+
+        $('#export-word-btn').on('click', function(e) {
+            e.preventDefault();
+            
+            if (!window.allExportData || window.allExportData.length === 0) {
+                alert('No data available to export.');
+                return;
+            }
+
+            let headers = [];
+            let rows = [];
+
+            if (currentReportType === 'it_asset') {
+                headers = ['Asset ID', 'Asset Name', 'Asset Type', 'Location', 'Added By', 'Date Added', 'Status'];
+                rows = window.allExportData.map(item => [
+                    item.assets_id,
+                    item.assets_name,
+                    item.assets_type || 'N/A',
+                    item.location,
+                    item.assigned_to_name || 'System',
+                    new Date(item.date_added).toLocaleString(),
+                    item.status
+                ]);
+            } else if (currentReportType === 'maintenance') {
+                headers = ['Asset ID', 'Asset Name', 'Asset Type', 'Maintenance Type', 'Technician', 'Date Created', 'Last Updated', 'Status'];
+                rows = window.allExportData.map(item => [
+                    item.asset_string_id,
+                    item.asset_name,
+                    item.asset_type || item.assets_type || 'N/A',
+                    item.maintenance_type || 'Repair',
+                    item.technician_name || 'Unassigned',
+                    new Date(item.date).toLocaleString(),
+                    new Date(item.last_modified).toLocaleString(),
+                    item.status
+                ]);
+            } else {
+                headers = ['Incident ID', 'Severity', 'Title', 'Affected Area', 'Logged By', 'Date Logged', 'Last Updated', 'Status'];
+                rows = window.allExportData.map(item => [
+                    `INC-${item.id}`,
+                    item.severity,
+                    item.title,
+                    item.affected_area || item.asset_location || 'N/A',
+                    item.reported_by_name || 'System',
+                    new Date(item.date).toLocaleString(),
+                    item.updated_at ? new Date(item.updated_at).toLocaleString() : new Date(item.date).toLocaleString(),
+                    item.status
+                ]);
+            }
+
+            let tableHtml = '<table border="1" style="border-collapse: collapse; width: 100%; font-family: sans-serif;">';
+            tableHtml += '<tr>' + headers.map(h => `<th style="background-color: #f2f2f2; padding: 8px; text-align: left;">${h}</th>`).join('') + '</tr>';
+            rows.forEach(row => {
+                tableHtml += '<tr>' + row.map(cell => `<td style="padding: 8px;">${cell}</td>`).join('') + '</tr>';
+            });
+            tableHtml += '</table>';
+
+            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML To Doc</title></head><body>";
+            const footer = "</body></html>";
+            const sourceHTML = header + `<h2 style="font-family: sans-serif;">${currentReportType.toUpperCase()} REPORT</h2>` + tableHtml + footer;
+
+            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+            const fileDownload = document.createElement("a");
+            document.body.appendChild(fileDownload);
+            fileDownload.href = source;
+            fileDownload.download = `${currentReportType}_report_${new Date().toISOString().slice(0,10)}.doc`;
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+        });
+
+        function renderPaginationButtons(totalCount) {
+            const totalPages = Math.ceil(totalCount / pageSize);
+            let html = '';
+            
+            if (totalPages > 1) {
+                if (currentPage > 1) {
+                    html += `<button onclick="changePage(1)" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 transition-all shadow-sm"><i class="fas fa-angle-double-left text-[10px] sm:text-xs"></i></button>`;
+                    html += `<button onclick="changePage(${currentPage - 1})" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 transition-all shadow-sm"><i class="fas fa-chevron-left text-[10px] sm:text-xs"></i></button>`;
+                }
+
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === currentPage) {
+                        html += `<span class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-bold shadow-md shadow-blue-500/30">${i}</span>`;
+                    } else if (i >= currentPage - 1 && i <= currentPage + 1) {
+                        html += `<button onclick="changePage(${i})" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl border border-transparent text-slate-600 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all">${i}</button>`;
+                    }
+                }
+
+                if (currentPage < totalPages) {
+                    html += `<button onclick="changePage(${currentPage + 1})" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 transition-all shadow-sm"><i class="fas fa-chevron-right text-[10px] sm:text-xs"></i></button>`;
+                    html += `<button onclick="changePage(${totalPages})" class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 transition-all shadow-sm"><i class="fas fa-angle-double-right text-[10px] sm:text-xs"></i></button>`;
+                }
+            }
+            $('#pagination-controls').html(html);
+        }
+
+        function getStatusBadge(status) {
+            if (!status) return '';
+            const s = status.toLowerCase();
+            let colors = 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'; 
+            let dot = 'bg-slate-400';
+            
+            if (s === 'active' || s === 'completed' || s === 'resolved') {
+                colors = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
+                dot = 'bg-emerald-500';
+            } else if (s === 'inactive' || s === 'open' || s === 'critical' || s === 'high') {
+                colors = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20';
+                dot = 'bg-rose-500';
+            } else if (s === 'maintenance' || s === 'in progress' || s === 'investigating' || s === 'medium') {
+                colors = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20';
+                dot = 'bg-amber-500';
+            } else if (s === 'low') {
+                colors = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20';
+                dot = 'bg-blue-500';
+            }
+
+            return `<span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border ${colors} shadow-sm whitespace-nowrap"><div class="w-1.5 h-1.5 rounded-full ${dot} mr-1.5 sm:mr-2 shadow-sm"></div>${status}</span>`;
+        }
+
+        /* --- ADDED DATA-LABELS & FLEX WRAPPERS TO TD ELEMENTS --- */
+        function renderAssetRow(item) {
+            return `
+                <tr class="text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+                    <td data-label="Asset ID" class="py-3 sm:py-4 px-4 sm:px-6 font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors whitespace-nowrap">${item.assets_id}</td>
+                    <td data-label="Asset Name" class="py-3 sm:py-4 px-4 sm:px-6 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">${item.assets_name}</td>
+                    <td data-label="Asset Type" class="py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap"><span class="bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-semibold border border-slate-200 dark:border-slate-700 shadow-sm">${item.assets_type || 'N/A'}</span></td>
+                    <td data-label="Location" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap"><div class="flex items-center gap-1 sm:gap-2 justify-end lg:justify-start"><i class="fas fa-map-marker-alt text-slate-300 dark:text-slate-600"></i> ${item.location}</div></td>
+                    <td data-label="Added By" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-700 dark:text-slate-300 font-semibold whitespace-nowrap">
+                        <div class="flex items-center gap-2 justify-end lg:justify-start">
+                            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[9px] sm:text-[10px] font-black">${(item.assigned_to_name || '?').charAt(0).toUpperCase()}</div>
+                            ${item.assigned_to_name || 'System'}
+                        </div>
+                    </td>
+                    <td data-label="Date Added" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">${new Date(item.date_added).toLocaleString()}</td>
+                    <td data-label="Status" class="py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap">${getStatusBadge(item.status)}</td>
+                </tr>`;
+        }
+
+        function renderMaintRow(item) {
+            return `
+                <tr class="text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+                    <td data-label="Asset ID" class="py-3 sm:py-4 px-4 sm:px-6 font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors whitespace-nowrap">${item.asset_string_id}</td>
+                    <td data-label="Asset Name" class="py-3 sm:py-4 px-4 sm:px-6 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">${item.asset_name}</td>
+                    <td data-label="Asset Type" class="py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap"><span class="bg-slate-100 dark:bg-slate-800 px-2 sm:px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-semibold border border-slate-200 dark:border-slate-700 shadow-sm">${item.asset_type || item.assets_type || 'N/A'}</span></td>
+                    <td data-label="Maint. Type" class="py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap"><span class="bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20 px-2 sm:px-3 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold shadow-sm">${item.maintenance_type || 'Repair'}</span></td>
+                    <td data-label="Technician" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-700 dark:text-slate-300 font-semibold whitespace-nowrap">
+                        <div class="flex items-center gap-2 justify-end lg:justify-start">
+                            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[9px] sm:text-[10px] font-black">${(item.technician_name || '?').charAt(0).toUpperCase()}</div>
+                            ${item.technician_name || 'Unassigned'}
+                        </div>
+                    </td>
+                    <td data-label="Date Created" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">${new Date(item.date).toLocaleString()}</td>
+                    <td data-label="Last Updated" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">${new Date(item.last_modified).toLocaleString()}</td>
+                    <td data-label="Status" class="py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap">${getStatusBadge(item.status)}</td>
+                </tr>`;
+        }
+
+        function renderIncidentRow(item) {
+            const area = item.affected_area || item.asset_location || 'N/A';
+            const updated = item.updated_at ? new Date(item.updated_at).toLocaleString() : new Date(item.date).toLocaleString();
+
+            return `
+                <tr class="text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group border-b border-slate-100 dark:border-slate-800/60 last:border-0">
+                    <td data-label="Incident ID" class="py-3 sm:py-4 px-4 sm:px-6 font-mono font-bold text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors whitespace-nowrap">INC-${item.id}</td>
+                    <td data-label="Severity" class="py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap">${getStatusBadge(item.severity)}</td>
+                    <td data-label="Title" class="py-3 sm:py-4 px-4 sm:px-6 font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">${item.title}</td>
+                    <td data-label="Affected Area" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap"><div class="flex items-center gap-1 sm:gap-2 justify-end lg:justify-start"><i class="fas fa-building text-slate-300 dark:text-slate-600"></i> ${area}</div></td>
+                    <td data-label="Logged By" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-700 dark:text-slate-300 font-semibold whitespace-nowrap">
+                        <div class="flex items-center gap-2 justify-end lg:justify-start">
+                            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 flex items-center justify-center text-[9px] sm:text-[10px] font-black">${(item.reported_by_name || '?').charAt(0).toUpperCase()}</div>
+                            ${item.reported_by_name || 'System'}
+                        </div>
+                    </td>
+                    <td data-label="Date Logged" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">${new Date(item.date).toLocaleString()}</td>
+                    <td data-label="Last Updated" class="py-3 sm:py-4 px-4 sm:px-6 text-slate-500 text-[10px] sm:text-xs font-medium whitespace-nowrap">${updated}</td>
+                    <td data-label="Status" class="py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap">${getStatusBadge(item.status)}</td>
+                </tr>`;
+        }
+
+        $('div.flex-col.min-h-screen').on('click', function(e) {
+            if (!$(e.target).closest('button, a, select, input').length) {
+                // syncDataViaAPI();
+            }
+        });
+
+        $('#manualSyncBtn').on('click', function() {
+            const $icon = $(this).find('.sync-icon');
+            $icon.addClass('fa-spin');
+            syncDataViaAPI().then(() => {
+                setTimeout(() => $icon.removeClass('fa-spin'), 600);
+            });
+        });
+
+        updateFilterDropdown(currentReportType);
+        syncDataViaAPI();
+    });
+</script>
+{% endblock %}

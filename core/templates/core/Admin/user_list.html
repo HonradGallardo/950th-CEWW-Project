@@ -1,0 +1,543 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col min-h-screen lg:h-[calc(100vh-140px)] space-y-6 lg:overflow-hidden p-4 sm:p-6 bg-slate-50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-200 transition-colors duration-300 relative z-0">
+    
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-4 relative z-10 w-full">
+        <div class="flex items-center gap-3">
+            <div class="p-2 sm:p-2.5 bg-blue-100 dark:bg-slate-800/80 text-blue-600 dark:text-blue-400 rounded-xl shadow-sm border border-blue-200/50 dark:border-slate-700">
+                <i class="fas fa-users-cog text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">User Access Control & RBAC</h1>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Manage system personnel, roles, and security permissions</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+             <div id="api-indicator" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm">
+                <div class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </div>
+                <span class="text-xs font-bold tracking-wider text-slate-600 dark:text-slate-300 uppercase">Live Sync</span>
+            </div>
+            <a href="{% url 'add_user' %}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-md shadow-blue-500/20 flex items-center justify-center shrink-0 active:scale-95">
+                <i class="fas fa-user-plus mr-2"></i> Add New User
+            </a>
+        </div>
+    </div>
+
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:min-h-0 pb-10 sm:pb-0 relative z-10 w-full">
+        
+        <div class="lg:col-span-8 flex flex-col h-fit lg:h-full min-h-0">
+            <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden shadow-sm relative z-10">
+                
+                <div class="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 space-y-4 sm:space-y-0 flex flex-col xl:flex-row justify-between xl:items-center bg-slate-50/50 dark:bg-slate-800/20">
+                    
+                    <div class="flex overflow-x-auto no-scrollbar pb-1 xl:pb-0">
+                        <div class="inline-flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50 w-max shadow-inner">
+                            <button onclick="setRoleFilter('ALL')" class="role-filter-btn active bg-blue-600 text-white shadow-sm text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">All</button>
+                            <button onclick="setRoleFilter('ADMIN')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">Admins</button>
+                            <button onclick="setRoleFilter('COMMANDER')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">Commanders</button>
+                            <button onclick="setRoleFilter('PERSONNEL')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">Personnel</button>
+                            <button onclick="setRoleFilter('UNASSIGNED')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">Others</button>
+                        </div>
+                    </div>
+
+                    <div class="relative w-full sm:w-auto sm:min-w-[250px] shrink-0 group">
+                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="text" id="userSearch" onkeyup="handleLiveSearch()" placeholder="Search directory..."
+                               class="text-sm pl-10 pr-9 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full outline-none transition-all placeholder-slate-400 dark:placeholder-slate-500 shadow-sm">
+                        
+                        <button id="clearSearch" onclick="resetSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors bg-slate-50 dark:bg-slate-800 rounded p-1">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar w-full p-3 lg:p-0">
+                    <table class="w-full text-left border-collapse responsive-table" id="userTable">
+                        <thead class="hidden sm:table-header-group sticky top-0 bg-slate-50/95 dark:bg-[#111827]/95 backdrop-blur-sm z-10 shadow-sm">
+                            <tr class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-200 dark:border-slate-800">
+                                <th class="py-3 px-4 sm:px-6 w-20 text-center"><i class="fas fa-hashtag mr-1"></i> ID</th>
+                                <th class="py-3 px-4 sm:px-6 w-20 text-center"><i class="fas fa-star mr-1"></i> Rank</th>
+                                <th class="py-3 px-4 sm:px-6"><i class="fas fa-user mr-1"></i> Personnel</th>
+                                <th class="py-3 px-4 sm:px-6"><i class="fas fa-at mr-1"></i> Username</th> 
+                                <th class="py-3 px-4 sm:px-6"><i class="fas fa-envelope mr-1"></i> Email</th> 
+                                <th class="py-3 px-4 sm:px-6"><i class="fas fa-phone-alt mr-1"></i> Phone</th> 
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-transparent block sm:table-row-group whitespace-nowrap" id="userTableBody">
+                            {% for person in users %}
+                            <tr class="user-row block sm:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 sm:p-0" 
+                                onclick="showUserDetails('{{ person.id }}', '{{ person.username|escapejs }}', '{{ person.get_full_name|default:person.username|escapejs }}', '{{ person.email|escapejs }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}', '{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}', '{{ person.profile.rank|default:'Airman' }}', '{{ person.profile.phone|default:''|escapejs }}')">
+                                <td data-label="ID" class="block sm:table-cell py-3 px-4 sm:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">#{{ person.id }}</td>
+                                <td data-label="Rank" class="block sm:table-cell py-3 px-4 sm:px-6">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 p-1.5 mx-auto border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-200 dark:group-hover:border-slate-600 transition-colors shadow-sm">
+                                        <img src="/static/core/images/badge/{{ person.profile.rank|default:'Airman' }}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';">
+                                    </div>
+                                </td>
+                                <td data-label="Personnel" class="block sm:table-cell py-3 px-4 sm:px-6">
+                                    <div class="flex flex-col justify-end items-end sm:items-start w-full min-w-0">
+                                        <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ person.get_full_name|default:person.username }}</div>
+                                        <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 sm:hidden">{{ person.profile.rank|default:"Airman" }}</div>
+                                    </div>
+                                </td>
+                                <td data-label="Username" class="block sm:table-cell py-3 px-4 sm:px-6 font-medium text-slate-600 dark:text-slate-300">@{{ person.username }}</td>
+                                <td data-label="Email" class="block sm:table-cell py-3 px-4 sm:px-6 text-slate-500 dark:text-slate-400">{{ person.email|default:"—" }}</td>
+                                <td data-label="Phone" class="block sm:table-cell py-3 px-4 sm:px-6 text-slate-500 dark:text-slate-400">{{ person.profile.phone|default:"—" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if users.has_other_pages %}
+                <div class="px-4 sm:px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex items-center justify-between no-print shrink-0" id="pagination-container">
+                    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                        Showing page <span class="font-bold text-slate-900 dark:text-white">{{ users.number }}</span> of <span class="font-bold text-slate-900 dark:text-white">{{ users.paginator.num_pages }}</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 shadow-sm rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                        {% if users.has_previous %}
+                            <a href="?page={{ users.previous_page_number }}" class="w-8 h-8 flex items-center justify-center bg-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border-r border-slate-200 dark:border-slate-700">
+                                <i class="fas fa-chevron-left text-[10px]"></i>
+                            </a>
+                        {% else %}
+                            <span class="w-8 h-8 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 text-slate-300 dark:text-slate-600 cursor-not-allowed border-r border-slate-200 dark:border-slate-700">
+                                <i class="fas fa-chevron-left text-[10px]"></i>
+                            </span>
+                        {% endif %}
+
+                        {% for i in users.paginator.page_range %}
+                            {% if users.number == i %}
+                                <span class="w-8 h-8 flex items-center justify-center bg-blue-600 text-white text-xs font-bold border-r border-slate-200 dark:border-slate-700">{{ i }}</span>
+                            {% elif i > users.number|add:'-3' and i < users.number|add:'3' %}
+                                <a href="?page={{ i }}" class="w-8 h-8 flex items-center justify-center bg-transparent text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800 text-xs font-bold transition-all border-r border-slate-200 dark:border-slate-700">{{ i }}</a>
+                            {% elif i == 1 or i == users.paginator.num_pages %}
+                                <a href="?page={{ i }}" class="w-8 h-8 flex items-center justify-center bg-transparent text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800 text-xs font-bold transition-all border-r border-slate-200 dark:border-slate-700">{{ i }}</a>
+                            {% elif i == users.number|add:'-3' or i == users.number|add:'3' %}
+                                <span class="w-8 h-8 flex items-center justify-center bg-transparent text-slate-400 dark:text-slate-600 text-xs font-bold border-r border-slate-200 dark:border-slate-700">...</span>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if users.has_next %}
+                            <a href="?page={{ users.next_page_number }}" class="w-8 h-8 flex items-center justify-center bg-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                                <i class="fas fa-chevron-right text-[10px]"></i>
+                            </a>
+                        {% else %}
+                            <span class="w-8 h-8 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 text-slate-300 dark:text-slate-600 cursor-not-allowed">
+                                <i class="fas fa-chevron-right text-[10px]"></i>
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <div class="lg:col-span-4 flex flex-col h-full min-h-0 relative z-10">
+            <div id="detail-panel" class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden relative shadow-sm">
+                
+                <div id="empty-message" class="flex-1 flex flex-col items-center justify-center text-center py-16 lg:py-0 relative z-10 px-6">
+                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 border border-slate-200 dark:border-slate-800 shadow-inner">
+                        <i class="fas fa-id-badge text-slate-400 dark:text-slate-600 text-2xl"></i>
+                    </div>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-[250px]">Select a user to view their complete profile details.</p>
+                </div>
+
+                <div id="user-details" class="hidden flex-1 flex flex-col min-h-0 relative z-10 w-full">
+                    
+                    <div class="flex-1 overflow-y-auto custom-scrollbar relative">
+                        
+                        <div class="w-full h-24 bg-gradient-to-r from-blue-700 to-indigo-800 relative shrink-0">
+                            <div class="absolute inset-0 bg-black/20"></div>
+                            <div class="absolute top-3 right-3 z-10">
+                                <span id="detail-role" class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/20 text-white border border-white/20 backdrop-blur-md shadow-sm"></span>
+                            </div>
+                        </div>
+
+                        <div class="px-5 pb-5 relative">
+                            
+                            <div class="flex items-end gap-4 -mt-12 mb-6 relative z-20">
+                                <div id="detail-image-container" class="w-24 h-24 min-w-[6rem] min-h-[6rem] bg-slate-100 dark:bg-slate-800 border-4 border-white dark:border-[#111827] rounded-2xl flex items-center justify-center text-slate-400 font-black text-3xl shadow-sm relative overflow-hidden">
+                                    <img id="detail-profile-pic" src="" class="hidden absolute inset-0 w-full h-full object-cover z-10" onerror="this.classList.add('hidden'); document.getElementById('initials').classList.remove('hidden');">
+                                    <span id="initials" class="relative z-0"></span>
+                                </div>
+                                
+                                <div class="min-w-0 pb-1">
+                                    <p id="detail-name" class="text-xl font-bold text-slate-900 dark:text-white truncate drop-shadow-sm"></p>
+                                    <div class="mt-1">
+                                        <span id="detail-username" class="inline-block text-sm font-medium text-blue-600 dark:text-blue-400 truncate bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-500/20 w-max">@<span id="detail-username-text"></span></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5 shadow-sm">
+                                        <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 mb-1">
+                                            <i class="fas fa-sign-in-alt text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Last Login</label>
+                                            <p id="detail-last-login" class="text-xs font-bold text-slate-800 dark:text-slate-200"></p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5 shadow-sm">
+                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 mb-1">
+                                            <i class="fas fa-calendar-check text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Member Since</label>
+                                            <p id="detail-joined" class="text-xs font-bold text-slate-800 dark:text-slate-200"></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-white dark:bg-[#0F172A] rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-sm">
+                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60">
+                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-star text-slate-400 text-[10px]"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Rank / Position</label>
+                                            <div class="flex items-center gap-2">
+                                                <img id="detail-rank-icon" src="" class="w-3.5 h-3.5 object-contain">
+                                                <p id="detail-rank" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60">
+                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-envelope text-slate-400 text-[10px]"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Email Address</label>
+                                            <p id="detail-email" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3 p-3">
+                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-phone-alt text-slate-400 text-[10px]"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Phone Number</label>
+                                            <p id="detail-phone" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+                                    <div>
+                                        <label class="block text-[9px] font-bold uppercase tracking-wider text-blue-500 dark:text-blue-400 mb-0.5">System Access</label>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Active Account</span>
+                                    </div>
+                                    <span class="relative flex h-2.5 w-2.5">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-sm"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] shrink-0 z-20">
+                         <a id="edit-link" href="#" class="flex items-center justify-center gap-2 w-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95">
+                            <i class="fas fa-user-edit text-slate-400"></i> Edit User Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentRole = 'ALL';
+let activeUserId = null;
+let searchTimeout;
+
+$(document).ready(function() {
+    window.refreshUserTable = function() {
+        $.ajax({
+            url: '/api/dashboard-stats/', 
+            type: 'GET',
+            success: function(data) { $('#api-indicator').removeClass('hidden'); },
+            error: function() { console.log("Stats API Offline"); }
+        });
+    };
+    setInterval(refreshUserTable, 120000);
+});
+
+function handleLiveSearch() {
+    const q = $('#userSearch').val().toLowerCase().trim();
+    const clearBtn = $('#clearSearch');
+    
+    if (q.length > 0) {
+        clearBtn.removeClass('hidden');
+    } else {
+        clearBtn.addClass('hidden');
+    }
+
+    let hasMatch = false;
+
+    $('#userTableBody .user-row').each(function() {
+        const rowText = $(this).text().toLowerCase();
+        
+        if (rowText.includes(q)) {
+            $(this).removeClass('force-hide');
+            hasMatch = true;
+        } else {
+            $(this).addClass('force-hide');
+        }
+    });
+
+    $('#no-match-row').remove();
+    if (!hasMatch && q !== "") {
+        $('#userTableBody').append(`
+            <tr id="no-match-row" class="block sm:table-row p-4 sm:p-0 border-b border-slate-100 dark:border-slate-800">
+                <td colspan="6" class="py-12 text-center">
+                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 mb-3 border border-slate-200 dark:border-slate-700">
+                        <i class="fas fa-search text-xl text-slate-400 dark:text-slate-500"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">No exact matches found in the table.</p>
+                </td>
+            </tr>
+        `);
+    }
+}
+
+function resetSearch() {
+    $('#userSearch').val('');
+    $('#clearSearch').addClass('hidden');
+    handleLiveSearch(); 
+}
+
+function setRoleFilter(role) {
+    currentRole = role;
+    
+    $('.role-filter-btn').removeClass('active bg-blue-600 text-white shadow-sm')
+                         .addClass('bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800');
+    
+    $(event.target).removeClass('bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800')
+                   .addClass('active bg-blue-600 text-white shadow-sm');
+                   
+    resetSearch();
+                   
+    performAjaxSearch();
+}
+
+function performAjaxSearch(query) {
+    const q = query !== undefined ? query : $('#userSearch').val().trim();
+    $('#api-indicator').removeClass('hidden');
+
+    if(q !== "" || currentRole !== "ALL") {
+        $('#pagination-container').addClass('hidden');
+    } else {
+        $('#pagination-container').removeClass('hidden');
+    }
+
+    $.ajax({
+        url: `/api/core/users/live_search/?q=${q}&role=${currentRole}`,
+        type: 'GET',
+        success: function(data) {
+            updateUserTable(data);
+            $('#api-indicator').addClass('hidden');
+        },
+        error: function(err) {
+            console.error("API Error:", err);
+            $('#api-indicator').addClass('hidden');
+        }
+    });
+}
+
+function updateUserTable(users) {
+    const container = document.getElementById('userTableBody');
+    container.innerHTML = ''; 
+
+    if (users.length === 0) {
+        container.innerHTML = `
+            <tr class="block sm:table-row p-4 sm:p-0">
+                <td colspan="6" class="py-12 text-center text-xs font-bold text-slate-500 dark:text-slate-400">
+                    No matching personnel found.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    users.forEach(u => {
+        const row = `
+            <tr class="user-row block sm:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 sm:p-0" 
+                onclick="showUserDetails('${u.id}', '${u.username}', '${u.full_name}', '${u.email}', '${u.role}', '${u.last_login}', '${u.date_joined}', '${u.image_url || ''}', '${u.rank}', '${u.phone || ''}')">
+                <td data-label="ID" class="block sm:table-cell py-3 px-4 sm:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">#${u.id}</td>
+                <td data-label="Rank" class="block sm:table-cell py-3 px-4 sm:px-6">
+                    <div class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 p-1.5 mx-auto border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-200 dark:group-hover:border-slate-600 transition-colors shadow-sm">
+                        <img src="/static/core/images/badge/${u.rank}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';">
+                    </div>
+                </td>
+                <td data-label="Personnel" class="block sm:table-cell py-3 px-4 sm:px-6">
+                    <div class="flex flex-col justify-end items-end sm:items-start w-full min-w-0">
+                        <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${u.full_name || u.username}</div>
+                        <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 sm:hidden">${u.rank}</div>
+                    </div>
+                </td>
+                <td data-label="Username" class="block sm:table-cell py-3 px-4 sm:px-6 font-medium text-slate-600 dark:text-slate-300">@${u.username}</td>
+                <td data-label="Email" class="block sm:table-cell py-3 px-4 sm:px-6 text-slate-500 dark:text-slate-400">${u.email || '—'}</td>
+                <td data-label="Phone" class="block sm:table-cell py-3 px-4 sm:px-6 text-slate-500 dark:text-slate-400">${u.phone || '—'}</td>
+            </tr>`;
+        container.insertAdjacentHTML('beforeend', row);
+    });
+}
+
+function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined, imageUrl, rank, phone) {
+    activeUserId = id;
+    document.getElementById('empty-message').classList.add('hidden');
+    document.getElementById('user-details').classList.remove('hidden');
+    document.getElementById('detail-username-text').innerText = username;
+    
+    const displayName = (fullName && fullName.trim() !== "") ? fullName : username;
+    document.getElementById('detail-name').innerText = displayName;
+    
+    document.getElementById('detail-email').innerText = email || '—';
+    document.getElementById('detail-phone').innerText = phone || '—';
+    document.getElementById('detail-role').innerText = role;
+    document.getElementById('detail-last-login').innerText = lastLogin;
+    document.getElementById('detail-joined').innerText = dateJoined;
+    document.getElementById('detail-rank').innerText = rank;
+    
+    document.getElementById('detail-rank-icon').src = `/static/core/images/badge/${rank}.png`;
+    document.getElementById('edit-link').href = "/users/edit/" + id + "/"; 
+
+    const imgElement = document.getElementById('detail-profile-pic');
+    const initialsElement = document.getElementById('initials');
+
+    if (imageUrl && imageUrl.trim() !== "") {
+        imgElement.src = imageUrl;
+        imgElement.classList.remove('hidden');
+        initialsElement.classList.add('hidden');
+    } else {
+        imgElement.classList.add('hidden');
+        initialsElement.classList.remove('hidden');
+        initialsElement.innerText = displayName.substring(0, 2).toUpperCase();
+    }
+
+    // Scroll to the detail panel seamlessly if the user is on a mobile device
+    if (window.innerWidth <= 1024) {
+        setTimeout(() => {
+            const detailPanel = document.getElementById('detail-panel');
+            if (detailPanel) {
+                detailPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 50); // Minor delay ensures the DOM transitions have fired before calculating scroll position
+    }
+}
+</script>
+
+<style>
+    body { overflow-x: hidden; }
+
+    .force-hide { display: none !important; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* --- MOBILE RESPONSIVE TABLE (GRID CARD LAYOUT) --- */
+    @media (max-width: 1024px) {
+        .responsive-table, .responsive-table thead, .responsive-table th, .responsive-table td {
+            display: block;
+            width: 100%;
+        }
+        .responsive-table thead tr {
+            position: absolute; top: -9999px; left: -9999px;
+        }
+        
+        #userTableBody {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+            gap: 1rem;
+            background: transparent !important;
+            padding: 1rem;
+        }
+
+        .user-row {
+            border: 1px solid #e2e8f0 !important; 
+            border-radius: 1rem;
+            background-color: #ffffff !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex !important;
+            flex-direction: column;
+            padding: 0 !important;
+            overflow: hidden;
+            margin-bottom: 0 !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .user-row:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .user-row {
+            border-color: #1e293b !important;
+            background-color: #111827 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+        .dark .user-row:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        .user-row td {
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f8fafc !important;
+            padding: 0.85rem 1.25rem !important;
+            text-align: right;
+            white-space: normal !important;
+        }
+        .dark .user-row td {
+            border-bottom-color: #1e293b !important;
+        }
+        .user-row td:last-child { 
+            border-bottom: 0 !important; 
+        }
+
+        .user-row td::before {
+            content: attr(data-label);
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            text-align: left;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            width: 35%;
+        }
+        .dark .user-row td::before {
+            color: #94a3b8;
+        }
+        
+        .user-row td > div {
+            width: 65%;
+            display: flex;
+            justify-content: flex-end;
+            text-align: right;
+        }
+        
+        .user-row td > .w-8 {
+            margin-left: auto;
+            margin-right: 0;
+        }
+    }
+</style>
+{% endblock %}

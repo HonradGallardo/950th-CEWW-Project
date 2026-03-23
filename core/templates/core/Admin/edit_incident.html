@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
+        
+        <div class="bg-slate-50 px-4 sm:px-8 py-5 border-b border-slate-200 card-header-bg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-base sm:text-lg font-black text-slate-800 dark-mode-text uppercase tracking-tight">
+                    {% if incident %}<i class="fas fa-file-signature mr-2 text-blue-600"></i> Incident Report Update{% else %}Add New Incident Report{% endif %}
+                </h2>
+                <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Modify technical details and threat intelligence</p>
+            </div>
+            {% if incident %}
+            <div class="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 info-badge">
+                <span class="text-[10px] font-black text-slate-400 uppercase">System ID:</span>
+                <span class="text-xs font-mono font-bold text-blue-600">INC-{{ incident.id|stringformat:"03d" }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-8 space-y-6" id="incidentForm">
+            {% csrf_token %}
+            <input type="hidden" name="take_over" id="take_over_flag" value="false">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Reporter</p>
+                    <p class="text-xs sm:text-sm font-bold text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 info-badge truncate">
+                        {{ incident.reported_by.username|default:"System Log" }} 
+                    </p>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assigned Tech</p>
+                    <div class="flex items-center gap-2">
+                        <p class="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800 flex-1 truncate">
+                            {{ incident.assigned_to.username|default:"Unassigned" }} 
+                        </p>
+                        <button type="button" id="btnTakeOver" class="bg-slate-800 dark:bg-slate-700 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-sm shrink-0">
+                            Take Over
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Date / Time</p>
+                    <p class="text-xs sm:text-sm font-bold text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 info-badge">
+                        {% if incident %}{{ incident.date|date:'d-m-Y H:i' }}{% else %}{% now "d-m-Y H:i" %}{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Incident Title</label>
+                    <input type="text" name="title" required value="{{ incident.title|default:'' }}"
+                        class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none transition-all">
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Threat Actor (Optional)</label>
+                    <input type="text" name="threat_actor" value="{{ incident.threat_actor|default:'' }}"
+                        class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none">
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Category</label>
+                    <select name="category" class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer">
+                        <option value="Malware" {% if incident.category == 'Malware' %}selected{% endif %}>Malware / Ransomware</option>
+                        <option value="Phishing" {% if incident.category == 'Phishing' %}selected{% endif %}>Phishing / Social Engineering</option>
+                        <option value="Unauthorized Access" {% if incident.category == 'Unauthorized Access' %}selected{% endif %}>Unauthorized Access</option>
+                        <option value="DDoS" {% if incident.category == 'DDoS' %}selected{% endif %}>Denial of Service (DDoS)</option>
+                        <option value="Insider Threat" {% if incident.category == 'Insider Threat' %}selected{% endif %}>Insider Threat</option>
+                        <option value="Hardware Loss" {% if incident.category == 'Hardware Loss' %}selected{% endif %}>Hardware Loss / Physical Breach</option>
+                        <option value="Other" {% if incident.category == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Detection Source</label>
+                    <select name="detection_source" class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer">
+                        <option value="User Report" {% if incident.detection_source == 'User Report' %}selected{% endif %}>User Report</option>
+                        <option value="Antivirus / EDR" {% if incident.detection_source == 'Antivirus / EDR' %}selected{% endif %}>Antivirus / EDR Alert</option>
+                        <option value="Network Firewall" {% if incident.detection_source == 'Network Firewall' %}selected{% endif %}>Network Firewall Log</option>
+                        <option value="Routine Audit" {% if incident.detection_source == 'Routine Audit' %}selected{% endif %}>Routine System Audit</option>
+                        <option value="External Intelligence" {% if incident.detection_source == 'External Intelligence' %}selected{% endif %}>External Intelligence / Command</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 rounded-xl border border-slate-100 bg-slate-50/50 dark:bg-slate-900/30 registration-card">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Affected Area</label>
+                    <input type="text" name="affected_area" value="{{ incident.affected_area|default:'' }}" placeholder="Server Room, etc."
+                        class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Linked Asset</label>
+                    <input type="text" name="linked_asset" value="{{ incident.linked_asset|default:'' }}" placeholder="Asset ID"
+                        class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Exploited CVE</label>
+                    <input type="text" name="cve_id" value="{{ incident.cve_id|default:'' }}" placeholder="e.g. CVE-2023-XXXX"
+                        class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none">
+                </div>
+                <div class="col-span-1 md:col-span-3 space-y-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">IoCs Found</label>
+                    <input type="text" name="iocs" value="{{ incident.iocs|default:'' }}" placeholder="IPs, Hashes, Malicious URLs"
+                        class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Impact Assessment (CIA)</label>
+                <div class="grid grid-cols-3 gap-3">
+                    <select name="impact_confidentiality" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer">
+                        <option value="" disabled {% if not incident.impact_confidentiality %}selected{% endif %}>Confidentiality</option>
+                        <option value="Low" {% if incident.impact_confidentiality == 'Low' %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if incident.impact_confidentiality == 'Medium' %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if incident.impact_confidentiality == 'High' %}selected{% endif %}>High</option>
+                    </select>
+                    <select name="impact_integrity" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer">
+                        <option value="" disabled {% if not incident.impact_integrity %}selected{% endif %}>Integrity</option>
+                        <option value="Low" {% if incident.impact_integrity == 'Low' %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if incident.impact_integrity == 'Medium' %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if incident.impact_integrity == 'High' %}selected{% endif %}>High</option>
+                    </select>
+                    <select name="impact_availability" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer">
+                        <option value="" disabled {% if not incident.impact_availability %}selected{% endif %}>Availability</option>
+                        <option value="Low" {% if incident.impact_availability == 'Low' %}selected{% endif %}>Low</option>
+                        <option value="Medium" {% if incident.impact_availability == 'Medium' %}selected{% endif %}>Medium</option>
+                        <option value="High" {% if incident.impact_availability == 'High' %}selected{% endif %}>High</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Initial Description</label>
+                <textarea name="description" rows="3" required
+                    class="w-full bg-slate-50 border-slate-200 rounded-xl p-4 text-sm font-medium text-slate-600 custom-input outline-none transition-all">{{ incident.description|default:'' }}</textarea>
+            </div>
+
+            <div class="space-y-4">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                    <i class="fas fa-microscope mr-2 text-blue-500"></i> Evidence & Reference Materials
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="p-4 border border-slate-100 rounded-2xl bg-slate-50 flex items-center justify-between group info-badge">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm mr-3 registration-card">
+                            <i class="fas fa-book-medical text-blue-500"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase">Response Playbook</p>
+                            <p class="text-xs font-bold text-slate-700 dark-mode-text">Standard SOP-042</p>
+                        </div>
+                    </div>
+                        <a href="#" target="_blank" class="text-[10px] font-black text-blue-600 uppercase hover:underline flex items-center">
+                            View Guide <i class="fas fa-external-link-alt ml-1 text-[8px]"></i>
+                        </a>
+                </div>
+
+                    <div class="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-white flex items-center justify-between hover:border-blue-400 transition-colors cursor-pointer relative registration-card">
+                        <div class="flex items-center overflow-hidden">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex-shrink-0 flex items-center justify-center mr-3">
+                                <i class="fas fa-cloud-upload-alt text-blue-600"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Incident Evidence</p>
+                                <p id="fileNameDisplay" class="text-xs font-bold text-slate-500 truncate">No file selected</p>
+                            </div>
+                        </div>
+                        <input type="file" name="attachment" id="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                        <span id="fileBtnText" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-md flex-shrink-0">Select</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="px-5 py-3 border-b border-slate-800 bg-slate-800/50 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-terminal text-blue-400 text-xs mr-3"></i>
+                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">AI Assistance Terminal</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="font-mono text-xs text-slate-300">
+                        <p class="text-blue-400 font-bold mb-1">AI Assistant [v4.0.2]: Analysis Complete_</p>
+                        <p id="ai-status">File validation logic attached. Awaiting telemetry data.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                    <i class="fas fa-hammer mr-2 text-orange-500"></i> Log Progress / Remediation
+                </label>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-2xl info-badge">
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">1. Current Issue / Diagnosis</label>
+                        <input type="text" id="log_issue" placeholder="What is happening currently?" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">2. Action Taken</label>
+                        <input type="text" id="log_action" placeholder="What did you do to fix it?" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">3. Result / Outcome</label>
+                        <input type="text" id="log_result" placeholder="Did it work? Is it contained?" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <input type="hidden" id="hidden_actions_taken" value="{{ incident.actions_taken|default:'' }}">
+
+                {% if incident.actions_taken %}
+                <div class="bg-slate-100 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4 max-h-48 overflow-y-auto custom-scrollbar mt-2">
+                    <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 dark:border-slate-700 pb-2">Actions History</h4>
+                    <div class="text-xs text-slate-600 dark:text-slate-400 font-mono whitespace-pre-wrap leading-relaxed">{{ incident.actions_taken }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                    <i class="fas fa-clipboard-check mr-2 text-emerald-500"></i> Post-Incident Wrap-Up (Optional)
+                </label>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Root Cause Analysis (RCA)</label>
+                        <select name="root_cause" class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none">
+                            <option value="">-- Select RCA if known --</option>
+                            <option value="Human Error" {% if incident.root_cause == 'Human Error' %}selected{% endif %}>Human Error / Misconfiguration</option>
+                            <option value="Missing Patch" {% if incident.root_cause == 'Missing Patch' %}selected{% endif %}>Missing Patch / Vulnerability</option>
+                            <option value="Compromised Credentials" {% if incident.root_cause == 'Compromised Credentials' %}selected{% endif %}>Compromised Credentials</option>
+                            <option value="Malicious Payload" {% if incident.root_cause == 'Malicious Payload' %}selected{% endif %}>Malicious Payload Execution</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-xl info-badge">
+                        <input type="checkbox" name="is_false_positive" id="false_pos" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" {% if incident.is_false_positive %}checked{% endif %}>
+                        <label for="false_pos" class="text-xs font-black uppercase text-slate-600 cursor-pointer dark-mode-text">Flag as False Positive</label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Problems Encountered</label>
+                        <textarea name="problems_encountered" rows="2" placeholder="Leave blank if N/A" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-600 custom-input outline-none resize-none">{{ incident.problems_encountered|default:'' }}</textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Solutions Applied</label>
+                        <textarea name="solutions_applied" rows="2" placeholder="Leave blank if N/A" class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-600 custom-input outline-none resize-none">{{ incident.solutions_applied|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 card-header-bg">
+                <div class="flex flex-wrap items-center gap-4">
+                    
+                    <div class="flex items-center space-x-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Severity:</label>
+                        <select name="severity" class="bg-white border border-slate-200 text-xs font-black text-slate-700 rounded-xl px-3 py-2.5 custom-input">
+                            <option value="Low" {% if incident.severity == 'Low' %}selected{% endif %}>Low</option>
+                            <option value="Medium" {% if incident.severity == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="High" {% if incident.severity == 'High' %}selected{% endif %}>High</option>
+                            <option value="Critical" {% if incident.severity == 'Critical' %}selected{% endif %}>Critical</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status:</label>
+                        <select name="status" class="bg-white border border-slate-200 text-xs font-black text-slate-700 rounded-xl px-3 py-2.5 custom-input">
+                            <option value="Open" {% if incident.status == 'Open' %}selected{% endif %}>Open</option>
+                            <option value="Investigating" {% if incident.status == 'Investigating' %}selected{% endif %}>Investigating</option>
+                            <option value="Resolved" {% if incident.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 w-full md:w-auto">
+                    <a href="{% url 'incident_list' %}" class="flex-1 md:flex-none px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 text-center dark-mode-text info-badge">
+                        Cancel
+                    </a>
+                    <button type="submit" id="submitBtn" class="flex-1 md:flex-none px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase shadow-lg adaptive-btn">
+                        Submit Report
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    const $form = $('#incidentForm');
+    const $btn = $('#submitBtn');
+    const $fileInput = $('#fileInput');
+    const incidentId = "{{ incident.id|default:'' }}";
+    const isEdit = incidentId !== "";
+    const apiUrl = isEdit ? `/api/incidents/${incidentId}/` : '/api/incidents/';
+    const apiMethod = isEdit ? 'PUT' : 'POST';
+
+    // Take Over Logic
+    $('#btnTakeOver').on('click', function(e) {
+        e.preventDefault();
+        $('#take_over_flag').val('true');
+        $(this).text('Taking Over...').removeClass('bg-slate-800 dark:bg-slate-700').addClass('bg-emerald-600');
+    });
+
+    $fileInput.on('change', function(e) {
+        const fileName = e.target.files[0] ? e.target.files[0].name : "No file selected";
+        $('#fileNameDisplay').text(fileName);
+        if (e.target.files[0]) {
+            $('#fileNameDisplay').removeClass('text-slate-500').addClass('text-blue-600');
+            $('#fileBtnText').text("Change");
+            $('#ai-status').text("Telemetry detected: " + fileName + ". Validating payload structure...");
+        }
+    });
+
+    $form.on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const originalBtnText = $btn.html();
+        
+        // Formatter for the structured logging
+        const issue = $('#log_issue').val().trim();
+        const action = $('#log_action').val().trim();
+        const result = $('#log_result').val().trim();
+        const oldActions = $('#hidden_actions_taken').val();
+        
+        // Only append if at least one field has data
+        if (issue || action || result) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const username = "{{ request.user.username }}";
+            
+            // Format the entry neatly
+            let logEntry = `[ ${dateStr} | ${timeStr} | ${username} ]\n`;
+            if (issue) logEntry += `  >> Issue: ${issue}\n`;
+            if (action) logEntry += `  >> Action: ${action}\n`;
+            if (result) logEntry += `  >> Result: ${result}\n`;
+            
+            const finalActions = oldActions ? (logEntry + '\n' + oldActions) : logEntry;
+            formData.set('actions_taken', finalActions);
+        } else {
+            formData.set('actions_taken', oldActions);
+        }
+
+        $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> SYNCING...');
+
+        $.ajax({
+            url: apiUrl,
+            type: apiMethod,
+            data: formData,
+            processData: false, 
+            contentType: false, 
+            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+            success: function(response) {
+                $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').html('<i class="fas fa-check mr-2"></i> LOGGED');
+                setTimeout(() => { window.location.href = "{% url 'incident_list' %}"; }, 1000);
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).html(originalBtnText);
+                let errorMsg = "Submission failed. Ensure all technical fields are valid.";
+                if(xhr.responseJSON) {
+                    const errors = Object.values(xhr.responseJSON).flat();
+                    if(errors.length > 0) errorMsg = "API Error: " + errors[0];
+                }
+                alert(errorMsg);
+                console.error("API Rejected payload:", xhr.responseText);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+    .bg-slate-900 { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(59, 130, 246, 0.05); }
+    body.dark-mode .content-bg { background-color: #0f172a !important; }
+    body.dark-mode .registration-card { background-color: #111827 !important; border-color: #1f2937 !important; }
+    body.dark-mode .card-header-bg { background-color: #1f2937 !important; border-bottom-color: #374151 !important; }
+    body.dark-mode .dark-mode-text { color: #f9fafb !important; }
+    body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; color: #f3f4f6 !important; }
+    body.dark-mode .custom-input { background-color: #1f2937 !important; border-color: #374151 !important; color: #f1f5f9 !important; }
+    body.dark-mode .custom-input::placeholder { color: #6b7280 !important; }
+    .adaptive-btn { box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+    body.dark-mode .adaptive-btn { box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.5) !important; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark-mode .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+</style>
+{% endblock %}
