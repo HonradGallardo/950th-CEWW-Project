@@ -2,41 +2,18 @@ import os
 import environ
 from pathlib import Path
 
-# 1. Path Setup
+# 1. Path Setup (This MUST come before reading the .env file)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 2. Initialize Environ
-env = environ.Env(
-    DEBUG=(bool, False)
-    # Removed the incorrect ALLOWED_HOSTS definition from here
-)
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-# 3. Read Environment Files (Priority: .sys_config then .env)
-sys_env_path = os.path.join(BASE_DIR, '.internal_lib', '.sys_config')
-default_env_path = os.path.join(BASE_DIR, '.env')
+# 2. Core Security Settings (LOCAL ONLY)
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-local-dev-key')
+DEBUG = env.bool('DEBUG', default=True)
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost',]
 
-if os.path.exists(sys_env_path):
-    environ.Env.read_env(sys_env_path)
-
-# Always try loading .env as well
-if os.path.exists(default_env_path):
-    environ.Env.read_env(default_env_path)
-
-# 4. Core Security Settings
-SECRET_KEY = env('SECRET_KEY')
-
-# --- MERGE CONFLICT RESOLVED ---
-# Honrad-Branch (Active): Secure, environment-driven approach
-DEBUG = env.bool('DEBUG', default=False)
-# ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', '192.168.0.5'])
-
-# Christian-Branch (Preserved as comments): 
-# DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
-# CRITICAL FIX: Hardcode the allowed hosts right here, overwriting the env file completely.
-ALLOWED_HOSTS = ['*']
-# -------------------------------
-
-# 5. Application Definition
+# 3. Application Definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,8 +21,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'rest_framework.authtoken',
+
     'core',
     'tickets',
     'django_extensions',
@@ -54,13 +33,13 @@ INSTALLED_APPS = [
     'cloudinary',
 ]
 
-# Session settings (in seconds)
-SESSION_COOKIE_AGE = 1800  # 30 minutes
-SESSION_SAVE_EVERY_REQUEST = True  # Resets the 30min timer on every click
+# 4. Session Settings
+SESSION_COOKIE_AGE = 1800
+SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_HTTPONLY = True
 
-# 6. Django REST Framework Configuration
+# 5. Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'core.authentication.ExpiringTokenAuthentication',
@@ -71,7 +50,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-# 7. Middleware
+# 6. Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -84,7 +63,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'CEWWproject.urls'
 
-# 8. Template Configuration
+# 7. Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -102,97 +81,59 @@ TEMPLATES = [
     },
 ]
 
-# 9. Database Configuration (Pulled from DATABASE_URL)
+# 8. Database (LOCAL SQLITE)
 DATABASES = {
-    'default': env.db(),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
-# 10. Email Configuration (Securely pulled from env)
-
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# 10. Email Configuration (Securely pulled from env)
-
-EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-
-# Feed the Resend API Key directly to Anymail
-ANYMAIL = {
-    # FIX APPLIED HERE: Using the variable name, not the actual secret key
-    "BREVO_API_KEY": env('BREVO_API_KEY', default=''),
-}
-
-# Use the verified Gmail address from your Brevo account
-DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
-
-# OLD: Brevo SMTP setup (Preserved as comments)
-# EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
-# EMAIL_PORT = env.int('EMAIL_PORT', default=2525)
-# DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
-
-# NEW: Resend SMTP setup
-EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
-EMAIL_PORT = env.int('EMAIL_PORT', default=2525) 
+# 9. Email (kept active)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-# CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
-#DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
+# Read from your .env file
+EMAIL_HOST_USER = env('EMAIL_HOST_USER') 
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD') 
 
-# Active secure configuration (We will update Render to feed these into the app)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# 11. ReCaptcha Security
-# Original hardcoded credentials preserved as comments
-# RECAPTCHA_SITE_KEY = '6LfZKoksAAAAAIQa-R-ifpRM-KAWlH6GURcjcT5D'
-# RECAPTCHA_SECRET_KEY = '6LfZKoksAAAAAI2kvj1d2d-5KlL1dNDsC_YNn_Xo'
+ANYMAIL = {
+    "BREVO_API_KEY": "your_brevo_api_key_here",  # replace with your key
+}
 
-# Active secure configuration
-# FIX APPLIED HERE: Using the variable names, not the actual secret keys
+DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+# EMAIL_HOST = 'smtp.resend.com'
+# EMAIL_PORT = 2525
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'resend_user_here'        # replace with your username
+# EMAIL_HOST_PASSWORD = 'resend_password_here'  # replace with your password
+
+# 10. Disable external APIs
 RECAPTCHA_SITE_KEY = env('RECAPTCHA_SITE_KEY', default='')
 RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY', default='')
 
-# 12. Authentication Routing
+# 11. Authentication Routing
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'role_redirect'
 LOGOUT_REDIRECT_URL = 'login'
 
 WEBAUTHN_RP_ID = 'localhost'
 WEBAUTHN_RP_NAME = "950th CEWW System"
-WEBAUTHN_ORIGIN = 'http://localhost:8000'
+WEBAUTHN_ORIGIN = 'http://127.0.0.1:8000'
 
-# 13. Static and Media Files
-STATIC_URL = 'static/'
+# 12. Static and Media Files
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
-# OLD MEDIA SETTINGS (Preserved)
-# MEDIA_URL = env('MEDIA_URL', default='/media/')
-# MEDIA_ROOT = os.path.join(
-#    BASE_DIR,
-#    env('MEDIA_ROOT', default=env('MEDIA_ROOT_PATH', default='media'))
-# )
-
-# NEW CLOUDINARY STORAGE CONFIGURATION
-#CLOUDINARY_STORAGE = {
-#    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
-#    'API_KEY': env('CLOUDINARY_API_KEY', default=''),
-#    'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
-#    'RESOURCE_TYPE': 'auto'
-#}
-# Tell Django to route all uploaded files to Cloudinary automatically
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# 14. Internationalization
+# 13. Internationalization
 TIME_ZONE = 'Asia/Manila'
 USE_TZ = True
 
