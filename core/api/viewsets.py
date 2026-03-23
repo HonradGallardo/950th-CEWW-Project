@@ -204,42 +204,60 @@ class APILoginView(LoginView):
             mfa_enabled = True 
 
             if mfa_enabled:
+                
                 if not user.email or user.email.strip() == "":
                     return JsonResponse({
                         'status': 'error',
-                        'message': 'MFA is required, but no email is registered. Contact admin.'
+                        'message': 'MFA is required, but no email is registered to this account. Please contact your system administrator.'
                     }, status=400)
-
+                
+                # 1. Generate a 6-digit OTP
                 generated_otp = str(random.randint(100000, 999999))
+                
+                # 2. Store pre-auth info in the session securely
                 self.request.session['mfa_user_id'] = user.id
                 self.request.session['mfa_expected_otp'] = generated_otp
 
+                # 3. Send the OTP via Email
                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
-                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
-                
+                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
                 try:
-                    # CRITICAL: fail_silently=False allows us to catch the timeout immediately
                     send_mail(
-                        subject, 
-                        message,
+                        subject, message,
                         getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
                         [user.email], 
-                        fail_silently=False, 
+                        fail_silently=False, # CHANGED to False
                     )
                 except Exception as e:
-                    # This block prevents the "Worker Timeout" crash
-                    print(f"Login Email Failed: {e}")
+                    print(f"Failed to send MFA email: {e}")
+                    # ADDED: This returns a clean error to the user instead of hanging the server
                     return JsonResponse({
                         'status': 'error',
-                        'message': 'The mail server is not responding. Login temporarily unavailable.'
+                        'message': 'The mail server is currently unreachable. Please try again in a few moments.'
                     }, status=503)
 
-                return JsonResponse({'status': 'success', 'mfa_required': True})
+                # 4. >>> ADDED THIS BACK <<< Tell the frontend to show the MFA form!
+                return JsonResponse({
+                    'status': 'success',
+                    'mfa_required': True 
+                })
+
             else:
+                # Standard Login (No MFA)
                 login(self.request, user)
-                return JsonResponse({'status': 'success', 'redirect_url': '/role-redirect/', 'mfa_required': False})
+                return JsonResponse({
+                    'status': 'success',
+                    'redirect_url': '/role-redirect/',
+                    'mfa_required': False 
+                })
                 
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Invalid credentials.'}, status=400)
+        return super().form_invalid(form)
+
 
 class VerifyMFAAPI(APIView):
     """Endpoint to verify the OTP entered during login."""

@@ -65,6 +65,9 @@ class IncidentSerializer(serializers.ModelSerializer):
     # Include details from the related Asset
     asset_location = serializers.ReadOnlyField(source='asset.location')
     asset_id_display = serializers.ReadOnlyField(source='asset.assets_id')
+
+    problems_encountered = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    solutions_applied = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     
     class Meta:
         model = Incident
