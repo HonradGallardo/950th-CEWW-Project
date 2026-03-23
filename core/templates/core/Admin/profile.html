@@ -587,10 +587,8 @@
       $btn.prop("disabled", true).html('<i class="fas fa-sync fa-spin mr-2"></i> SAVING...');
 
       $.ajax({
-        // 1. FIX: Send to the current URL (which triggers your profile_view)
-        url: window.location.href, 
-        // 2. FIX: profile_view expects a POST request, not a PATCH
-        type: "POST", 
+        url: `/api/users/${userId}/`,
+        type: "PATCH",
         data: formData,
         processData: false,
         contentType: false,
@@ -612,12 +610,10 @@
         },
         error: function (xhr) {
           $btn.prop("disabled", false).html(originalText);
-          
-          // 3. FIX: Log the actual error to the console so you can see why it failed if it happens again
-          console.error("Server Validation Error:", xhr.responseText); 
-          alert("Protocol Error: Identity update rejected by server. Check console for details.");
+          alert("Protocol Error: Identity update rejected by server.");
         },
       });
+    });
 
     // --- 2. PASSKEY REGISTRATION LOGIC ---
     $('#register-passkey-btn').on('click', async function(e) {
