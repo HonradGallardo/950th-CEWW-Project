@@ -119,7 +119,7 @@ ANYMAIL = {
 }
 
 # Use the verified Gmail address from your Brevo account
-DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
+DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
 
 # OLD: Brevo SMTP setup (Preserved as comments)
 # EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
