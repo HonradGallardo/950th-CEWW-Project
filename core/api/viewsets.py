@@ -36,9 +36,12 @@ from core.api.serializers import (
 )
 
 # Ensure these match your local environment
-
-RP_ID = "nine50ceww-aims.onrender.com"
-ORIGIN = "https://nine50ceww-aims.onrender.com"
+if settings.DEBUG:
+    RP_ID = "localhost"
+    ORIGIN = "http://localhost:8000"
+else:
+    RP_ID = "nine50ceww-aims.onrender.com"
+    ORIGIN = "https://nine50ceww-aims.onrender.com"
 
 # ==========================================
 # PASSKEY REGISTRATION (For Profile Page)
@@ -201,12 +204,12 @@ class APILoginView(LoginView):
             mfa_enabled = True 
 
             if mfa_enabled:
-                
                 if not user.email or user.email.strip() == "":
                     return JsonResponse({
                         'status': 'error',
                         'message': 'MFA is required, but no email is registered to this account. Please contact your system administrator.'
                     }, status=400)
+
                 # 1. Generate a 6-digit OTP
                 generated_otp = str(random.randint(100000, 999999))
                 
@@ -217,14 +220,23 @@ class APILoginView(LoginView):
                 # 3. Send the OTP via Email
                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
                 message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
+                
                 try:
+                    # We set fail_silently=False so we can catch the timeout/error explicitly
                     send_mail(
-                        subject, message,
+                        subject, 
+                        message,
                         getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
-                        [user.email], fail_silently=True,
+                        [user.email], 
+                        fail_silently=False,
                     )
                 except Exception as e:
-                    print(f"Failed to send MFA email: {e}")
+                    # Log the error and return a response instead of hanging until Gunicorn kills the worker
+                    print(f"CRITICAL SMTP ERROR: {e}")
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'The notification server is currently unreachable. Please try again in a few moments.'
+                    }, status=503)
 
                 # 4. Tell the frontend to show the MFA form!
                 return JsonResponse({

@@ -112,7 +112,8 @@ DATABASES = {
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # 10. Email Configuration (Securely pulled from env)
 
-EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_TIMEOUT = 10
 
 # Feed the Resend API Key directly to Anymail
 ANYMAIL = {
@@ -130,7 +131,7 @@ DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
 # NEW: Resend SMTP setup
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
-EMAIL_PORT = env.int('EMAIL_PORT', default=2525) 
+EMAIL_PORT = env.int('EMAIL_PORT', default=587) # Port 587 is generally more reliable on Render than 2525
 EMAIL_USE_TLS = True
 
 # CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
