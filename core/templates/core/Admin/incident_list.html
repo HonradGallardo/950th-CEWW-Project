@@ -191,7 +191,7 @@
                             <label class="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                 <i class="fas fa-history"></i> Progress & Actions Log
                             </label>
-                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-mono leading-relaxed shadow-inner" id="view_actions"></div>
+                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-mono leading-7 shadow-inner overflow-x-auto" id="view_actions"></div>
                         </div>
                     </div>
 
@@ -436,7 +436,62 @@ function previewIncident(data) {
     
     if(data.actions) {
         $('#actions_taken_container').removeClass('hidden');
-        $('#view_actions').text(data.actions);
+        
+        // 1. Escape HTML to prevent XSS (Security first!)
+        let safeActions = $('<div>').text(data.actions).html();
+        
+        // 2. Process line-by-line to add structural padding
+        let formattedActions = '';
+        let lines = safeActions.split('\n');
+        let inDetailBlock = false;
+
+        lines.forEach((line, index) => {
+            let trimmed = line.trim();
+            
+            // Preserve empty lines inside details for paragraph spacing
+            if (!trimmed) {
+                if (inDetailBlock) formattedActions += '<br>';
+                return;
+            }
+            
+            // Timestamp headers [ 24 Mar 2026 ... ]
+            if (trimmed.startsWith('[')) {
+                if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
+                if (index > 0) formattedActions += '<hr class="my-5 border-slate-300 dark:border-slate-600 border-dashed">';
+                formattedActions += `<div class="mb-2 opacity-80">${line}</div>`;
+            } 
+            // >> Issue:, >> Action:, >> Result: headers
+            else if (trimmed.startsWith('&gt;&gt;')) {
+                if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
+                
+                let parts = line.split(/(&gt;&gt; (?:Issue|Action|Result):)/);
+                if (parts.length > 1) {
+                    // Renders the header
+                    formattedActions += `<div class="font-bold mt-3 mb-1 text-slate-800 dark:text-slate-200">${parts[1]}</div>`;
+                    // Starts the padded detail block (with an optional subtle vertical line)
+                    formattedActions += `<div class="pl-5 sm:pl-7 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-1.5 opacity-90">`;
+                    inDetailBlock = true;
+                    // Adds the text that was on the same line as the header
+                    if (parts[2].trim()) formattedActions += `${parts[2]}<br>`;
+                } else {
+                    formattedActions += `<div class="font-bold mt-3 mb-1 text-slate-800 dark:text-slate-200">${line}</div>`;
+                    formattedActions += `<div class="pl-5 sm:pl-7 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-1.5 opacity-90">`;
+                    inDetailBlock = true;
+                }
+            } 
+            // The actual detail text
+            else {
+                if (!inDetailBlock) {
+                    formattedActions += `<div class="pl-5 sm:pl-7 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-1.5 opacity-90">`;
+                    inDetailBlock = true;
+                }
+                formattedActions += `${line}<br>`;
+            }
+        });
+        
+        if (inDetailBlock) formattedActions += '</div>'; // Close the final block
+        
+        $('#view_actions').html(formattedActions);
     } else {
         $('#actions_taken_container').addClass('hidden');
     }
