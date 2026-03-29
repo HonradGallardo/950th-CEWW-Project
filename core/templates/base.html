@@ -191,50 +191,50 @@
                 <nav class="flex-1 mt-4 space-y-1.5 custom-scrollbar overflow-y-auto pt-2 pb-4">
                     {% with current=request.resolver_match.url_name %}
 
-                    <a href="{% url 'dashboard' %}" class="nav-item {% if current == 'dashboard' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'dashboard' %}" class="nav-item {% if current == 'dashboard' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-th-large"></i> <span class="sidebar-text">Dashboard</span>
                     </a>
                     
-                    <a href="{% url 'incident_list' %}" class="nav-item {% if current == 'incident_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'incident_list' %}" class="nav-item {% if current == 'incident_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-exclamation-triangle"></i> <span class="sidebar-text">Incidents</span>
                     </a>
 
-                    <a href="{% url 'analytics_list' %}" class="nav-item {% if current == 'analytics_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'analytics_list' %}" class="nav-item {% if current == 'analytics_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-line"></i> <span class="sidebar-text">Analytics</span>
                     </a>
 
-                    <a href="{% url 'asset_list' %}" class="nav-item {% if current == 'asset_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'asset_list' %}" class="nav-item {% if current == 'asset_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-laptop"></i> <span class="sidebar-text">IT Assets</span>
                     </a>
 
-                    <a href="{% url 'maintenance_list' %}" class="nav-item {% if current == 'maintenance_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'maintenance_list' %}" class="nav-item {% if current == 'maintenance_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-tools"></i> <span class="sidebar-text">Maintenance</span>
                     </a>
 
                     {% if 'Personnel' in request.user.groups.all.0.name or 'Personnel' in request.user.groups.all.1.name %}
-                    <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-file-alt"></i> <span class="sidebar-text">Tickets</span>
                     </a>
                     {% endif %}
 
                     {% if 'Commander' in request.user.groups.all.0.name or 'Commander' in request.user.groups.all.1.name %}
-                    <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-file-alt"></i> <span class="sidebar-text">Tickets</span>
                     </a>
                                             
-                    <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-pie"></i> <span class="sidebar-text">Reports</span>
                     </a>
                     {% endif %}
 
                     {% if 'Admin' in request.user.groups.all.0.name or 'Admin' in request.user.groups.all.1.name %}
-                    <a href="{% url 'tickets:admin_tickets' %}" class="nav-item {% if current == 'admin_tickets' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'tickets:admin_tickets' %}" class="nav-item {% if current == 'admin_tickets' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-file-alt"></i> <span class="sidebar-text">Tickets</span>
                     </a>
-                    <a href="{% url 'user_list' %}" class="nav-item {% if current == 'user_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'user_list' %}" class="nav-item {% if current == 'user_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-users"></i> <span class="sidebar-text">Users</span>
                     </a>
-                    <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-pie"></i> <span class="sidebar-text">Reports</span>
                     </a>
                     {% endif %}
@@ -274,7 +274,7 @@
                     <button id="burgerBtn" class="lg:hidden p-2 mr-2 text-slate-600 hover:text-blue-600 focus:outline-none flex-shrink-0 transition-transform">
                         <i class="fas fa-bars text-lg"></i>
                     </button>
-                    <h1 class="font-bold text-slate-700 truncate text-base sm:text-lg">950 CEWW AIMS</h1>
+                    <h1 class="font-rajdhani text-slate-700 truncate text-base sm:text-lg">950 CEWW AIMS</h1>
                 </div>
 
                 <div class="flex items-center space-x-3 sm:space-x-6 flex-shrink-0">
@@ -284,14 +284,14 @@
                             {% if unread_count > 0 %}
                             <span class="absolute top-1 right-1 flex h-4 w-4">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-[10px] text-white items-center justify-center font-bold">{{ unread_count }}</span>
+                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-[10px] text-white items-center justify-center font-rajdhani">{{ unread_count }}</span>
                             </span>
                             {% endif %}
                         </button>
                         <div id="notifDropdown" class="hidden absolute right-[-50px] sm:right-0 mt-3 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
                             <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                                 <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Incidents</span>
-                                <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-600 hover:underline font-bold uppercase">Mark all</a>
+                                <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-600 hover:underline font-rajdhani uppercase">Mark all</a>
                             </div>
                             <div class="max-h-96 overflow-y-auto custom-scrollbar">
                                 {% for n in user.notifications.all|dictsortreversed:"created_at"|slice:":5" %}
@@ -306,7 +306,7 @@
                     </div>
 
                     <div class="relative">
-                        <button id="userMenuBtn" class="flex items-center space-x-1 sm:space-x-2 text-slate-700 font-bold focus:outline-none hover:text-blue-600 transition text-sm">
+                        <button id="userMenuBtn" class="flex items-center space-x-1 sm:space-x-2 text-slate-700 font-rajdhani focus:outline-none hover:text-blue-600 transition text-sm">
                             <span class="max-w-[70px] sm:max-w-none truncate inline-block">
                                 {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}
                             </span>
