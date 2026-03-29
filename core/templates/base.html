@@ -105,6 +105,7 @@
             /* Text fades in and out */
             .sidebar-text { 
                 opacity: 0; 
+                font-size: 1.15rem;
                 margin-left: 0.75rem;
                 transform: translateX(-10px);
                 transition: opacity var(--transition), transform var(--transition); 
@@ -191,7 +192,7 @@
                 <nav class="flex-1 mt-4 space-y-1.5 custom-scrollbar overflow-y-auto pt-2 pb-4">
                     {% with current=request.resolver_match.url_name %}
 
-                    <a href="{% url 'dashboard' %}" class="nav-item {% if current == 'dashboard' %} text-1 bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'dashboard' %}" class="nav-item {% if current == 'dashboard' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-th-large"></i> <span class="sidebar-text">Dashboard</span>
                     </a>
                     
