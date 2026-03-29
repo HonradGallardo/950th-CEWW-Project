@@ -34,8 +34,8 @@
 <div class="font-plex flex flex-col min-h-screen lg:h-[calc(100vh-120px)] lg:overflow-hidden space-y-4 p-2 sm:p-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
         <div>
-            <h1 class="font-rajdhani text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Service History</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
+            <h1 class="font-rajdhani text-2xl sm:text-3x font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Service History</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
         </div>
         
         {% if not request.user.groups.all.0.name == "Commander" %}
