@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<div class="flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
+<div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
         
         <div class="bg-slate-50 px-4 sm:px-8 py-5 border-b border-slate-200 card-header-bg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h2 class="text-base sm:text-lg font-black text-slate-800 dark-mode-text uppercase tracking-tight">
+                <h2 class="font-rajdhani text-base sm:text-lg font-black text-slate-800 dark-mode-text uppercase tracking-tight">
                     {% if incident %}<i class="fas fa-file-signature mr-2 text-blue-600"></i> Incident Report Update{% else %}Add New Incident Report{% endif %}
                 </h2>
                 <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Modify technical details and threat intelligence</p>
@@ -141,7 +141,7 @@
             </div>
 
             <div class="space-y-4">
-                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                <label class="font-rajdhani text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
                     <i class="fas fa-microscope mr-2 text-blue-500"></i> Evidence & Reference Materials
                 </label>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -180,7 +180,7 @@
                 <div class="px-5 py-3 border-b border-slate-800 bg-slate-800/50 flex items-center justify-between">
                     <div class="flex items-center">
                         <i class="fas fa-terminal text-blue-400 text-xs mr-3"></i>
-                        <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">AI Assistance Terminal</span>
+                        <span class="font-rajdhani text-[10px] font-black text-slate-300 uppercase tracking-widest">AI Assistance Terminal</span>
                     </div>
                 </div>
                 <div class="p-6">
@@ -192,7 +192,7 @@
             </div>
             
             <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                <label class="font-rajdhani text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
                     <i class="fas fa-hammer mr-2 text-orange-500"></i> Log Progress / Remediation
                 </label>
                 
@@ -215,14 +215,14 @@
 
                 {% if incident.actions_taken %}
                 <div class="bg-slate-100 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4 max-h-48 overflow-y-auto custom-scrollbar mt-2">
-                    <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 dark:border-slate-700 pb-2">Actions History</h4>
+                    <h4 class="font-rajdhani text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-200 dark:border-slate-700 pb-2">Actions History</h4>
                     <div class="text-xs text-slate-600 dark:text-slate-400 font-mono whitespace-pre-wrap leading-relaxed">{{ incident.actions_taken }}</div>
                 </div>
                 {% endif %}
             </div>
 
             <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                <label class="font-rajdhani text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
                     <i class="fas fa-clipboard-check mr-2 text-emerald-500"></i> Post-Incident Wrap-Up (Optional)
                 </label>
                 
@@ -378,18 +378,26 @@ $(document).ready(function() {
 </script>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
     .bg-slate-900 { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(59, 130, 246, 0.05); }
-    body.dark-mode .content-bg { background-color: #0f172a !important; }
-    body.dark-mode .registration-card { background-color: #111827 !important; border-color: #1f2937 !important; }
-    body.dark-mode .card-header-bg { background-color: #1f2937 !important; border-bottom-color: #374151 !important; }
-    body.dark-mode .dark-mode-text { color: #f9fafb !important; }
-    body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; color: #f3f4f6 !important; }
-    body.dark-mode .custom-input { background-color: #1f2937 !important; border-color: #374151 !important; color: #f1f5f9 !important; }
-    body.dark-mode .custom-input::placeholder { color: #6b7280 !important; }
+    
+    html.dark .content-bg, body.dark-mode .content-bg { background-color: #0f172a !important; }
+    html.dark .registration-card, body.dark-mode .registration-card { background-color: #111827 !important; border-color: #1f2937 !important; }
+    html.dark .card-header-bg, body.dark-mode .card-header-bg { background-color: #1f2937 !important; border-bottom-color: #374151 !important; }
+    html.dark .dark-mode-text, body.dark-mode .dark-mode-text { color: #f9fafb !important; }
+    html.dark .info-badge, body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; color: #f3f4f6 !important; }
+    html.dark .custom-input, body.dark-mode .custom-input { background-color: #1f2937 !important; border-color: #374151 !important; color: #f1f5f9 !important; }
+    html.dark .custom-input::placeholder, body.dark-mode .custom-input::placeholder { color: #6b7280 !important; }
+    
     .adaptive-btn { box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
-    body.dark-mode .adaptive-btn { box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.5) !important; }
+    html.dark .adaptive-btn, body.dark-mode .adaptive-btn { box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.5) !important; }
+    
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .dark-mode .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+    html.dark .custom-scrollbar::-webkit-scrollbar-thumb, .dark-mode .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
 </style>
 {% endblock %}

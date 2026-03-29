@@ -4,8 +4,8 @@
 {% block title %}Dashboard | 950 CEWW{% endblock %}
 
 {% block content %}
-<div class="dashboard-grid space-y-8">
-    <h1 class="text-xl font-black text-slate-800 dark:text-white uppercase mb-4">Dashboard Overview</h1>
+<div class="font-plex dashboard-grid space-y-8">
+    <h1 class="font-rajdhani text-xl font-black text-slate-800 dark:text-white uppercase mb-4">Dashboard Overview</h1>
     
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 my-6">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
@@ -28,11 +28,11 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 my-8">
         <div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
-            <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Asset Distribution</h3>
+            <h3 class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Asset Distribution</h3>
             <div class="chart-container h-[300px]"><canvas id="adminAssetChart"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
-            <h3 class="font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Incident Severity</h3>
+            <h3 class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Incident Severity</h3>
             <div class="chart-container h-[300px]"><canvas id="adminIncidentPie"></canvas></div>
         </div>
     </div>
@@ -40,15 +40,15 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-10 mt-8">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden transition-colors">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <span class="font-black text-[10px] text-slate-400 uppercase tracking-widest">Recent Maintenance</span>
+                <span class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest">Recent Maintenance</span>
             </div>
             <div class="scroll-area custom-scrollbar overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead class="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                         <tr>
-                            <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Asset</th>
-                            <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Technician</th>
-                            <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
+                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Asset</th>
+                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Technician</th>
+                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50 dark:divide-slate-700" id="maintenanceTableBody">
@@ -60,15 +60,15 @@
 
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden transition-colors">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <span class="font-black text-[10px] text-slate-400 uppercase tracking-widest">Open Incidents</span>
+                <span class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest">Open Incidents</span>
             </div>
             <div class="scroll-area custom-scrollbar overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead class="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                         <tr>
-                            <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Incident</th>
-                            <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Severity</th>
-                            <th class="px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
+                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Incident</th>
+                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Severity</th>
+                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
@@ -86,7 +86,8 @@
 
         // Initialize/Update Charts
         function updateCharts(data) {
-            const isDark = document.body.classList.contains('dark-mode');
+            // Enhanced dark mode detection for both custom class and Tailwind native class
+            const isDark = document.body.classList.contains('dark-mode') || document.documentElement.classList.contains('dark');
             const textColor = isDark ? '#f1f5f9' : '#94a3b8';
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(148, 163, 184, 0.1)';
 
@@ -228,6 +229,11 @@ function refreshDashboard() {
 </script>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
+<div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
         
         <div class="bg-slate-50 px-4 sm:px-8 py-5 border-b border-slate-200 card-header-bg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h2 class="text-base sm:text-lg font-black text-slate-800 dark-mode-text uppercase tracking-tight">
+                <h2 class="font-rajdhani text-base sm:text-lg font-black text-slate-800 dark-mode-text uppercase tracking-tight">
                     <i class="fas fa-plus-circle mr-2 text-blue-600"></i> Log New Incident
                 </h2>
                 <p class="text-slate-500 text-[10px] font-bold uppercase mt-1 tracking-wider">Initialize threat tracking and telemetry payload</p>
@@ -20,7 +20,6 @@
         <form method="POST" class="p-4 sm:p-8 space-y-6" id="incidentForm">
             {% csrf_token %}
 
-            <!-- Top Header Row: Reporter & Time -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Reporter</p>
@@ -38,7 +37,6 @@
                 </div>
             </div>
 
-            <!-- Primary Classifications -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Threat / Incident Title <span class="text-red-500">*</span></label>
@@ -77,9 +75,8 @@
                 </div>
             </div>
 
-            <!-- Elevated Threat Intelligence Card -->
             <div class="space-y-4 pt-2">
-                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                <label class="font-rajdhani text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
                     <i class="fas fa-radar mr-2 text-blue-500"></i> Technical Asset & Threat Context
                 </label>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-900/10 dark:to-indigo-900/5 shadow-sm registration-card">
@@ -106,10 +103,9 @@
                 </div>
             </div>
 
-            <!-- Severity & Impact Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
+                    <label class="font-rajdhani text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center">
                         <i class="fas fa-shield-halved mr-2 text-emerald-500"></i> Impact Assessment (CIA)
                     </label>
                     <div class="grid grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl info-badge">
@@ -155,16 +151,14 @@
                 </div>
             </div>
 
-            <!-- Description Box -->
             <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center mt-4">
+                <label class="font-rajdhani text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center mt-4">
                     <i class="fas fa-file-lines mr-2 text-slate-400"></i> Detailed Description <span class="text-red-500 ml-1">*</span>
                 </label>
                 <textarea name="description" id="id_description" rows="4" required placeholder="Provide full details of the incident, initial findings, and any immediate actions taken..."
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none custom-input"></textarea>
             </div>
 
-            <!-- Footer Buttons -->
             <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 card-header-bg mt-6">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest w-full md:w-auto text-center md:text-left">
                     Ensure all data complies with standard reporting protocols.
@@ -222,6 +216,11 @@
 </script>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
     body.dark-mode .content-bg { background-color: #0f172a !important; }
     body.dark-mode .registration-card { background-color: #111827 !important; border-color: #1f2937 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
     body.dark-mode .card-header-bg { background-color: #1f2937 !important; border-bottom-color: #374151 !important; }

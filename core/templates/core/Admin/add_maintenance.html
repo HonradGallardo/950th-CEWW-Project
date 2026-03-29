@@ -2,10 +2,10 @@
 {% load static %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-[80vh] p-2 sm:p-6 bg-slate-100 dark:bg-[#0f172a] transition-colors duration-300 content-bg">
+<div class="font-plex flex items-center justify-center min-h-[80vh] p-2 sm:p-6 bg-slate-100 dark:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="bg-white dark:bg-slate-900 rounded-lg shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-slate-800 transition-all registration-card">
         <div class="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 py-4 text-center card-header-bg">
-            <h2 class="text-lg sm:text-xl font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 dark-mode-text">
+            <h2 class="font-rajdhani text-lg sm:text-xl font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 dark-mode-text">
                 {% if log_id %} Update Service Log {% else %} Create Service Log {% endif %}
             </h2>
         </div>
@@ -209,13 +209,22 @@ $(document).ready(function() {
 </script>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
     /* Light/Dark consistency for form controls */
     #serviceLogForm select, #serviceLogForm textarea { 
-        width: 100% !important; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; 
+        width: 100% !important; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; background-color: #ffffff; color: #1e293b;
     }
+    
+    /* Ensure both native Tailwind '.dark' and custom '.dark-mode' classes trigger the theme change */
+    html.dark #serviceLogForm select, html.dark #serviceLogForm textarea,
     body.dark-mode #serviceLogForm select, body.dark-mode #serviceLogForm textarea {
-        background-color: #1f2937; border-color: #374151; color: #f1f5f9;
+        background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9 !important;
     }
+    
     #asset-options-container::-webkit-scrollbar { width: 4px; }
     #asset-options-container::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
 </style>
