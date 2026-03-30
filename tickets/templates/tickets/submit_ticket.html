@@ -3,600 +3,612 @@
 
 {% block content %}
 <style>
-    /* Custom Scrollbar for a premium feel */
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
-    /* Fix for mobile height issues & safe area for iOS/Android home bars */
-    .main-container { 
-        height: 100vh; 
-        height: 100dvh; /* Better mobile viewport handling */
-        max-height: 100vh;
-        max-height: 100dvh;
-        min-height: 0 !important; /* This stops the flex-expansion dead in its tracks */
-        width: 100%;
-        padding-bottom: env(safe-area-inset-bottom); /* Added for mobile responsiveness */
-        padding-top: env(safe-area-inset-top); /* Added for mobile responsiveness */
-    }
-    
-    /* Ensure images don't break layouts */
-    img { max-width: 100%; height: auto; }
-
-    /* Utility for hidden scrollbars but keep functionality */
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .no-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;     /* Firefox */
+    /* Apply IBM Plex Sans to the main body */
+    body, .main-container, .font-sans {
+        font-family: 'IBM Plex Sans', sans-serif !important;
     }
 
-    .custom-scrollbar::-webkit-scrollbar { 
-        display: none; 
-    }
-    .custom-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+    /* Apply Rajdhani to headers */
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Rajdhani', sans-serif !important;
     }
 
-    #sidebar-ticket-details {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;     /* Firefox */
-    }
+    /* Custom Scrollbar for a premium feel */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
 
-    #sidebar-ticket-details::-webkit-scrollbar {
-        display: none;             /* Chrome, Safari and Opera */
-    }
+    /* Fix for mobile height issues & safe area for iOS/Android home bars */
+    .main-container { 
+        height: 100vh; 
+        height: 100dvh; /* Better mobile viewport handling */
+        max-height: 100vh;
+        max-height: 100dvh;
+        min-height: 0 !important; /* This stops the flex-expansion dead in its tracks */
+        width: 100%;
+        padding-bottom: env(safe-area-inset-bottom); /* Added for mobile responsiveness */
+        padding-top: env(safe-area-inset-top); /* Added for mobile responsiveness */
+    }
+    
+    /* Ensure images don't break layouts */
+    img { max-width: 100%; height: auto; }
 
-    .active-ticket-item { 
-        background-color: #f1f5f9 !important; 
-        border-color: #cbd5e1 !important; 
-        border-left: 4px solid #2563eb !important;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-    }
-    .dark .active-ticket-item { 
-        background-color: #1e293b !important; 
-        border-color: #334155 !important; 
-        border-left: 4px solid #3b82f6 !important; 
-    }
-    #chatInput { min-height: 52px; max-height: 200px; }
-    /* Sidebar should always be above main content but potentially below modals */
+    /* Utility for hidden scrollbars but keep functionality */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
+
+    .custom-scrollbar::-webkit-scrollbar { 
+        display: none; 
+    }
+    .custom-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    #sidebar-ticket-details {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;     /* Firefox */
+    }
+
+    #sidebar-ticket-details::-webkit-scrollbar {
+        display: none;             /* Chrome, Safari and Opera */
+    }
+
+    .active-ticket-item { 
+        background-color: #f1f5f9 !important; 
+        border-color: #cbd5e1 !important; 
+        border-left: 4px solid #2563eb !important;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+    .dark .active-ticket-item { 
+        background-color: #1e293b !important; 
+        border-color: #334155 !important; 
+        border-left: 4px solid #3b82f6 !important; 
+    }
+    #chatInput { min-height: 52px; max-height: 200px; }
+    /* Sidebar should always be above main content but potentially below modals */
 #mainSidebar {
-    z-index: 60 !important; /* Higher than header and main content */
+    z-index: 60 !important; /* Higher than header and main content */
 }
 
 #rightAssetsSidebar {
-    z-index: 60 !important;
+    z-index: 60 !important;
 }
 
 /* The dark background overlays when sidebars are open on mobile */
 #sidebarOverlay, #assetsOverlay {
-    z-index: 55 !important;
+    z-index: 55 !important;
 }
 
 /* Ensure the header doesn't clip the sidebars when they slide out */
 header {
-    z-index: 40 !important; 
+    z-index: 40 !important; 
 }
 
 /* Ensure the main content stays at the bottom of the stack */
 main {
-    z-index: 10;
+    z-index: 10;
 }
 </style>
 
 <div class="h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden font-sans text-slate-900 dark:text-slate-100 main-container">
-    
-    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 md:px-8 shrink-0 z-30 shadow-sm relative">
-        <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto overflow-hidden">
-            <button type="button" onclick="SupportConsole.toggleSidebar()" class="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-                <i class="fas fa-bars text-lg"></i>
-            </button>
-            
-            <div class="bg-blue-600 p-1.5 md:p-2 rounded-xl shadow-lg shadow-blue-500/30 shrink-0">
-                <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-            </div>
-            <div class="truncate min-w-0 flex-1">
-                <h1 class="text-xs md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.15em] text-slate-800 dark:text-white truncate">On The Go AIMS</h1>
-                <p class="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">Enterprise v2.0</p>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-2 md:gap-4 shrink-0 pl-2">
-            <div class="hidden sm:block text-right leading-tight">
-                <p class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ request.user.username|default:"Staff Member" }}</p>
-                <p class="text-[10px] font-bold text-emerald-500 uppercase flex items-center justify-end gap-1">
-                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
-                </p>
-            </div>
-            <div class="relative group">
-                <img src="https://ui-avatars.com/api/?name={{ request.user.username|default:'U' }}&background=3b82f6&color=fff&bold=true" 
-                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
-            </div>
-        </div>
-    </header>
+    
+    <header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-3 md:px-8 shrink-0 z-30 shadow-sm relative">
+        <div class="flex items-center gap-2 md:gap-4 w-full md:w-auto overflow-hidden">
+            <button type="button" onclick="SupportConsole.toggleSidebar()" class="lg:hidden p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+            
+            <div class="bg-blue-600 p-1.5 md:p-2 rounded-xl shadow-lg shadow-blue-500/30 shrink-0">
+                <svg class="w-4 h-4 md:w-5 md:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+            </div>
+            <div class="truncate min-w-0 flex-1">
+                <h1 class="text-xs md:text-sm font-black uppercase tracking-[0.10em] md:tracking-[0.15em] text-slate-800 dark:text-white truncate">On The Go AIMS</h1>
+                <p class="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-wider truncate">Enterprise v2.0</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2 md:gap-4 shrink-0 pl-2">
+            <div class="hidden sm:block text-right leading-tight">
+                <p class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ request.user.username|default:"Staff Member" }}</p>
+                <p class="text-[10px] font-bold text-emerald-500 uppercase flex items-center justify-end gap-1">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active
+                </p>
+                </div>
+            <div class="relative group">
+                <img src="https://ui-avatars.com/api/?name={{ request.user.username|default:'U' }}&background=3b82f6&color=fff&bold=true" 
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+            </div>
+        </div>
+    </header>
 
-    <main class="flex-1 flex overflow-hidden h-full relative min-h-0">
-        
-        <aside id="mainSidebar" class="absolute lg:static inset-y-0 left-0 z-50 w-[85vw] sm:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-hidden">
-            <div class="p-4 md:p-5 space-y-4 shrink-0">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Conversations</span>
-                    <button type="button" onclick="SupportConsole.openAssistant()" 
-                            class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm focus:outline-none">
-                        <i class="fas fa-plus mr-1"></i> New Ticket
-                    </button>
-                </div>
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
-                    <input type="text" id="sidebarSearch" oninput="SupportConsole.filterSidebar()" 
-                           placeholder="Search tickets..." 
-                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all">
-                </div>
-            </div>
+    <main class="flex-1 flex overflow-hidden h-full relative min-h-0">
+        
+        <aside id="mainSidebar" class="absolute lg:static inset-y-0 left-0 z-50 w-[85vw] sm:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-hidden">
+            <div class="p-4 md:p-5 space-y-4 shrink-0">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Conversations</span>
+                    <button type="button" onclick="SupportConsole.openAssistant()" 
+                            class="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap shadow-sm focus:outline-none">
+                        <i class="fas fa-plus mr-1"></i> New Ticket
+                    </button>
+                </div>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
+                    <input type="text" id="sidebarSearch" oninput="SupportConsole.filterSidebar()" 
+                           placeholder="Search tickets..." 
+                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all">
+                </div>
+            </div>
 
-            <div class="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1.5 pb-2" id="sidebarTicketContainer">
-                {% for ticket in user_tickets %}
-                <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}', '{{ ticket.technician.username|default:'Unassigned' }}')" 
-                     id="ticket-item-{{ ticket.id }}"
-                     class="ticket-item p-3 md:p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-transparent shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500 border border-slate-200 dark:border-slate-700">#{{ ticket.id|stringformat:"04d" }}</span>
-                        <span class="text-[9px] font-black uppercase tracking-tighter 
-                            {% if ticket.status == 'Completed' %}text-emerald-500{% else %}text-blue-500{% endif %}">
-                            {{ ticket.status }}
-                        </span>
-                    </div>
-                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ ticket.subject }}</p>
-                    <p class="text-[9px] text-slate-400 mt-1 font-medium">{{ ticket.created_at|date:'M d' }} • {{ ticket.priority }} Priority</p>
-                </div>
-                {% endfor %}
-            </div>
+            <div class="flex-1 overflow-y-auto no-scrollbar px-3 space-y-1.5 pb-2" id="sidebarTicketContainer">
+                {% for ticket in user_tickets %}
+                <div onclick="SupportConsole.loadChat('{{ ticket.id }}', '{{ ticket.subject|escapejs }}', '{{ ticket.description|escapejs }}', '{{ ticket.user.username|escapejs }}', '{{ ticket.user.email|escapejs }}', '{{ ticket.status }}', '{{ ticket.priority }}', '{{ ticket.created_at|date:'M d, Y' }}', '{{ ticket.technician.username|default:'Unassigned' }}')" 
+                     id="ticket-item-{{ ticket.id }}"
+                     class="ticket-item p-3 md:p-4 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-l-4 border-transparent shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-slate-500 border border-slate-200 dark:border-slate-700">#{{ ticket.id|stringformat:"04d" }}</span>
+                        <span class="text-[9px] font-black uppercase tracking-tighter 
+                            {% if ticket.status == 'Completed' %}text-emerald-500{% else %}text-blue-500{% endif %}">
+                            {{ ticket.status }}
+                        </span>
+                    </div>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ ticket.subject }}</p>
+                    <p class="text-[9px] text-slate-400 mt-1 font-medium">{{ ticket.created_at|date:'M d' }} • {{ ticket.priority }} Priority</p>
+                </div>
+                {% endfor %}
+            </div>
 
-            <div id="sidebar-ticket-details" class="scrollbar-hide h-[40%] min-h-[200px] flex flex-col overflow-y-auto border-t border-slate-200 dark:border-slate-800 p-4 md:p-5 bg-slate-50/50 dark:bg-slate-900/50 shrink-0 relative">
-                <div id="ticket-details-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                    <i class="fas fa-info-circle text-slate-300 dark:text-slate-700 text-2xl mb-3"></i>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Select a ticket to view details</p>
-                </div>
+            <div id="sidebar-ticket-details" class="scrollbar-hide h-[40%] min-h-[200px] flex flex-col overflow-y-auto border-t border-slate-200 dark:border-slate-800 p-4 md:p-5 bg-slate-50/50 dark:bg-slate-900/50 shrink-0 relative">
+                <div id="ticket-details-empty" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+                    <i class="fas fa-info-circle text-slate-300 dark:text-slate-700 text-2xl mb-3"></i>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Select a ticket to view details</p>
+                </div>
 
-                <div id="contact-details-inner" class="hidden flex-col pb-4 h-full">
-                    <div class="flex items-center gap-2 mb-4 shrink-0">
-                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Initial Inquiry</span>
-                    </div>
-                    
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3 flex-1 overflow-y-auto custom-scrollbar">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-ticket-alt text-blue-500 text-xs shrink-0"></i>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate w-full">Ticket Type: <span id="detailCategory" class="text-blue-600 dark:text-blue-400">--</span></span>
-                        </div>
-                        
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
-                        
-                        <div class="grid grid-cols-2 gap-3 text-[10px] shrink-0">
-                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
-                                <i class="fas fa-user text-slate-400 shrink-0 w-3 text-center"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Name: <span id="contactName" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
-                            </div>
-                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
-                                <i class="fas fa-medal text-slate-400 shrink-0 w-3 text-center"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Rank: <span id="contactRank" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-2 truncate">
-                                <i class="fas fa-envelope text-slate-400 shrink-0 w-3 text-center"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Email: <span id="contactEmail" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
-                            </div>
-                            <div class="col-span-2 flex items-center gap-2 truncate">
-                                <i class="fas fa-phone text-slate-400 shrink-0 w-3 text-center"></i>
-                                <span class="text-slate-600 dark:text-slate-300 truncate">Phone: <span id="contactPhone" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
-                            </div>
-                        </div>
+                <div id="contact-details-inner" class="hidden flex-col pb-4 h-full">
+                    <div class="flex items-center gap-2 mb-4 shrink-0">
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400">Initial Inquiry</span>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3 flex-1 overflow-y-auto custom-scrollbar">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-ticket-alt text-blue-500 text-xs shrink-0"></i>
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 truncate w-full">Ticket Type: <span id="detailCategory" class="text-blue-600 dark:text-blue-400">--</span></span>
+                        </div>
+                        
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full shrink-0"></div>
+                        
+                        <div class="grid grid-cols-2 gap-3 text-[10px] shrink-0">
+                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
+                                <i class="fas fa-user text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Name: <span id="contactName" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                            <div class="col-span-2 sm:col-span-1 flex items-center gap-2 truncate">
+                                <i class="fas fa-medal text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Rank: <span id="contactRank" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                            <div class="col-span-2 flex items-center gap-2 truncate">
+                                <i class="fas fa-envelope text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Email: <span id="contactEmail" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                            <div class="col-span-2 flex items-center gap-2 truncate">
+                                <i class="fas fa-phone text-slate-400 shrink-0 w-3 text-center"></i>
+                                <span class="text-slate-600 dark:text-slate-300 truncate">Phone: <span id="contactPhone" class="font-bold text-slate-800 dark:text-slate-100">--</span></span>
+                            </div>
+                        </div>
 
-                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full mt-3 mb-2 shrink-0"></div>
-                        
-                        <div class="mt-2">
-                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">User Concern:</span>
-                            <p id="detailConcern" class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium break-words">--</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </aside>
+                        <div class="h-px bg-slate-200 dark:bg-slate-700 w-full mt-3 mb-2 shrink-0"></div>
+                        
+                        <div class="mt-2">
+                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">User Concern:</span>
+                            <p id="detailConcern" class="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium break-words">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
-        <div id="sidebarOverlay" onclick="SupportConsole.toggleSidebar()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[45]"></div>
+        <div id="sidebarOverlay" onclick="SupportConsole.toggleSidebar()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[45]"></div>
 
-        <section class="flex-1 flex flex-col bg-white dark:bg-[#0f172a] relative overflow-hidden w-full min-w-0 min-h-0 h-full">
-            
-            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-[70] flex flex-col p-4 md:p-8 overflow-y-auto">
-                <div class="max-w-4xl mx-auto w-full flex flex-col h-full min-h-fit pb-8 animate-in fade-in zoom-in-95 duration-300">
-                    <div class="flex justify-between items-center mb-6 md:mb-8 shrink-0 bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm">
-                        <div class="flex items-center gap-3 md:gap-4">
-                            <div class="w-10 h-10 md:w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
-                                <i class="fas fa-robot text-white text-lg md:text-xl"></i>
-                            </div>
-                            <div>
-                                <h2 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Smart Assistant</h2>
-                                <p class="text-[8px] md:text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Neural Link Active
-                                </p>
-                            </div>
-                        </div>
-                        <button type="button" onclick="SupportConsole.closeAssistant()" class="w-8 h-8 md:w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500/50">
-                            <i class="fas fa-times text-lg"></i>
-                        </button>
-                    </div>
-                    
-                    <div id="assistant-chat" class="flex-1 overflow-y-auto space-y-4 md:space-y-6 mb-6 custom-scrollbar px-2 min-h-[30vh]"></div>
-                    
-                    <div id="assistant-interaction" class="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm shrink-0">
-                        <div id="assistant-options" class="flex flex-wrap gap-2 md:gap-3 mb-2"></div>
-                        
-                        <form id="newTicketForm" class="hidden flex flex-col gap-5 animate-in slide-in-from-bottom-4 duration-500" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
-                                <p id="form-context-msg" class="text-[10px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
-                                    <i class="fas fa-layer-group"></i> <span></span>
-                                </p>
-                            </div>
-                            
-                            <input type="hidden" name="category" id="newCat" value="General">
-                            <input type="hidden" name="priority" id="newPriority" value="Medium">
+        <section class="flex-1 flex flex-col bg-white dark:bg-[#0f172a] relative overflow-hidden w-full min-w-0 min-h-0 h-full">
+            
+            <div id="new-ticket-overlay" class="hidden absolute inset-0 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-md z-[70] flex flex-col p-4 md:p-8 overflow-y-auto">
+                <div class="max-w-4xl mx-auto w-full flex flex-col h-full min-h-fit pb-8 animate-in fade-in zoom-in-95 duration-300">
+                    <div class="flex justify-between items-center mb-6 md:mb-8 shrink-0 bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-sm shadow-sm">
+                        <div class="flex items-center gap-3 md:gap-4">
+                            <div class="w-10 h-10 md:w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
+                                <i class="fas fa-robot text-white text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white">Smart Assistant</h2>
+                                <p class="text-[8px] md:text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Neural Link Active
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="SupportConsole.closeAssistant()" class="w-8 h-8 md:w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all shrink-0 focus:outline-none focus:ring-2 focus:ring-red-500/50">
+                            <i class="fas fa-times text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="assistant-chat" class="flex-1 overflow-y-auto space-y-4 md:space-y-6 mb-6 custom-scrollbar px-2 min-h-[30vh]"></div>
+                    
+                    <div id="assistant-interaction" class="bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm shrink-0">
+                        <div id="assistant-options" class="flex flex-wrap gap-2 md:gap-3 mb-2"></div>
+                        
+                        <form id="newTicketForm" class="hidden flex flex-col gap-5 animate-in slide-in-from-bottom-4 duration-500" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="border-b border-slate-200 dark:border-slate-800 pb-3">
+                                <p id="form-context-msg" class="text-[10px] md:text-[11px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fas fa-layer-group"></i> <span></span>
+                                </p>
+                            </div>
+                            
+                            <input type="hidden" name="category" id="newCat" value="General">
+                            <input type="hidden" name="priority" id="newPriority" value="Medium">
 
-                            <div id="account-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/50">
-                                <div class="flex items-center gap-3 col-span-1 sm:col-span-2 mb-1">
-                                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-id-card text-blue-600 text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest">Identity Support</p>
-                                        <p class="text-[8px] text-blue-600/70 dark:text-blue-500/70 font-bold uppercase">Profile Provisioning</p>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">First Name</label>
-                                    <input type="text" name="first_name" id="acc_fname" maxlength="25" placeholder="John" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Last Name</label>
-                                    <input type="text" name="last_name" id="acc_lname" maxlength="25" placeholder="Doe" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                                </div>
-                                <div class="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Inst. Email</label>
-                                    <input type="email" name="email" id="acc_email" maxlength="50" placeholder="john.doe@company.com" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                                </div>
-                                <div class="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Phone Number</label>
-                                    <input type="tel" name="phone" id="acc_phone" maxlength="11" placeholder="09123456789" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
-                                </div>
-                                <div class="flex flex-col gap-1.5 sm:col-span-2">
-                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Requested Rank</label>
-                                    <select name="rank" id="acc_rank" onchange="if(typeof updateRankBadge === 'function') updateRankBadge(this)" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer">
-                                        <option value="" disabled selected>Select Rank</option>
-                                        <optgroup label="Enlisted">
-                                            <option value="Airman">Airman</option>
-                                            <option value="Airman Second Class">Airman Second Class</option>
-                                            <option value="Airman First Class">Airman First Class</option>
-                                            <option value="Sergeant">Sergeant</option>
-                                        </optgroup>
-                                        <optgroup label="Non-Commissioned Officers">
-                                            <option value="Staff Sergeant">Staff Sergeant</option>
-                                            <option value="Technical Sergeant">Technical Sergeant</option>
-                                            <option value="Master Sergeant">Master Sergeant</option>
-                                            <option value="Senior Master Sergeant">Senior Master Sergeant</option>
-                                            <option value="Chief Master Sergeant">Chief Master Sergeant</option>
-                                        </optgroup>
-                                        <optgroup label="Officers">
-                                            <option value="Second Lieutenant">Second Lieutenant</option>
-                                            <option value="First Lieutenant">First Lieutenant</option>
-                                            <option value="Captain">Captain</option>
-                                            <option value="Major">Major</option>
-                                            <option value="Lieutenant Colonel">Lieutenant Colonel</option>
-                                            <option value="Colonel">Colonel</option>
-                                        </optgroup>
-                                        <optgroup label="General Officers">
-                                            <option value="Brigadier General">Brigadier General</option>
-                                            <option value="Major General">Major General</option>
-                                            <option value="Lieutenant General">Lieutenant General</option>
-                                            <option value="General">General</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
-                            </div>
+                            <div id="account-fields" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800/50">
+                                <div class="flex items-center gap-3 col-span-1 sm:col-span-2 mb-1">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-id-card text-blue-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-widest">Identity Support</p>
+                                        <p class="text-[8px] text-blue-600/70 dark:text-blue-500/70 font-bold uppercase">Profile Provisioning</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">First Name</label>
+                                    <input type="text" name="first_name" id="acc_fname" maxlength="25" placeholder="John" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Last Name</label>
+                                    <input type="text" name="last_name" id="acc_lname" maxlength="25" placeholder="Doe" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Inst. Email</label>
+                                    <input type="email" name="email" id="acc_email" maxlength="50" placeholder="john.doe@company.com" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5 sm:col-span-2 md:col-span-1">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Phone Number</label>
+                                    <input type="tel" name="phone" id="acc_phone" maxlength="11" placeholder="09123456789" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                </div>
+                                <div class="flex flex-col gap-1.5 sm:col-span-2">
+                                    <label class="text-[9px] font-black uppercase tracking-widest text-blue-600">Requested Rank</label>
+                                    <select name="rank" id="acc_rank" onchange="if(typeof updateRankBadge === 'function') updateRankBadge(this)" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer">
+                                        <option value="" disabled selected>Select Rank</option>
+                                        <optgroup label="Enlisted">
+                                            <option value="Airman">Airman</option>
+                                            <option value="Airman Second Class">Airman Second Class</option>
+                                            <option value="Airman First Class">Airman First Class</option>
+                                            <option value="Sergeant">Sergeant</option>
+                                        </optgroup>
+                                        <optgroup label="Non-Commissioned Officers">
+                                            <option value="Staff Sergeant">Staff Sergeant</option>
+                                            <option value="Technical Sergeant">Technical Sergeant</option>
+                                            <option value="Master Sergeant">Master Sergeant</option>
+                                            <option value="Senior Master Sergeant">Senior Master Sergeant</option>
+                                            <option value="Chief Master Sergeant">Chief Master Sergeant</option>
+                                        </optgroup>
+                                        <optgroup label="Officers">
+                                            <option value="Second Lieutenant">Second Lieutenant</option>
+                                            <option value="First Lieutenant">First Lieutenant</option>
+                                            <option value="Captain">Captain</option>
+                                            <option value="Major">Major</option>
+                                            <option value="Lieutenant Colonel">Lieutenant Colonel</option>
+                                            <option value="Colonel">Colonel</option>
+                                        </optgroup>
+                                        <optgroup label="General Officers">
+                                            <option value="Brigadier General">Brigadier General</option>
+                                            <option value="Major General">Major General</option>
+                                            <option value="Lieutenant General">Lieutenant General</option>
+                                            <option value="General">General</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
 
-                            <div id="security-removal-fields" class="hidden flex flex-col gap-4 p-5 bg-amber-50/50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-800/50">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-shield-alt text-amber-600 text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">Security Clearance</p>
-                                        <p class="text-[8px] text-amber-600/70 dark:text-amber-500/70 font-bold uppercase">Authorization Required</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-500">Identifier</label>
-                                        <input type="text" name="auth_id" placeholder="ID or Username" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-500">Action Type</label>
-                                        <select name="removal_type" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all appearance-none cursor-pointer">
-                                            <option value="OTP">OTP Reset</option>
-                                            <option value="MFA">Complete MFA Removal</option>
-                                            <option value="Hardware">Hardware Token Unlink</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+                            <div id="security-removal-fields" class="hidden flex flex-col gap-4 p-5 bg-amber-50/50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-shield-alt text-amber-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">Security Clearance</p>
+                                        <p class="text-[8px] text-amber-600/70 dark:text-amber-500/70 font-bold uppercase">Authorization Required</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-500">Identifier</label>
+                                        <input type="text" name="auth_id" placeholder="ID or Username" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-500">Action Type</label>
+                                        <select name="removal_type" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all appearance-none cursor-pointer">
+                                            <option value="OTP">OTP Reset</option>
+                                            <option value="MFA">Complete MFA Removal</option>
+                                            <option value="Hardware">Hardware Token Unlink</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div id="bug-fields" class="hidden flex flex-col gap-4 p-5 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-800/50">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-bug text-red-600 text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] font-black text-red-600 dark:text-red-500 uppercase tracking-widest">System Anomaly</p>
-                                        <p class="text-[8px] text-red-600/70 dark:text-red-500/70 font-bold uppercase">Diagnostics & Routing</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Impacted Module</label>
-                                        <select name="bug_module" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all appearance-none cursor-pointer">
-                                            <option value="Dashboard">Dashboard / Analytics</option>
-                                            <option value="Tickets">Ticket System</option>
-                                            <option value="Assets">IT Assets</option>
-                                            <option value="Authentication">Authentication</option>
-                                            <option value="Other">Other Component</option>
-                                        </select>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Error Code (If any)</label>
-                                        <input type="text" name="error_code" placeholder="e.g. ERR_500 or Hex Code" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all">
-                                    </div>
-                                    <div class="flex flex-col gap-1.5 sm:col-span-2">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Steps to Reproduce</label>
-                                        <textarea name="reproduce_steps" rows="2" placeholder="1. Go to... 2. Click on... 3. Error appears" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"></textarea>
-                                    </div>
-                                </div>
-                            </div>
+                            <div id="bug-fields" class="hidden flex flex-col gap-4 p-5 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-bug text-red-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-red-600 dark:text-red-500 uppercase tracking-widest">System Anomaly</p>
+                                        <p class="text-[8px] text-red-600/70 dark:text-red-500/70 font-bold uppercase">Diagnostics & Routing</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Impacted Module</label>
+                                        <select name="bug_module" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all appearance-none cursor-pointer">
+                                            <option value="Dashboard">Dashboard / Analytics</option>
+                                            <option value="Tickets">Ticket System</option>
+                                            <option value="Assets">IT Assets</option>
+                                            <option value="Authentication">Authentication</option>
+                                            <option value="Other">Other Component</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Error Code (If any)</label>
+                                        <input type="text" name="error_code" placeholder="e.g. ERR_500 or Hex Code" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5 sm:col-span-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-red-700 dark:text-red-500">Steps to Reproduce</label>
+                                        <textarea name="reproduce_steps" rows="2" placeholder="1. Go to... 2. Click on... 3. Error appears" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none"></textarea>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div id="permission-fields" class="hidden flex flex-col gap-4 p-5 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-key text-emerald-600 text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Access Control</p>
-                                        <p class="text-[8px] text-emerald-600/70 dark:text-emerald-500/70 font-bold uppercase">Role Modification</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Target Resource</label>
-                                        <input type="text" name="target_resource" placeholder="System/Database Name" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Requested Level</label>
-                                        <select name="access_level" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none cursor-pointer">
-                                            <option value="Read-Only">Read-Only (Viewer)</option>
-                                            <option value="Contributor">Contributor (Editor)</option>
-                                            <option value="Administrator">Administrator (Elevated)</option>
-                                        </select>
-                                    </div>
-                                    <div class="flex flex-col gap-1.5 sm:col-span-2">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Approving Officer</label>
-                                        <input type="text" name="approving_officer" placeholder="Name or Reference Number of Approval" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
-                                    </div>
-                                </div>
-                            </div>
+                            <div id="permission-fields" class="hidden flex flex-col gap-4 p-5 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-key text-emerald-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Access Control</p>
+                                        <p class="text-[8px] text-emerald-600/70 dark:text-emerald-500/70 font-bold uppercase">Role Modification</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Target Resource</label>
+                                        <input type="text" name="target_resource" placeholder="System/Database Name" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Requested Level</label>
+                                        <select name="access_level" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none cursor-pointer">
+                                            <option value="Read-Only">Read-Only (Viewer)</option>
+                                            <option value="Contributor">Contributor (Editor)</option>
+                                            <option value="Administrator">Administrator (Elevated)</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex flex-col gap-1.5 sm:col-span-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-500">Approving Officer</label>
+                                        <input type="text" name="approving_officer" placeholder="Name or Reference Number of Approval" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div id="access-fields" class="hidden flex flex-col gap-4 p-5 bg-purple-50/50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-800/50">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
-                                        <i class="fas fa-sign-in-alt text-purple-600 text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] font-black text-purple-600 dark:text-purple-500 uppercase tracking-widest">Authentication Issue</p>
-                                        <p class="text-[8px] text-purple-600/70 dark:text-purple-500/70 font-bold uppercase">Login Diagnostics</p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-500">Affected ID / Username</label>
-                                        <input type="text" name="affected_id" placeholder="Your Service ID" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
-                                    </div>
-                                    <div class="flex flex-col gap-1.5">
-                                        <label class="text-[9px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-500">Contact Method</label>
-                                        <input type="text" name="alt_contact" placeholder="Alternate Email / Phone" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
-                                    </div>
-                                </div>
-                            </div>
+                            <div id="access-fields" class="hidden flex flex-col gap-4 p-5 bg-purple-50/50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-800/50">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
+                                        <i class="fas fa-sign-in-alt text-purple-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-purple-600 dark:text-purple-500 uppercase tracking-widest">Authentication Issue</p>
+                                        <p class="text-[8px] text-purple-600/70 dark:text-purple-500/70 font-bold uppercase">Login Diagnostics</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-500">Affected ID / Username</label>
+                                        <input type="text" name="affected_id" placeholder="Your Service ID" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                                    </div>
+                                    <div class="flex flex-col gap-1.5">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-500">Contact Method</label>
+                                        <input type="text" name="alt_contact" placeholder="Alternate Email / Phone" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all">
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div class="flex flex-col gap-4">
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Subject</label>
-                                    <input type="text" name="subject" id="newSub" required class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm">
-                                </div>
-                                
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Description</label>
-                                    <textarea name="description" id="newDescInput" required rows="4" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none shadow-sm"></textarea>
-                                </div>
-                                
-                                <div class="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-6 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all text-center">
-                                    <input type="file" name="attachments" multiple class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="SupportConsole.updateFileList(this)">
-                                    <div class="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-blue-500 transition-colors">
-                                        <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-800 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-all">
-                                            <i class="fas fa-cloud-upload-alt text-lg"></i>
-                                        </div>
-                                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest mt-1" id="file-label">Attach Files or Media</span>
-                                    </div>
-                                    <div id="file-preview-list" class="mt-4 flex flex-wrap gap-2 justify-center empty:hidden"></div>
-                                </div>
-                            </div>
-                            
-                            <button type="button" onclick="SupportConsole.finalizeTicketSubmission()" 
-                                    class="w-full bg-blue-600 text-white py-3.5 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] transition-all mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
-                                Initialize Dispatch
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                            <div class="flex flex-col gap-4">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Subject</label>
+                                    <input type="text" name="subject" id="newSub" required class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm">
+                                </div>
+                                
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Description</label>
+                                    <textarea name="description" id="newDescInput" required rows="4" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 md:p-4 rounded-xl text-xs md:text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none shadow-sm"></textarea>
+                                </div>
+                                
+                                <div class="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-6 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all text-center">
+                                    <input type="file" name="attachments" multiple class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="SupportConsole.updateFileList(this)">
+                                    <div class="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-blue-500 transition-colors">
+                                        <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-800 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-all">
+                                            <i class="fas fa-cloud-upload-alt text-lg"></i>
+                                        </div>
+                                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-widest mt-1" id="file-label">Attach Files or Media</span>
+                                    </div>
+                                    <div id="file-preview-list" class="mt-4 flex flex-wrap gap-2 justify-center empty:hidden"></div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" onclick="SupportConsole.finalizeTicketSubmission()" 
+                                    class="w-full bg-blue-600 text-white py-3.5 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-[0.2em] shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-[0.98] transition-all mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                                Initialize Dispatch
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-            <div id="no-chat-selected" class="absolute inset-0 bg-white dark:bg-[#0f172a] z-20 flex flex-col items-center justify-center p-6 text-center">
-                <div class="w-16 h-16 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-                    <i class="fas fa-comments text-2xl md:text-4xl text-slate-200 dark:text-slate-800"></i>
-                </div>
-                <h3 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Secure Line Ready</h3>
-                <p class="text-[10px] md:text-xs text-slate-400 mt-2 max-w-[200px] leading-relaxed">Select a thread or start a new assistant session.</p>
-            </div>
+            <div id="no-chat-selected" class="absolute inset-0 bg-white dark:bg-[#0f172a] z-20 flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-16 h-16 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <i class="fas fa-comments text-2xl md:text-4xl text-slate-200 dark:text-slate-800"></i>
+                </div>
+                <h3 class="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Secure Line Ready</h3>
+                <p class="text-[10px] md:text-xs text-slate-400 mt-2 max-w-[200px] leading-relaxed">Select a thread or start a new assistant session.</p>
+            </div>
 
-            <div class="h-12 md:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-2 md:px-6 shrink-0 z-30 w-full min-w-0 relative shadow-sm">
-                
-                <div class="flex items-center border-r border-slate-200 dark:border-slate-800 mr-2 md:mr-4 h-full shrink-0">
-                    <button type="button" onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Activity</button>
-                    <button type="button" onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Case Details</button>
-                    
-                    <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden px-3 md:px-4 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-600 focus:outline-none flex items-center gap-1.5">
-                        <i class="fas fa-folder-open"></i> <span class="hidden sm:inline">Assets</span>
-                    </button>
-                </div>
-                
-                <div id="staff-threads-container" class="flex-1 flex items-center gap-2 overflow-visible custom-scrollbar h-full min-w-0 scroll-smooth pr-4">
-                </div>
-                
-                <button type="button" onclick="SupportConsole.toggleAssets()" id="mainHeaderToggleBtn" title="Expand Assets" class="hidden items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto shrink-0">
-                    <i class="fas fa-chevron-left text-sm md:text-base"></i>
-                </button>
-            </div>
+            <div class="h-12 md:h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center px-2 md:px-6 shrink-0 z-30 w-full min-w-0 relative shadow-sm">
+                
+                <div class="flex items-center border-r border-slate-200 dark:border-slate-800 mr-2 md:mr-4 h-full shrink-0">
+                    <button type="button" onclick="SupportConsole.switchTab('feed')" id="feedTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Activity</button>
+                    <button type="button" onclick="SupportConsole.switchTab('details')" id="detailsTabBtn" class="px-3 md:px-6 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent focus:outline-none">Case Details</button>
+                    
+                    <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden px-3 md:px-4 h-full text-[9px] md:text-[11px] font-black uppercase tracking-wider transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-600 focus:outline-none flex items-center gap-1.5">
+                        <i class="fas fa-folder-open"></i> <span class="hidden sm:inline">Assets</span>
+                    </button>
+                </div>
+                
+                <div id="staff-threads-container" class="flex-1 flex items-center gap-2 overflow-visible custom-scrollbar h-full min-w-0 scroll-smooth pr-4">
+                </div>
+                
+                <button type="button" onclick="SupportConsole.toggleAssets()" id="mainHeaderToggleBtn" title="Expand Assets" class="hidden items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto shrink-0">
+                    <i class="fas fa-chevron-left text-sm md:text-base"></i>
+                </button>
+            </div>
 
-            <div id="feedView" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-[#0f172a] min-h-0">
-                <div class="px-4 md:px-8 pt-4 md:pt-6 shrink-0">
-                    <div id="feed-header-label" class="flex items-center gap-3 mb-3 md:mb-4">
-                        <span class="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] whitespace-nowrap truncate">Chatting with: <span id="active-chat-id">#0000</span></span>
-                        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
-                    </div>
-                </div>
+            <div id="feedView" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50/50 dark:bg-[#0f172a] min-h-0">
+                <div class="px-4 md:px-8 pt-4 md:pt-6 shrink-0">
+                    <div id="feed-header-label" class="flex items-center gap-3 mb-3 md:mb-4">
+                        <span class="text-[9px] md:text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] whitespace-nowrap truncate">Chatting with: <span id="active-chat-id">#0000</span></span>
+                        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800"></div>
+                    </div>
+                </div>
 
-                <div class="flex-1 overflow-y-auto no-scrollbar px-3 md:px-8 py-4 min-h-0" id="workspaceScroll">
-                    <div id="messageContainer" class="max-w-4xl mx-auto space-y-6 md:space-y-8"></div>
-                </div>
+                <div class="flex-1 overflow-y-auto no-scrollbar px-3 md:px-8 py-4 min-h-0" id="workspaceScroll">
+                    <div id="messageContainer" class="max-w-4xl mx-auto space-y-6 md:space-y-8"></div>
+                </div>
 
-                <div class="p-3 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 z-10 mb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                    <div class="max-w-4xl mx-auto">
-                        <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-2 mb-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"></div>
-                        <form onsubmit="SupportConsole.sendMessage(event)" id="chatMsgForm" class="relative group flex items-end" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input type="file" id="chatFileInput" name="attachments" multiple class="hidden" onchange="SupportConsole.handleChatFileSelect(this)">
-                            
-                            <div class="flex-1 relative">
-                                <textarea id="chatInput" rows="1" 
-                                          class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-[4.5rem] md:pr-28 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all resize-none shadow-sm" 
-                                          placeholder="Type your message here..."></textarea>
-                                
-                                <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none">
-                                    <i class="fas fa-paperclip text-base md:text-lg"></i>
-                                </button>
-                            </div>
+                <div class="p-3 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 z-10 mb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                    <div class="max-w-4xl mx-auto">
+                        <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-2 mb-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"></div>
+                        <form onsubmit="SupportConsole.sendMessage(event)" id="chatMsgForm" class="relative group flex items-end" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="file" id="chatFileInput" name="attachments" multiple class="hidden" onchange="SupportConsole.handleChatFileSelect(this)">
+                            
+                            <div class="flex-1 relative">
+                                <textarea id="chatInput" rows="1" 
+                                          class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-[4.5rem] md:pr-28 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all resize-none shadow-sm" 
+                                          placeholder="Type your message here..."></textarea>
+                                
+                                <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none">
+                                    <i class="fas fa-paperclip text-base md:text-lg"></i>
+                                </button>
+                            </div>
 
-                            <button type="submit" id="shareBtn" class="absolute right-2 top-2 bottom-2 bg-blue-600 px-4 md:px-6 rounded-xl text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
-                                Send
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+                            <button type="submit" id="shareBtn" class="absolute right-2 top-2 bottom-2 bg-blue-600 px-4 md:px-6 rounded-xl text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+                                Send
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-            <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a] min-h-0 mb-[env(safe-area-inset-bottom)]">
-                <div class="max-w-3xl mx-auto p-4 md:p-10">
-                    <form id="editTicketForm" onsubmit="SupportConsole.updateTicket(event)" class="space-y-6 md:space-y-10">
-                        {% csrf_token %}
-                        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-6 gap-4 text-center md:text-left">
-                            <div>
-                                <h3 class="text-xs md:text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Case Management</h3>
-                                <p class="text-[10px] md:text-xs text-slate-400 mt-1">Modify internal descriptions.</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <button type="button" onclick="SupportConsole.deleteTicket()" class="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors focus:outline-none">
-                                    Delete Ticket
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-                            <div class="md:col-span-2">
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Subject</label>
-                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-slate-500 cursor-not-allowed outline-none shadow-sm">
-                            </div>
+            <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a] min-h-0 mb-[env(safe-area-inset-bottom)]">
+                <div class="max-w-3xl mx-auto p-4 md:p-10">
+                    <form id="editTicketForm" onsubmit="SupportConsole.updateTicket(event)" class="space-y-6 md:space-y-10">
+                        {% csrf_token %}
+                        <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-6 gap-4 text-center md:text-left">
+                            <div>
+                                <h3 class="text-xs md:text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Case Management</h3>
+                                <p class="text-[10px] md:text-xs text-slate-400 mt-1">Modify internal descriptions.</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <button type="button" onclick="SupportConsole.deleteTicket()" class="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 px-4 py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors focus:outline-none">
+                                    Delete Ticket
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+                            <div class="md:col-span-2">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Subject</label>
+                                <input type="text" id="editSubject" name="subject" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-slate-500 cursor-not-allowed outline-none shadow-sm">
+                            </div>
 
-                            <div class="md:col-span-2">
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Technician (Locked)</label>
-                                <input type="text" id="editTechnician" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-blue-600 cursor-not-allowed outline-none shadow-sm">
-                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Technician (Locked)</label>
+                                <input type="text" id="editTechnician" readonly class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm font-bold text-blue-600 cursor-not-allowed outline-none shadow-sm">
+                            </div>
 
-                            <div>
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Status</label>
-                                <input type="text" name="status" id="editStatus" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
-                            </div>
-                            <div>
-                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Priority</label>
-                                <input type="text" name="priority" id="editPriority" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="text-[9px] md:text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Internal Summary</label>
-                                <textarea id="editDesc" name="description" rows="5" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 shadow-sm transition-all resize-none"></textarea>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
+                            <div>
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Status</label>
+                                <input type="text" name="status" id="editStatus" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Priority</label>
+                                <input type="text" name="priority" id="editPriority" readonly tabindex="-1" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-[10px] md:text-xs font-black uppercase pointer-events-none opacity-80 shadow-sm">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-[9px] md:text-[10px] font-black uppercase text-slate-400 mb-1.5 block">Internal Summary</label>
+                                <textarea id="editDesc" name="description" rows="5" class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 shadow-sm transition-all resize-none"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
 
-        <div id="assetsOverlay" onclick="SupportConsole.toggleAssets()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] xl:hidden transition-opacity"></div>
+        <div id="assetsOverlay" onclick="SupportConsole.toggleAssets()" class="hidden absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] xl:hidden transition-opacity"></div>
 
-        <aside id="rightAssetsSidebar" class="absolute xl:static inset-y-0 right-0 z-[60] w-[85vw] sm:w-80 bg-white dark:bg-slate-900 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 transform translate-x-full xl:translate-x-0 transition-all duration-300 ease-in-out shadow-2xl xl:shadow-none xl:w-80 xl:min-w-[20rem] overflow-hidden">
-            
-            <div class="shrink-0 p-4 border-b border-slate-200 dark:border-slate-800">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-folder-open text-blue-500 xl:hidden"></i>
-                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white xl:text-slate-500">Ticket Assets</span>
-                    </div>
-                    
-                    <div class="flex items-center gap-1">
-                        <button type="button" onclick="SupportConsole.toggleAssets()" title="Collapse Sidebar" class="hidden xl:flex items-center justify-center w-7 h-7 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
-                            <i class="fas fa-chevron-right text-sm"></i>
-                        </button>
-                        
-                        <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors focus:outline-none">
-                            <i class="fas fa-times text-sm"></i>
-                        </button>
-                    </div>
-                </div>
+        <aside id="rightAssetsSidebar" class="absolute xl:static inset-y-0 right-0 z-[60] w-[85vw] sm:w-80 bg-white dark:bg-slate-900 flex flex-col shrink-0 border-l border-slate-200 dark:border-slate-800 transform translate-x-full xl:translate-x-0 transition-all duration-300 ease-in-out shadow-2xl xl:shadow-none xl:w-80 xl:min-w-[20rem] overflow-hidden">
+            
+            <div class="shrink-0 p-4 border-b border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-folder-open text-blue-500 xl:hidden"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-white xl:text-slate-500">Ticket Assets</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="SupportConsole.toggleAssets()" title="Collapse Sidebar" class="hidden xl:flex items-center justify-center w-7 h-7 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
+                            <i class="fas fa-chevron-right text-sm"></i>
+                        </button>
+                        
+                        <button type="button" onclick="SupportConsole.toggleAssets()" class="xl:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors focus:outline-none">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+                    </div>
+                </div>
 
-                <div class="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
-                    <button type="button" onclick="SupportConsole.switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all bg-white dark:bg-slate-900 shadow-sm text-blue-600 focus:outline-none">Media</button>
-                    <button type="button" onclick="SupportConsole.switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Files</button>
-                    <button type="button" onclick="SupportConsole.switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Links</button>
-                </div>
-            </div>
+                <div class="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
+                    <button type="button" onclick="SupportConsole.switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all bg-white dark:bg-slate-900 shadow-sm text-blue-600 focus:outline-none">Media</button>
+                    <button type="button" onclick="SupportConsole.switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Files</button>
+                    <button type="button" onclick="SupportConsole.switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-[9px] font-black uppercase rounded-md transition-all text-slate-500 focus:outline-none">Links</button>
+                </div>
+            </div>
 
-            <div id="contact-details-container" class="flex-1 flex flex-col opacity-0 transition-all duration-500 translate-x-4 overflow-hidden min-h-0">
-                <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 min-h-0">
-                        <div id="mediaGridView" class="grid grid-cols-3 gap-2"></div>
-                        <div id="filesListView" class="hidden space-y-3"></div>
-                        <div id="linksListView" class="hidden space-y-3"></div>
-                    </div>
-                </div>
-            </div>
-        </aside>
-    </main>
+            <div id="contact-details-container" class="flex-1 flex flex-col opacity-0 transition-all duration-500 translate-x-4 overflow-hidden min-h-0">
+                <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 min-h-0">
+                        <div id="mediaGridView" class="grid grid-cols-3 gap-2"></div>
+                        <div id="filesListView" class="hidden space-y-3"></div>
+                        <div id="linksListView" class="hidden space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
 </div>
 
 <script>
