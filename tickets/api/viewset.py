@@ -6,11 +6,15 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from django.utils.html import escape # CRITICAL SECURITY IMPORT: Neutralizes XSS attacks
+from django.utils.html import escape 
 from ..models import Ticket, TicketMessage, TicketAttachment
+import os # NEW: Required for extracting file extensions
 
-# CRITICAL NEW IMPORT: Directly import Cloudinary to bypass strict image rules
 import cloudinary.uploader  
+
+# --- SECURITY: Allowed File Types ---
+# Blocks executables and scripts from being uploaded to the server
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.txt', '.csv'}
 
 # --- SERIALIZERS ---
 
@@ -113,7 +117,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 pass
             return None
 
-        # FIX: Safe extraction for raw URL strings
         def get_safe_filename(file_obj):
             try:
                 if file_obj and hasattr(file_obj, 'name') and file_obj.name:
@@ -124,11 +127,9 @@ class TicketViewSet(viewsets.ModelViewSet):
             
         def get_safe_url(file_obj):
             try:
-                # 1. Check if the raw string in the database is ALREADY a full URL!
                 if file_obj and hasattr(file_obj, 'name') and file_obj.name and file_obj.name.startswith('http'):
                     return file_obj.name
                 
-                # 2. If it's a normal file path, let Django build the Cloudinary URL
                 if file_obj and hasattr(file_obj, 'url'):
                     return file_obj.url
             except Exception:
@@ -141,7 +142,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             'sender_name': msg.sender.username,
             'sender_avatar': get_safe_avatar(msg.sender),
             'recipient_name': msg.recipient.username if msg.recipient else "Everyone",
-            'message': escape(msg.message), # SECURITY FIX: Escapes XSS payloads
+            'message': escape(msg.message), 
             'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
             'is_me': msg.sender == request.user,
             'is_staff': msg.sender.is_staff,
@@ -190,8 +191,12 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         for f in files:
+            # SECURITY FIX: Validate file extension
+            ext = os.path.splitext(f.name)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                continue # Skip dangerous files silently
+                
             try:
-                # FIX: Force 'auto' detection for video/pdf and save the raw URL string
                 upload_result = cloudinary.uploader.upload(f, resource_type="auto")
                 TicketAttachment.objects.create(
                     ticket=ticket, 
@@ -250,14 +255,18 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         ticket = serializer.save(
             user=ticket_owner, 
-            description=full_body,  # We rely on TicketSerializer.to_representation to escape this later
+            description=full_body, 
             status="Pending"
         )
 
         files = self.request.FILES.getlist('attachments')
         for f in files:
+            # SECURITY FIX: Validate file extension
+            ext = os.path.splitext(f.name)[1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                continue # Skip dangerous files silently
+                
             try:
-                # FIX: Force 'auto' detection for video/pdf and save the raw URL string
                 upload_result = cloudinary.uploader.upload(f, resource_type="auto")
                 TicketAttachment.objects.create(
                     ticket=ticket, 
@@ -268,6 +277,11 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def update_technical_details(self, request, pk=None):
+        # SECURITY FIX: Prevent Privilege Escalation (Broken Access Control)
+        # Ensure only authorized staff can alter ticket technicalities
+        if not (request.user.is_staff or request.user.groups.filter(name='Admin').exists()):
+            return Response({'error': 'Unauthorized. Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
         ticket = self.get_object()
         old_tech = ticket.technician
         data = request.data
