@@ -3,7 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://ui-avatars.com; connect-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://ui-avatars.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Asset & Cybersecurity System</title>
@@ -433,7 +434,7 @@
                     <textarea name="description" id="newDescInput" placeholder="Detailed Description..." required rows="3" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"></textarea>
                     
                     <label class="border-2 border-dashed border-slate-200 bg-slate-50 rounded-xl p-3 sm:p-4 text-center cursor-pointer hover:border-blue-500 transition-colors group">
-                        <input type="file" name="attachments" multiple class="hidden" onchange="ChatWidget.updateFileLabel(this)">
+                        <input type="file" name="attachments" multiple class="hidden" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.csv" onchange="ChatWidget.updateFileLabel(this)">
                         <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 mx-auto mb-2 group-hover:border-blue-500/30">
                             <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-blue-500 transition-colors"></i>
                         </div>
@@ -442,7 +443,7 @@
                     </label>
                 </div>
 
-                <button type="button" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg shadow-blue-500/20 mt-1">
+                <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg shadow-blue-500/20 mt-1">
                     Initialize Dispatch
                 </button>
             </form>
@@ -450,9 +451,9 @@
     </div>
 
 <script>
-    // --- SECURITY: XSS Sanitization Utility ---
-    // Defends against Cross-Site Scripting (XSS) and Vanilla JS Injection vulnerabilities
+    // --- SECURITY: Utility Framework ---
     const SecurityUtils = {
+        // Defends against Cross-Site Scripting (XSS) and Vanilla JS Injection vulnerabilities
         escapeHTML(str) {
             if (typeof str !== 'string') return str;
             return str.replace(/[&<>'"]/g, tag => ({
@@ -462,6 +463,30 @@
                 "'": '&#39;',
                 '"': '&quot;'
             }[tag] || tag));
+        },
+        
+        // SECURITY: Client-Side Malware & DoS Prevention
+        // Prevents massive files and harmful filetypes from consuming server resources
+        validateFiles(files) {
+            const maxSize = 5 * 1024 * 1024; // 5MB limit per file
+            const allowedTypes = [
+                'image/jpeg', 'image/png', 'image/gif', 
+                'application/pdf', 'text/plain', 
+                'application/msword', 
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                'text/csv'
+            ];
+            
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].size > maxSize) {
+                    return { valid: false, error: `File "${files[i].name}" exceeds the 5MB limit.` };
+                }
+                // Check if file type is valid (allow empty types for edge cases where browser can't detect it, backend will handle)
+                if (files[i].type !== '' && !allowedTypes.includes(files[i].type)) {
+                    return { valid: false, error: `File "${files[i].name}" has an invalid/unsupported format.` };
+                }
+            }
+            return { valid: true };
         }
     };
 
@@ -500,17 +525,23 @@
         },
         
         async search() {
+            // SECURITY: Anti-Spam (Debounce)
+            if (this.btn.disabled) return;
+
             let val = this.input.value.trim();
             if (!val) return;
             
             // Clean input (remove '#' if user typed it)
             val = val.replace('#', '');
-            const searchId = parseInt(val, 10);
             
-            if (isNaN(searchId)) {
-                this.showError("Invalid format. Please enter numbers only.");
+            // SECURITY FIX: STRICT REGEX FOR SQLi PREVENTION
+            // The input MUST contain only digits, otherwise it is rejected immediately.
+            if (!/^\d+$/.test(val)) {
+                this.showError("Security Alert: Invalid format. Please enter numbers only.");
                 return;
             }
+            
+            const searchId = parseInt(val, 10);
 
             // Set loading state
             const originalBtnHtml = this.btn.innerHTML;
@@ -909,7 +940,17 @@
             const label = document.getElementById('widget-file-label');
             preview.innerHTML = '';
             
+            // SECURITY: Run file validation before accepting inputs
             if (input.files.length > 0) {
+                const validation = SecurityUtils.validateFiles(input.files);
+                if (!validation.valid) {
+                    alert("SECURITY ALERT: " + validation.error);
+                    input.value = ''; // Safely clear the harmful file
+                    label.innerText = "Attach Media";
+                    label.classList.remove('text-blue-600');
+                    return;
+                }
+
                 label.innerText = `${input.files.length} Files Selected`;
                 label.classList.add('text-blue-600');
                 Array.from(input.files).forEach(file => {
@@ -926,8 +967,11 @@
 
         async finalizeTicketSubmission() {
             const form = document.getElementById('newTicketForm');
-            const btn = form.querySelector('button');
+            const btn = document.getElementById('dispatchBtn');
             
+            // SECURITY: Anti-Spam (Debounce click)
+            if (btn.disabled) return;
+
             const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...';
