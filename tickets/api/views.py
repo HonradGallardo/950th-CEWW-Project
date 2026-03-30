@@ -1,6 +1,7 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny # Added AllowAny for the public tracker
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from ..models import Ticket, TicketMessage, TicketAttachment
@@ -74,8 +75,12 @@ def send_ticket_message(request, ticket_id):
             
     return Response({'status': 'error'}, status=400)
 
+class TrackTicketThrottle(AnonRateThrottle):
+    rate = '10/minute' # Blocks scripts trying to scrape hundreds of IDs
+
 # --- NEW: Public Ticket Tracking Endpoint ---
 @api_view(['GET'])
+@throttle_classes([TrackTicketThrottle]) # Apply the security throttle
 @permission_classes([AllowAny]) # This allows guests who aren't logged in to track their tickets
 def track_ticket(request):
     """Public API endpoint to track ticket status by ID."""
