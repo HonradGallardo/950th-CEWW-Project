@@ -735,19 +735,20 @@
                 });
 
                 if (res.ok) {
-                    // NEW: Parse the JSON response to get data from your Django Backend
                     const responseData = await res.json(); 
                     
                     form.classList.add('hidden');
                     document.getElementById('hiddenForms').appendChild(form); // Move it back safely
                     this.removeLastOptions();
                     
-                    // NEW: Dynamically build the success message using the ticket number returned
-                    const ticketId = responseData.ticket_number || responseData.ticket_id || responseData.id;
+                    // Retrieve the raw ticket ID from the response
+                    const rawTicketId = responseData.ticket_number || responseData.ticket_id || responseData.id;
                     let successMessage = "✅ Dispatch successful. Our team will review your report shortly.";
                     
-                    if (ticketId) {
-                        successMessage = `✅ Dispatch successful. Your ticket number is <strong>${ticketId}</strong>. Please save this for your tracking.`;
+                    if (rawTicketId) {
+                        // Format the ticket ID to be 6 digits padded with zeros and prefixed with a '#'
+                        const formattedTicketId = '#' + String(rawTicketId).padStart(6, '0');
+                        successMessage = `✅ Dispatch successful. Your ticket number is <strong>${formattedTicketId}</strong>. Please save this for your tracking.`;
                     }
                     
                     this.appendBotMessage(successMessage);
