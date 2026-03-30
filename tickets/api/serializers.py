@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.utils.html import escape # CRITICAL SECURITY IMPORT: Neutralizes XSS on output
+from django.utils.html import escape # SECURITY: Neutralizes XSS attacks on output
 from ..models import Ticket, TicketMessage, TicketAttachment
 from django.contrib.auth.models import User
 
