@@ -16,5 +16,6 @@ urlpatterns = [
     path('manage/', views.admin_ticket_dashboard, name='admin_tickets'),
     path('detail/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
     path('api/', include(router.urls)),
+    path('api/track/', views.track_ticket, name='track_ticket'),
 ]
 
