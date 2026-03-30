@@ -3,6 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://ui-avatars.com; connect-src 'self';">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Asset & Cybersecurity System</title>
     
@@ -448,6 +450,21 @@
     </div>
 
 <script>
+    // --- SECURITY: XSS Sanitization Utility ---
+    // Defends against Cross-Site Scripting (XSS) and Vanilla JS Injection vulnerabilities
+    const SecurityUtils = {
+        escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        }
+    };
+
     // --- NEW: TICKET TRACKER LOGIC ---
     const TicketTracker = {
         modal: document.getElementById('trackerModal'),
@@ -510,18 +527,20 @@
                 
                 const data = await res.json();
                 
-                // Format Variables
-                const formattedId = '#' + String(data.id || searchId).padStart(6, '0');
-                const status = data.status || 'Pending';
+                // Format Variables AND Secure against DOM Injection (XSS)
+                const formattedId = SecurityUtils.escapeHTML('#' + String(data.id || searchId).padStart(6, '0'));
+                const status = SecurityUtils.escapeHTML(data.status || 'Pending');
                 const lowerStatus = status.toLowerCase();
                 
                 // Handle missing or null technician
                 let technician = data.technician;
                 if (!technician || technician.trim() === '') {
                     technician = 'No technician yet';
+                } else {
+                    technician = SecurityUtils.escapeHTML(technician);
                 }
 
-                const subject = data.subject || 'Not specified';
+                const subject = SecurityUtils.escapeHTML(data.subject || 'Not specified');
                 
                 // Styling based on status
                 let statusColor = 'text-blue-600 bg-blue-100 border-blue-200';
@@ -544,10 +563,21 @@
                                 </div>
                             </div>
                         `;
+                    } else {
+                        // Standard resolved message for other tickets
+                        resolutionMessageHtml = `
+                            <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
+                                <div>
+                                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Issue Resolved</p>
+                                    <p class="text-xs text-emerald-600 font-medium mt-1">Your request has been successfully processed.</p>
+                                </div>
+                            </div>
+                        `;
                     }
                 }
 
-                // Inject Results
+                // Inject Results safely
                 this.results.innerHTML = `
                     <div class="flex justify-between items-start border-b border-slate-200 pb-3">
                         <div>
@@ -667,11 +697,13 @@
         },
 
         appendUserMessage(text) {
+            // Apply HTML escape to prevent XSS from user injected payloads
+            const sanitizedText = SecurityUtils.escapeHTML(text);
             const div = document.createElement('div');
             div.className = "flex justify-end w-full mb-2";
             div.innerHTML = `
                 <div class="bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-sm text-[13px] shadow-sm max-w-[85%]">
-                    ${text}
+                    ${sanitizedText}
                 </div>`;
             this.body.appendChild(div);
             this.scrollToBottom();
