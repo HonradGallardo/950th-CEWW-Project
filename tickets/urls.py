@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from CEWWproject import settings
 from . import views
-# Matches lowercase 'api' folder and singular 'viewset.py' file
+from .api import views as api_views 
 from .api.viewset import TicketViewSet 
 
 app_name = 'tickets'
@@ -16,6 +16,7 @@ urlpatterns = [
     path('manage/', views.admin_ticket_dashboard, name='admin_tickets'),
     path('detail/<int:ticket_id>/', views.ticket_detail, name='ticket_detail'),
     path('api/', include(router.urls)),
-    path('api/track/', views.track_ticket, name='track_ticket'),
+    
+    # <--- FIX THIS LINE: Change views.track_ticket to api_views.track_ticket
+    path('api/track/', api_views.track_ticket, name='track_ticket'), 
 ]
-
