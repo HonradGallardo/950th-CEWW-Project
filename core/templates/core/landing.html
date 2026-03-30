@@ -513,6 +513,7 @@
                 // Format Variables
                 const formattedId = '#' + String(data.id || searchId).padStart(6, '0');
                 const status = data.status || 'Pending';
+                const lowerStatus = status.toLowerCase();
                 
                 // Handle missing or null technician
                 let technician = data.technician;
@@ -524,17 +525,15 @@
                 
                 // Styling based on status
                 let statusColor = 'text-blue-600 bg-blue-100 border-blue-200';
-                if(status.toLowerCase() === 'pending' || status.toLowerCase() === 'open') {
+                if(lowerStatus === 'pending' || lowerStatus === 'open') {
                     statusColor = 'text-amber-600 bg-amber-100 border-amber-200';
-                } else if(status.toLowerCase() === 'resolved' || status.toLowerCase() === 'closed') {
-                    statusColor = 'text-emerald-600 bg-emerald-100 border-emerald-200';
-                } else if(status.toLowerCase() === 'completed' || status.toLowerCase() === 'closed') {
+                } else if(lowerStatus === 'resolved' || lowerStatus === 'closed' || lowerStatus === 'completed') {
                     statusColor = 'text-emerald-600 bg-emerald-100 border-emerald-200';
                 }
 
-                // Check if we need to show the resolution message
+                // Check if we need to show a resolution message
                 let resolutionMessageHtml = '';
-                if (status.toLowerCase() === 'resolved','completed' || status.toLowerCase() === 'closed') {
+                if (lowerStatus === 'resolved' || lowerStatus === 'closed' || lowerStatus === 'completed') {
                     if (subject === 'New Account Provisioning') {
                         resolutionMessageHtml = `
                             <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
@@ -542,17 +541,6 @@
                                 <div>
                                     <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Your Account Is Ready</p>
                                     <p class="text-xs text-emerald-600 font-medium mt-1">Please check your email for the credentials. Thank you!</p>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        // Standard resolved message for other tickets
-                        resolutionMessageHtml = `
-                            <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
-                                <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
-                                <div>
-                                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Issue Resolved</p>
-                                    <p class="text-xs text-emerald-600 font-medium mt-1">Your request has been successfully processed.</p>
                                 </div>
                             </div>
                         `;
