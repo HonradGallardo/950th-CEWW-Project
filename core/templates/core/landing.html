@@ -114,10 +114,15 @@
         </div>
         
         <div class="flex items-center space-x-6">
-            <div id="network-status" class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest transition-opacity duration-500">
+            <div id="network-status" class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest transition-opacity duration-500 hidden sm:flex">
                 <span id="status-dot" class="w-2 h-2 bg-slate-300 rounded-full mr-2"></span>
                 <span id="status-text">Network Sync...</span>
             </div>
+            
+            <button onclick="TicketTracker.open()" class="text-slate-500 hover:text-blue-600 font-bold text-sm transition-colors flex items-center">
+                <i class="fas fa-search mr-2"></i> Track Ticket
+            </button>
+            
             <a href="{% url 'login' %}" class="btn-gradient text-white px-7 py-2.5 rounded-full font-bold text-sm flex items-center shadow-lg">
                 <i class="fas fa-lock-open mr-2 text-xs"></i> Portal Login
             </a>
@@ -234,6 +239,38 @@
             </p>
         </div>
     </footer>
+
+    <div id="trackerModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="trackerModalContent">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-extrabold text-lg text-slate-900 flex items-center">
+                    <i class="fas fa-radar mr-3 text-blue-600"></i> Track Your Ticket
+                </h3>
+                <button onclick="TicketTracker.close()" class="text-slate-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <p class="text-xs text-slate-500 mb-4 font-medium">Enter your 6-digit ticket number below to check its current status and assigned technician.</p>
+                <div class="flex gap-3">
+                    <div class="relative flex-1">
+                        <i class="fas fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="trackTicketInput" placeholder="000001" 
+                               class="w-full bg-white border border-slate-200 py-3 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700 uppercase tracking-wider shadow-sm" 
+                               onkeypress="if(event.key === 'Enter') TicketTracker.search()">
+                    </div>
+                    <button onclick="TicketTracker.search()" id="trackBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors flex items-center shadow-lg shadow-blue-500/30">
+                        Search
+                    </button>
+                </div>
+                
+                <div id="trackResults" class="hidden mt-6 bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-inner">
+                    </div>
+                <div id="trackError" class="hidden mt-4 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100 text-center">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-50">
         <i class="fas fa-comment-dots text-2xl"></i>
@@ -411,6 +448,130 @@
     </div>
 
 <script>
+    // --- NEW: TICKET TRACKER LOGIC ---
+    const TicketTracker = {
+        modal: document.getElementById('trackerModal'),
+        content: document.getElementById('trackerModalContent'),
+        input: document.getElementById('trackTicketInput'),
+        results: document.getElementById('trackResults'),
+        error: document.getElementById('trackError'),
+        btn: document.getElementById('trackBtn'),
+
+        open() {
+            this.modal.classList.remove('hidden');
+            // Slight delay for transition effect
+            setTimeout(() => {
+                this.modal.classList.remove('opacity-0');
+                this.content.classList.remove('scale-95');
+            }, 10);
+            this.input.focus();
+        },
+        
+        close() {
+            this.modal.classList.add('opacity-0');
+            this.content.classList.add('scale-95');
+            setTimeout(() => {
+                this.modal.classList.add('hidden');
+                this.reset();
+            }, 300);
+        },
+        
+        reset() {
+            this.input.value = '';
+            this.results.classList.add('hidden');
+            this.error.classList.add('hidden');
+        },
+        
+        async search() {
+            let val = this.input.value.trim();
+            if (!val) return;
+            
+            // Clean input (remove '#' if user typed it)
+            val = val.replace('#', '');
+            const searchId = parseInt(val, 10);
+            
+            if (isNaN(searchId)) {
+                this.showError("Invalid format. Please enter numbers only.");
+                return;
+            }
+
+            // Set loading state
+            const originalBtnHtml = this.btn.innerHTML;
+            this.btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
+            this.btn.disabled = true;
+            this.results.classList.add('hidden');
+            this.error.classList.add('hidden');
+
+            try {
+                // IMPORTANT: Adjust this URL to match your Django URL setup for retrieving ticket statuses
+                const res = await fetch(`/tickets/api/track/?id=${searchId}`);
+                
+                if (!res.ok) throw new Error("Ticket not found.");
+                
+                const data = await res.json();
+                
+                // Format Variables
+                const formattedId = '#' + String(data.id || searchId).padStart(6, '0');
+                const status = data.status || 'Pending';
+                
+                // Handle missing or null technician
+                let technician = data.technician;
+                if (!technician || technician.trim() === '') {
+                    technician = 'No technician yet';
+                }
+
+                const subject = data.subject || 'Not specified';
+                
+                // Styling based on status
+                let statusColor = 'text-blue-600 bg-blue-100 border-blue-200';
+                if(status.toLowerCase() === 'pending' || status.toLowerCase() === 'open') {
+                    statusColor = 'text-amber-600 bg-amber-100 border-amber-200';
+                } else if(status.toLowerCase() === 'resolved' || status.toLowerCase() === 'closed') {
+                    statusColor = 'text-emerald-600 bg-emerald-100 border-emerald-200';
+                }
+
+                // Inject Results
+                this.results.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-slate-200 pb-3">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ticket ID</p>
+                            <p class="font-extrabold text-slate-800 text-xl">${formattedId}</p>
+                        </div>
+                        <div class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border ${statusColor}">
+                            ${status}
+                        </div>
+                    </div>
+                    <div class="space-y-4 pt-3">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Subject</p>
+                            <p class="text-sm font-bold text-slate-700">${subject}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Assigned Technician</p>
+                            <p class="text-sm font-bold ${technician === 'No technician yet' ? 'text-slate-400 italic' : 'text-slate-700'} flex items-center">
+                                <i class="fas ${technician === 'No technician yet' ? 'fa-user-clock' : 'fa-user-check'} mr-2 text-slate-400"></i> 
+                                ${technician}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                this.results.classList.remove('hidden');
+
+            } catch (err) {
+                this.showError("Ticket not found. Please double-check your number.");
+            } finally {
+                this.btn.innerHTML = originalBtnHtml;
+                this.btn.disabled = false;
+            }
+        },
+        
+        showError(msg) {
+            this.error.innerText = msg;
+            this.error.classList.remove('hidden');
+        }
+    };
+
+
     // --- SYSTEM READINESS WIDGET (Preserved) ---
     function updateLocalClock() {
         const now = new Date();
