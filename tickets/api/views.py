@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.utils.html import escape # SECURITY FIX: Import escape
 from ..models import Ticket, TicketMessage, TicketAttachment
 from .serializers import TicketSerializer
 
@@ -32,14 +33,14 @@ def get_ticket_chat(request, ticket_id):
             Q(sender=request.user) | Q(recipient=request.user) | Q(recipient__isnull=True)
         ).select_related('sender', 'recipient').order_by('created_at')
 
-    # Formatting data for the Frontend Assistant
+    # SECURITY FIX: Manually escape all strings to prevent XSS
     messages_data = [{
-        'sender': msg.sender.username,
-        'message': msg.message,
+        'sender': escape(msg.sender.username),
+        'message': escape(msg.message),
         'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
         'is_me': msg.sender == request.user,
         'is_staff': msg.sender.is_staff,
-        'recipient': msg.recipient.username if msg.recipient else "Everyone"
+        'recipient': escape(msg.recipient.username) if msg.recipient else "Everyone"
     } for msg in filtered_messages]
 
     attachments_data = [{
@@ -69,7 +70,7 @@ def send_ticket_message(request, ticket_id):
             ticket=ticket,
             sender=request.user,
             recipient=target_user,
-            message=content
+            message=content # Stored clean, escaped on output
         )
         return Response({'status': 'sent'})
             
@@ -97,11 +98,12 @@ def track_ticket(request):
         # Safely get the technician's username if one is assigned
         technician_name = ticket.technician.username if ticket.technician else None
         
+        # SECURITY FIX: Manually escape all tracking outputs
         return Response({
             'id': ticket.id,
-            'subject': ticket.subject,
-            'status': ticket.status,
-            'technician': technician_name
+            'subject': escape(ticket.subject),
+            'status': escape(ticket.status),
+            'technician': escape(technician_name) if technician_name else None
         })
         
     except (ValueError, Ticket.DoesNotExist):

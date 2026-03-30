@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.utils.html import escape # SECURITY: Neutralizes XSS attacks on output
+from django.utils.html import escape # SECURITY: Global XSS Neutralizer
 from ..models import Ticket, TicketMessage, TicketAttachment
 from django.contrib.auth.models import User
 
@@ -31,11 +31,12 @@ class TicketMessageSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return obj.sender == request.user if request else False
         
-    # SECURITY FIX: Intercept and sanitize the message before it goes to the API response
+    # SECURITY FIX: Globally sanitize EVERY string field before it leaves the API
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if data.get('message'):
-            data['message'] = escape(data['message'])
+        for key, value in data.items():
+            if isinstance(value, str):
+                data[key] = escape(value)
         return data
 
 class TicketSerializer(serializers.ModelSerializer):
@@ -71,11 +72,10 @@ class TicketSerializer(serializers.ModelSerializer):
         except:
             return None
             
-    # SECURITY FIX: Intercept and sanitize the subject and description globally
+    # SECURITY FIX: Globally sanitize EVERY string field before it leaves the API
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if data.get('subject'):
-            data['subject'] = escape(data['subject'])
-        if data.get('description'):
-            data['description'] = escape(data['description'])
+        for key, value in data.items():
+            if isinstance(value, str):
+                data[key] = escape(value)
         return data

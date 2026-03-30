@@ -9,7 +9,6 @@ from django.contrib.auth.models import User
 from django.utils.html import escape # SECURITY: Neutralizes XSS attacks
 import os # SECURITY: For checking file extensions
 
-# ---> THE MISSING IMPORT IS RIGHT HERE <---
 from ..models import Ticket, TicketMessage, TicketAttachment
 
 # CRITICAL NEW IMPORT: Directly import Cloudinary to bypass strict image rules
@@ -19,6 +18,7 @@ import cloudinary.uploader
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.txt', '.csv'}
 
 # --- SERIALIZERS ---
+# Note: Ensure the global `to_representation` from serializers.py is used if imported
 
 class AttachmentSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -78,13 +78,12 @@ class TicketSerializer(serializers.ModelSerializer):
             pass
         return None
         
-    # SECURITY FIX: Sanitize output
+    # SECURITY FIX: Sanitize output globally
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if data.get('subject'):
-            data['subject'] = escape(data['subject'])
-        if data.get('description'):
-            data['description'] = escape(data['description'])
+        for key, value in data.items():
+            if isinstance(value, str):
+                data[key] = escape(value)
         return data
 
 # --- VIEWSET ---
@@ -157,13 +156,14 @@ class TicketViewSet(viewsets.ModelViewSet):
                 pass
             return ""
 
+        # SECURITY FIX: Escape everything
         messages_data = [{
             'id': msg.id,
-            'sender': msg.sender.username,
-            'sender_name': msg.sender.username,
+            'sender': escape(msg.sender.username),
+            'sender_name': escape(msg.sender.username),
             'sender_avatar': get_safe_avatar(msg.sender),
-            'recipient_name': msg.recipient.username if msg.recipient else "Everyone",
-            'message': escape(msg.message), # SECURITY FIX
+            'recipient_name': escape(msg.recipient.username) if msg.recipient else "Everyone",
+            'message': escape(msg.message), 
             'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
             'is_me': msg.sender == request.user,
             'is_staff': msg.sender.is_staff,
@@ -189,6 +189,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def send_reply(self, request, pk=None):
         ticket = self.get_object()
+        # SECURITY FIX: Escape the incoming chat message
         text = escape(request.data.get('message', '').strip())
         recipient_username = request.data.get('recipient')
         is_group_chat = request.data.get('is_group_chat') == 'true'
@@ -277,7 +278,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 defaults={'first_name': 'Public', 'last_name': 'Guest', 'email': 'guest@system.local'}
             )
 
-        # Apply the explicitly escaped subject and body to the save method
         ticket = serializer.save(
             user=ticket_owner, 
             subject=subject_val,
