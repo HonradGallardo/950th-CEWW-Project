@@ -533,15 +533,28 @@
                 // Check if we need to show the resolution message
                 let resolutionMessageHtml = '';
                 if (status.toLowerCase() === 'resolved' || status.toLowerCase() === 'closed') {
-                    resolutionMessageHtml = `
-                        <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
-                            <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
-                            <div>
-                                <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Issue Resolved</p>
-                                <p class="text-xs text-emerald-600 font-medium mt-1">Please check your email for the credentials. Thank you!</p>
+                    if (subject === 'New Account Provisioning') {
+                        resolutionMessageHtml = `
+                            <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
+                                <div>
+                                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Your Account Is Ready</p>
+                                    <p class="text-xs text-emerald-600 font-medium mt-1">Please check your email for the credentials. Thank you!</p>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        // Standard resolved message for other tickets
+                        resolutionMessageHtml = `
+                            <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
+                                <div>
+                                    <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Issue Resolved</p>
+                                    <p class="text-xs text-emerald-600 font-medium mt-1">Your request has been successfully processed.</p>
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
 
                 // Inject Results
