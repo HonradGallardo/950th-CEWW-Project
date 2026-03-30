@@ -1,9 +1,28 @@
 {% extends "base.html" %}
-{% load static %}
-
-{% block title %}Case #0000{{ ticket.id }} | On The Go{% endblock %}
 
 {% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Chat bubble animations */
+    #chatBox > div { animation: fadeIn 0.3s ease-out forwards; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
 <div class="font-plex flex flex-col h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
     
     <header class="shrink-0 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between z-10 relative">
@@ -66,58 +85,58 @@
             <div class="flex-1 overflow-y-auto custom-scrollbar">
                 
                 <div class="p-5 border-b border-slate-200 dark:border-slate-800">
-    <h3 class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Staff Conversations</h3>
-    <div class="space-y-2" id="techTabsContainer">
-        
-        <button type="button" onclick="filterByTech('GROUP_CHAT'); closeMobileSidebar();" id="tab-GROUP_CHAT" 
-                data-active-bg="bg-indigo-50 dark:bg-indigo-900/20" data-active-border="border-indigo-200 dark:border-indigo-800"
-                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
-            <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                <i class="fas fa-users"></i>
-            </div>
-            <div class="text-left overflow-hidden flex-1">
-                <p class="text-sm font-semibold truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Group Discussion</p>
-                <p class="text-xs text-slate-500 truncate">All Staff & User</p>
-            </div>
-        </button>
+                    <h3 class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Staff Conversations</h3>
+                    <div class="space-y-2" id="techTabsContainer">
+                        
+                        <button type="button" onclick="filterByTech('GROUP_CHAT'); closeMobileSidebar();" id="tab-GROUP_CHAT" 
+                                data-active-bg="bg-indigo-50 dark:bg-indigo-900/20" data-active-border="border-indigo-200 dark:border-indigo-800"
+                                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="text-left overflow-hidden flex-1">
+                                <p class="text-sm font-semibold truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Group Discussion</p>
+                                <p class="text-xs text-slate-500 truncate">All Staff & User</p>
+                            </div>
+                        </button>
 
-        <div class="h-px bg-slate-200 dark:bg-slate-800 my-3"></div>
-        
-        <button type="button" onclick="filterByTech('{{ request.user.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ request.user.username }}" 
-                data-active-bg="bg-blue-50 dark:bg-blue-900/20" data-active-border="border-blue-200 dark:border-blue-800"
-                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
-            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800">
-                {% if request.user.profile.image %}
-                    <img src="{{ request.user.profile.image.url }}" class="w-full h-full object-cover">
-                {% else %}
-                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400">ME</span>
-                {% endif %}
-            </div>
-            <div class="text-left overflow-hidden flex-1">
-                <p class="text-sm font-semibold truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">My Chat</p>
-                <p class="text-xs text-slate-500 truncate">{{ request.user.username }}</p>
-            </div>
-        </button>
+                        <div class="h-px bg-slate-200 dark:bg-slate-800 my-3"></div>
+                        
+                        <button type="button" onclick="filterByTech('{{ request.user.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ request.user.username }}" 
+                                data-active-bg="bg-blue-50 dark:bg-blue-900/20" data-active-border="border-blue-200 dark:border-blue-800"
+                                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800">
+                                {% if request.user.profile.image %}
+                                    <img src="{{ request.user.profile.image.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400">ME</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-left overflow-hidden flex-1">
+                                <p class="text-sm font-semibold truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">My Chat</p>
+                                <p class="text-xs text-slate-500 truncate">{{ request.user.username }}</p>
+                            </div>
+                        </button>
 
-        {% for admin in other_admins %}
-        <button type="button" onclick="filterByTech('{{ admin.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ admin.username }}" 
-                data-active-bg="bg-emerald-50 dark:bg-emerald-900/20" data-active-border="border-emerald-200 dark:border-emerald-800"
-                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
-            <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-300 dark:group-hover:border-emerald-600 transition-colors">
-                {% if admin.profile.image %}
-                    <img src="{{ admin.profile.image.url }}" class="w-full h-full object-cover">
-                {% else %}
-                    <span class="text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors">{{ admin.username|slice:":2" }}</span>
-                {% endif %}
-            </div>
-            <div class="text-left overflow-hidden flex-1">
-                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ admin.get_full_name|default:admin.username }}</p>
-                <p class="text-xs text-slate-500 truncate">{{ admin.username }}</p>
-            </div>
-        </button>
-        {% endfor %}
-    </div>
-</div> 
+                        {% for admin in other_admins %}
+                        <button type="button" onclick="filterByTech('{{ admin.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ admin.username }}" 
+                                data-active-bg="bg-emerald-50 dark:bg-emerald-900/20" data-active-border="border-emerald-200 dark:border-emerald-800"
+                                class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-300 dark:group-hover:border-emerald-600 transition-colors">
+                                {% if admin.profile.image %}
+                                    <img src="{{ admin.profile.image.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <span class="text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors">{{ admin.username|slice:":2" }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-left overflow-hidden flex-1">
+                                <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ admin.get_full_name|default:admin.username }}</p>
+                                <p class="text-xs text-slate-500 truncate">{{ admin.username }}</p>
+                            </div>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div> 
 
                 <div class="p-5" id="sidebarDescription">
                     <h3 class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -216,9 +235,9 @@
                                     </button>
                                 </div>
                                 <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-1 dark:focus:ring-offset-slate-900">
-    <span>Send</span>
-    <i class="fas fa-paper-plane text-xs"></i>
-</button>
+                                    <span>Send</span>
+                                    <i class="fas fa-paper-plane text-xs"></i>
+                                </button>
                             </div>
                         </div>
                     </form>
@@ -360,28 +379,6 @@
     <div id="lightboxContent" class="w-full h-full flex items-center justify-center"></div>
     <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10"></div>
 </div>
-
-<style>
-    /* Custom Scrollbar */
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-    /* Chat bubble animations */
-    #chatBox > div { animation: fadeIn 0.3s ease-out forwards; }
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
-
-    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
-    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
-</style>
 
 <script>
     // PRESERVED JAVASCRIPT LOGIC - ALL IDs AND FUNCTIONS KEPT INTACT
@@ -597,7 +594,7 @@
             // 👇 THE FIX: Target 'dynamicMessages' so we don't delete our anti-bounce wrapper!
             const chatBox = document.getElementById('dynamicMessages');
             
-            if(chatBox) chatBox.innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i><p class="text-[10px] uppercase font-black tracking-widest">Decrypting Thread...</p></div>`;
+            if(chatBox) chatBox.innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest">Decrypting Thread...</p></div>`;
             const mediaGrid = document.getElementById('mediaGridView');
             if(mediaGrid) mediaGrid.innerHTML = '';
         }
@@ -902,11 +899,11 @@
         const detailsBtn = document.getElementById('detailsTabBtn');
 
         if (tab === 'feed') {
-            feedBtn.className = "py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors";
-            detailsBtn.className = "py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors";
+            feedBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
+            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
         } else {
-            detailsBtn.className = "py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors";
-            feedBtn.className = "py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors";
+            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
+            feedBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
         }
     }
     
@@ -944,7 +941,7 @@
             const rawDescription = "{{ ticket.description|escapejs }}";
             dynamicInquiry.innerHTML = `
                 <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
-                    <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Original User Concern</p>
+                    <p class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2 tracking-widest">Original User Concern</p>
                     <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">${rawDescription}</p>
                 </div>
             `;
@@ -959,9 +956,9 @@
         if (linksList) linksList.innerHTML = '';
 
         if (!allAttachments || allAttachments.length === 0) {
-            if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
-            if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
-            if (linksList) linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+            if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+            if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+            if (linksList) linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
             return;
         }
 
@@ -974,7 +971,7 @@
         const docItems = visibleAttachments.filter(att => SupportConsole.classifyAttachment(att) === 'document');
 
         if (mediaItemsForLightbox.length === 0 && mediaGrid) {
-            mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+            mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
         } else {
             mediaItemsForLightbox.forEach(att => {
                 const type = SupportConsole.classifyAttachment(att);
@@ -995,7 +992,7 @@
         }
 
         if (docItems.length === 0 && filesList) {
-            filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+            filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
         } else {
             docItems.forEach(att => {
                 if (filesList) {
@@ -1032,7 +1029,7 @@
         });
 
         if (linkCount === 0 && linksList) {
-            linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+            linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
         }
     }
 
@@ -1045,11 +1042,11 @@
                 if (cat === tab) {
                     view.classList.remove('hidden');
                     if (cat !== 'media') view.classList.add('flex');
-                    btn.className = "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50";
+                    btn.className = "font-rajdhani uppercase tracking-widest flex-1 py-1.5 text-xs font-bold rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50";
                 } else {
                     view.classList.add('hidden');
                     if (cat !== 'media') view.classList.remove('flex');
-                    btn.className = "flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent";
+                    btn.className = "font-rajdhani uppercase tracking-widest flex-1 py-1.5 text-xs font-bold rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent";
                 }
             }
         });
