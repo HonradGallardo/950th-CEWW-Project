@@ -4,7 +4,7 @@
 {% block title %}Case #0000{{ ticket.id }} | On The Go{% endblock %}
 
 {% block content %}
-<div class="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden font-sans text-slate-900 dark:text-slate-100 transition-colors duration-300">
+<div class="font-plex flex flex-col h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
     
     <header class="shrink-0 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between z-10 relative">
         <div class="flex items-center gap-3 md:gap-4">
@@ -17,7 +17,7 @@
             </div>
 
             <button type="button" onclick="navigator.clipboard.writeText('0000{{ ticket.id }}')" class="group flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95">
-                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">ID: 0000{{ ticket.id }}</span>
+                <span class="font-rajdhani text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">ID: 0000{{ ticket.id }}</span>
                 <i class="fas fa-copy text-slate-400 group-hover:text-blue-500 transition-colors"></i>
             </button>
         </div>
@@ -37,8 +37,8 @@
             <div class="shrink-0 p-5 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex justify-between items-start mb-3">
                     <div>
-                        <p class="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Case Subject</p>
-                        <h2 class="text-base font-bold leading-snug line-clamp-2">{{ ticket.subject }}</h2>
+                        <p class="font-rajdhani text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Case Subject</p>
+                        <h2 class="font-rajdhani text-base font-bold leading-snug line-clamp-2">{{ ticket.subject }}</h2>
                     </div>
                     <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md">
                         <i class="fas fa-chevron-left text-sm"></i>
@@ -66,7 +66,7 @@
             <div class="flex-1 overflow-y-auto custom-scrollbar">
                 
                 <div class="p-5 border-b border-slate-200 dark:border-slate-800">
-    <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Staff Conversations</h3>
+    <h3 class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Staff Conversations</h3>
     <div class="space-y-2" id="techTabsContainer">
         
         <button type="button" onclick="filterByTech('GROUP_CHAT'); closeMobileSidebar();" id="tab-GROUP_CHAT" 
@@ -120,7 +120,7 @@
 </div> 
 
                 <div class="p-5" id="sidebarDescription">
-                    <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <h3 class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
                         <i class="fas fa-info-circle"></i> Case Metadata
                     </h3>
                     
@@ -173,16 +173,14 @@
             
             <div class="shrink-0 flex items-center px-4 md:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#1E293B] backdrop-blur-md sticky top-0 z-10 w-full">
                 <div class="flex gap-6 md:gap-8 flex-1">
-                    <button type="button" onclick="switchTab('feed')" id="feedTabBtn" class="py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors">Feed</button>
-                    <button type="button" onclick="switchTab('details')" id="detailsTabBtn" class="py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors">Ticket Details</button>
+                    <button type="button" onclick="switchTab('feed')" id="feedTabBtn" class="font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest">Feed</button>
+                    <button type="button" onclick="switchTab('details')" id="detailsTabBtn" class="font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest">Ticket Details</button>
                 </div>
                 
-                <!-- 🚀 UPDATED: Arrow Toggle Button (Moved to far right) -->
                 <button type="button" onclick="toggleRightSidebar()" id="mainHeaderToggleBtn" title="Expand Sidebar" class="hidden items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
                     <i class="fas fa-chevron-left text-lg"></i>
                 </button>
 
-                <!-- Mobile Paperclip Toggle -->
                 <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none">
                     <i class="fas fa-paperclip"></i>
                 </button>
@@ -195,9 +193,7 @@
                     <span id="readOnlyIndicator" class="hidden text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2.5 py-1 rounded-md uppercase tracking-wide border border-red-200 dark:border-red-800/50">Read Only</span>
                 </div>
 
-                <!-- THE NEW RIGID SCROLL CONTAINER -->
                 <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0" id="chatBox">
-                    <!-- THE INNER PADDING WRAPPER -->
                     <div id="dynamicMessages" class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8 space-y-6"></div>
                 </div>
 
@@ -235,7 +231,7 @@
                     
                     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <h3 class="font-rajdhani text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 <i class="fas fa-sliders-h text-blue-500"></i> Technical Details
                             </h3>
                             <p class="text-sm text-slate-500 mt-1">Manage routing, priority, and internal notes.</p>
@@ -310,15 +306,13 @@
             
             <div class="shrink-0 p-5 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">Thread Assets</h3>
+                    <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-white">Thread Assets</h3>
                     
                     <div class="flex items-center gap-1">
-                        <!-- 🚀 NEW: Desktop Collapse Button (Inside Sidebar) -->
                         <button type="button" onclick="toggleRightSidebar()" title="Collapse Sidebar" class="hidden lg:flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
                             <i class="fas fa-chevron-right text-base"></i>
                         </button>
                         
-                        <!-- Mobile Close Button (Existing) -->
                         <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none">
                             <i class="fas fa-times"></i>
                         </button>
@@ -382,6 +376,11 @@
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 </style>
 
 <script>

@@ -2,6 +2,11 @@
 
 {% block content %}
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     :root {
@@ -111,15 +116,67 @@
             width: 100% !important;
             max-width: none !important;
         }
+
+        .ticket-row td::before {
+            content: attr(data-label);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            text-align: left;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            width: 35%;
+        }
+        .dark .ticket-row td::before { color: #94a3b8; }
+        
+        .ticket-row td > div {
+            width: 65%;
+            display: flex;
+            justify-content: flex-end;
+            text-align: right;
+        }
     }
 </style>
 
-<div class="min-h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#0F172A] p-3 md:p-6 text-slate-900 dark:text-slate-300 font-sans transition-colors duration-300">
+<div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
+            <div class="px-6 pt-6 pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Confirm Delete
+                </button>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="font-plex min-h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#0F172A] p-3 md:p-6 text-slate-900 dark:text-slate-300 transition-colors duration-300">
     
     <header id="head" class="flex flex-col gap-5 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
         <div class="flex items-center justify-between">
             <div class="flex flex-col gap-1">
-                <h1 class="text-base md:text-xl font-black tracking-tight flex items-center gap-3">
+                <h1 class="font-rajdhani text-base md:text-xl font-black tracking-tight flex items-center gap-3">
                     <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                         <i class="fas fa-shield-alt text-blue-600 dark:text-blue-400"></i>
                     </div>
@@ -158,7 +215,7 @@
     <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col">
         <div class="admin-table-container overflow-auto custom-scrollbar">
             <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px]">
-                <thead class="hidden lg:table-header-group">
+                <thead class="font-rajdhani hidden lg:table-header-group">
                     <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm">
                         <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl">Ref ID</th>
                         <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Priority</th>
@@ -296,7 +353,7 @@
         } else {
             body.innerHTML = paginatedItems.map(t => `
                 <tr class="ticket-row group" onclick="goToDetail(${t.id})">
-                    <td class="p-4 lg:w-36 align-middle">
+                    <td data-label="Ref ID" class="p-4 lg:w-36 align-middle">
                         <div class="lg:block flex justify-between items-center w-full">
                             <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
                                 #${String(t.id).padStart(6, '0')}
@@ -320,43 +377,47 @@
                             </div>
                         </div>
                     </td>
-                    <td class="p-4 align-middle">
-                        <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
-                            <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
-                        </span>
+                    <td data-label="Priority" class="p-4 align-middle">
+                        <div>
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
+                                <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
+                            </span>
+                        </div>
                     </td>
-                    <td class="p-4 align-middle">
+                    <td data-label="Client" class="p-4 align-middle">
                         <div class="flex flex-col">
                             <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${t.first_name || ''} ${t.last_name || ''}</span>
                             <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">@${t.user_name || 'unknown'}</span>
                         </div>
                     </td>
-                    <td class="p-4 align-middle lg:max-w-[320px]">
+                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px]">
                         <div class="flex flex-col overflow-hidden">
                             <p class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${t.subject || 'No Subject'}</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">"${t.description || 'No additional details provided'}"</p>
                         </div>
                     </td>
-                    <td class="p-4 align-middle">
+                    <td data-label="Agent Details" class="p-4 align-middle">
                         <div class="flex flex-col gap-1">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 lg:justify-start justify-end">
                                 <i class="fas fa-user-shield text-slate-400"></i> ${t.technician_name || 'Unassigned'}
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">Prev: ${t.previous_technician || 'None'}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold lg:justify-start justify-end flex">Prev: ${t.previous_technician || 'None'}</span>
                         </div>
                     </td>
-                    <td class="p-4 align-middle lg:text-center">
-                        <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
-                            ${t.status || 'Open'}
-                        </span>
+                    <td data-label="Status" class="p-4 align-middle lg:text-center">
+                        <div>
+                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
+                                ${t.status || 'Open'}
+                            </span>
+                        </div>
                     </td>
-                    <td class="p-4 align-middle">
+                    <td data-label="Created At" class="p-4 align-middle">
                         <div class="flex flex-col">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">${formatTimestamp(t.created_at)}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Logged</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 lg:justify-start justify-end flex">Logged</span>
                         </div>
                     </td>
-                    <td class="p-4 align-middle text-right relative hidden lg:table-cell">
+                    <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
                         <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
                             <i class="fas fa-ellipsis-v"></i>
                         </button>
