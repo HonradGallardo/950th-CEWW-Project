@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils.html import escape
 from ..models import Ticket, TicketMessage, TicketAttachment
 from django.contrib.auth.models import User
 
@@ -29,6 +30,13 @@ class TicketMessageSerializer(serializers.ModelSerializer):
     def get_is_me(self, obj):
         request = self.context.get('request')
         return obj.sender == request.user if request else False
+
+    # NEW: Intercept and sanitize the message before it goes to the API response
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if data.get('message'):
+            data['message'] = escape(data['message'])
+        return data
 
 class TicketSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
@@ -62,3 +70,12 @@ class TicketSerializer(serializers.ModelSerializer):
                 return obj.user.profile.image.url
         except:
             return None
+
+    # NEW: Intercept and sanitize the subject and description globally
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if data.get('subject'):
+            data['subject'] = escape(data['subject'])
+        if data.get('description'):
+            data['description'] = escape(data['description'])
+        return data

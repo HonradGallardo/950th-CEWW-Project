@@ -6,6 +6,7 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from django.utils.html import escape # CRITICAL SECURITY IMPORT: Neutralizes XSS attacks
 from ..models import Ticket, TicketMessage, TicketAttachment
 
 # CRITICAL NEW IMPORT: Directly import Cloudinary to bypass strict image rules
@@ -140,7 +141,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             'sender_name': msg.sender.username,
             'sender_avatar': get_safe_avatar(msg.sender),
             'recipient_name': msg.recipient.username if msg.recipient else "Everyone",
-            'message': msg.message,
+            'message': escape(msg.message), # SECURITY FIX: Escapes XSS payloads
             'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
             'is_me': msg.sender == request.user,
             'is_staff': msg.sender.is_staff,
@@ -249,7 +250,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         ticket = serializer.save(
             user=ticket_owner, 
-            description=full_body, 
+            description=full_body,  # We rely on TicketSerializer.to_representation to escape this later
             status="Pending"
         )
 
