@@ -528,11 +528,13 @@
                     statusColor = 'text-amber-600 bg-amber-100 border-amber-200';
                 } else if(status.toLowerCase() === 'resolved' || status.toLowerCase() === 'closed') {
                     statusColor = 'text-emerald-600 bg-emerald-100 border-emerald-200';
+                } else if(status.toLowerCase() === 'completed' || status.toLowerCase() === 'closed') {
+                    statusColor = 'text-emerald-600 bg-emerald-100 border-emerald-200';
                 }
 
                 // Check if we need to show the resolution message
                 let resolutionMessageHtml = '';
-                if (status.toLowerCase() === 'resolved' || status.toLowerCase() === 'closed') {
+                if (status.toLowerCase() === 'resolved','completed' || status.toLowerCase() === 'closed') {
                     if (subject === 'New Account Provisioning') {
                         resolutionMessageHtml = `
                             <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
