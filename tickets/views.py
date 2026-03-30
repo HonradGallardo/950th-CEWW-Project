@@ -69,29 +69,3 @@ def ticket_detail(request, ticket_id):
         'all_admins': all_admins,    # Use this for the Assign Dropdown
         'other_admins': other_admins # Use this for the chat participant list
     })
-
-# --- NEW: Public Ticket Tracking Endpoint ---
-def track_ticket(request):
-    """Public API endpoint to track ticket status by ID."""
-    ticket_id = request.GET.get('id')
-    
-    if not ticket_id:
-        return JsonResponse({'error': 'Ticket ID is required'}, status=400)
-    
-    try:
-        # We ensure it's a valid integer
-        ticket_id = int(ticket_id)
-        ticket = Ticket.objects.get(id=ticket_id)
-        
-        # Safely get the technician's username if one is assigned
-        technician_name = ticket.technician.username if ticket.technician else None
-        
-        return JsonResponse({
-            'id': ticket.id,
-            'subject': ticket.subject,
-            'status': ticket.status,
-            'technician': technician_name
-        })
-        
-    except (ValueError, Ticket.DoesNotExist):
-        return JsonResponse({'error': 'Ticket not found'}, status=404)

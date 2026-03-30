@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny # Added AllowAny for the public tracker
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -73,3 +73,31 @@ def send_ticket_message(request, ticket_id):
         return Response({'status': 'sent'})
             
     return Response({'status': 'error'}, status=400)
+
+# --- NEW: Public Ticket Tracking Endpoint ---
+@api_view(['GET'])
+@permission_classes([AllowAny]) # This allows guests who aren't logged in to track their tickets
+def track_ticket(request):
+    """Public API endpoint to track ticket status by ID."""
+    ticket_id = request.GET.get('id')
+    
+    if not ticket_id:
+        return Response({'error': 'Ticket ID is required'}, status=400)
+    
+    try:
+        # We ensure it's a valid integer
+        ticket_id = int(ticket_id)
+        ticket = Ticket.objects.get(id=ticket_id)
+        
+        # Safely get the technician's username if one is assigned
+        technician_name = ticket.technician.username if ticket.technician else None
+        
+        return Response({
+            'id': ticket.id,
+            'subject': ticket.subject,
+            'status': ticket.status,
+            'technician': technician_name
+        })
+        
+    except (ValueError, Ticket.DoesNotExist):
+        return Response({'error': 'Ticket not found'}, status=404)
