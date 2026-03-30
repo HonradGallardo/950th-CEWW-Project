@@ -1,10 +1,10 @@
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny # Added AllowAny for the public tracker
+from rest_framework.permissions import IsAuthenticated, AllowAny 
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from django.utils.html import escape # SECURITY FIX: Import escape
+from django.utils.html import escape, strip_tags # SECURITY FIX: Import strip_tags
 from ..models import Ticket, TicketMessage, TicketAttachment
 from .serializers import TicketSerializer
 
@@ -33,14 +33,13 @@ def get_ticket_chat(request, ticket_id):
             Q(sender=request.user) | Q(recipient=request.user) | Q(recipient__isnull=True)
         ).select_related('sender', 'recipient').order_by('created_at')
 
-    # SECURITY FIX: Manually escape all strings to prevent XSS
     messages_data = [{
-        'sender': escape(msg.sender.username),
-        'message': escape(msg.message),
+        'sender': msg.sender.username,
+        'message': msg.message,
         'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
         'is_me': msg.sender == request.user,
         'is_staff': msg.sender.is_staff,
-        'recipient': escape(msg.recipient.username) if msg.recipient else "Everyone"
+        'recipient': msg.recipient.username if msg.recipient else "Everyone"
     } for msg in filtered_messages]
 
     attachments_data = [{
@@ -57,7 +56,9 @@ def get_ticket_chat(request, ticket_id):
 @permission_classes([IsAuthenticated])
 def send_ticket_message(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
-    content = request.data.get('message')
+    
+    # SECURITY FIX: Physically delete HTML tags from input
+    content = strip_tags(request.data.get('message', ''))
     recipient_username = request.data.get('recipient') 
     
     target_user = None
@@ -70,19 +71,19 @@ def send_ticket_message(request, ticket_id):
             ticket=ticket,
             sender=request.user,
             recipient=target_user,
-            message=content # Stored clean, escaped on output
+            message=content
         )
         return Response({'status': 'sent'})
             
     return Response({'status': 'error'}, status=400)
 
 class TrackTicketThrottle(AnonRateThrottle):
-    rate = '10/minute' # Blocks scripts trying to scrape hundreds of IDs
+    rate = '10/minute' 
 
 # --- NEW: Public Ticket Tracking Endpoint ---
 @api_view(['GET'])
-@throttle_classes([TrackTicketThrottle]) # Apply the security throttle
-@permission_classes([AllowAny]) # This allows guests who aren't logged in to track their tickets
+@throttle_classes([TrackTicketThrottle]) 
+@permission_classes([AllowAny]) 
 def track_ticket(request):
     """Public API endpoint to track ticket status by ID."""
     ticket_id = request.GET.get('id')
@@ -91,19 +92,16 @@ def track_ticket(request):
         return Response({'error': 'Ticket ID is required'}, status=400)
     
     try:
-        # We ensure it's a valid integer
         ticket_id = int(ticket_id)
         ticket = Ticket.objects.get(id=ticket_id)
         
-        # Safely get the technician's username if one is assigned
         technician_name = ticket.technician.username if ticket.technician else None
         
-        # SECURITY FIX: Manually escape all tracking outputs
         return Response({
             'id': ticket.id,
-            'subject': escape(ticket.subject),
-            'status': escape(ticket.status),
-            'technician': escape(technician_name) if technician_name else None
+            'subject': ticket.subject,
+            'status': ticket.status,
+            'technician': technician_name
         })
         
     except (ValueError, Ticket.DoesNotExist):

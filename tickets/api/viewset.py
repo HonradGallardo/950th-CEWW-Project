@@ -6,9 +6,10 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from django.utils.html import escape # SECURITY: Neutralizes XSS attacks
+from django.utils.html import escape, strip_tags # SECURITY: Added strip_tags for Input Sanitization
 import os # SECURITY: For checking file extensions
 
+# ---> THE MISSING IMPORT IS RIGHT HERE <---
 from ..models import Ticket, TicketMessage, TicketAttachment
 
 # CRITICAL NEW IMPORT: Directly import Cloudinary to bypass strict image rules
@@ -18,7 +19,6 @@ import cloudinary.uploader
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.txt', '.csv'}
 
 # --- SERIALIZERS ---
-# Note: Ensure the global `to_representation` from serializers.py is used if imported
 
 class AttachmentSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -46,7 +46,6 @@ class TicketMessageSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return obj.sender == request.user if request else False
         
-    # SECURITY FIX: Sanitize output
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if data.get('message'):
@@ -78,12 +77,12 @@ class TicketSerializer(serializers.ModelSerializer):
             pass
         return None
         
-    # SECURITY FIX: Sanitize output globally
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        for key, value in data.items():
-            if isinstance(value, str):
-                data[key] = escape(value)
+        if data.get('subject'):
+            data['subject'] = escape(data['subject'])
+        if data.get('description'):
+            data['description'] = escape(data['description'])
         return data
 
 # --- VIEWSET ---
@@ -134,7 +133,6 @@ class TicketViewSet(viewsets.ModelViewSet):
                 pass
             return None
 
-        # FIX: Safe extraction for raw URL strings
         def get_safe_filename(file_obj):
             try:
                 if file_obj and hasattr(file_obj, 'name') and file_obj.name:
@@ -145,25 +143,22 @@ class TicketViewSet(viewsets.ModelViewSet):
             
         def get_safe_url(file_obj):
             try:
-                # 1. Check if the raw string in the database is ALREADY a full URL!
                 if file_obj and hasattr(file_obj, 'name') and file_obj.name and file_obj.name.startswith('http'):
                     return file_obj.name
                 
-                # 2. If it's a normal file path, let Django build the Cloudinary URL
                 if file_obj and hasattr(file_obj, 'url'):
                     return file_obj.url
             except Exception:
                 pass
             return ""
 
-        # SECURITY FIX: Escape everything
         messages_data = [{
             'id': msg.id,
-            'sender': escape(msg.sender.username),
-            'sender_name': escape(msg.sender.username),
+            'sender': msg.sender.username,
+            'sender_name': msg.sender.username,
             'sender_avatar': get_safe_avatar(msg.sender),
-            'recipient_name': escape(msg.recipient.username) if msg.recipient else "Everyone",
-            'message': escape(msg.message), 
+            'recipient_name': msg.recipient.username if msg.recipient else "Everyone",
+            'message': escape(msg.message),
             'timestamp': msg.created_at.strftime('%b %d, %H:%M'),
             'is_me': msg.sender == request.user,
             'is_staff': msg.sender.is_staff,
@@ -189,8 +184,8 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def send_reply(self, request, pk=None):
         ticket = self.get_object()
-        # SECURITY FIX: Escape the incoming chat message
-        text = escape(request.data.get('message', '').strip())
+        # SECURITY FIX: Physically delete HTML tags from input
+        text = strip_tags(request.data.get('message', '').strip())
         recipient_username = request.data.get('recipient')
         is_group_chat = request.data.get('is_group_chat') == 'true'
         files = request.FILES.getlist('attachments') 
@@ -213,12 +208,10 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         for f in files:
-            # SECURITY FIX: Validate file extension
             ext = os.path.splitext(f.name)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 continue
             try:
-                # FIX: Force 'auto' detection for video/pdf and save the raw URL string
                 upload_result = cloudinary.uploader.upload(f, resource_type="auto")
                 TicketAttachment.objects.create(
                     ticket=ticket, 
@@ -233,39 +226,39 @@ class TicketViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         data = self.request.data
         
-        # SECURITY FIX: Escape EVERY piece of text inputted by the user
-        category = escape(data.get("category", "General"))
-        description = escape(data.get("description", ""))
-        subject_val = escape(data.get("subject", "No Subject"))
+        # SECURITY FIX: Physically delete HTML tags from input
+        category = strip_tags(data.get("category", "General"))
+        description = strip_tags(data.get("description", ""))
+        subject_val = strip_tags(data.get("subject", "No Subject"))
         
         header = f"🎫 TICKET TYPE: {category.upper()}\n"
         header += "─" * 25 + "\n"
         details = []
         
         if category == "Identity":
-            details.append(f"👤 First Name: {escape(data.get('first_name', 'N/A'))}")
-            details.append(f"👤 Last Name: {escape(data.get('last_name', 'N/A'))}")
-            details.append(f"📧 Email: {escape(data.get('email', 'N/A'))}")
-            details.append(f"🎖️ Rank: {escape(data.get('rank', 'N/A'))}")
-            details.append(f"📞 Phone: {escape(data.get('phone', 'N/A'))}")
+            details.append(f"👤 First Name: {strip_tags(data.get('first_name', 'N/A'))}")
+            details.append(f"👤 Last Name: {strip_tags(data.get('last_name', 'N/A'))}")
+            details.append(f"📧 Email: {strip_tags(data.get('email', 'N/A'))}")
+            details.append(f"🎖️ Rank: {strip_tags(data.get('rank', 'N/A'))}")
+            details.append(f"📞 Phone: {strip_tags(data.get('phone', 'N/A'))}")
 
         elif category == "Security":
-            details.append(f"🔐 Auth ID: {escape(data.get('auth_id', 'N/A'))}")
-            details.append(f"⚠️ Request Type: {escape(data.get('removal_type', 'N/A'))}")
+            details.append(f"🔐 Auth ID: {strip_tags(data.get('auth_id', 'N/A'))}")
+            details.append(f"⚠️ Request Type: {strip_tags(data.get('removal_type', 'N/A'))}")
 
         elif category == "Technical":
-            details.append(f"📦 Impacted Module: {escape(data.get('bug_module', 'N/A'))}")
-            details.append(f"🚫 Error Code: {escape(data.get('error_code', 'None'))}")
-            details.append(f"🔄 Steps: {escape(data.get('reproduce_steps', 'N/A'))}")
+            details.append(f"📦 Impacted Module: {strip_tags(data.get('bug_module', 'N/A'))}")
+            details.append(f"🚫 Error Code: {strip_tags(data.get('error_code', 'None'))}")
+            details.append(f"🔄 Steps: {strip_tags(data.get('reproduce_steps', 'N/A'))}")
 
         elif category == "Access":
             if data.get('target_resource'):
-                details.append(f"🔑 Resource: {escape(data.get('target_resource', 'N/A'))}")
-                details.append(f"📊 Level: {escape(data.get('access_level', 'N/A'))}")
-                details.append(f"✍️ Approver: {escape(data.get('approving_officer', 'N/A'))}")
+                details.append(f"🔑 Resource: {strip_tags(data.get('target_resource', 'N/A'))}")
+                details.append(f"📊 Level: {strip_tags(data.get('access_level', 'N/A'))}")
+                details.append(f"✍️ Approver: {strip_tags(data.get('approving_officer', 'N/A'))}")
             else:
-                details.append(f"🆔 Affected ID: {escape(data.get('affected_id', 'N/A'))}")
-                details.append(f"📱 Alt Contact: {escape(data.get('alt_contact', 'N/A'))}")
+                details.append(f"🆔 Affected ID: {strip_tags(data.get('affected_id', 'N/A'))}")
+                details.append(f"📱 Alt Contact: {strip_tags(data.get('alt_contact', 'N/A'))}")
 
         detail_text = "\n".join(details)
         full_body = f"{header}{detail_text}\n\n📝 USER CONCERN:\n{description}"
@@ -287,12 +280,10 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         files = self.request.FILES.getlist('attachments')
         for f in files:
-            # SECURITY FIX: Validate file extension
             ext = os.path.splitext(f.name)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 continue
             try:
-                # FIX: Force 'auto' detection for video/pdf and save the raw URL string
                 upload_result = cloudinary.uploader.upload(f, resource_type="auto")
                 TicketAttachment.objects.create(
                     ticket=ticket, 
@@ -303,7 +294,6 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def update_technical_details(self, request, pk=None):
-        # SECURITY FIX: Prevent Privilege Escalation
         if not (request.user.is_staff or request.user.groups.filter(name='Admin').exists()):
             return Response({'error': 'Unauthorized. Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
             
