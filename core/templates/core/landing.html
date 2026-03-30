@@ -735,10 +735,22 @@
                 });
 
                 if (res.ok) {
+                    // NEW: Parse the JSON response to get data from your Django Backend
+                    const responseData = await res.json(); 
+                    
                     form.classList.add('hidden');
                     document.getElementById('hiddenForms').appendChild(form); // Move it back safely
                     this.removeLastOptions();
-                    this.appendBotMessage("✅ Dispatch successful. Our team will review your report shortly.");
+                    
+                    // NEW: Dynamically build the success message using the ticket number returned
+                    const ticketId = responseData.ticket_number || responseData.ticket_id || responseData.id;
+                    let successMessage = "✅ Dispatch successful. Our team will review your report shortly.";
+                    
+                    if (ticketId) {
+                        successMessage = `✅ Dispatch successful. Your ticket number is <strong>${ticketId}</strong>. Please save this for your tracking.`;
+                    }
+                    
+                    this.appendBotMessage(successMessage);
                     this.setBotOptions([{ label: "Start over", action: "restart" }]);
                 } else {
                     throw new Error("Dispatch failed");
