@@ -1,7 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex flex-col min-h-screen lg:h-[calc(100vh-140px)] space-y-6 lg:overflow-hidden p-4 sm:p-6 bg-slate-50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-200 transition-colors duration-300 relative z-0">
+<div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
+            <div class="px-6 pt-6 pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Confirm Delete
+                </button>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="font-plex flex flex-col min-h-screen lg:h-[calc(100vh-140px)] space-y-6 lg:overflow-hidden p-4 sm:p-6 bg-slate-50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-200 transition-colors duration-300 relative z-0">
     
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-4 relative z-10 w-full">
         <div class="flex items-center gap-3">
@@ -9,7 +39,7 @@
                 <i class="fas fa-users-cog text-lg"></i>
             </div>
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">User Access Control & RBAC</h1>
+                <h1 class="font-rajdhani text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">User Access Control & RBAC</h1>
                 <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Manage system personnel, roles, and security permissions</p>
             </div>
         </div>
@@ -59,7 +89,7 @@
                 <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar w-full p-3 lg:p-0">
                     <table class="w-full text-left border-collapse responsive-table" id="userTable">
                         <thead class="hidden sm:table-header-group sticky top-0 bg-slate-50/95 dark:bg-[#111827]/95 backdrop-blur-sm z-10 shadow-sm">
-                            <tr class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-200 dark:border-slate-800">
+                            <tr class="font-rajdhani text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-200 dark:border-slate-800">
                                 <th class="py-3 px-4 sm:px-6 w-20 text-center"><i class="fas fa-hashtag mr-1"></i> ID</th>
                                 <th class="py-3 px-4 sm:px-6 w-20 text-center"><i class="fas fa-star mr-1"></i> Rank</th>
                                 <th class="py-3 px-4 sm:px-6"><i class="fas fa-user mr-1"></i> Personnel</th>
@@ -138,118 +168,76 @@
             </div>
         </div>
 
-        <div class="lg:col-span-4 flex flex-col h-full min-h-0 relative z-10">
-            <div id="detail-panel" class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden relative shadow-sm">
-                
-                <div id="empty-message" class="flex-1 flex flex-col items-center justify-center text-center py-16 lg:py-0 relative z-10 px-6">
-                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 border border-slate-200 dark:border-slate-800 shadow-inner">
-                        <i class="fas fa-id-badge text-slate-400 dark:text-slate-600 text-2xl"></i>
-                    </div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-[250px]">Select a user to view their complete profile details.</p>
-                </div>
+        <div class="col-span-12 lg:col-span-4 flex flex-col h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 overflow-hidden">
+            <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center">
+                <i class="fas fa-file-medical text-slate-200 dark:text-slate-800 text-5xl mb-4"></i>
+                <p class="font-rajdhani text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest">Select a card to view activity</p>
+            </div>
 
-                <div id="user-details" class="hidden flex-1 flex flex-col min-h-0 relative z-10 w-full">
+            <div id="detail-content" class="hidden flex-1 flex flex-col min-h-0">
+                <div class="flex justify-between items-start mb-6 border-b dark:border-slate-800 pb-4 shrink-0">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span id="det-icon" class="text-blue-500 dark:text-blue-400"></span>
+                            <h3 class="font-rajdhani font-black text-sm text-slate-800 dark:text-slate-100" id="det-id">---</h3>
+                        </div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-1" id="det-asset-type">---</p>
+                    </div>
                     
-                    <div class="flex-1 overflow-y-auto custom-scrollbar relative">
-                        
-                        <div class="w-full h-24 bg-gradient-to-r from-blue-700 to-indigo-800 relative shrink-0">
-                            <div class="absolute inset-0 bg-black/20"></div>
-                            <div class="absolute top-3 right-3 z-10">
-                                <span id="detail-role" class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/20 text-white border border-white/20 backdrop-blur-md shadow-sm"></span>
-                            </div>
+                    {% if not request.user.groups.all.0.name == "Commander" %}
+                    <form id="delete-log-form" method="POST" action="" class="hidden">
+                        {% csrf_token %}
+                        <button type="button" onclick="openDeleteModal()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-red-400 dark:text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                            <i class="fas fa-trash-alt text-[10px]"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block">Log Created</label>
+                            <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200" id="det-date">---</p>
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500" id="det-time">---</p>
                         </div>
-
-                        <div class="px-5 pb-5 relative">
-                            
-                            <div class="flex items-end gap-4 -mt-12 mb-6 relative z-20">
-                                <div id="detail-image-container" class="w-24 h-24 min-w-[6rem] min-h-[6rem] bg-slate-100 dark:bg-slate-800 border-4 border-white dark:border-[#111827] rounded-2xl flex items-center justify-center text-slate-400 font-black text-3xl shadow-sm relative overflow-hidden">
-                                    <img id="detail-profile-pic" src="" class="hidden absolute inset-0 w-full h-full object-cover z-10" onerror="this.classList.add('hidden'); document.getElementById('initials').classList.remove('hidden');">
-                                    <span id="initials" class="relative z-0"></span>
-                                </div>
-                                
-                                <div class="min-w-0 pb-1">
-                                    <p id="detail-name" class="text-xl font-bold text-slate-900 dark:text-white truncate drop-shadow-sm"></p>
-                                    <div class="mt-1">
-                                        <span id="detail-username" class="inline-block text-sm font-medium text-blue-600 dark:text-blue-400 truncate bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-500/20 w-max">@<span id="detail-username-text"></span></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-4">
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5 shadow-sm">
-                                        <div class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 mb-1">
-                                            <i class="fas fa-sign-in-alt text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Last Login</label>
-                                            <p id="detail-last-login" class="text-xs font-bold text-slate-800 dark:text-slate-200"></p>
-                                        </div>
-                                    </div>
-                                    <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5 shadow-sm">
-                                        <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 mb-1">
-                                            <i class="fas fa-calendar-check text-xs"></i>
-                                        </div>
-                                        <div>
-                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">Member Since</label>
-                                            <p id="detail-joined" class="text-xs font-bold text-slate-800 dark:text-slate-200"></p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="bg-white dark:bg-[#0F172A] rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-sm">
-                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60">
-                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-                                            <i class="fas fa-star text-slate-400 text-[10px]"></i>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Rank / Position</label>
-                                            <div class="flex items-center gap-2">
-                                                <img id="detail-rank-icon" src="" class="w-3.5 h-3.5 object-contain">
-                                                <p id="detail-rank" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60">
-                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-                                            <i class="fas fa-envelope text-slate-400 text-[10px]"></i>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Email Address</label>
-                                            <p id="detail-email" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-3 p-3">
-                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-                                            <i class="fas fa-phone-alt text-slate-400 text-[10px]"></i>
-                                        </div>
-                                        <div class="min-w-0 flex-1">
-                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Phone Number</label>
-                                            <p id="detail-phone" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
-                                    <div>
-                                        <label class="block text-[9px] font-bold uppercase tracking-wider text-blue-500 dark:text-blue-400 mb-0.5">System Access</label>
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Active Account</span>
-                                    </div>
-                                    <span class="relative flex h-2.5 w-2.5">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-sm"></span>
-                                    </span>
-                                </div>
-                            </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block">Status</label>
+                            <p class="text-[11px] font-black mt-1 uppercase" id="det-status">---</p>
                         </div>
                     </div>
 
-                    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] shrink-0 z-20">
-                         <a id="edit-link" href="#" class="flex items-center justify-center gap-2 w-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95">
-                            <i class="fas fa-user-edit text-slate-400"></i> Edit User Profile
-                        </a>
+                    <div class="flex items-center space-x-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 rounded-xl">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                            <i class="fas fa-user-cog text-xs"></i>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block">Assigned Technician</label>
+                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200" id="det-tech">---</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-2">Technical Hardware</label>
+                        <div id="hardware-grid" class="grid grid-cols-2 gap-2">
+                            </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-2">Technical Notes</label>
+                        <div class="bg-slate-50/50 dark:bg-slate-800/30 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic" id="det-notes">---</p>
+                        </div>
                     </div>
                 </div>
+
+                {% if not request.user.groups.all.0.name == "Commander" %}
+                <div class="mt-4 pt-4 shrink-0 border-t border-slate-100 dark:border-slate-800">
+                    <a id="det-edit-link" href="#" class="w-full py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center shadow-lg transition-all bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600">
+                        <i class="fas fa-edit mr-2"></i> Update Service Log
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -437,6 +425,11 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
 </script>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
     body { overflow-x: hidden; }
 
     .force-hide { display: none !important; }
@@ -513,6 +506,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
 
         .user-row td::before {
             content: attr(data-label);
+            font-family: 'Rajdhani', sans-serif;
             font-weight: 800;
             text-transform: uppercase;
             font-size: 0.65rem;

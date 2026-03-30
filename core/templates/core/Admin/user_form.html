@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form method="POST" id="userPersonnelForm" class="w-full max-w-5xl mx-auto mt-8 px-4 sm:px-0 mb-16 transition-colors duration-300" enctype="multipart/form-data">
+<form method="POST" id="userPersonnelForm" class="font-plex w-full max-w-5xl mx-auto mt-8 px-4 sm:px-0 mb-16 transition-colors duration-300" enctype="multipart/form-data">
     {% csrf_token %}
     
     <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -9,7 +9,7 @@
             <a href="{% url 'user_list' %}" class="text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 text-sm font-semibold transition-colors inline-flex items-center mb-2">
                 <i class="fas fa-arrow-left mr-2 text-xs"></i> Back to Directory
             </a>
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{{ title }}</h2>
+            <h2 class="font-rajdhani text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{{ title }}</h2>
             <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage personnel profile and system access levels.</p>
         </div>
         
@@ -27,7 +27,7 @@
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-indigo-50 to-slate-50 dark:from-slate-800 dark:to-slate-900"></div>
                 
-                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 relative z-10 w-full text-left uppercase tracking-wider text-[11px] opacity-70">Avatar</h3>
+                <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 relative z-10 w-full text-left uppercase tracking-wider text-[11px] opacity-70">Avatar</h3>
                 
                 <div class="relative group z-10 w-full flex flex-col items-center">
                     {% if form.instance.pk and form.instance.profile.image and 'default.jpg' not in form.instance.profile.image.url %}
@@ -55,7 +55,7 @@
         <div class="w-full lg:w-2/3">
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 shadow-sm">
                 
-                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800 uppercase tracking-wider text-[11px] opacity-70">Identity & Access</h3>
+                <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800 uppercase tracking-wider text-[11px] opacity-70">Identity & Access</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                     
@@ -111,7 +111,6 @@
                             System Role
                         </label>
                         <div class="relative group">
-                            <!-- SAFEGUARDED M2M RELATIONSHIP LOOP -->
                             <select name="role_name" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
                                 <option value="" disabled {% if not form.instance.pk %}selected{% endif %}>Select Role</option>
                                 
@@ -123,7 +122,7 @@
                     </div>
 
                     <div class="md:col-span-2 mt-4 mb-2">
-                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 pb-4 border-b border-slate-100 dark:border-slate-800 uppercase tracking-wider text-[11px] opacity-70">Core Credentials</h3>
+                        <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-slate-200 pb-4 border-b border-slate-100 dark:border-slate-800 uppercase tracking-wider text-[11px] opacity-70">Core Credentials</h3>
                     </div>
 
                     {% for field in form %}
@@ -258,9 +257,15 @@ $(document).ready(function() {
 </script>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
     /* Django-rendered Input Theming - Unified with Indigo/Slate Theme */
     input, select, textarea {
         width: 100% !important;
+        font-family: 'IBM Plex Sans', sans-serif !important;
         font-size: 0.875rem !important; 
         padding: 0.75rem 1rem !important;
         border-radius: 0.75rem !important; /* Matches rounded-xl */
