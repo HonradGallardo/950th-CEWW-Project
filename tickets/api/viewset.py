@@ -9,6 +9,9 @@ from django.contrib.auth.models import User
 from django.utils.html import escape # SECURITY: Neutralizes XSS attacks
 import os # SECURITY: For checking file extensions
 
+# ---> THE MISSING IMPORT IS RIGHT HERE <---
+from ..models import Ticket, TicketMessage, TicketAttachment
+
 # CRITICAL NEW IMPORT: Directly import Cloudinary to bypass strict image rules
 import cloudinary.uploader  
 
@@ -186,7 +189,7 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def send_reply(self, request, pk=None):
         ticket = self.get_object()
-        text = request.data.get('message', '').strip()
+        text = escape(request.data.get('message', '').strip())
         recipient_username = request.data.get('recipient')
         is_group_chat = request.data.get('is_group_chat') == 'true'
         files = request.FILES.getlist('attachments') 
@@ -228,37 +231,40 @@ class TicketViewSet(viewsets.ModelViewSet):
     
     def perform_create(self, serializer):
         data = self.request.data
-        category = data.get("category", "General")
-        description = data.get("description", "")
+        
+        # SECURITY FIX: Escape EVERY piece of text inputted by the user
+        category = escape(data.get("category", "General"))
+        description = escape(data.get("description", ""))
+        subject_val = escape(data.get("subject", "No Subject"))
         
         header = f"🎫 TICKET TYPE: {category.upper()}\n"
         header += "─" * 25 + "\n"
         details = []
         
         if category == "Identity":
-            details.append(f"👤 First Name: {data.get('first_name', 'N/A')}")
-            details.append(f"👤 Last Name: {data.get('last_name', 'N/A')}")
-            details.append(f"📧 Email: {data.get('email', 'N/A')}")
-            details.append(f"🎖️ Rank: {data.get('rank', 'N/A')}")
-            details.append(f"📞 Phone: {data.get('phone', 'N/A')}")
+            details.append(f"👤 First Name: {escape(data.get('first_name', 'N/A'))}")
+            details.append(f"👤 Last Name: {escape(data.get('last_name', 'N/A'))}")
+            details.append(f"📧 Email: {escape(data.get('email', 'N/A'))}")
+            details.append(f"🎖️ Rank: {escape(data.get('rank', 'N/A'))}")
+            details.append(f"📞 Phone: {escape(data.get('phone', 'N/A'))}")
 
         elif category == "Security":
-            details.append(f"🔐 Auth ID: {data.get('auth_id', 'N/A')}")
-            details.append(f"⚠️ Request Type: {data.get('removal_type', 'N/A')}")
+            details.append(f"🔐 Auth ID: {escape(data.get('auth_id', 'N/A'))}")
+            details.append(f"⚠️ Request Type: {escape(data.get('removal_type', 'N/A'))}")
 
         elif category == "Technical":
-            details.append(f"📦 Impacted Module: {data.get('bug_module', 'N/A')}")
-            details.append(f"🚫 Error Code: {data.get('error_code', 'None')}")
-            details.append(f"🔄 Steps: {data.get('reproduce_steps', 'N/A')}")
+            details.append(f"📦 Impacted Module: {escape(data.get('bug_module', 'N/A'))}")
+            details.append(f"🚫 Error Code: {escape(data.get('error_code', 'None'))}")
+            details.append(f"🔄 Steps: {escape(data.get('reproduce_steps', 'N/A'))}")
 
         elif category == "Access":
             if data.get('target_resource'):
-                details.append(f"🔑 Resource: {data.get('target_resource', 'N/A')}")
-                details.append(f"📊 Level: {data.get('access_level', 'N/A')}")
-                details.append(f"✍️ Approver: {data.get('approving_officer', 'N/A')}")
+                details.append(f"🔑 Resource: {escape(data.get('target_resource', 'N/A'))}")
+                details.append(f"📊 Level: {escape(data.get('access_level', 'N/A'))}")
+                details.append(f"✍️ Approver: {escape(data.get('approving_officer', 'N/A'))}")
             else:
-                details.append(f"🆔 Affected ID: {data.get('affected_id', 'N/A')}")
-                details.append(f"📱 Alt Contact: {data.get('alt_contact', 'N/A')}")
+                details.append(f"🆔 Affected ID: {escape(data.get('affected_id', 'N/A'))}")
+                details.append(f"📱 Alt Contact: {escape(data.get('alt_contact', 'N/A'))}")
 
         detail_text = "\n".join(details)
         full_body = f"{header}{detail_text}\n\n📝 USER CONCERN:\n{description}"
@@ -271,8 +277,10 @@ class TicketViewSet(viewsets.ModelViewSet):
                 defaults={'first_name': 'Public', 'last_name': 'Guest', 'email': 'guest@system.local'}
             )
 
+        # Apply the explicitly escaped subject and body to the save method
         ticket = serializer.save(
             user=ticket_owner, 
+            subject=subject_val,
             description=full_body, 
             status="Pending"
         )
