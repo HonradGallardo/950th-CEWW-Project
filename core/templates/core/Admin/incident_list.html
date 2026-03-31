@@ -157,7 +157,7 @@
                     </table>
                 </div>
 
-                <div class="px-4 py-3 sm:px-5 border-t border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
+                <div class="px-4 py-3 sm:px-5 border-t border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0 relative z-20">
                     <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">Showing 0-0 of 0</span>
                     <div class="flex items-center gap-1.5" id="paginationControls"></div>
                 </div>
@@ -290,7 +290,7 @@
         </div>
     </div>
     
-    <div class="h-16 w-full shrink-0 border-none bg-transparent"></div>
+    <div class="h-24 w-full shrink-0 border-none bg-transparent"></div>
 
 </div>
 
@@ -415,6 +415,7 @@ function initTable() {
     $('#pageInfo').text(`Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries}`);
 }
 
+// CRITICAL FIX: Bulletproof click handlers on the pagination buttons 
 function renderPagination(totalPages) {
     const container = document.getElementById('paginationControls');
     container.innerHTML = '';
@@ -423,23 +424,20 @@ function renderPagination(totalPages) {
     const createBtn = (text, page, isDisabled = false, isCurrent = false) => {
         const btn = document.createElement('button');
         btn.innerHTML = text;
-        btn.type = 'button'; // CRITICAL FIX: prevents form submission page reloads
+        btn.type = 'button'; // Ensures it will never submit a form wrapper
         
-        let baseClass = 'w-6 h-6 flex items-center justify-center rounded-lg text-[9px] font-black transition-all ';
+        // Increased base sizes (w-7 h-7) and explicit cursor styles
+        let baseClass = 'w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ';
         
         if (isCurrent) {
-            baseClass += 'bg-blue-600 text-white shadow-md cursor-default';
+            baseClass += 'bg-blue-600 text-white shadow-md pointer-events-none cursor-default';
+        } else if (isDisabled) {
+            baseClass += 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 opacity-50 cursor-not-allowed pointer-events-none';
         } else {
-            baseClass += 'bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700';
-        }
-        
-        if (isDisabled) {
-            baseClass += ' opacity-50 cursor-not-allowed';
-            btn.disabled = true;
-        } else if (!isCurrent) {
-            btn.onclick = (e) => { 
-                e.preventDefault(); 
-                e.stopPropagation(); 
+            baseClass += 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer shadow-sm hover:shadow active:scale-95';
+            
+            // Standard direct event assignment without preventDefault overriding inner icon clicks
+            btn.onclick = function() { 
                 currentPage = page; 
                 initTable(); 
             };
@@ -448,7 +446,7 @@ function renderPagination(totalPages) {
         return btn;
     };
 
-    container.appendChild(createBtn('<i class="fas fa-chevron-left"></i>', currentPage - 1, currentPage === 1));
+    container.appendChild(createBtn('<i class="fas fa-chevron-left pointer-events-none"></i>', currentPage - 1, currentPage === 1));
 
     let startP = Math.max(1, currentPage - 1);
     let endP = Math.min(totalPages, currentPage + 1);
@@ -480,7 +478,7 @@ function renderPagination(totalPages) {
         container.appendChild(createBtn(totalPages, totalPages));
     }
 
-    container.appendChild(createBtn('<i class="fas fa-chevron-right"></i>', currentPage + 1, currentPage === totalPages));
+    container.appendChild(createBtn('<i class="fas fa-chevron-right pointer-events-none"></i>', currentPage + 1, currentPage === totalPages));
 }
 
 function renderTableRows(incidents) {
