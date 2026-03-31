@@ -91,7 +91,7 @@
         #ticketTableBody {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1rem;
+            gap: 1.25rem;
             padding: 1rem;
         }
 
@@ -103,7 +103,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.875rem;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
 
@@ -114,6 +114,9 @@
             border: none !important;
             width: 100% !important;
             max-width: none !important;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
         }
 
         .ticket-row td::before {
@@ -125,17 +128,54 @@
             letter-spacing: 0.05em;
             color: #64748b;
             text-align: left;
-            margin-right: 1rem;
+            margin-right: 0.5rem;
             flex-shrink: 0;
-            width: 35%;
+            width: 30%;
+            margin-top: 0.2rem;
         }
         .dark .ticket-row td::before { color: #94a3b8; }
         
         .ticket-row td > div {
-            width: 65%;
+            width: 70%;
             display: flex;
-            justify-content: flex-end;
-            text-align: right;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        /* CARD HEADER (Ref ID & Menu) */
+        .ticket-row td[data-label="Ref ID"] {
+            align-items: center;
+            border-bottom: 1px solid var(--head-border) !important;
+            padding-bottom: 0.75rem !important;
+            margin-bottom: 0.25rem;
+        }
+        .dark .ticket-row td[data-label="Ref ID"] {
+            border-bottom-color: rgba(255,255,255,0.05) !important;
+        }
+        .ticket-row td[data-label="Ref ID"]::before {
+            display: none; 
+        }
+        .ticket-row td[data-label="Ref ID"] > div {
+            width: 100%;
+        }
+
+        /* STACKED ISSUE & SNIPPET */
+        .ticket-row td[data-label="Issue & Snippet"] {
+            flex-direction: column;
+            background: #f8fafc;
+            padding: 0.75rem !important;
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+        }
+        .dark .ticket-row td[data-label="Issue & Snippet"] {
+            background: rgba(30, 41, 59, 0.4);
+        }
+        .ticket-row td[data-label="Issue & Snippet"]::before {
+            width: 100%;
+            margin-top: 0;
+        }
+        .ticket-row td[data-label="Issue & Snippet"] > div {
+            width: 100%;
         }
     }
 </style>
@@ -488,43 +528,43 @@
                         </div>
                     </td>
                     <td data-label="Priority" class="p-4 align-middle">
-                        <div>
+                        <div class="flex justify-start">
                             <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
                                 <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
                             </span>
                         </div>
                     </td>
                     <td data-label="Client" class="p-4 align-middle">
-                        <div class="flex flex-col">
+                        <div class="flex flex-col text-left">
                             <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${t.first_name || ''} ${t.last_name || ''}</span>
                             <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">@${t.user_name || 'unknown'}</span>
                         </div>
                     </td>
                     <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px]">
-                        <div class="flex flex-col overflow-hidden">
+                        <div class="flex flex-col overflow-hidden text-left">
                             <p class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${t.subject || 'No Subject'}</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">"${t.description || 'No additional details provided'}"</p>
                         </div>
                     </td>
                     <td data-label="Agent Details" class="p-4 align-middle">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 lg:justify-start justify-end">
+                        <div class="flex flex-col gap-1 text-left">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 justify-start">
                                 <i class="fas fa-user-shield text-slate-400"></i> ${t.technician_name || 'Unassigned'}
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold lg:justify-start justify-end flex">Prev: ${t.previous_technician || 'None'}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold flex justify-start">Prev: ${t.previous_technician || 'None'}</span>
                         </div>
                     </td>
                     <td data-label="Status" class="p-4 align-middle lg:text-center">
-                        <div>
+                        <div class="flex justify-start lg:justify-center">
                             <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
                                 ${t.status || 'Open'}
                             </span>
                         </div>
                     </td>
                     <td data-label="Created At" class="p-4 align-middle">
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">${formatTimestamp(t.created_at)}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 lg:justify-start justify-end flex">Logged</span>
+                        <div class="flex flex-col text-left">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-left">${formatTimestamp(t.created_at)}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 flex justify-start">Logged</span>
                         </div>
                     </td>
                     <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
