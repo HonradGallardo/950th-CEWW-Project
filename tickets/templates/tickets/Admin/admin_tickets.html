@@ -57,7 +57,6 @@
         letter-spacing: -0.02em;
     }
 
-    /* Fixed Action Menu Width to prevent text wrap */
     .action-menu {
         display: none;
         position: absolute;
@@ -116,7 +115,6 @@
 
         .dark .ticket-row { background: #1e293b !important; }
         
-        /* HIDDEN REDUNDANT DESKTOP ACTIONS ROW ON MOBILE */
         .ticket-row td[data-label="Actions"] {
             display: none !important;
         }
@@ -154,7 +152,6 @@
             text-align: right;
         }
 
-        /* Allow Ref ID to span fully to accommodate the 3 dots menu */
         .ticket-row td[data-label="Ref ID"] > div {
             max-width: 100% !important;
         }
@@ -253,62 +250,63 @@
                     Administrative Dispatch Overview
                 </p>
             </div>
-            <div class="lg:hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2">
+            <div class="lg:hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2 shrink-0">
                 <i class="fas fa-ticket-alt text-blue-500 text-xs"></i>
                 <span id="mobileCount" class="text-sm font-black text-blue-700 dark:text-blue-400">00</span>
             </div>
         </div>
         
         <div class="flex flex-col gap-3 w-full">
-            <div class="relative w-full">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-slate-400"></i>
-                </span>
-                <input type="text" id="ticketSearch" placeholder="Search by ID, Subject, Client, or Date..." 
-                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
-            </div>
             
-            <div class="flex flex-col lg:flex-row gap-3 w-full items-stretch lg:items-center justify-between">
-                
-                <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto flex-wrap">
-                    <div class="flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 w-full sm:w-auto">
-                        <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
-                        <div class="flex items-center gap-1">
-                            <span class="text-[9px] font-black text-slate-400 uppercase">From</span>
-                            <input type="date" id="dateFrom" class="bg-transparent text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer w-[95px] sm:w-auto">
-                        </div>
-                        <span class="text-[10px] font-black text-slate-400 mx-1">-</span>
-                        <div class="flex items-center gap-1">
-                            <span class="text-[9px] font-black text-slate-400 uppercase">To</span>
-                            <input type="date" id="dateTo" class="bg-transparent text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer w-[95px] sm:w-auto">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 w-full sm:w-auto sm:flex sm:flex-row flex-1">
-                        <select id="categoryFilter" class="col-span-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm w-full sm:w-auto flex-1 cursor-pointer">
-                            <option value="ALL">All Categories</option>
-                        </select>
-                        <select id="priorityFilter" class="col-span-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm w-full sm:w-auto flex-1 cursor-pointer">
-                            <option value="all">All Priorities</option>
-                            <option value="high">High Priority</option>
-                            <option value="medium">Medium Priority</option>
-                            <option value="low">Low Priority</option>
-                        </select>
-                        <select id="sortOrder" class="col-span-2 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm w-full sm:w-auto flex-1 cursor-pointer">
-                            <option value="newest">Sort: Newest First</option>
-                            <option value="oldest">Sort: Oldest First</option>
-                            <option value="priority_desc">Sort: Priority (High-Low)</option>
-                            <option value="priority_asc">Sort: Priority (Low-High)</option>
-                        </select>
-                    </div>
+            <div class="flex flex-col xl:flex-row gap-3 w-full items-stretch xl:items-center justify-between">
+                <div class="relative w-full xl:w-1/3 shrink-0">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-slate-400"></i>
+                    </span>
+                    <input type="text" id="ticketSearch" placeholder="Search by ID, Subject, Client, or Date..." 
+                        class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
                 </div>
-
-                <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5 w-full lg:w-auto shrink-0">
+                
+                <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5 w-full xl:w-auto shrink-0">
                     <button class="filter-btn whitespace-nowrap px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex-1" data-filter="all" onclick="filterTable('all', this)">All</button>
                     <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
                     <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
                     <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
                 </div>
+            </div>
+
+            <div class="flex overflow-x-auto no-scrollbar items-center gap-2.5 w-full pb-1">
+                
+                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1.5 shrink-0 whitespace-nowrap">
+                    <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[9px] font-black text-slate-400 uppercase">From</span>
+                        <input type="date" id="dateFrom" class="bg-transparent text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer w-[95px] sm:w-auto">
+                    </div>
+                    <span class="text-[10px] font-black text-slate-400 mx-1">-</span>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[9px] font-black text-slate-400 uppercase">To</span>
+                        <input type="date" id="dateTo" class="bg-transparent text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer w-[95px] sm:w-auto">
+                    </div>
+                </div>
+
+                <select id="categoryFilter" class="shrink-0 min-w-[140px] md:min-w-[160px] w-max bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                    <option value="ALL">All Categories</option>
+                </select>
+                
+                <select id="priorityFilter" class="shrink-0 min-w-[140px] md:min-w-[160px] w-max bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                    <option value="all">All Priorities</option>
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                </select>
+                
+                <select id="sortOrder" class="shrink-0 min-w-[150px] md:min-w-[180px] w-max bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                    <option value="newest">Sort: Newest First</option>
+                    <option value="oldest">Sort: Oldest First</option>
+                    <option value="priority_desc">Sort: Priority (High-Low)</option>
+                    <option value="priority_asc">Sort: Priority (Low-High)</option>
+                </select>
                 
             </div>
         </div>
