@@ -95,7 +95,6 @@
             padding: 1rem;
         }
 
-        /* Re-styled to match Incidents Cards exactly */
         .ticket-row {
             background: #ffffff !important;
             border: 1px solid var(--head-border) !important;
@@ -117,8 +116,9 @@
             border-bottom: 1px solid var(--head-border) !important;
             width: 100% !important;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
+            gap: 0.5rem;
         }
 
         .dark .ticket-row td { border-bottom-color: #1f2937 !important; }
@@ -136,27 +136,16 @@
             text-align: left;
             flex-shrink: 0;
             width: 35%;
+            margin-top: 0.125rem;
         }
         .dark .ticket-row td::before { color: #9ca3af; }
         
-        .ticket-row td > div {
-            width: 65%;
-            display: flex;
-            justify-content: flex-end;
-            text-align: right;
-        }
-
         /* CARD HEADER OVERRIDES */
-        .ticket-row td[data-label="Ref ID"] {
-            padding: 0 !important;
-        }
+        .ticket-row td[data-label="Ref ID"] { padding: 0 !important; }
         .ticket-row td[data-label="Ref ID"]::before { display: none; }
-        .ticket-row td[data-label="Ref ID"] > div { width: 100%; justify-content: space-between; }
 
         .ticket-row td[data-label="Actions"] { display: none !important; }
         .ticket-row td[data-label="Status"] { display: none !important; }
-
-        .ticket-row td[data-label="Issue & Snippet"] { align-items: flex-start; }
     }
 </style>
 
@@ -476,14 +465,14 @@
         } else {
             body.innerHTML = paginatedItems.map(t => `
                 <tr class="ticket-row group" onclick="goToDetail(${t.id})">
-                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle">
+                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none">
                         <div class="hidden lg:flex justify-between items-center w-full">
                             <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
                                 #${String(t.id).padStart(6, '0')}
                             </span>
                         </div>
                         
-                        <div class="lg:hidden flex justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl">
+                        <div class="flex lg:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-circle text-[8px] text-blue-500"></i>
                                 <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
@@ -514,44 +503,44 @@
                             </div>
                         </div>
                     </td>
-                    <td data-label="Priority" class="p-4 align-middle">
-                        <div class="flex justify-end lg:justify-start w-full">
+                    <td data-label="Priority" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
                             <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
                                 <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
                             </span>
                         </div>
                     </td>
-                    <td data-label="Client" class="p-4 align-middle">
-                        <div class="flex flex-col text-right lg:text-left items-end lg:items-start w-full">
-                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${t.first_name || ''} ${t.last_name || ''}</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">@${t.user_name || 'unknown'}</span>
+                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full">${t.first_name || ''} ${t.last_name || ''}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full">@${t.user_name || 'unknown'}</span>
                         </div>
                     </td>
-                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px]">
-                        <div class="flex flex-col overflow-hidden text-right lg:text-left items-end lg:items-start w-full">
-                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${t.subject || 'No Subject'}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">"${t.description || 'No additional details provided'}"</p>
+                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center overflow-hidden">
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">${t.subject || 'No Subject'}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words">${t.description || 'No additional details provided'}</p>
                         </div>
                     </td>
-                    <td data-label="Agent Details" class="p-4 align-middle">
-                        <div class="flex flex-col gap-1 text-right lg:text-left items-end lg:items-start w-full">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                <i class="fas fa-user-shield text-slate-400 lg:inline-block hidden"></i> ${t.technician_name || 'Unassigned'}
+                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center gap-1">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full">
+                                <i class="fas fa-user-shield text-slate-400"></i> <span class="truncate">${t.technician_name || 'Unassigned'}</span>
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">Prev: ${t.previous_technician || 'None'}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full">Prev: ${t.previous_technician || 'None'}</span>
                         </div>
                     </td>
-                    <td data-label="Status" class="p-4 align-middle lg:text-center hidden lg:table-cell">
-                        <div class="flex justify-start lg:justify-center w-full">
+                    <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell">
+                        <div class="w-full flex justify-center">
                             <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
                                 ${t.status || 'Open'}
                             </span>
                         </div>
                     </td>
-                    <td data-label="Created At" class="p-4 align-middle">
-                        <div class="flex flex-col text-right lg:text-left items-end lg:items-start w-full">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">${formatTimestamp(t.created_at)}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Logged</span>
+                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words">${formatTimestamp(t.created_at)}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full">Logged</span>
                         </div>
                     </td>
                     <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
