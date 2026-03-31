@@ -89,94 +89,74 @@
         thead tr { position: absolute; top: -9999px; left: -9999px; }
         
         #ticketTableBody {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
             padding: 1rem;
         }
 
+        /* Re-styled to match Incidents Cards exactly */
         .ticket-row {
-            background: white !important;
+            background: #ffffff !important;
             border: 1px solid var(--head-border) !important;
-            border-radius: 1rem;
-            padding: 1.25rem;
+            border-radius: 0.75rem;
+            padding: 0;
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.875rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
-        .dark .ticket-row { background: #0f172a !important; }
+        .dark .ticket-row { 
+            background: #111827 !important; 
+            border-color: #1f2937 !important; 
+        }
         
         .ticket-row td { 
-            padding: 0 !important; 
-            border: none !important;
+            padding: 0.875rem 1.25rem !important;
+            border-bottom: 1px solid var(--head-border) !important;
             width: 100% !important;
-            max-width: none !important;
             display: flex;
-            align-items: flex-start;
-            gap: 0.5rem;
+            align-items: center;
+            justify-content: space-between;
         }
+
+        .dark .ticket-row td { border-bottom-color: #1f2937 !important; }
+        .ticket-row td:last-child, 
+        .ticket-row td:nth-last-child(2) { border-bottom: none !important; }
 
         .ticket-row td::before {
             content: attr(data-label);
             font-family: 'Rajdhani', sans-serif;
-            font-weight: 800;
+            font-weight: 700;
             text-transform: uppercase;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             letter-spacing: 0.05em;
             color: #64748b;
             text-align: left;
-            margin-right: 0.5rem;
             flex-shrink: 0;
-            width: 30%;
-            margin-top: 0.2rem;
+            width: 35%;
         }
-        .dark .ticket-row td::before { color: #94a3b8; }
+        .dark .ticket-row td::before { color: #9ca3af; }
         
         .ticket-row td > div {
-            width: 70%;
+            width: 65%;
             display: flex;
-            justify-content: flex-start;
-            text-align: left;
+            justify-content: flex-end;
+            text-align: right;
         }
 
-        /* CARD HEADER (Ref ID & Menu) */
+        /* CARD HEADER OVERRIDES */
         .ticket-row td[data-label="Ref ID"] {
-            align-items: center;
-            border-bottom: 1px solid var(--head-border) !important;
-            padding-bottom: 0.75rem !important;
-            margin-bottom: 0.25rem;
+            padding: 0 !important;
         }
-        .dark .ticket-row td[data-label="Ref ID"] {
-            border-bottom-color: rgba(255,255,255,0.05) !important;
-        }
-        .ticket-row td[data-label="Ref ID"]::before {
-            display: none; 
-        }
-        .ticket-row td[data-label="Ref ID"] > div {
-            width: 100%;
-        }
+        .ticket-row td[data-label="Ref ID"]::before { display: none; }
+        .ticket-row td[data-label="Ref ID"] > div { width: 100%; justify-content: space-between; }
 
-        /* STACKED ISSUE & SNIPPET */
-        .ticket-row td[data-label="Issue & Snippet"] {
-            flex-direction: column;
-            background: #f8fafc;
-            padding: 0.75rem !important;
-            border-radius: 0.5rem;
-            margin-top: 0.25rem;
-        }
-        .dark .ticket-row td[data-label="Issue & Snippet"] {
-            background: rgba(30, 41, 59, 0.4);
-        }
-        .ticket-row td[data-label="Issue & Snippet"]::before {
-            width: 100%;
-            margin-top: 0;
-        }
-        .ticket-row td[data-label="Issue & Snippet"] > div {
-            width: 100%;
-        }
+        .ticket-row td[data-label="Actions"] { display: none !important; }
+        .ticket-row td[data-label="Status"] { display: none !important; }
+
+        .ticket-row td[data-label="Issue & Snippet"] { align-items: flex-start; }
     }
 </style>
 
@@ -334,7 +314,6 @@
         }
     }
 
-    // --- DOM Event Listeners for Filters & Search ---
     document.getElementById('ticketSearch').addEventListener('input', () => { 
         currentPage = 1; 
         updateUI(); 
@@ -362,7 +341,7 @@
             const data = await response.json();
             allTickets = Array.isArray(data) ? data : (data.results || []); 
             
-            updateMetrics(); // Update dashboard counts
+            updateMetrics(); 
             updateUI();
         } catch (err) { console.error("Sync Error:", err); }
     }
@@ -430,14 +409,12 @@
     function updateUI() {
         const body = document.getElementById('ticketTableBody');
         
-        // Retrieve inputs
         const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
         const activeBtn = document.querySelector('.filter-btn.bg-white, .filter-btn.dark\\:bg-blue-600');
         const filterType = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
         const priorityFilter = document.getElementById('priorityFilter').value.toLowerCase();
         const sortOrder = document.getElementById('sortOrder').value;
 
-        // Apply Filters & Search
         let filtered = allTickets.filter(t => {
             const paddedId = String(t.id).padStart(6, '0');
             const searchableContent = [
@@ -464,7 +441,6 @@
             return matchesSearch && matchesStatusFilter && matchesPriorityFilter;
         });
 
-        // Apply Sorting
         filtered.sort((a, b) => {
             if (sortOrder === 'newest') {
                 return new Date(b.created_at) - new Date(a.created_at);
@@ -475,18 +451,16 @@
                 const pA = priorityWeight[(a.priority || '').toLowerCase()] || 0;
                 const pB = priorityWeight[(b.priority || '').toLowerCase()] || 0;
                 
-                // If priorities are identical, fallback to newest first
                 if (pA === pB) {
                      return new Date(b.created_at) - new Date(a.created_at);
                 }
                 
-                if (sortOrder === 'priority_desc') return pB - pA; // High to Low
-                if (sortOrder === 'priority_asc') return pA - pB;  // Low to High
+                if (sortOrder === 'priority_desc') return pB - pA; 
+                if (sortOrder === 'priority_asc') return pA - pB;  
             }
             return 0;
         });
 
-        // Pagination calculations
         const mobileCountEl = document.getElementById('mobileCount');
         if(mobileCountEl) mobileCountEl.innerText = String(filtered.length).padStart(2, '0');
 
@@ -497,74 +471,87 @@
         const start = (currentPage - 1) * itemsPerPage;
         const paginatedItems = filtered.slice(start, start + itemsPerPage);
 
-        // Render Table Body
         if (paginatedItems.length === 0) {
             body.innerHTML = `<tr><td colspan="8" class="p-24 text-center text-sm font-bold text-slate-400 dark:text-slate-600 flex flex-col items-center gap-3"><i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i> No dispatch records found</td></tr>`;
         } else {
             body.innerHTML = paginatedItems.map(t => `
                 <tr class="ticket-row group" onclick="goToDetail(${t.id})">
-                    <td data-label="Ref ID" class="p-4 lg:w-36 align-middle">
-                        <div class="lg:block flex justify-between items-center w-full">
+                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle">
+                        <div class="hidden lg:flex justify-between items-center w-full">
                             <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
                                 #${String(t.id).padStart(6, '0')}
                             </span>
-                            <div class="lg:hidden text-right relative">
-                                <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full flex items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2">
-                                     <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                        <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
+                        </div>
+                        
+                        <div class="lg:hidden flex justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-circle text-[8px] text-blue-500"></i>
+                                <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
+                                    #${String(t.id).padStart(6, '0')}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
+                                    ${t.status || 'Open'}
+                                </span>
+                                <div class="relative">
+                                    <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-md flex items-center justify-center text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                        <i class="fas fa-ellipsis-v text-xs"></i>
                                     </button>
-                                    <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                        <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
-                                    </button>
-                                    <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
-                                    <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
-                                        <i class="fas fa-trash-alt w-4"></i> Delete Record
-                                    </button>
+                                    <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2 origin-top-right">
+                                         <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                            <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
+                                        </button>
+                                        <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                            <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
+                                        </button>
+                                        <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
+                                        <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
+                                            <i class="fas fa-trash-alt w-4"></i> Delete Record
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </td>
                     <td data-label="Priority" class="p-4 align-middle">
-                        <div class="flex justify-start">
+                        <div class="flex justify-end lg:justify-start w-full">
                             <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
                                 <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
                             </span>
                         </div>
                     </td>
                     <td data-label="Client" class="p-4 align-middle">
-                        <div class="flex flex-col text-left">
+                        <div class="flex flex-col text-right lg:text-left items-end lg:items-start w-full">
                             <span class="font-bold text-sm text-slate-800 dark:text-slate-200">${t.first_name || ''} ${t.last_name || ''}</span>
                             <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">@${t.user_name || 'unknown'}</span>
                         </div>
                     </td>
                     <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px]">
-                        <div class="flex flex-col overflow-hidden text-left">
+                        <div class="flex flex-col overflow-hidden text-right lg:text-left items-end lg:items-start w-full">
                             <p class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${t.subject || 'No Subject'}</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">"${t.description || 'No additional details provided'}"</p>
                         </div>
                     </td>
                     <td data-label="Agent Details" class="p-4 align-middle">
-                        <div class="flex flex-col gap-1 text-left">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 justify-start">
-                                <i class="fas fa-user-shield text-slate-400"></i> ${t.technician_name || 'Unassigned'}
+                        <div class="flex flex-col gap-1 text-right lg:text-left items-end lg:items-start w-full">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                <i class="fas fa-user-shield text-slate-400 lg:inline-block hidden"></i> ${t.technician_name || 'Unassigned'}
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold flex justify-start">Prev: ${t.previous_technician || 'None'}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">Prev: ${t.previous_technician || 'None'}</span>
                         </div>
                     </td>
-                    <td data-label="Status" class="p-4 align-middle lg:text-center">
-                        <div class="flex justify-start lg:justify-center">
+                    <td data-label="Status" class="p-4 align-middle lg:text-center hidden lg:table-cell">
+                        <div class="flex justify-start lg:justify-center w-full">
                             <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
                                 ${t.status || 'Open'}
                             </span>
                         </div>
                     </td>
                     <td data-label="Created At" class="p-4 align-middle">
-                        <div class="flex flex-col text-left">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap text-left">${formatTimestamp(t.created_at)}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 flex justify-start">Logged</span>
+                        <div class="flex flex-col text-right lg:text-left items-end lg:items-start w-full">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">${formatTimestamp(t.created_at)}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Logged</span>
                         </div>
                     </td>
                     <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
