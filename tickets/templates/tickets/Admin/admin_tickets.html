@@ -83,16 +83,17 @@
     }
     .dark .action-btn-trigger:hover { color: #60a5fa; }
 
+    /* RESPONSIVE FLUID CARDS FOR MOBILE */
     @media (max-width: 1024px) {
-        .admin-table-container { height: auto; overflow: visible; }
-        table, thead, tbody, th, td, tr { display: block; }
-        thead tr { position: absolute; top: -9999px; left: -9999px; }
+        .admin-table-container { height: auto; overflow: visible; padding: 0.5rem; }
+        table, thead, tbody, th, td, tr { display: block; width: 100%; }
+        thead { display: none; } /* Hide standard headers */
         
         #ticketTableBody {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
             gap: 1rem;
-            padding: 1rem;
+            padding: 0;
         }
 
         .ticket-row {
@@ -103,17 +104,22 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.875rem;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
 
-        .dark .ticket-row { background: #0f172a !important; }
+        .dark .ticket-row { background: #1e293b !important; }
         
         .ticket-row td { 
             padding: 0 !important; 
             border: none !important;
             width: 100% !important;
             max-width: none !important;
+            display: flex !important;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         .ticket-row td::before {
@@ -121,21 +127,40 @@
             font-family: 'Rajdhani', sans-serif;
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             letter-spacing: 0.05em;
             color: #64748b;
-            text-align: left;
-            margin-right: 1rem;
             flex-shrink: 0;
-            width: 35%;
         }
         .dark .ticket-row td::before { color: #94a3b8; }
         
         .ticket-row td > div {
-            width: 65%;
+            width: auto !important;
+            max-width: 65%;
             display: flex;
             justify-content: flex-end;
             text-align: right;
+        }
+
+        /* Isolate Issue/Snippet to stack vertically for readability */
+        .ticket-row td[data-label="Issue & Snippet"] {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            background: #f8fafc;
+            padding: 0.875rem !important;
+            border-radius: 0.75rem;
+            gap: 0.5rem !important;
+            margin-top: 0.25rem;
+        }
+        .dark .ticket-row td[data-label="Issue & Snippet"] {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+        }
+        .ticket-row td[data-label="Issue & Snippet"] > div {
+            max-width: 100%;
+            width: 100% !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
         }
     }
 </style>
@@ -225,14 +250,14 @@
             </div>
             
             <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full lg:w-auto">
-                <select id="priorityFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                <select id="priorityFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer min-w-[140px]">
                     <option value="all">All Priorities</option>
                     <option value="high">High Priority</option>
                     <option value="medium">Medium Priority</option>
                     <option value="low">Low Priority</option>
                 </select>
 
-                <select id="sortOrder" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                <select id="sortOrder" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer min-w-[140px]">
                     <option value="newest">Sort: Newest First</option>
                     <option value="oldest">Sort: Oldest First</option>
                     <option value="priority_desc">Sort: Priority (High-Low)</option>
@@ -267,12 +292,13 @@
                 <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80"></tbody>
             </table>
         </div>
+        
         <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-xl md:rounded-b-2xl">
             <span id="pageIndicator" class="text-xs font-bold text-slate-500 uppercase tracking-wider"></span>
-            <div class="flex items-center gap-2">
-                <button id="prevPage" onclick="changePage(-1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
-                <div id="pageNumbers" class="flex gap-1.5"></div>
-                <button id="nextPage" onclick="changePage(1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
+            <div class="flex items-center justify-center flex-wrap gap-2">
+                <button id="prevPage" onclick="changePage(-1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm focus:outline-none"><i class="fas fa-chevron-left text-xs"></i></button>
+                <div id="pageNumbers" class="flex flex-wrap justify-center gap-1.5"></div>
+                <button id="nextPage" onclick="changePage(1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm focus:outline-none"><i class="fas fa-chevron-right text-xs"></i></button>
             </div>
         </div>
     </div>
@@ -464,7 +490,7 @@
             body.innerHTML = paginatedItems.map(t => `
                 <tr class="ticket-row group" onclick="goToDetail(${t.id})">
                     <td data-label="Ref ID" class="p-4 lg:w-36 align-middle">
-                        <div class="lg:block flex justify-between items-center w-full">
+                        <div class="lg:block flex justify-between items-center w-full gap-2">
                             <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
                                 #${String(t.id).padStart(6, '0')}
                             </span>
@@ -528,19 +554,19 @@
                         </div>
                     </td>
                     <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
-                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
-                            <i class="fas fa-ellipsis-v"></i>
+                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30 focus:outline-none">
+                            <i class="fas fa-ellipsis-v pointer-events-none"></i>
                         </button>
                         <div id="menu-desktop-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mt-2">
                             <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
+                                <i class="fas fa-user-plus text-blue-500 w-4 pointer-events-none"></i> Assign To Me
                             </button>
                             <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
+                                <i class="fas fa-check-circle text-emerald-500 w-4 pointer-events-none"></i> Mark Resolved
                             </button>
                             <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
                             <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
-                                <i class="fas fa-trash-alt w-4"></i> Delete Record
+                                <i class="fas fa-trash-alt w-4 pointer-events-none"></i> Delete Record
                             </button>
                         </div>
                     </td>
@@ -566,14 +592,20 @@
             const isCurrent = i === currentPage;
             const btn = document.createElement('button');
             btn.innerText = i;
-            btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-sm ${
-                isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+            btn.type = 'button';
+            btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isCurrent ? 'bg-blue-600 text-white border-blue-600 cursor-default' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer active:scale-95'
             }`;
-            btn.onclick = () => { 
-                currentPage = i; 
-                updateUI(); 
-                scrollToTop(); 
-            };
+            
+            if (!isCurrent) {
+                btn.onclick = (e) => { 
+                    e.preventDefault();
+                    e.stopPropagation();
+                    currentPage = i; 
+                    updateUI(); 
+                    scrollToTop(); 
+                };
+            }
             pageNumbersContainer.appendChild(btn);
         }
     }
