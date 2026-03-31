@@ -46,6 +46,63 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center transition-all hover:shadow-md">
+            <span class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1"><i class="fas fa-shield-virus mr-1"></i> Total Incidents</span>
+            <span class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100" id="metric-total">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-red-200 dark:border-red-900/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-red-500/10 rounded-bl-full"></div>
+            <span class="text-[10px] sm:text-xs font-bold text-red-600 dark:text-red-500 uppercase tracking-widest mb-1"><i class="fas fa-exclamation-circle mr-1"></i> Open</span>
+            <span class="text-2xl sm:text-3xl font-black text-red-600 dark:text-red-400" id="metric-open">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-orange-200 dark:border-orange-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-orange-500/10 rounded-bl-full"></div>
+            <span class="text-[10px] sm:text-xs font-bold text-orange-600 dark:text-orange-500 uppercase tracking-widest mb-1"><i class="fas fa-search mr-1"></i> Investigating</span>
+            <span class="text-2xl sm:text-3xl font-black text-orange-600 dark:text-orange-400" id="metric-investigating">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full"></div>
+            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1"><i class="fas fa-check-circle mr-1"></i> Resolved</span>
+            <span class="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400" id="metric-resolved">0</span>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm shrink-0 flex flex-col xl:flex-row gap-4 items-center justify-between">
+        
+        <div class="relative w-full xl:w-1/3">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-search text-slate-400"></i>
+            </span>
+            <input type="text" id="incidentSearch" placeholder="Search ID, Target, Snippet..." 
+                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all dark:text-slate-200">
+        </div>
+
+        <div class="flex flex-wrap md:flex-nowrap gap-3 w-full xl:w-auto items-center">
+            <select id="severityFilter" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                <option value="all">All Severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+
+            <select id="sortOrder" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                <option value="newest">Sort: Newest First</option>
+                <option value="oldest">Sort: Oldest First</option>
+                <option value="sev_desc">Sort: Severity (High-Low)</option>
+                <option value="sev_asc">Sort: Severity (Low-High)</option>
+            </select>
+            
+            <div class="flex overflow-x-auto no-scrollbar bg-slate-50 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 gap-1 flex-1 md:flex-none">
+                <button class="status-btn active px-3 py-1.5 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex-1" data-filter="all">All</button>
+                <button class="status-btn px-3 py-1.5 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="open">Open</button>
+                <button class="status-btn px-3 py-1.5 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="investigating">Investigating</button>
+                <button class="status-btn px-3 py-1.5 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="resolved">Resolved</button>
+            </div>
+        </div>
+    </div>
+
     <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4 overflow-y-auto lg:overflow-hidden">
         
         <div class="col-span-12 lg:col-span-7 flex flex-col h-auto lg:h-full min-w-0">
@@ -220,7 +277,8 @@ function loadIncidents() {
         url: '/api/incidents/',
         type: 'GET',
         success: function(data) {
-            allIncidents = data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            allIncidents = data;
+            updateMetrics();
             initTable();
         },
         error: function(err) {
@@ -230,14 +288,87 @@ function loadIncidents() {
     });
 }
 
+// --- NEW: Metrics Logic ---
+function updateMetrics() {
+    let total = allIncidents.length;
+    let open = 0;
+    let investigating = 0;
+    let resolved = 0;
+
+    allIncidents.forEach(inc => {
+        const s = (inc.status || "").toLowerCase();
+        if (s === 'open') open++;
+        else if (s === 'investigating') investigating++;
+        else if (s === 'resolved' || s === 'closed' || s === 'completed') resolved++;
+    });
+
+    $('#metric-total').text(total);
+    $('#metric-open').text(open);
+    $('#metric-investigating').text(investigating);
+    $('#metric-resolved').text(resolved);
+}
+
+// --- NEW: Filter & Sort Logic ---
+function applyFiltersAndSort() {
+    let filtered = allIncidents;
+
+    // 1. Search Term
+    const term = $('#incidentSearch').val().toLowerCase();
+    if (term) {
+        filtered = filtered.filter(i => {
+            const safeSubject = i.title ? i.title.toLowerCase() : '';
+            const safeDesc = i.description ? i.description.toLowerCase() : '';
+            const idString = String(i.id);
+            const safeAsset = i.linked_asset ? i.linked_asset.toLowerCase() : '';
+            return safeSubject.includes(term) || safeDesc.includes(term) || idString.includes(term) || safeAsset.includes(term);
+        });
+    }
+
+    // 2. Status Tabs
+    const statusFilter = $('.status-btn.active').data('filter');
+    if (statusFilter && statusFilter !== 'all') {
+        filtered = filtered.filter(i => {
+            const s = (i.status || "").toLowerCase();
+            if (statusFilter === 'resolved') {
+                return (s === 'resolved' || s === 'closed' || s === 'completed');
+            }
+            return s === statusFilter;
+        });
+    }
+
+    // 3. Severity Dropdown
+    const sevFilter = $('#severityFilter').val();
+    if (sevFilter !== 'all') {
+        filtered = filtered.filter(i => (i.severity || "").toLowerCase() === sevFilter);
+    }
+
+    // 4. Sorting
+    const sortOrder = $('#sortOrder').val();
+    filtered.sort((a, b) => {
+        if (sortOrder === 'newest') return new Date(b.date) - new Date(a.date);
+        if (sortOrder === 'oldest') return new Date(a.date) - new Date(b.date);
+        if (sortOrder === 'sev_desc' || sortOrder === 'sev_asc') {
+            const weight = {'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1};
+            const wA = weight[a.severity] || 0;
+            const wB = weight[b.severity] || 0;
+            if (wA === wB) return new Date(b.date) - new Date(a.date); // fallback to newest if same severity
+            return sortOrder === 'sev_desc' ? wB - wA : wA - wB;
+        }
+        return 0;
+    });
+
+    return filtered;
+}
+
 function initTable() {
-    const totalEntries = allIncidents.length;
+    const filteredData = applyFiltersAndSort();
+    const totalEntries = filteredData.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
 
     const start = (currentPage - 1) * rowsPerPage;
     const end = Math.min(start + rowsPerPage, totalEntries);
-    const pageData = allIncidents.slice(start, end);
+    const pageData = filteredData.slice(start, end);
 
     renderTableRows(pageData);
     renderPagination(totalPages);
@@ -250,7 +381,7 @@ function renderTableRows(incidents) {
     let html = '';
 
     if (incidents.length === 0) {
-        $tbody.html('<tr><td colspan="8" class="p-12 text-center text-slate-400 italic block md:table-cell">No active incidents found in database.</td></tr>');
+        $tbody.html('<tr><td colspan="8" class="p-12 text-center text-slate-400 italic block md:table-cell">No active incidents match your filters.</td></tr>');
         return;
     }
 
@@ -267,12 +398,13 @@ function renderTableRows(incidents) {
     incidents.forEach(inc => {
         let sevIcon, sevColor, sevBadge, statusBadge;
         
+        // NEW: Added animate-pulse for High and Critical Severities
         if (inc.severity === 'Critical') {
             sevIcon = 'fa-biohazard'; sevColor = 'text-red-500'; 
-            sevBadge = 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 shadow-sm ring-1 ring-red-500/20';
+            sevBadge = 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 shadow-[0_0_8px_rgba(239,68,68,0.4)] ring-2 ring-red-500/40 animate-pulse font-extrabold';
         } else if (inc.severity === 'High') {
             sevIcon = 'fa-exclamation-triangle'; sevColor = 'text-orange-500'; 
-            sevBadge = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50 shadow-sm ring-1 ring-orange-500/20';
+            sevBadge = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/50 shadow-[0_0_8px_rgba(249,115,22,0.4)] ring-2 ring-orange-500/40 animate-pulse font-extrabold';
         } else if (inc.severity === 'Medium') {
             sevIcon = 'fa-exclamation-circle'; sevColor = 'text-amber-500'; 
             sevBadge = 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50 shadow-sm ring-1 ring-amber-500/20';
@@ -314,7 +446,6 @@ function renderTableRows(incidents) {
         
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
-        // Dynamic styling for active state (applies card ring on mobile, border on desktop)
         const activeClass = currentOpenIncidentId == inc.id 
             ? 'border-blue-500 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 md:border-transparent md:border-l-blue-500 md:border-l-4' 
             : 'border-slate-200 dark:border-slate-700 md:border-transparent md:border-0';
@@ -414,6 +545,29 @@ function renderPagination(totalPages) {
     }
 }
 
+// --- NEW: Event Listeners for search & filters ---
+$('#incidentSearch').on('input', function() {
+    currentPage = 1;
+    initTable();
+});
+
+$('#severityFilter, #sortOrder').on('change', function() {
+    currentPage = 1;
+    initTable();
+});
+
+$('.status-btn').on('click', function() {
+    $('.status-btn').removeClass('bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white').addClass('text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-700');
+    $(this).removeClass('text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-700').addClass('bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white active');
+    
+    // Manage custom active class attribute for the filter script
+    $('.status-btn').removeClass('active');
+    $(this).addClass('active');
+
+    currentPage = 1;
+    initTable();
+});
+
 function previewIncident(data) {
     currentOpenIncidentId = data.id;
     initTable();
@@ -437,10 +591,8 @@ function previewIncident(data) {
     if(data.actions) {
         $('#actions_taken_container').removeClass('hidden');
         
-        // 1. Escape HTML to prevent XSS (Security first!)
         let safeActions = $('<div>').text(data.actions).html();
         
-        // 2. Process line-by-line to add structural padding
         let formattedActions = '';
         let lines = safeActions.split('\n');
         let inDetailBlock = false;
@@ -448,30 +600,24 @@ function previewIncident(data) {
         lines.forEach((line, index) => {
             let trimmed = line.trim();
             
-            // Preserve empty lines inside details for paragraph spacing
             if (!trimmed) {
                 if (inDetailBlock) formattedActions += '<br>';
                 return;
             }
             
-            // Timestamp headers [ 24 Mar 2026 ... ]
             if (trimmed.startsWith('[')) {
                 if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
                 if (index > 0) formattedActions += '<hr class="my-5 border-slate-300 dark:border-slate-600 border-dashed">';
                 formattedActions += `<div class="mb-2 opacity-80">${line}</div>`;
             } 
-            // >> Issue:, >> Action:, >> Result: headers
             else if (trimmed.startsWith('&gt;&gt;')) {
                 if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
                 
                 let parts = line.split(/(&gt;&gt; (?:Issue|Action|Result):)/);
                 if (parts.length > 1) {
-                    // Renders the header
                     formattedActions += `<div class="font-bold mt-3 mb-1 text-slate-800 dark:text-slate-200">${parts[1]}</div>`;
-                    // Starts the padded detail block (with an optional subtle vertical line)
                     formattedActions += `<div class="pl-5 sm:pl-7 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-1.5 opacity-90">`;
                     inDetailBlock = true;
-                    // Adds the text that was on the same line as the header
                     if (parts[2].trim()) formattedActions += `${parts[2]}<br>`;
                 } else {
                     formattedActions += `<div class="font-bold mt-3 mb-1 text-slate-800 dark:text-slate-200">${line}</div>`;
@@ -479,7 +625,6 @@ function previewIncident(data) {
                     inDetailBlock = true;
                 }
             } 
-            // The actual detail text
             else {
                 if (!inDetailBlock) {
                     formattedActions += `<div class="pl-5 sm:pl-7 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-1.5 opacity-90">`;
@@ -489,7 +634,7 @@ function previewIncident(data) {
             }
         });
         
-        if (inDetailBlock) formattedActions += '</div>'; // Close the final block
+        if (inDetailBlock) formattedActions += '</div>'; 
         
         $('#view_actions').html(formattedActions);
     } else {
@@ -508,16 +653,15 @@ function previewIncident(data) {
     
     if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${data.id}/`);
 
-    // Severity Badge Rendering
     const $badge = $('#view_severity_badge');
     let colorClass = '';
-    if (data.severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-500/10 text-red-600 border-red-200 dark:border-red-900/50 ring-1 ring-red-500/20';
-    else if (data.severity === 'High') colorClass = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 border-orange-200 dark:border-orange-900/50 ring-1 ring-orange-500/20';
+    // NEW: Applying pulse animation to severity badges in the Details view as well
+    if (data.severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-500/10 text-red-600 border-red-200 dark:border-red-900/50 ring-2 ring-red-500/40 animate-pulse font-extrabold shadow-[0_0_8px_rgba(239,68,68,0.4)]';
+    else if (data.severity === 'High') colorClass = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 border-orange-200 dark:border-orange-900/50 ring-2 ring-orange-500/40 animate-pulse font-extrabold shadow-[0_0_8px_rgba(249,115,22,0.4)]';
     else if (data.severity === 'Medium') colorClass = 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-900/50 ring-1 ring-amber-500/20';
     else colorClass = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/50 ring-1 ring-emerald-500/20';
     $badge.html(`<span class="px-3 py-1 rounded-md border text-[10px] font-black uppercase tracking-wider shadow-sm ${colorClass}">${data.severity}</span>`);
 
-    // Status Badge Rendering
     const $statusBadge = $('#view_status_badge');
     let statusClass = '';
     if (data.status === 'Open') statusClass = 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50';
