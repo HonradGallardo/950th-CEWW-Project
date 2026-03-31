@@ -50,7 +50,6 @@
     .ticket-row { transition: all 0.2s ease; cursor: pointer; }
     .ticket-row:hover { 
         background-color: var(--row-hover) !important; 
-        /* transform: translateY(-1px); NOTE: Commented out to prevent Z-index stacking context conflicts with action menus */ 
     }
 
     .id-badge {
@@ -63,7 +62,7 @@
         position: absolute;
         right: 0;
         top: 100%;
-        z-index: 9999; /* Boosted from 50 to 9999 to guarantee top visibility */
+        z-index: 9999;
         width: 200px; 
         text-align: left; 
         animation: menuFade 0.2s ease-out;
@@ -173,6 +172,28 @@
 
 <div class="font-plex min-h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#0F172A] p-3 md:p-6 text-slate-900 dark:text-slate-300 transition-colors duration-300">
     
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center transition-all hover:shadow-md">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1"><i class="fas fa-ticket-alt mr-1"></i> Total Tickets</span>
+            <span class="text-3xl font-black text-slate-800 dark:text-slate-100" id="metric-total">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-amber-500/10 rounded-bl-full"></div>
+            <span class="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1"><i class="fas fa-clock mr-1"></i> Pending</span>
+            <span class="text-3xl font-black text-amber-600 dark:text-amber-400" id="metric-pending">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-blue-200 dark:border-blue-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-blue-500/10 rounded-bl-full"></div>
+            <span class="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1"><i class="fas fa-spinner mr-1"></i> In Progress</span>
+            <span class="text-3xl font-black text-blue-600 dark:text-blue-400" id="metric-progress">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full"></div>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1"><i class="fas fa-check-circle mr-1"></i> Completed</span>
+            <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400" id="metric-completed">0</span>
+        </div>
+    </div>
+
     <header id="head" class="flex flex-col gap-5 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
         <div class="flex items-center justify-between">
             <div class="flex flex-col gap-1">
@@ -194,20 +215,36 @@
             </div>
         </div>
         
-        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
             <div class="relative flex-grow max-w-2xl">
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i class="fas fa-search text-slate-400"></i>
                 </span>
                 <input type="text" id="ticketSearch" placeholder="Search by ID, Subject, Client, or Date..." 
-                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner">
+                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
             </div>
             
-            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5">
-                <button class="filter-btn whitespace-nowrap px-5 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all" data-filter="all" onclick="filterTable('all', this)">All</button>
-                <button class="filter-btn whitespace-nowrap px-5 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
-                <button class="filter-btn whitespace-nowrap px-5 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
-                <button class="filter-btn whitespace-nowrap px-5 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
+            <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full lg:w-auto">
+                <select id="priorityFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                    <option value="all">All Priorities</option>
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                </select>
+
+                <select id="sortOrder" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                    <option value="newest">Sort: Newest First</option>
+                    <option value="oldest">Sort: Oldest First</option>
+                    <option value="priority_desc">Sort: Priority (High-Low)</option>
+                    <option value="priority_asc">Sort: Priority (Low-High)</option>
+                </select>
+            </div>
+            
+            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5 w-full lg:w-auto">
+                <button class="filter-btn whitespace-nowrap px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex-1" data-filter="all" onclick="filterTable('all', this)">All</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
             </div>
         </div>
     </header>
@@ -257,6 +294,22 @@
         }
     }
 
+    // --- DOM Event Listeners for Filters & Search ---
+    document.getElementById('ticketSearch').addEventListener('input', () => { 
+        currentPage = 1; 
+        updateUI(); 
+    });
+
+    document.getElementById('priorityFilter').addEventListener('change', () => {
+        currentPage = 1;
+        updateUI();
+    });
+
+    document.getElementById('sortOrder').addEventListener('change', () => {
+        currentPage = 1;
+        updateUI();
+    });
+
     async function initAdminSync() {
         try {
             const response = await fetch('/tickets/api/support-api/', { 
@@ -268,8 +321,29 @@
             }
             const data = await response.json();
             allTickets = Array.isArray(data) ? data : (data.results || []); 
+            
+            updateMetrics(); // Update dashboard counts
             updateUI();
         } catch (err) { console.error("Sync Error:", err); }
+    }
+
+    function updateMetrics() {
+        let total = allTickets.length;
+        let pending = 0;
+        let progress = 0;
+        let completed = 0;
+
+        allTickets.forEach(t => {
+            const status = (t.status || '').toLowerCase();
+            if (status === 'pending') pending++;
+            else if (status === 'in progress' || status === 'open') progress++;
+            else if (status === 'resolved' || status === 'closed' || status === 'completed') completed++;
+        });
+
+        document.getElementById('metric-total').innerText = total;
+        document.getElementById('metric-pending').innerText = pending;
+        document.getElementById('metric-progress').innerText = progress;
+        document.getElementById('metric-completed').innerText = completed;
     }
 
     function getPriorityStyles(priority) {
@@ -315,10 +389,15 @@
 
     function updateUI() {
         const body = document.getElementById('ticketTableBody');
+        
+        // Retrieve inputs
         const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
         const activeBtn = document.querySelector('.filter-btn.bg-white, .filter-btn.dark\\:bg-blue-600');
         const filterType = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+        const priorityFilter = document.getElementById('priorityFilter').value.toLowerCase();
+        const sortOrder = document.getElementById('sortOrder').value;
 
+        // Apply Filters & Search
         let filtered = allTickets.filter(t => {
             const paddedId = String(t.id).padStart(6, '0');
             const searchableContent = [
@@ -328,16 +407,46 @@
             ].join(" ").toLowerCase();
 
             const matchesSearch = searchableContent.includes(searchTerm);
-            let matchesFilter = true;
-            if (filterType === 'pending') matchesFilter = (t.status || "").toLowerCase() === 'pending';
-            else if (filterType === 'mine') matchesFilter = t.technician_name === currentAdminUser;
+            
+            let matchesStatusFilter = true;
+            if (filterType === 'pending') matchesStatusFilter = (t.status || "").toLowerCase() === 'pending';
+            else if (filterType === 'mine') matchesStatusFilter = t.technician_name === currentAdminUser;
             else if (filterType === 'completed') {
                 const s = (t.status || "").toLowerCase();
-                matchesFilter = (s === 'resolved' || s === 'closed' || s === 'completed');
+                matchesStatusFilter = (s === 'resolved' || s === 'closed' || s === 'completed');
             }
-            return matchesSearch && matchesFilter;
+
+            let matchesPriorityFilter = true;
+            if (priorityFilter !== 'all') {
+                matchesPriorityFilter = (t.priority || "").toLowerCase() === priorityFilter;
+            }
+
+            return matchesSearch && matchesStatusFilter && matchesPriorityFilter;
         });
 
+        // Apply Sorting
+        filtered.sort((a, b) => {
+            if (sortOrder === 'newest') {
+                return new Date(b.created_at) - new Date(a.created_at);
+            } else if (sortOrder === 'oldest') {
+                return new Date(a.created_at) - new Date(b.created_at);
+            } else if (sortOrder.startsWith('priority')) {
+                const priorityWeight = { 'high': 3, 'medium': 2, 'low': 1 };
+                const pA = priorityWeight[(a.priority || '').toLowerCase()] || 0;
+                const pB = priorityWeight[(b.priority || '').toLowerCase()] || 0;
+                
+                // If priorities are identical, fallback to newest first
+                if (pA === pB) {
+                     return new Date(b.created_at) - new Date(a.created_at);
+                }
+                
+                if (sortOrder === 'priority_desc') return pB - pA; // High to Low
+                if (sortOrder === 'priority_asc') return pA - pB;  // Low to High
+            }
+            return 0;
+        });
+
+        // Pagination calculations
         const mobileCountEl = document.getElementById('mobileCount');
         if(mobileCountEl) mobileCountEl.innerText = String(filtered.length).padStart(2, '0');
 
@@ -348,6 +457,7 @@
         const start = (currentPage - 1) * itemsPerPage;
         const paginatedItems = filtered.slice(start, start + itemsPerPage);
 
+        // Render Table Body
         if (paginatedItems.length === 0) {
             body.innerHTML = `<tr><td colspan="8" class="p-24 text-center text-sm font-bold text-slate-400 dark:text-slate-600 flex flex-col items-center gap-3"><i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i> No dispatch records found</td></tr>`;
         } else {
@@ -468,6 +578,17 @@
         }
     }
 
+    function filterTable(type, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+            b.classList.add('text-slate-600', 'dark:text-slate-400');
+        });
+        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
+        currentPage = 1;
+        updateUI();
+    }
+
     function changePage(dir) { 
         currentPage += dir; 
         updateUI(); 
@@ -479,7 +600,6 @@
     async function quickAction(event, id, type) {
         event.stopPropagation();
         
-        // Ensure we send the current tech ID for both actions to satisfy backend validation
         const payload = type === 'assign' 
             ? { 
                 technician_id: currentUserId, 
@@ -487,7 +607,7 @@
                 priority: 'Medium' 
               } 
             : { 
-                technician_id: currentUserId, // Include who is resolving it
+                technician_id: currentUserId,
                 status: 'Resolved' 
               };
         
@@ -503,7 +623,6 @@
             });
 
             if (res.ok) {
-                // Refresh data and close menus
                 initAdminSync();
             } else {
                 const errorData = await res.json();
@@ -529,22 +648,6 @@
             if (res.ok) initAdminSync();
         } catch (err) { console.error(err); }
     }
-
-    function filterTable(type, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
-            b.classList.add('text-slate-600', 'dark:text-slate-400');
-        });
-        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
-        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
-        currentPage = 1;
-        updateUI();
-    }
-
-    document.getElementById('ticketSearch').addEventListener('input', () => { 
-        currentPage = 1; 
-        updateUI(); 
-    });
 
     window.addEventListener('DOMContentLoaded', () => { 
         initAdminSync(); 

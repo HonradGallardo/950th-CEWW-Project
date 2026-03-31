@@ -3,20 +3,28 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle # SECURITY: Bot Protection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from django.utils.html import escape, strip_tags # SECURITY: Added strip_tags for Input Sanitization
-import os # SECURITY: For checking file extensions
+from django.utils.html import escape, strip_tags 
+import os 
 
-# ---> THE MISSING IMPORT IS RIGHT HERE <---
 from ..models import Ticket, TicketMessage, TicketAttachment
-
-# CRITICAL NEW IMPORT: Directly import Cloudinary to bypass strict image rules
 import cloudinary.uploader  
 
-# --- SECURITY: Allowed File Types ---
+# --- SECURITY CONSTANTS ---
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx', '.txt', '.csv'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # SECURITY: 5 MB strict backend limit
+
+# --- SECURITY: API Rate Limiters (Anti-Spam/DDoS) ---
+class GuestTicketThrottle(AnonRateThrottle):
+    # Limits unauthenticated guests to submitting 3 requests per minute
+    rate = '3/minute'
+
+class UserTicketThrottle(UserRateThrottle):
+    # Limits logged-in users to 30 requests per minute (prevents compromised accounts from spamming)
+    rate = '30/minute'
 
 # --- SERIALIZERS ---
 
@@ -90,6 +98,9 @@ class TicketSerializer(serializers.ModelSerializer):
 class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
     pagination_class = None
+    
+    # SECURITY: Attach rate limiters to this entire viewset
+    throttle_classes = [GuestTicketThrottle, UserTicketThrottle]
 
     def get_permissions(self):
         if self.action == 'create':
@@ -184,7 +195,6 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def send_reply(self, request, pk=None):
         ticket = self.get_object()
-        # SECURITY FIX: Physically delete HTML tags from input
         text = strip_tags(request.data.get('message', '').strip())
         recipient_username = request.data.get('recipient')
         is_group_chat = request.data.get('is_group_chat') == 'true'
@@ -208,9 +218,13 @@ class TicketViewSet(viewsets.ModelViewSet):
         )
 
         for f in files:
+            # SECURITY FIX: Validate Extension AND Size
             ext = os.path.splitext(f.name)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 continue
+            if f.size > MAX_FILE_SIZE:
+                continue # Block files larger than 5MB silently to protect server RAM
+                
             try:
                 upload_result = cloudinary.uploader.upload(f, resource_type="auto")
                 TicketAttachment.objects.create(
@@ -226,7 +240,6 @@ class TicketViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         data = self.request.data
         
-        # SECURITY FIX: Physically delete HTML tags from input
         category = strip_tags(data.get("category", "General"))
         description = strip_tags(data.get("description", ""))
         subject_val = strip_tags(data.get("subject", "No Subject"))
@@ -280,9 +293,13 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         files = self.request.FILES.getlist('attachments')
         for f in files:
+            # SECURITY FIX: Validate Extension AND Size
             ext = os.path.splitext(f.name)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 continue
+            if f.size > MAX_FILE_SIZE:
+                continue # Block files larger than 5MB
+                
             try:
                 upload_result = cloudinary.uploader.upload(f, resource_type="auto")
                 TicketAttachment.objects.create(
