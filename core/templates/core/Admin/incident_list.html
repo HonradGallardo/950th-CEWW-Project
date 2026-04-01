@@ -814,9 +814,15 @@ $(document).ready(function() {
     
     /* Added custom blink animation for high/critical severities */
     @keyframes blinkWarning {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.35; }
+        0%, 100% { 
+            opacity: 1; 
+            transform: scale(1); 
+        }
+        50% { 
+            opacity: 0.15; 
+            transform: scale(0.96); 
+        }
     }
-    .animate-blink { animation: blinkWarning 1.25s ease-in-out infinite; }
+    .animate-blink { animation: blinkWarning 0.8s ease-in-out infinite; }
 </style>
 {% endblock %}
