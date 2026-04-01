@@ -23,14 +23,26 @@
                 </a>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-1 md:gap-4">
                     <label class="text-sm font-bold text-slate-700 dark:text-slate-300 pt-2">Select Asset:</label>
                     <div class="md:col-span-2 relative">
                         <div class="relative w-full custom-dropdown" id="dropdown-asset">
                             <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
-                                <span class="selected-label">
-                                    {% if form.instance.asset %}{{ form.instance.asset.assets_id }} - {{ form.instance.asset.assets_name }}{% else %}Select Asset ID / Name{% endif %}
+                                <span class="selected-label flex items-center w-full">
+                                    {% if form.instance.asset %}
+                                        <span class="font-black text-blue-600 dark:text-blue-400">{{ form.instance.asset.assets_id }}</span> 
+                                        <span class="mx-2 text-slate-300">|</span> 
+                                        <span class="text-xs font-bold text-slate-500">{{ form.instance.asset.assets_name }}</span>
+                                        
+                                        {% if form.instance.asset.status == 'Maintenance' %}
+                                            <span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">
+                                                In Maintenance
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        Select Asset ID / Name
+                                    {% endif %}
                                 </span>
                                 <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                             </button>
@@ -56,13 +68,35 @@
                     <div class="md:col-span-2">{{ form.maintenance_type }}</div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-1 md:gap-4">
-                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 pt-2">Status:</label>
-                    <div class="md:col-span-2 relative">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Hardware Component</label>
+                        <div class="relative group w-full">
+                            {{ form.faulty_hardware_part }}
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Software/OS Issue</label>
+                        <div class="relative group w-full">
+                            {{ form.software_issue_type }}
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Service Status</label>
                         <div class="relative w-full custom-dropdown" id="dropdown-status">
                             <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
                                 <span class="selected-label">
-                                    {% if form.instance.status %}{{ form.instance.status }}{% else %}---------{% endif %}
+                                    {% if form.instance.status %}{{ form.instance.status }}{% else %}In Progress{% endif %}
                                 </span>
                                 <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                             </button>
@@ -76,13 +110,22 @@
 
                             <div class="hidden">
                                 {{ form.status }}
-                                <input type="hidden" id="custom-status-tracker" value="{{ form.instance.status|default_if_none:'' }}">
+                                <input type="hidden" id="custom-status-tracker" value="{% if form.instance.status %}{{ form.instance.status }}{% else %}In Progress{% endif %}">
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Effective Service Date</label>
+                        <div class="relative group w-full">
+                            <input type="date" name="maintenance_date" id="id_maintenance_date" 
+                                value="{% if form.instance.maintenance_date %}{{ form.instance.maintenance_date|date:'Y-m-d' }}{% else %}{% now 'Y-m-d' %}{% endif %}"
+                                class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 transition-all dark:[color-scheme:dark]">
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-2">
+                <div class="space-y-2 pt-2">
                     <label class="text-sm font-bold text-slate-700 dark:text-slate-300 block">Description / Technical Notes</label>
                     <div class="w-full">
                         {{ form.notes }}
@@ -115,12 +158,20 @@ $(document).ready(function() {
             success: function(data) {
                 let html = '';
                 data.forEach(asset => {
+                    // Check against the 'status' field returned from your API
+                    const maintenanceBadge = asset.status === 'Maintenance' 
+                        ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">In Maintenance</span>` 
+                        : '';
+
                     html += `
                         <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0" 
-                             data-value="${asset.id}" data-search="${asset.assets_id} ${asset.assets_name}">
-                            <span class="font-black text-blue-600 dark:text-blue-400">${asset.assets_id}</span> 
-                            <span class="mx-2 text-slate-300">|</span> 
-                            <span class="text-xs font-bold text-slate-500">${asset.assets_name}</span>
+                            data-value="${asset.id}" data-search="${asset.assets_id} ${asset.assets_name}">
+                            <div class="flex items-center w-full">
+                                <span class="font-black text-blue-600 dark:text-blue-400">${asset.assets_id}</span> 
+                                <span class="mx-2 text-slate-300">|</span> 
+                                <span class="text-xs font-bold text-slate-500">${asset.assets_name}</span>
+                                ${maintenanceBadge}
+                            </div>
                         </div>`;
                 });
                 $('#asset-options-container').html(html || '<div class="p-4 text-center">No assets found.</div>');
@@ -167,11 +218,16 @@ $(document).ready(function() {
     $('#serviceLogForm').on('submit', function(e) {
         e.preventDefault();
         
-        // Grab values from our guaranteed trackers
+        // Grab values from our guaranteed trackers and new fields
         const assetPk = $('#custom-asset-tracker').val();
         const statusVal = $('#custom-status-tracker').val();
         const maintTypeVal = $('[name="maintenance_type"]').val();
         const notesVal = $('textarea[name="notes"]').val();
+        
+        // New Diagnostics
+        const hwPartVal = $('[name="faulty_hardware_part"]').val() || null;
+        const swIssueVal = $('[name="software_issue_type"]').val() || null;
+        const dateVal = $('#id_maintenance_date').val() || null;
 
         if (!assetPk || assetPk === "" || !statusVal || statusVal === "") {
             alert("Verification Failed: Please select an Asset and a Status.");
@@ -192,6 +248,9 @@ $(document).ready(function() {
                 asset: parseInt(assetPk),
                 status: statusVal,
                 maintenance_type: maintTypeVal,
+                faulty_hardware_part: hwPartVal,
+                software_issue_type: swIssueVal,
+                maintenance_date: dateVal,
                 notes: notesVal
             }),
             contentType: 'application/json',
@@ -210,13 +269,22 @@ $(document).ready(function() {
 
 <style>
     /* Light/Dark consistency for form controls */
-    #serviceLogForm select, #serviceLogForm textarea { 
-        width: 100% !important; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; 
+    #serviceLogForm select, #serviceLogForm textarea, #serviceLogForm input[type="text"], #serviceLogForm input[type="date"] { 
+        width: 100% !important; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; font-size: 0.875rem; font-weight: 500; appearance: none; background-color: #ffffff;
     }
-    body.dark-mode #serviceLogForm select, body.dark-mode #serviceLogForm textarea {
-        background-color: #1f2937; border-color: #374151; color: #f1f5f9;
+    body.dark-mode #serviceLogForm select, body.dark-mode #serviceLogForm textarea, body.dark-mode #serviceLogForm input[type="text"], body.dark-mode #serviceLogForm input[type="date"] {
+        background-color: #1e293b; border-color: #334155; color: #f1f5f9;
     }
+    
+    #serviceLogForm select:focus, #serviceLogForm textarea:focus, #serviceLogForm input[type="text"]:focus, #serviceLogForm input[type="date"]:focus {
+        border-color: #3b82f6;
+    }
+
     #asset-options-container::-webkit-scrollbar { width: 4px; }
     #asset-options-container::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    .dropdown-item .ml-auto {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
 </style>
 {% endblock %}

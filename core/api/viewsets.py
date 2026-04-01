@@ -201,7 +201,7 @@ class APILoginView(LoginView):
             user = form.get_user()
             
             # --- MFA LOGIC CHECK ---
-            mfa_enabled = True 
+            mfa_enabled = True # In a real app, this would check a user profile setting or global config
 
             if mfa_enabled:
                 

@@ -4,30 +4,57 @@ from ..models import Asset, IncidentComment, Maintenance, Incident, Notification
 from django.contrib.auth.password_validation import validate_password
 
 class AssetSerializer(serializers.ModelSerializer):
-    """Converts Asset model instances into JSON with conditional logic."""
+    """Converts Asset model instances into JSON with comprehensive hardware/maintenance logic."""
     assigned_to_name = serializers.ReadOnlyField(source='assigned_to.username')
     
-    # Allow null/blank for fields that might be hidden by the frontend logic
-    type_of_maintenance = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    # Optional fields for dynamic frontend logic
     processor = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     ram_gb = serializers.IntegerField(required=False, allow_null=True)
     storage_capacity = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    os_version = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    
+    # Networking & Infrastructure
     ip_address = serializers.IPAddressField(required=False, allow_null=True)
     mac_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     firmware_version = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    total_ports = serializers.IntegerField(required=False, allow_null=True)
+    rack_unit = serializers.IntegerField(required=False, allow_null=True)
+    
+    # Laptop specific
+    battery_health = serializers.IntegerField(required=False, allow_null=True)
+
+    # NEW: Maintenance Specifics
+    faulty_hardware_part = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    software_issue_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = Asset
         fields = '__all__'
 
     def validate(self, data):
-        # Logic check: If status is maintenance, a reason should ideally be provided
-        status = data.get('status', '').lower()
-        if 'maintenance' in status and not data.get('type_of_maintenance'):
-            # We allow it in the serializer but the ViewSet will provide a fallback
-            pass
-        return data
+        """
+        Custom validation logic for IT assets.
+        """
+        status = data.get('status', '')
         
+        # Logic: If status is 'Under Maintenance', ensure at least one diagnostic field or reason is present
+        if status == 'Maintenance':
+            reason = data.get('maintenance_reason')
+            hw_part = data.get('faulty_hardware_part')
+            sw_issue = data.get('software_issue_type')
+            
+            if not any([reason, hw_part, sw_issue]):
+                raise serializers.ValidationError({
+                    "maintenance_reason": "Maintenance requires a reason, hardware part, or software issue type."
+                })
+        
+        # Logic: Ensure Battery Health is within 0-100 if provided
+        battery = data.get('battery_health')
+        if battery is not None and (battery < 0 or battery > 100):
+            raise serializers.ValidationError({"battery_health": "Battery health must be between 0 and 100."})
+            
+        return data
+
 
 class MaintenanceSerializer(serializers.ModelSerializer):
     asset_name = serializers.ReadOnlyField(source='asset.assets_name')
@@ -35,27 +62,38 @@ class MaintenanceSerializer(serializers.ModelSerializer):
     asset_type = serializers.CharField(source='asset.assets_type', read_only=True)
     asset_string_id = serializers.ReadOnlyField(source='asset.assets_id')
 
-    # Define the missing fields that caused the crash
+    # Hardware specs pulled from the related Asset for the Inspector UI
     processor = serializers.ReadOnlyField(source='asset.processor')
     ram_gb = serializers.ReadOnlyField(source='asset.ram_gb')
     ip_address = serializers.ReadOnlyField(source='asset.ip_address')
-    
-    # Your existing custom fields
     storage = serializers.ReadOnlyField(source='asset.storage_capacity') 
     firmware_os = serializers.ReadOnlyField(source='asset.firmware_version')   
     mac_address = serializers.ReadOnlyField(source='asset.mac_address')   
     asset_category = serializers.ReadOnlyField(source='asset.assets_type') 
 
+    # NEW: Specific Maintenance Diagnostics
+    # These map directly to the Maintenance model fields
+    faulty_hardware_part = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    software_issue_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+
+    formatted_maintenance_date = serializers.SerializerMethodField()
+
     class Meta:
         model = Maintenance
-        # Successfully merged fields to include both asset_string_id and the hardware specs
         fields = [
-            'id', 'asset_string_id', 'asset_name', 'asset_type', 
+            'id', 'asset', 'asset_string_id', 'asset_name', 'asset_type', 
             'maintenance_type', 'technician_name', 'date', 
+            'maintenance_date', 'formatted_maintenance_date', 
             'last_modified', 'status', 'notes',
             'processor', 'ram_gb', 'storage', 'ip_address', 
             'firmware_os', 'mac_address', 'asset_category',
+            'faulty_hardware_part', 'software_issue_type' # ADDED THESE
         ]
+
+    def get_formatted_maintenance_date(self, obj):
+        if obj.maintenance_date:
+            return obj.maintenance_date.strftime('%b %d, %Y')
+        return "Not Scheduled"
 
 class IncidentSerializer(serializers.ModelSerializer):
     """Prepares incident data with formatted reporting information."""

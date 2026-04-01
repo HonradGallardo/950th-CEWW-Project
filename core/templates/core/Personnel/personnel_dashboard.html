@@ -1,363 +1,720 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Personnel Dashboard | 950th CEWW{% endblock %}
+{% block title %}Dashboard | 950th CEWW{% endblock %}
 
 {% block content %}
-<div class="flex-1 p-4 md:p-6 flex flex-col gap-6 overflow-y-auto">
-    <div class="flex justify-between items-center shrink-0">
-        <h1 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white tracking-tight uppercase">
-            Dashboard Overview
-        </h1>
-        <div id="sync-indicator" class="hidden flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-100 dark:border-emerald-800">
-            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></div>
-            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Telemetry Live</span>
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .ticket-row { transition: all 0.2s ease; cursor: pointer; }
+    .ticket-row:hover { background-color: rgba(255, 255, 255, 0.03) !important; }
+    .dark .ticket-row:hover { background-color: rgba(0, 0, 0, 0.2) !important; }
+
+    .id-badge { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: -0.02em; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+
+    @keyframes menuFade {
+        from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+</style>
+
+<div id="assetDetailModal" class="hidden fixed inset-0 z-[110] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeAssetModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200 dark:border-slate-800">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <div class="flex items-center gap-4">
+                    <div id="asset_modal_icon_bg" class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <i id="asset_modal_icon" class="fas fa-microchip text-xl"></i>
+                    </div>
+                    <div>
+                        <span id="asset_modal_id" class="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded uppercase tracking-widest border border-blue-100 dark:border-slate-800"></span>
+                        <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight mt-1" id="asset_modal_title">Asset Details</h3>
+                    </div>
+                </div>
+                <button onclick="closeAssetModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="px-8 py-8" id="asset_modal_content_area"></div>
         </div>
     </div>
+</div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
-        <div class="lg:col-span-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col order-2 lg:order-1">
-            <div class="px-5 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">Recent Incident Reports</span>
-                <div class="w-full sm:w-auto relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                    <input type="text" id="incidentAjaxSearch" placeholder="Search ID, Type, Severity..." 
-                           class="w-full sm:w-64 pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
-                           value="{{ q_incident|default:'' }}">
+<div id="incidentModal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeIncidentModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-slate-200 dark:border-slate-800">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <div>
+                    <span id="modal_view_id" class="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded uppercase tracking-widest border border-blue-100 dark:border-blue-800"></span>
+                    <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight mt-2" id="modal_view_title">Incident Detail</h3>
                 </div>
+                <button onclick="closeIncidentModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
-            
-            <div class="overflow-x-auto flex-1">
-                <table class="w-full text-left text-[13px]" id="incidentTable">
-                    <thead class="bg-slate-50/50 dark:bg-slate-900/20 text-slate-500 dark:text-slate-400 uppercase text-[11px] tracking-wider border-b dark:border-slate-700">
-                        <tr>
-                            <th class="px-6 py-4">ID</th>
-                            <th class="px-6 py-4">Incident Type</th>
-                            <th class="px-6 py-4 text-center">Severity</th>
-                            <th class="px-6 py-4 text-center">Status</th>
-                            <th class="px-6 py-4">Date Reported</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
-                        {% for incident in page_obj %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer" onclick="window.location.href='{% url 'incident_list' %}'">
-                            <td class="px-6 py-4 font-mono text-slate-400">#{{ incident.id }}</td>
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{{ incident.title }}</td>
-                            <td class="px-6 py-4 text-center">
-                                {% if incident.severity == 'Critical' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-black uppercase border border-red-200 dark:border-red-800">
-                                        <i class="fas fa-skull-crossbones mr-1.5 animate-pulse"></i> {{ incident.severity }}
-                                    </span>
-                                {% elif incident.severity == 'High' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-black uppercase border border-orange-200 dark:border-orange-800">
-                                        <i class="fas fa-exclamation-triangle mr-1.5"></i> {{ incident.severity }}
-                                    </span>
-                                {% elif incident.severity == 'Medium' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-black uppercase border border-yellow-200 dark:border-yellow-800">
-                                        <i class="fas fa-bolt mr-1.5"></i> {{ incident.severity }}
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-200 dark:border-emerald-800">
-                                        <i class="fas fa-shield-virus mr-1.5"></i> {{ incident.severity|default:"Low" }}
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase border border-blue-100 dark:border-blue-800/30">
-                                    {{ incident.status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ incident.date|date:"M d, Y" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5" class="p-10 text-center text-slate-400 italic">No incident reports available.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            
-            {% if page_obj.paginator.num_pages > 1 %}
-            <div class="px-5 py-3 border-t dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/20 flex justify-between items-center">
-                <div class="flex gap-2">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&q_incident={{ q_incident }}" class="px-3 py-1 text-xs font-bold rounded border dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700 transition">Prev</a>
-                    {% endif %}
+            <div class="px-8 py-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Severity</label><div id="modal_view_severity"></div></div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label><div id="modal_view_status"></div></div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Assigned Tech</label><p id="modal_view_assigned" class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase truncate"></p></div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Logged Time</label><p id="modal_view_date" class="text-xs font-bold text-slate-700 dark:text-slate-200"></p></div>
                 </div>
-                <div class="flex items-center gap-1">
-                    {% for i in page_obj.paginator.page_range %}
-                        <a href="?page={{ i }}&q_incident={{ q_incident }}" class="px-2.5 py-1 text-xs rounded {% if page_obj.number == i %}bg-blue-600 text-white{% else %}hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">{{ i }}</a>
-                    {% endfor %}
+                <div class="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 p-6 rounded-2xl border border-blue-100/80 dark:border-blue-800/50 shadow-sm mb-8">
+                    <h4 class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fas fa-radar text-blue-500"></i> Threat Intelligence</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-5 gap-x-4">
+                        <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Category</label><p id="modal_view_category" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                        <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Threat Actor</label><p id="modal_view_threat_actor" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Unknown</p></div>
+                        <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Detection Source</label><p id="modal_view_detection" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                        <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Affected Area</label><p id="modal_view_affected_area" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                        <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Linked Asset</label><p id="modal_view_asset" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                        <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Impact (CIA)</label><p id="modal_view_impact" class="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&q_incident={{ q_incident }}" class="px-3 py-1 text-xs font-bold rounded border dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700 transition">Next</a>
-                    {% endif %}
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                            <i class="fas fa-align-left"></i> Investigation Summary
+                        </label>
+                        <div id="modal_view_description" class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-xl text-sm leading-relaxed dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-inner min-h-[80px]"></div>
+                    </div>
                 </div>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="flex flex-col gap-4 order-1 lg:order-2">
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Assets</p>
-                <p id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">My Tasks</p>
-                <p id="stat-my-tasks" class="text-3xl font-black text-emerald-500">{{ my_maintenance_count|default:"0" }}</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border-l-4 border-l-red-500 border-y border-r border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Alerts</p>
-                <p id="stat-alerts" class="text-3xl font-black text-red-500">{{ reported_incidents_count|default:"0" }}</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex-1">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">Incident Trends</p>
-                <div class="relative h-32">
-                    <canvas id="incidentTrendChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
-            <div class="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex justify-between items-center">
-                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">My Assigned Assets</span>
-                <div class="relative">
-                    <input type="text" id="assetAjaxSearch" placeholder="Search Assets..." class="px-2 py-1 text-xs bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-md outline-none focus:border-blue-500" value="{{ q_asset|default:'' }}">
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-[12px]">
-                    <thead class="text-slate-500 uppercase text-[10px] tracking-wider border-b dark:border-slate-700">
-                        <tr>
-                            <th class="px-5 py-3">Asset</th>
-                            <th class="px-5 py-3 text-center">Status</th>
-                            <th class="px-5 py-3">Added</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="assetTableBody">
-                        {% for asset in asset_page_obj %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='{% url 'asset_list' %}'">
-                            <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">{{ asset.assets_name }}</td>
-                            <td class="px-5 py-4 text-center">
-                                {% if asset.status == 'Active' %}
-                                    <span class="text-emerald-500 font-black uppercase text-[10px] bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">Active</span>
-                                {% elif asset.status == 'Maintenance' %}
-                                    <span class="text-amber-500 font-black uppercase text-[10px] bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg">Maintenance</span>
-                                {% else %}
-                                    <span class="text-red-500 font-black uppercase text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg">{{ asset.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-5 py-4 text-slate-400">{{ asset.date_added|date:"d-m-Y" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="p-8 text-center text-slate-400">No assets found.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
-            <div class="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex justify-between items-center">
-                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">Maintenance Tasks</span>
-                <div class="relative">
-                    <input type="text" id="taskAjaxSearch" placeholder="Search Tasks..." class="px-2 py-1 text-xs bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-md outline-none focus:border-blue-500" value="{{ q_task|default:'' }}">
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-[12px]">
-                    <thead class="text-slate-500 uppercase text-[10px] tracking-wider border-b dark:border-slate-700">
-                        <tr>
-                            <th class="px-5 py-3">Asset</th>
-                            <th class="px-5 py-3">Task Type</th>
-                            <th class="px-5 py-3 text-center">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="taskTableBody">
-                        {% for task in task_page_obj %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='{% url 'maintenance_list' %}'">
-                            <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">{{ task.asset.assets_name }}</td>
-                            <td class="px-5 py-4 text-slate-500">{{ task.maintenance_type }}</td>
-                            <td class="px-5 py-4 text-center">
-                                <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black uppercase">{{ task.status }}</span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="p-8 text-center text-slate-400">No active tasks.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 </div>
 
+<div id="maintDetailModal" class="hidden fixed inset-0 z-[120] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" onclick="closeMaintModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200 dark:border-slate-800">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="md_asset_name">---</h3>
+                    <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1" id="md_asset_id">---</p>
+                </div>
+                <button onclick="closeMaintModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="px-8 py-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                <div class="grid grid-cols-3 gap-4 mb-8">
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label>
+                        <div id="md_status"></div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Technician</label>
+                        <p id="md_tech" class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase truncate"></p>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Type</label>
+                        <p id="md_type" class="text-xs font-black text-blue-600 dark:text-blue-400 uppercase truncate"></p>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2"><i class="fas fa-tools"></i> Technical Notes</label>
+                    <div id="md_notes" class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-xl text-sm leading-relaxed dark:text-slate-300 border border-slate-100 dark:border-slate-800 italic"></div>
+                </div>
+                <div id="md_hardware_grid" class="grid grid-cols-2 gap-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+    <h1 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Strategic Overview</h1>
+    <div class="flex items-center gap-2">
+        <div id="sync-status" class="hidden flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-full">
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse mr-2"></div>
+            <span class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">Syncing Telemetry</span>
+        </div>
+        <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">Live Operations Center</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+        <p class="text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Operational Assets</p>
+        <div id="api-total-assets" class="text-3xl font-black text-slate-800 dark:text-slate-100">{{ total_assets|default:"0" }}</div>
+    </div>
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+        <p class="text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Asset Readiness</p>
+        <div id="api-readiness" class="text-3xl font-black text-green-500">{{ readiness_rate|floatformat:1|default:"0.0" }}%</div>
+    </div>
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+        <p class="text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Active Incidents</p>
+        <div id="api-incidents" class="text-3xl font-black text-orange-500">0</div>
+    </div>
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+        <p class="text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Critical Threats</p>
+        <div id="api-critical" class="text-3xl font-black text-red-500">0</div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 class="font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2 text-orange-500"></i> Active Incident Log
+            </h3>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <select id="incidentCategoryFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300">
+                    <option value="">All Categories</option>
+                    <option value="malware">Malware / Ransomware</option>
+                    <option value="phishing">Phishing / Social Engineering</option>
+                    <option value="unauthorized access">Unauthorized Access</option>
+                    <option value="ddos">Denial of Service (DDoS)</option>
+                    <option value="insider threat">Insider Threat</option>
+                    <option value="hardware loss">Hardware Loss / Physical Breach</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="incidentSeverityFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300">
+                    <option value="">All Severities</option>
+                    <option value="Critical">Critical Only</option>
+                    <option value="High">High Only</option>
+                    <option value="Medium">Medium Only</option>
+                    <option value="Low">Low Only</option>
+                </select>
+                <button onclick="clearIncidentFilters()" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg font-bold transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+                    <i class="fas fa-undo text-[9px]"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-grow h-[320px]">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">Incident</th>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">Category</th>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">Severity</th>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="table-incidents" class="text-sm"></tbody>
+            </table>
+        </div>
+        <div class="p-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 flex items-center justify-between mt-auto">
+            <span id="incidentPageIndicator" class="text-[9px] font-bold text-slate-400 uppercase"></span>
+            <div id="incidentPagination" class="flex gap-1 items-center"></div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 class="font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center whitespace-nowrap">
+                <i class="fas fa-tools mr-2 text-blue-500"></i> Live Maintenance Queue
+            </h3>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <select id="maintCategoryFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                    <option value="">All Types</option>
+                </select>
+                <select id="maintStatusFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="in progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                </select>
+                <input type="text" id="maintSearch" placeholder="Search..." class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 w-full sm:w-24 flex-shrink-0">
+                <button onclick="clearMaintFilters()" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg font-bold transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 flex-shrink-0">
+                    <i class="fas fa-undo text-[9px]"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-grow h-[320px]">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase">Asset</th>
+                        <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase">Status</th>
+                        <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase text-right">Details</th>
+                    </tr>
+                </thead>
+                <tbody id="maintenanceTableBody" class="text-sm divide-y divide-slate-50 dark:divide-slate-800">
+                    <tr><td colspan="3" class="p-6 text-center text-slate-400 italic">Syncing queue...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 flex items-center justify-between mt-auto">
+            <span id="maintPageIndicator" class="text-[9px] font-bold text-slate-400 uppercase"></span>
+            <div id="maintPagination" class="flex gap-1 items-center"></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 class="font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center whitespace-nowrap">
+                <i class="fas fa-boxes mr-2 text-blue-500"></i> IT Asset Inventory
+            </h3>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <select id="assetCategoryFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                    <option value="">All Categories</option>
+                </select>
+                <select id="assetStatusFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="maintenance">Maintenance</option>
+                </select>
+                <input type="text" id="assetSearchInput" placeholder="Search..." class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 w-full sm:w-24 flex-shrink-0">
+                <button onclick="clearAssetFilters()" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg font-bold transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 flex-shrink-0">
+                    <i class="fas fa-undo text-[9px]"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-grow h-[320px]">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">Asset Name</th>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">Type</th>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">S/N</th>
+                        <th class="px-6 py-3 text-[9px] font-black text-slate-400 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="assetTableBody" class="text-sm divide-y divide-slate-50 dark:divide-slate-800"></tbody>
+            </table>
+        </div>
+        <div class="p-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 flex items-center justify-between mt-auto">
+            <span id="assetPageIndicator" class="text-[9px] font-bold text-slate-400 uppercase"></span>
+            <div id="assetPagination" class="flex gap-1 items-center"></div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+        <h3 class="font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 flex items-center">
+            <i class="fas fa-skull-crossbones mr-2 text-red-500"></i> Incident Severity Status
+        </h3>
+        <div class="relative h-[300px] w-full"><canvas id="severityChart"></canvas></div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    $(document).ready(function() {
-        window.syncDashboard = function() {
-            $('#sync-indicator').removeClass('hidden').addClass('flex');
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        // Data and Pagination States
+        let allAssets = [];
+        let allMaint = [];
+        let allIncidents = [];
+        let assetPage = 1;
+        let maintPage = 1;
+        let incidentPage = 1;
+        const itemsPerPage = 6;
 
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        Chart.defaults.color = isDark ? '#f1f5f9' : '#94a3b8';
+
+        const sevChart = new Chart(document.getElementById('severityChart'), {
+            type: 'doughnut',
+            data: { labels: ['Critical', 'High', 'Medium', 'Low'], datasets: [{ data: [0,0,0,0], backgroundColor: ['#ef4444', '#f97316', '#eab308', '#10b981'], borderWidth: 0 }] },
+            options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // --- CLEAR FILTER FUNCTIONS ---
+        window.clearIncidentFilters = function() {
+            $('#incidentCategoryFilter').val('');
+            $('#incidentSeverityFilter').val('');
+            incidentPage = 1;
+            renderIncidentsUI();
+        };
+
+        window.clearMaintFilters = function() {
+            $('#maintCategoryFilter').val('');
+            $('#maintStatusFilter').val('');
+            $('#maintSearch').val('');
+            maintPage = 1;
+            renderMaintUI();
+        };
+
+        window.clearAssetFilters = function() {
+            $('#assetCategoryFilter').val('');
+            $('#assetStatusFilter').val('');
+            $('#assetSearchInput').val('');
+            assetPage = 1;
+            renderAssetUI();
+        };
+
+        // --- HELPER: DYNAMIC DROPDOWNS ---
+        function populateDropdown(selectId, data, fieldExtractor, defaultOptionText) {
+            const select = $(`#${selectId}`);
+            const currentVal = select.val();
+            
+            const uniqueVals = [...new Set(data.map(fieldExtractor))].filter(v => v).sort();
+            
+            let html = `<option value="">${defaultOptionText}</option>`;
+            uniqueVals.forEach(val => {
+                html += `<option value="${val}">${val.toUpperCase()}</option>`;
+            });
+            
+            select.html(html);
+            
+            if (select.find(`option[value="${currentVal}"]`).length) {
+                select.val(currentVal);
+            }
+        }
+
+        // --- PAGINATION HELPER ---
+        function renderPaginationControls(containerId, currentPage, totalItems, itemsPerPage, setPageFuncName) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            let html = '';
+            
+            if (currentPage > 1) {
+                html += `<button onclick="${setPageFuncName}(${currentPage - 1})" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><i class="fas fa-chevron-left text-[10px]"></i></button>`;
+            } else {
+                html += `<button disabled class="p-1 px-2 opacity-30 cursor-not-allowed rounded"><i class="fas fa-chevron-left text-[10px]"></i></button>`;
+            }
+            
+            let startPage = Math.max(1, currentPage - 1);
+            let endPage = Math.min(totalPages, currentPage + 1);
+
+            if (currentPage === 1 && totalPages >= 3) {
+                endPage = 3;
+            } else if (currentPage === totalPages && totalPages >= 3) {
+                startPage = totalPages - 2;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `<button class="p-1 px-2 bg-blue-500 text-white rounded text-[10px] font-bold shadow-sm">${i}</button>`;
+                } else {
+                    html += `<button onclick="${setPageFuncName}(${i})" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400 text-[10px] font-bold transition-colors">${i}</button>`;
+                }
+            }
+
+            if (currentPage < totalPages) {
+                html += `<button onclick="${setPageFuncName}(${currentPage + 1})" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><i class="fas fa-chevron-right text-[10px]"></i></button>`;
+            } else {
+                html += `<button disabled class="p-1 px-2 opacity-30 cursor-not-allowed rounded"><i class="fas fa-chevron-right text-[10px]"></i></button>`;
+            }
+
+            $(`#${containerId}`).html(html);
+        }
+
+        // --- MAINTENANCE LOGIC ---
+        function loadMaintenance() {
             $.ajax({
-                url: '/api/personnel/stats/', 
-                type: 'GET',
-                success: function(data) {
-                    $('#stat-total-assets').text(data.total_assets_count);
+                url: '/api/maintenance/', type: 'GET',
+                success: function(data) { 
+                    allMaint = data; 
+                    populateDropdown('maintCategoryFilter', allMaint, m => m.maintenance_type || 'Other', 'All Types');
+                    renderMaintUI(); 
+                }
+            });
+        }
+
+        window.renderMaintUI = function() {
+            const body = $('#maintenanceTableBody');
+            const search = $('#maintSearch').val().toLowerCase();
+            const statusFilter = $('#maintStatusFilter').val().toLowerCase();
+            const categoryFilter = $('#maintCategoryFilter').val().toLowerCase();
+            
+            const filtered = allMaint.filter(m => {
+                const matchesSearch = m.asset_name.toLowerCase().includes(search) || m.status.toLowerCase().includes(search);
+                const matchesStatus = statusFilter === "" || m.status.toLowerCase() === statusFilter;
+                const itemCat = (m.maintenance_type || 'other').toLowerCase();
+                const matchesCategory = categoryFilter === "" || itemCat === categoryFilter;
+                
+                return matchesSearch && matchesStatus && matchesCategory;
+            });
+            
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (maintPage > totalPages) maintPage = totalPages;
+            if (maintPage < 1) maintPage = 1;
+
+            const paginated = filtered.slice((maintPage - 1) * itemsPerPage, maintPage * itemsPerPage);
+            body.empty();
+            
+            if(filtered.length === 0) {
+                body.append('<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">No logs match filters</td></tr>');
+            } else {
+                paginated.forEach(m => {
+                    const statusColor = m.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500';
+                    body.append(`
+                        <tr class="ticket-row group border-b border-slate-50 dark:border-slate-800/50" onclick="openMaintModal(${m.id})">
+                            <td class="px-4 py-3"><span class="font-bold text-slate-700 dark:text-slate-200">${m.asset_name}</span><br><span class="text-[9px] font-mono text-slate-400">${m.asset_string_id}</span></td>
+                            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${statusColor}">${m.status}</span></td>
+                            <td class="px-4 py-3 text-right"><i class="fas fa-chevron-right text-[10px] text-slate-300"></i></td>
+                        </tr>
+                    `);
+                });
+            }
+            
+            const startItem = filtered.length > 0 ? (maintPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(maintPage * itemsPerPage, filtered.length);
+            $('#maintPageIndicator').text(`Showing ${startItem}-${endItem} of ${filtered.length}`);
+            
+            renderPaginationControls('maintPagination', maintPage, filtered.length, itemsPerPage, 'setMaintPage');
+        };
+
+        window.openMaintModal = function(id) {
+            const m = allMaint.find(x => x.id == id);
+            if(!m) return;
+            $('#md_asset_name').text(m.asset_name);
+            $('#md_asset_id').text(m.asset_string_id);
+            $('#md_tech').text(m.technician_name || 'System');
+            $('#md_type').text(m.maintenance_type);
+            $('#md_notes').text(m.notes || 'No technical notes available.');
+            
+            const sColor = m.status === 'Completed' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white';
+            $('#md_status').html(`<span class="px-2 py-1 rounded text-[10px] font-black uppercase ${sColor}">${m.status}</span>`);
+
+            $('#md_hardware_grid').html(`
+                <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700"><label class="block text-[8px] font-black text-slate-400 uppercase">Processor</label><p class="text-xs font-bold">${m.processor || 'N/A'}</p></div>
+                <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700"><label class="block text-[8px] font-black text-slate-400 uppercase">RAM</label><p class="text-xs font-bold">${m.ram_gb || '0'} GB</p></div>
+            `);
+
+            $('#maintDetailModal').removeClass('hidden');
+            $('body').css('overflow', 'hidden');
+        };
+
+        window.closeMaintModal = function() { $('#maintDetailModal').addClass('hidden'); $('body').css('overflow', 'auto'); };
+
+        window.setMaintPage = (page) => { 
+            maintPage = page;
+            renderMaintUI(); 
+        };
+
+        // --- ASSET LOGIC ---
+        function loadAssets() {
+            $.ajax({ 
+                url: '/api/assets/', type: 'GET', 
+                success: function(data) { 
+                    allAssets = data; 
+                    populateDropdown('assetCategoryFilter', allAssets, a => a.assets_type || 'Other', 'All Types');
+                    renderAssetUI(); 
+                } 
+            });
+        }
+
+        function renderAssetUI() {
+            const body = $('#assetTableBody');
+            const search = $('#assetSearchInput').val().toLowerCase();
+            const statusFilter = $('#assetStatusFilter').val().toLowerCase();
+            const categoryFilter = $('#assetCategoryFilter').val().toLowerCase();
+            
+            const filtered = allAssets.filter(a => {
+                const matchesSearch = a.assets_name.toLowerCase().includes(search);
+                const matchesStatus = statusFilter === "" || a.status.toLowerCase() === statusFilter;
+                const itemCat = (a.assets_type || 'other').toLowerCase();
+                const matchesCategory = categoryFilter === "" || itemCat === categoryFilter;
+                
+                return matchesSearch && matchesStatus && matchesCategory;
+            });
+            
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (assetPage > totalPages) assetPage = totalPages;
+            if (assetPage < 1) assetPage = 1;
+
+            const paginated = filtered.slice((assetPage - 1) * itemsPerPage, assetPage * itemsPerPage);
+            body.empty();
+            
+            if (filtered.length === 0) {
+                body.append('<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">No assets match filters</td></tr>');
+            } else {
+                paginated.forEach(a => {
+                    const color = a.status === 'Active' ? 'text-emerald-500 bg-emerald-500/10' : 'text-amber-500 bg-amber-500/10';
+                    body.append(`<tr onclick="openAssetModal(${a.id})" class="cursor-pointer border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-100/5 transition-colors group">
+                        <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600">${a.assets_name}</td>
+                        <td class="px-6 py-4 text-[9px] font-black uppercase text-slate-500">${a.assets_type || 'N/A'}</td>
+                        <td class="px-6 py-4 text-[10px] font-mono font-bold text-slate-400">${a.serial_number || 'N/A'}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${color}">${a.status}</span></td>
+                    </tr>`);
+                });
+            }
+            
+            const startItem = filtered.length > 0 ? (assetPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(assetPage * itemsPerPage, filtered.length);
+            $('#assetPageIndicator').text(`Showing ${startItem}-${endItem} of ${filtered.length}`);
+            
+            renderPaginationControls('assetPagination', assetPage, filtered.length, itemsPerPage, 'setAssetPage');
+        }
+
+        window.openAssetModal = function(id) {
+            const a = allAssets.find(x => x.id == id);
+            if (!a) return;
+            $('#asset_modal_id').text(`#${a.assets_id}`);
+            $('#asset_modal_title').text(a.assets_name);
+            $('#asset_modal_content_area').html(`<div class="grid grid-cols-2 gap-4"><div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label><span class="px-2 py-1 rounded text-[10px] font-black uppercase ${a.status === 'Active' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${a.status}</span></div><div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Location</label><p class="text-xs font-bold dark:text-slate-200 uppercase">${a.location}</p></div></div>`);
+            $('#assetDetailModal').removeClass('hidden');
+        };
+
+        window.closeAssetModal = function() { $('#assetDetailModal').addClass('hidden'); };
+        
+        window.setAssetPage = (page) => { 
+            assetPage = page; 
+            renderAssetUI(); 
+        };
+
+        // --- INCIDENT LOGIC ---
+        window.renderIncidentsUI = function() {
+            const table = $('#table-incidents');
+            table.empty();
+            const severityFilter = $('#incidentSeverityFilter').val();
+            const categoryFilter = $('#incidentCategoryFilter').val().toLowerCase();
+            
+            let active = allIncidents.filter(i => i.status !== 'Resolved');
+            if (severityFilter) {
+                active = active.filter(i => i.severity === severityFilter);
+            }
+            if (categoryFilter) {
+                active = active.filter(i => (i.category || 'other').toLowerCase() === categoryFilter);
+            }
+            
+            const severityWeights = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1 };
+            active.sort((a, b) => {
+                const weightA = severityWeights[a.severity] || 0;
+                const weightB = severityWeights[b.severity] || 0;
+                if (weightB === weightA) return b.id - a.id;
+                return weightB - weightA;
+            });
+
+            const totalPages = Math.ceil(active.length / itemsPerPage) || 1;
+            if (incidentPage > totalPages) incidentPage = totalPages;
+            if (incidentPage < 1) incidentPage = 1;
+
+            const paginated = active.slice((incidentPage - 1) * itemsPerPage, incidentPage * itemsPerPage);
+
+            if (active.length === 0) {
+                table.append('<tr><td colspan="4" class="p-6 text-center text-slate-400 italic">No incidents match filters</td></tr>');
+            } else {
+                paginated.forEach(i => {
+                    let badgeClass = 'bg-slate-100 text-slate-500';
+                    if (i.severity === 'Critical') badgeClass = 'bg-red-500/10 text-red-500';
+                    else if (i.severity === 'High') badgeClass = 'bg-orange-500/10 text-orange-500';
+                    else if (i.severity === 'Medium') badgeClass = 'bg-amber-500/10 text-amber-500';
+                    else if (i.severity === 'Low') badgeClass = 'bg-emerald-500/10 text-emerald-500';
+
+                    let statusBadgeClass = 'bg-slate-100 text-slate-500';
+                    const statusLower = (i.status || '').toLowerCase();
+                    if (statusLower === 'open') {
+                        statusBadgeClass = 'bg-red-500/10 text-red-500 dark:bg-red-500/20';
+                    } else if (statusLower === 'investigating') {
+                        statusBadgeClass = 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20';
+                    } else if (statusLower === 'resolved') {
+                        statusBadgeClass = 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20';
+                    }
+
+                    table.append(`<tr onclick="openIncidentModal(${i.id})" class="cursor-pointer border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-100/5 transition-colors">
+                        <td class="px-6 py-4 font-bold">${i.title}</td>
+                        <td class="px-6 py-4 text-[9px] font-black uppercase text-slate-400">${i.category || 'Other'}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 rounded text-[8px] font-black uppercase ${badgeClass}">${i.severity}</span></td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 rounded text-[8px] font-black uppercase ${statusBadgeClass}">${i.status}</span></td>
+                    </tr>`);
+                });
+            }
+            
+            const startItem = active.length > 0 ? (incidentPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(incidentPage * itemsPerPage, active.length);
+            $('#incidentPageIndicator').text(`Showing ${startItem}-${endItem} of ${active.length}`);
+            
+            renderPaginationControls('incidentPagination', incidentPage, active.length, itemsPerPage, 'setIncidentPage');
+        };
+
+        window.openIncidentModal = function(id) {
+            $.ajax({
+                url: `/api/incidents/${id}/`, type: 'GET',
+                success: function(inc) {
+                    $('#modal_view_id').text(`INC-${String(inc.id).padStart(3, '0')}`);
+                    $('#modal_view_title').text(inc.title);
+                    $('#modal_view_assigned').text(inc.assigned_to_name || 'Unassigned');
+                    $('#modal_view_date').text(new Date(inc.date).toLocaleString());
+                    $('#modal_view_category').text(inc.category || 'N/A');
+                    $('#modal_view_description').text(inc.description || 'No summary.');
+
+                    const sevColors = { 'Critical': 'bg-red-500 text-white', 'High': 'bg-orange-500 text-white', 'Medium': 'bg-amber-500 text-white', 'Low': 'bg-emerald-500 text-white' };
+                    $('#modal_view_severity').html(`<span class="px-2 py-1 rounded text-[10px] font-black uppercase ${sevColors[inc.severity] || 'bg-slate-500 text-white'}">${inc.severity}</span>`);
                     
-                    const currentUser = data.user_info.username;
-                    const myTasks = data.recent_maintenance.filter(m => 
-                        m.technician_name === currentUser && m.status !== 'Completed'
-                    ).length;
-                    $('#stat-my-tasks').text(myTasks);
+                    let statusModalClass = 'bg-slate-500 text-white';
+                    const statusLower = (inc.status || '').toLowerCase();
+                    if (statusLower === 'open') {
+                        statusModalClass = 'bg-red-500 text-white';
+                    } else if (statusLower === 'investigating') {
+                        statusModalClass = 'bg-orange-500 text-white';
+                    } else if (statusLower === 'resolved') {
+                        statusModalClass = 'bg-emerald-500 text-white';
+                    }
+                    $('#modal_view_status').html(`<span class="px-2 py-1 rounded text-[10px] font-black uppercase ${statusModalClass}">${inc.status}</span>`);
 
-                    const openAlerts = data.recent_incidents.filter(i => i.status === 'Open').length;
-                    $('#stat-alerts').text(openAlerts);
-
-                    // Trigger ALL table and chart refreshes
-                    renderIncidentTable(data.recent_incidents);
-                    renderTaskTable(data.recent_maintenance);
-                    renderAssetTable(data.assigned_assets);
-                    updateChart(data.recent_incidents);
-                },
-                error: function(xhr) {
-                    console.error("Telemetry Sync Failed. Status:", xhr.status);
-                },
-                complete: function() {
-                    setTimeout(() => $('#sync-indicator').fadeOut(), 2000);
+                    $('#incidentModal').removeClass('hidden');
                 }
             });
         };
 
-        function renderIncidentTable(incidents) {
-            const $tbody = $('#incidentTableBody');
-            if (!incidents || incidents.length === 0) {
-                $tbody.html('<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">No incident reports available.</td></tr>');
-                return;
-            }
+        window.closeIncidentModal = function() { $('#incidentModal').addClass('hidden'); };
 
-            let html = '';
-            incidents.forEach(inc => {
-                // Determine severity color
-                let sevColor = inc.severity === 'Critical' ? 'bg-red-100 text-red-700 border-red-200' : 
-                               inc.severity === 'High' ? 'bg-orange-100 text-orange-700 border-orange-200' :
-                               inc.severity === 'Medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
-                               'bg-emerald-100 text-emerald-700 border-emerald-200';
+        window.setIncidentPage = (page) => { 
+            incidentPage = page; 
+            renderIncidentsUI(); 
+        };
 
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer" onclick="window.location.href='/incidents/'">
-                        <td class="px-6 py-4 font-mono text-slate-400">#${inc.id}</td>
-                        <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${inc.title}</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase border ${sevColor}">
-                                ${inc.severity}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-black uppercase border border-blue-100">
-                                ${inc.status}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">${inc.formatted_date}</td>
-                    </tr>`;
-            });
-            $tbody.html(html);
-        }
-
-        function renderAssetTable(assets) {
-            const $tbody = $('#assetTableBody');
-            if (!assets || assets.length === 0) {
-                $tbody.html('<tr><td colspan="3" class="p-8 text-center text-slate-400">No assets assigned to you.</td></tr>');
-                return;
-            }
-
-            let html = '';
-            assets.forEach(asset => {
-                let statusBadge = asset.status === 'Active' ? '<span class="text-emerald-500 font-black uppercase text-[10px] bg-emerald-50 px-2 py-1 rounded-lg">Active</span>' : 
-                                  asset.status === 'Maintenance' ? '<span class="text-amber-500 font-black uppercase text-[10px] bg-amber-50 px-2 py-1 rounded-lg">Maintenance</span>' : 
-                                  `<span class="text-red-500 font-black uppercase text-[10px] bg-red-50 px-2 py-1 rounded-lg">${asset.status}</span>`;
-                
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='/assets/'">
-                        <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">${asset.assets_name}</td>
-                        <td class="px-5 py-4 text-center">${statusBadge}</td>
-                        <td class="px-5 py-4 text-slate-400">${asset.date_added}</td>
-                    </tr>`;
-            });
-            $tbody.html(html);
-        }
-
-        function renderTaskTable(tasks) {
-            const $tbody = $('#taskTableBody');
-            if (!tasks || tasks.length === 0) {
-                $tbody.html('<tr><td colspan="3" class="p-8 text-center text-slate-400">No active maintenance tasks.</td></tr>');
-                return;
-            }
-
-            let html = '';
-            tasks.forEach(task => {
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='/maintenance/'">
-                        <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">${task.asset_name}</td>
-                        <td class="px-5 py-4 text-slate-500">${task.maintenance_type}</td>
-                        <td class="px-5 py-4 text-center">
-                            <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black uppercase">${task.status}</span>
-                        </td>
-                    </tr>`;
-            });
-            $tbody.html(html);
-        }
-
-        function updateChart(incidents) {
-            if (!window.myTrendChart) return;
-            const counts = {};
-            incidents.forEach(inc => {
-                const d = inc.date_label || 'Today'; 
-                counts[d] = (counts[d] || 0) + 1;
-            });
-            window.myTrendChart.data.labels = Object.keys(counts);
-            window.myTrendChart.data.datasets[0].data = Object.values(counts);
-            window.myTrendChart.update();
-        }
-
-        syncDashboard();
-        setInterval(syncDashboard, 30000); 
-    });
-
-    function initIncidentChart() {
-        const chartEl = document.getElementById('incidentTrendChart');
-        if (!chartEl) return;
-        const ctx = chartEl.getContext('2d');
-        
-        if (window.myTrendChart) window.myTrendChart.destroy();
-        window.myTrendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-                datasets: [{
-                    label: 'Incidents',
-                    data: [0,0,0,0,0],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { display: false },
-                    y: { display: false, beginAtZero: true }
+        // --- REFRESH DATA ---
+        window.refreshStrategicData = function() {
+            $('#sync-status').removeClass('hidden');
+            
+            $.ajax({
+                url: '/api/dashboard-stats/', type: 'GET',
+                success: function(data) {
+                    $('#api-total-assets').text(data.total_assets);
+                    $('#api-readiness').text((data.total_assets > 0 ? ((data.total_assets - data.maintenance_count) / data.total_assets * 100) : 0).toFixed(1) + '%');
                 }
-            }
-        });
-    }
+            });
 
-    document.addEventListener('DOMContentLoaded', initIncidentChart);
+            $.ajax({
+                url: '/api/incidents/', type: 'GET',
+                success: function(incs) {
+                    allIncidents = incs;
+                    renderIncidentsUI();
+                    
+                    let activeIncidentsCount = 0;
+                    let criticalThreatsCount = 0;
+                    const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+                    
+                    incs.forEach(i => {
+                        if (counts[i.severity] !== undefined) counts[i.severity]++;
+                        
+                        if (i.status !== 'Resolved') {
+                            activeIncidentsCount++;
+                            if (i.severity && i.severity.toUpperCase() === 'CRITICAL') {
+                                criticalThreatsCount++;
+                            }
+                        }
+                    });
+                    
+                    $('#api-incidents').text(activeIncidentsCount);
+                    $('#api-critical').text(criticalThreatsCount);
+
+                    sevChart.data.datasets[0].data = [counts.Critical, counts.High, counts.Medium, counts.Low];
+                    sevChart.update();
+                },
+                complete: function() { setTimeout(() => $('#sync-status').addClass('hidden'), 1000); }
+            });
+
+            loadMaintenance();
+            loadAssets();
+        };
+
+        // --- EVENT LISTENERS ---
+        $('#maintSearch').on('keyup', () => { maintPage = 1; renderMaintUI(); });
+        $('#maintStatusFilter').on('change', () => { maintPage = 1; renderMaintUI(); });
+        $('#maintCategoryFilter').on('change', () => { maintPage = 1; renderMaintUI(); });
+        
+        $('#assetSearchInput').on('keyup', () => { assetPage = 1; renderAssetUI(); });
+        $('#assetStatusFilter').on('change', () => { assetPage = 1; renderAssetUI(); });
+        $('#assetCategoryFilter').on('change', () => { assetPage = 1; renderAssetUI(); });
+        
+        $('#incidentSeverityFilter').on('change', () => { incidentPage = 1; renderIncidentsUI(); });
+        $('#incidentCategoryFilter').on('change', () => { incidentPage = 1; renderIncidentsUI(); });
+
+        refreshStrategicData();
+        setInterval(refreshStrategicData, 60000);
+    });
 </script>
-
 {% endblock %}
