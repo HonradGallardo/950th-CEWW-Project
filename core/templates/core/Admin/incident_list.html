@@ -726,8 +726,8 @@ function previewIncident(data) {
     // Severity Badge Rendering with conditional blinking
     const $badge = $('#view_severity_badge');
     let colorClass = '';
-    if (data.severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-500/10 text-red-600 border-red-200 dark:border-red-900/50 ring-1 ring-red-500/20 animate-blink';
-    else if (data.severity === 'High') colorClass = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 border-orange-200 dark:border-orange-900/50 ring-1 ring-orange-500/20 animate-blink';
+    if (data.severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-500/20 text-red-800 border-red-200 dark:border-red-500/60 ring-2 ring-red-500/60 shadow-lg shadow-red-500/50 animate-blink';
+    else if (data.severity === 'High') colorClass = 'bg-orange-50 dark:bg-orange-500/20 text-orange-800 border-orange-200 dark:border-orange-500/60 ring-2 ring-orange-500/60 shadow-lg shadow-orange-500/50 animate-blink';
     else if (data.severity === 'Medium') colorClass = 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-900/50 ring-1 ring-amber-500/20';
     else colorClass = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/50 ring-1 ring-emerald-500/20';
     $badge.html(`<span class="px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider shadow-sm ${colorClass}">${data.severity}</span>`);
