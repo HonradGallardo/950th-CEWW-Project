@@ -2,772 +2,672 @@
 
 {% block content %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
-    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
-    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    :root {
-        --head-bg: rgba(255, 255, 255, 0.85);
-        --head-text: #0F172A;
-        --head-border: #e2e8f0;
-        --row-hover: #f8fafc;
-        --nav-height: 73px; 
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    :root {
+        --head-bg: rgba(255, 255, 255, 0.85);
+        --head-text: #0F172A;
+        --head-border: #e2e8f0;
+        --row-hover: #f8fafc;
+        --nav-height: 73px; 
+    }
 
-    .dark {
-        --head-bg: rgba(15, 23, 42, 0.85);
-        --head-text: #F8FAFC;
-        --head-border: #1e293b;
-        --row-hover: #1e293b;
-    }
+    .dark {
+        --head-bg: rgba(15, 23, 42, 0.85);
+        --head-text: #F8FAFC;
+        --head-border: #1e293b;
+        --row-hover: #1e293b;
+    }
 
-    #head {
-        background-color: var(--head-bg) !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        color: var(--head-text) !important;
-        border-color: var(--head-border) !important;
-        transition: all 0.3s ease;
-        top: 0; 
-        position: sticky;
-        z-index: 30;
-    }
+    #head {
+        background-color: var(--head-bg) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        color: var(--head-text) !important;
+        border-color: var(--head-border) !important;
+        transition: all 0.3s ease;
+        top: 0; 
+        position: sticky;
+        z-index: 30;
+    }
 
-    .admin-table-container {
-        height: auto; 
-        overflow: visible;
-    }
-    
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .admin-table-container {
+        height: auto; 
+        overflow: visible;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    .ticket-row { transition: all 0.2s ease; cursor: pointer; }
-    .ticket-row:hover { 
-        background-color: var(--row-hover) !important; 
-    }
+    .ticket-row { transition: all 0.2s ease; cursor: pointer; }
+    .ticket-row:hover { 
+        background-color: var(--row-hover) !important; 
+    }
 
-    .id-badge {
-        font-family: 'JetBrains Mono', ui-monospace, monospace;
-        letter-spacing: -0.02em;
-    }
+    .id-badge {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        letter-spacing: -0.02em;
+    }
 
-    .action-menu {
-        display: none;
-        position: absolute;
-        right: 0;
-        top: 100%;
-        z-index: 9999;
-        width: 200px; 
-        text-align: left; 
-        animation: menuFade 0.2s ease-out;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    }
+    .action-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        z-index: 9999;
+        width: 200px; 
+        text-align: left; 
+        animation: menuFade 0.2s ease-out;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
 
-    @keyframes menuFade {
-        from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
+    @keyframes menuFade {
+        from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
 
-    .action-btn-trigger {
-        transition: all 0.2s ease;
-    }
-    .action-btn-trigger:hover {
-        background-color: rgba(59, 130, 246, 0.15);
-        color: #2563eb;
-    }
-    .dark .action-btn-trigger:hover { color: #60a5fa; }
+    .action-btn-trigger {
+        transition: all 0.2s ease;
+    }
+    .action-btn-trigger:hover {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #2563eb;
+    }
+    .dark .action-btn-trigger:hover { color: #60a5fa; }
 
-    @media (max-width: 1024px) {
-        .admin-table-container { height: auto; overflow: visible; }
-        table, thead, tbody, th, td, tr { display: block; }
-        thead tr { position: absolute; top: -9999px; left: -9999px; }
-        
-        #ticketTableBody {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding: 1rem;
-        }
+    @media (max-width: 1024px) {
+        .admin-table-container { height: auto; overflow: visible; }
+        table, thead, tbody, th, td, tr { display: block; }
+        thead tr { position: absolute; top: -9999px; left: -9999px; }
+        
+        #ticketTableBody {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+        }
 
-        .ticket-row {
-            background: #ffffff !important;
-            border: 1px solid var(--head-border) !important;
-            border-radius: 0.75rem;
-            padding: 0;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
+        .ticket-row {
+            background: #ffffff !important;
+            border: 1px solid var(--head-border) !important;
+            border-radius: 0.75rem;
+            padding: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
 
-        .dark .ticket-row { 
-            background: #111827 !important; 
-            border-color: #1f2937 !important; 
-        }
-        
-        .ticket-row td { 
-            padding: 0.875rem 1.25rem !important;
-            border-bottom: 1px solid var(--head-border) !important;
-            width: 100% !important;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 0.5rem;
-        }
+        .dark .ticket-row { 
+            background: #111827 !important; 
+            border-color: #1f2937 !important; 
+        }
+        
+        .ticket-row td { 
+            padding: 0.875rem 1.25rem !important;
+            border-bottom: 1px solid var(--head-border) !important;
+            width: 100% !important;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
 
-        .dark .ticket-row td { border-bottom-color: #1f2937 !important; }
-        .ticket-row td:last-child, 
-        .ticket-row td:nth-last-child(2) { border-bottom: none !important; }
+        .dark .ticket-row td { border-bottom-color: #1f2937 !important; }
+        .ticket-row td:last-child, 
+        .ticket-row td:nth-last-child(2) { border-bottom: none !important; }
 
-        .ticket-row td::before {
-            content: attr(data-label);
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            text-align: left;
-            flex-shrink: 0;
-            width: 35%;
-            margin-top: 0.125rem;
-        }
-        .dark .ticket-row td::before { color: #9ca3af; }
-        
-        /* CARD HEADER OVERRIDES */
-        .ticket-row td[data-label="Ref ID"] { padding: 0 !important; }
-        .ticket-row td[data-label="Ref ID"]::before { display: none; }
+        .ticket-row td::before {
+            content: attr(data-label);
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            text-align: left;
+            flex-shrink: 0;
+            width: 35%;
+            margin-top: 0.125rem;
+        }
+        .dark .ticket-row td::before { color: #9ca3af; }
+        
+        /* CARD HEADER OVERRIDES */
+        .ticket-row td[data-label="Ref ID"] { padding: 0 !important; }
+        .ticket-row td[data-label="Ref ID"]::before { display: none; }
 
-        .ticket-row td[data-label="Actions"] { display: none !important; }
-        .ticket-row td[data-label="Status"] { display: none !important; }
-    }
+        .ticket-row td[data-label="Actions"] { display: none !important; }
+        .ticket-row td[data-label="Status"] { display: none !important; }
+    }
 </style>
 
 <div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
-            <div class="px-6 pt-6 pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
-                        <i class="fas fa-exclamation-triangle text-red-600"></i>
-                    </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
-                        <div class="mt-2">
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
-                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
-                    Confirm Delete
-                </button>
-                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
+            <div class="px-6 pt-6 pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Confirm Delete
+                </button>
+                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="font-plex min-h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#0F172A] p-3 md:p-6 text-slate-900 dark:text-slate-300 transition-colors duration-300">
-    
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center transition-all hover:shadow-md">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1"><i class="fas fa-ticket-alt mr-1"></i> Total Tickets</span>
-            <span class="text-3xl font-black text-slate-800 dark:text-slate-100" id="metric-total">0</span>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 w-16 h-16 bg-amber-500/10 rounded-bl-full"></div>
-            <span class="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1"><i class="fas fa-clock mr-1"></i> Pending</span>
-            <span class="text-3xl font-black text-amber-600 dark:text-amber-400" id="metric-pending">0</span>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-blue-200 dark:border-blue-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 w-16 h-16 bg-blue-500/10 rounded-bl-full"></div>
-            <span class="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1"><i class="fas fa-spinner mr-1"></i> In Progress</span>
-            <span class="text-3xl font-black text-blue-600 dark:text-blue-400" id="metric-progress">0</span>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full"></div>
-            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1"><i class="fas fa-check-circle mr-1"></i> Completed</span>
-            <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400" id="metric-completed">0</span>
-        </div>
-    </div>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center transition-all hover:shadow-md">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1"><i class="fas fa-ticket-alt mr-1"></i> Total Tickets</span>
+            <span class="text-3xl font-black text-slate-800 dark:text-slate-100" id="metric-total">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-amber-500/10 rounded-bl-full"></div>
+            <span class="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1"><i class="fas fa-clock mr-1"></i> Pending</span>
+            <span class="text-3xl font-black text-amber-600 dark:text-amber-400" id="metric-pending">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-blue-200 dark:border-blue-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-blue-500/10 rounded-bl-full"></div>
+            <span class="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1"><i class="fas fa-spinner mr-1"></i> In Progress</span>
+            <span class="text-3xl font-black text-blue-600 dark:text-blue-400" id="metric-progress">0</span>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full"></div>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1"><i class="fas fa-check-circle mr-1"></i> Completed</span>
+            <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400" id="metric-completed">0</span>
+        </div>
+    </div>
 
-    <header id="head" class="flex flex-col gap-5 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
-        <div class="flex items-center justify-between">
-            <div class="flex flex-col gap-1">
-                <h1 class="font-rajdhani text-base md:text-xl font-black tracking-tight flex items-center gap-3">
-                    <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                        <i class="fas fa-shield-alt text-blue-600 dark:text-blue-400"></i>
-                    </div>
-                    <span class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">
-                        Support Command Center
-                    </span>
-                </h1>
-                <p class="text-xs font-semibold opacity-70 text-blue-600 dark:text-blue-400 uppercase tracking-widest pl-11">
-                    Administrative Dispatch Overview
-                </p>
-            </div>
-            <div class="lg:hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                <i class="fas fa-ticket-alt text-blue-500 text-xs"></i>
-                <span id="mobileCount" class="text-sm font-black text-blue-700 dark:text-blue-400">00</span>
-            </div>
-        </div>
-        
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
-            <div class="relative flex-grow max-w-2xl">
-                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-slate-400"></i>
-                </span>
-                <input type="text" id="ticketSearch" placeholder="Search by ID, Subject, Client, or Date..." 
-                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
-            </div>
-            
-            <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full lg:w-auto">
-                <select id="priorityFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
-                    <option value="all">All Priorities</option>
-                    <option value="high">High Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="low">Low Priority</option>
-                </select>
+    <header id="head" class="flex flex-col gap-5 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
+        <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-1">
+                <h1 class="font-rajdhani text-base md:text-xl font-black tracking-tight flex items-center gap-3">
+                    <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <i class="fas fa-shield-alt text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <span class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">
+                        Support Command Center
+                    </span>
+                </h1>
+                <p class="text-xs font-semibold opacity-70 text-blue-600 dark:text-blue-400 uppercase tracking-widest pl-11">
+                    Administrative Dispatch Overview
+                </p>
+            </div>
+            <div class="lg:hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                <i class="fas fa-ticket-alt text-blue-500 text-xs"></i>
+                <span id="mobileCount" class="text-sm font-black text-blue-700 dark:text-blue-400">00</span>
+            </div>
+        </div>
+        
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+            <div class="relative flex-grow max-w-2xl">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-slate-400"></i>
+                </span>
+                <input type="text" id="ticketSearch" placeholder="Search by ID, Subject, Client, or Date..." 
+                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
+            </div>
+            
+            <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full lg:w-auto">
+                <select id="priorityFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                    <option value="all">All Priorities</option>
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                </select>
 
-                <select id="sortOrder" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
-                    <option value="newest">Sort: Newest First</option>
-                    <option value="oldest">Sort: Oldest First</option>
-                    <option value="priority_desc">Sort: Priority (High-Low)</option>
-                    <option value="priority_asc">Sort: Priority (Low-High)</option>
-                </select>
-            </div>
-            
-            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5 w-full lg:w-auto">
-                <button class="filter-btn whitespace-nowrap px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex-1" data-filter="all" onclick="filterTable('all', this)">All</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
-            </div>
-        </div>
+                <select id="sortOrder" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
+                    <option value="newest">Sort: Newest First</option>
+                    <option value="oldest">Sort: Oldest First</option>
+                    <option value="priority_desc">Sort: Priority (High-Low)</option>
+                    <option value="priority_asc">Sort: Priority (Low-High)</option>
+                </select>
+            </div>
+            
+            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5 w-full lg:w-auto">
+                <button class="filter-btn whitespace-nowrap px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex-1" data-filter="all" onclick="filterTable('all', this)">All</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
+                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
+            </div>
+        </div>
+    </header>
 
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full">
-            <div class="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 flex-1 lg:flex-none focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-                <i class="fas fa-calendar-alt text-slate-400 text-xs"></i>
-                <label for="dateFrom" class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">From:</label>
-                <input type="date" id="dateFrom" class="bg-transparent border-none text-sm font-medium text-slate-700 dark:text-slate-200 outline-none w-full cursor-pointer">
-            </div>
-            
-            <div class="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 flex-1 lg:flex-none focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-                <i class="fas fa-calendar-check text-slate-400 text-xs"></i>
-                <label for="dateTo" class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">To:</label>
-                <input type="date" id="dateTo" class="bg-transparent border-none text-sm font-medium text-slate-700 dark:text-slate-200 outline-none w-full cursor-pointer">
-            </div>
-
-            <select id="categoryFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 lg:flex-none cursor-pointer">
-                <option value="all">Filter by Category (All)</option>
-                <option value="New Account Provisioning">New Account Provisioning</option>
-                <option value="OTP Removal Request">OTP Removal Request</option>
-                <option value="MFA Reset / Removal">MFA Reset / Removal</option>
-                <option value="Password Reset Request">Password Reset Request</option>
-                <option value="Account Unlock Request">Account Unlock Request</option>
-                <option value="Software Bug Report">Software Bug Report</option>
-                <option value="System Authentication Failure">System Authentication Failure</option>
-                <option value="Role Modification">Role Modification</option>
-                <option value="Custom Support Request">Custom Support Request</option>
-            </select>
-        </div>
-    </header>
-
-    <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col">
-        <div class="admin-table-container overflow-auto custom-scrollbar">
-            <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px]">
-                <thead class="font-rajdhani hidden lg:table-header-group">
-                    <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm">
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl">Ref ID</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Priority</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Client</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Issue & Snippet</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Agent Details</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-center">Status</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Created At</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80"></tbody>
-            </table>
-        </div>
-        <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-xl md:rounded-b-2xl">
-            <span id="pageIndicator" class="text-xs font-bold text-slate-500 uppercase tracking-wider"></span>
-            <div class="flex items-center gap-2">
-                <button id="prevPage" onclick="changePage(-1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
-                <div id="pageNumbers" class="flex gap-1.5"></div>
-                <button id="nextPage" onclick="changePage(1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
-            </div>
-        </div>
-    </div>
+    <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col">
+        <div class="admin-table-container overflow-auto custom-scrollbar">
+            <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px]">
+                <thead class="font-rajdhani hidden lg:table-header-group">
+                    <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm">
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl">Ref ID</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Priority</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Client</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Issue & Snippet</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Agent Details</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-center">Status</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Created At</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80"></tbody>
+            </table>
+        </div>
+        <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-xl md:rounded-b-2xl">
+            <span id="pageIndicator" class="text-xs font-bold text-slate-500 uppercase tracking-wider"></span>
+            <div class="flex items-center gap-2">
+                <button id="prevPage" onclick="changePage(-1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
+                <div id="pageNumbers" class="flex gap-1.5"></div>
+                <button id="nextPage" onclick="changePage(1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    let allTickets = [];
-    let currentPage = 1;
-    const itemsPerPage = 10;
-    const currentAdminUser = "{{ request.user.username|default:'' }}";
-    const currentUserId = "{{ request.user.id|default:'null' }}";
+    let allTickets = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    const currentAdminUser = "{{ request.user.username|default:'' }}";
+    const currentUserId = "{{ request.user.id|default:'null' }}";
 
-    function scrollToTop() {
-        const headElement = document.getElementById('head');
-        if (headElement) {
-            headElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    }
-
-    document.getElementById('ticketSearch').addEventListener('input', () => { 
-        currentPage = 1; 
-        updateUI(); 
-    });
-
-    document.getElementById('priorityFilter').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    document.getElementById('sortOrder').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    // NEW EVENT LISTENERS FOR ADVANCED FILTERS
-    document.getElementById('dateFrom').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    document.getElementById('dateTo').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    document.getElementById('categoryFilter').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    async function initAdminSync() {
-        try {
-            const response = await fetch('/tickets/api/support-api/', { 
-                headers: { 'X-Requested-With': 'XMLHttpRequest' } 
-            });
-            if (!response.ok) {
-                console.error("Failed to fetch tickets:", response.status);
-                return;
-            }
-            const data = await response.json();
-            allTickets = Array.isArray(data) ? data : (data.results || []); 
-            
-            updateMetrics(); 
-            updateUI();
-        } catch (err) { console.error("Sync Error:", err); }
-    }
-
-    function updateMetrics() {
-        let total = allTickets.length;
-        let pending = 0;
-        let progress = 0;
-        let completed = 0;
-
-        allTickets.forEach(t => {
-            const status = (t.status || '').toLowerCase();
-            if (status === 'pending') pending++;
-            else if (status === 'in progress' || status === 'open') progress++;
-            else if (status === 'resolved' || status === 'closed' || status === 'completed') completed++;
-        });
-
-        document.getElementById('metric-total').innerText = total;
-        document.getElementById('metric-pending').innerText = pending;
-        document.getElementById('metric-progress').innerText = progress;
-        document.getElementById('metric-completed').innerText = completed;
-    }
-
-    function getPriorityStyles(priority) {
-        const p = (priority || '').toLowerCase();
-        if (p === 'high') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800/50';
-        if (p === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50';
-    }
-
-    function getStatusStyles(status) {
-        const s = (status || '').toLowerCase();
-        if (s === 'resolved' || s === 'closed' || s === 'completed') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50';
-        if (s === 'in progress') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50';
-        if (s === 'pending') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
-        return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
-    }
-
-    function formatTimestamp(dateStr) {
-        if (!dateStr) return "N/A";
-        const date = new Date(dateStr);
-        return date.toLocaleString('en-US', { 
-            month: 'short', day: 'numeric', year: 'numeric',
-            hour: '2-digit', minute: '2-digit', hour12: true 
-        });
-    }
-
-    function toggleActionMenu(event, specificMenuId) {
-        event.stopPropagation();
-        document.querySelectorAll('.action-menu').forEach(menu => {
-            if (menu.id !== specificMenuId) menu.style.display = 'none';
-        });
-        const menu = document.getElementById(specificMenuId);
-        if(menu) {
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-    }
-
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.action-menu').forEach(menu => {
-            menu.style.display = 'none';
-        });
-    });
-
-    function updateUI() {
-        const body = document.getElementById('ticketTableBody');
-        
-        const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
-        const activeBtn = document.querySelector('.filter-btn.bg-white, .filter-btn.dark\\:bg-blue-600');
-        const filterType = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
-        const priorityFilter = document.getElementById('priorityFilter').value.toLowerCase();
-        const sortOrder = document.getElementById('sortOrder').value;
-
-        // NEW FILTER VALUES
-        const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
-        const dateFromStr = document.getElementById('dateFrom').value;
-        const dateToStr = document.getElementById('dateTo').value;
-
-        let filtered = allTickets.filter(t => {
-            const paddedId = String(t.id).padStart(6, '0');
-            const searchableContent = [
-                t.id.toString(), paddedId, (t.subject || ""), (t.description || ""), (t.status || ""), 
-                (t.priority || ""), (t.user_name || ""), (t.first_name || ""), 
-                (t.last_name || ""), (t.technician_name || ""), formatTimestamp(t.created_at).toLowerCase()
-            ].join(" ").toLowerCase();
-
-            const matchesSearch = searchableContent.includes(searchTerm);
-            
-            let matchesStatusFilter = true;
-            if (filterType === 'pending') matchesStatusFilter = (t.status || "").toLowerCase() === 'pending';
-            else if (filterType === 'mine') matchesStatusFilter = t.technician_name === currentAdminUser;
-            else if (filterType === 'completed') {
-                const s = (t.status || "").toLowerCase();
-                matchesStatusFilter = (s === 'resolved' || s === 'closed' || s === 'completed');
-            }
-
-            let matchesPriorityFilter = true;
-            if (priorityFilter !== 'all') {
-                matchesPriorityFilter = (t.priority || "").toLowerCase() === priorityFilter;
-            }
-
-            // NEW CATEGORY MATCHING (Checks category/subject string explicitly)
-            let matchesCategory = true;
-            if (categoryFilter !== 'all') {
-                const catStr = (t.category || t.subject || "").toLowerCase();
-                matchesCategory = catStr.includes(categoryFilter) || catStr === categoryFilter;
-            }
-
-            // NEW DATE RANGE MATCHING (Fixed to ensure cross-browser timezone safety)
-            let matchesDate = true;
-            if (t.created_at) {
-                const tDate = new Date(t.created_at);
-                if (dateFromStr) {
-                    const fromDate = new Date(dateFromStr + 'T00:00:00'); 
-                    fromDate.setHours(0, 0, 0, 0); 
-                    if (tDate < fromDate) matchesDate = false;
-                }
-                if (dateToStr) {
-                    const toDate = new Date(dateToStr + 'T00:00:00');
-                    toDate.setHours(23, 59, 59, 999); 
-                    if (tDate > toDate) matchesDate = false;
-                }
-            }
-
-            return matchesSearch && matchesStatusFilter && matchesPriorityFilter && matchesCategory && matchesDate;
-        });
-
-        filtered.sort((a, b) => {
-            if (sortOrder === 'newest') {
-                return new Date(b.created_at) - new Date(a.created_at);
-            } else if (sortOrder === 'oldest') {
-                return new Date(a.created_at) - new Date(b.created_at);
-            } else if (sortOrder.startsWith('priority')) {
-                const priorityWeight = { 'high': 3, 'medium': 2, 'low': 1 };
-                const pA = priorityWeight[(a.priority || '').toLowerCase()] || 0;
-                const pB = priorityWeight[(b.priority || '').toLowerCase()] || 0;
-                
-                if (pA === pB) {
-                     return new Date(b.created_at) - new Date(a.created_at);
-                }
-                
-                if (sortOrder === 'priority_desc') return pB - pA; 
-                if (sortOrder === 'priority_asc') return pA - pB;  
-            }
-            return 0;
-        });
-
-        const mobileCountEl = document.getElementById('mobileCount');
-        if(mobileCountEl) mobileCountEl.innerText = String(filtered.length).padStart(2, '0');
-
-        const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-        if (currentPage > totalPages) currentPage = totalPages;
-        if (currentPage < 1) currentPage = 1;
-
-        const start = (currentPage - 1) * itemsPerPage;
-        const paginatedItems = filtered.slice(start, start + itemsPerPage);
-
-        if (paginatedItems.length === 0) {
-            body.innerHTML = `<tr><td colspan="8" class="p-24 text-center text-sm font-bold text-slate-400 dark:text-slate-600 flex flex-col items-center gap-3"><i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i> No dispatch records found</td></tr>`;
-        } else {
-            body.innerHTML = paginatedItems.map(t => `
-                <tr class="ticket-row group" onclick="goToDetail(${t.id})">
-                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none">
-                        <div class="hidden lg:flex justify-between items-center w-full">
-                            <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
-                                #${String(t.id).padStart(6, '0')}
-                            </span>
-                        </div>
-                        
-                        <div class="flex lg:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-circle text-[8px] text-blue-500"></i>
-                                <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
-                                    #${String(t.id).padStart(6, '0')}
-                                </span>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
-                                    ${t.status || 'Open'}
-                                </span>
-                                <div class="relative">
-                                    <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-md flex items-center justify-center text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-                                        <i class="fas fa-ellipsis-v text-xs"></i>
-                                    </button>
-                                    <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2 origin-top-right">
-                                         <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                            <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
-                                        </button>
-                                        <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                            <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
-                                        </button>
-                                        <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
-                                        <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
-                                            <i class="fas fa-trash-alt w-4"></i> Delete Record
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td data-label="Priority" class="p-4 align-middle border-b lg:border-none">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
-                                <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
-                            </span>
-                        </div>
-                    </td>
-                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full">${t.first_name || ''} ${t.last_name || ''}</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full">@${t.user_name || 'unknown'}</span>
-                        </div>
-                    </td>
-                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center overflow-hidden">
-                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">${t.subject || 'No Subject'}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words">${t.description || 'No additional details provided'}</p>
-                        </div>
-                    </td>
-                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center gap-1">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full">
-                                <i class="fas fa-user-shield text-slate-400"></i> <span class="truncate">${t.technician_name || 'Unassigned'}</span>
-                            </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full">Prev: ${t.previous_technician || 'None'}</span>
-                        </div>
-                    </td>
-                    <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell">
-                        <div class="w-full flex justify-center">
-                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
-                                ${t.status || 'Open'}
-                            </span>
-                        </div>
-                    </td>
-                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words">${formatTimestamp(t.created_at)}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full">Logged</span>
-                        </div>
-                    </td>
-                    <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
-                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <div id="menu-desktop-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mt-2">
-                            <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
-                            </button>
-                            <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
-                                <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
-                            </button>
-                            <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
-                            <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
-                                <i class="fas fa-trash-alt w-4"></i> Delete Record
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        const showingStart = filtered.length > 0 ? start + 1 : 0;
-        const showingEnd = Math.min(start + itemsPerPage, filtered.length);
-        document.getElementById('pageIndicator').innerText = `Showing ${showingStart}-${showingEnd} of ${filtered.length} Records`;
-        
-        document.getElementById('prevPage').disabled = (currentPage <= 1);
-        document.getElementById('nextPage').disabled = (currentPage >= totalPages);
-
-        const pageNumbersContainer = document.getElementById('pageNumbers');
-        pageNumbersContainer.innerHTML = '';
-        
-        let startPage = Math.max(1, currentPage - 1);
-        let endPage = Math.min(totalPages, startPage + 2);
-        if (endPage - startPage < 2) startPage = Math.max(1, endPage - 2);
-
-        for (let i = startPage; i <= endPage; i++) {
-            const isCurrent = i === currentPage;
-            const btn = document.createElement('button');
-            btn.innerText = i;
-            btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-sm ${
-                isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
-            }`;
-            btn.onclick = () => { 
-                currentPage = i; 
-                updateUI(); 
-                scrollToTop(); 
-            };
-            pageNumbersContainer.appendChild(btn);
-        }
-    }
-
-    function filterTable(type, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
-            b.classList.add('text-slate-600', 'dark:text-slate-400');
-        });
-        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
-        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
-        currentPage = 1;
-        updateUI();
-    }
-
-    function changePage(dir) { 
-        currentPage += dir; 
-        updateUI(); 
-        scrollToTop(); 
-    }
-
-    function goToDetail(id) { window.location.href = `/tickets/detail/${id}/`; }
-
-    async function quickAction(event, id, type) {
-        event.stopPropagation();
-        
-        const payload = type === 'assign' 
-            ? { 
-                technician_id: currentUserId, 
-                status: 'In Progress', 
-                priority: 'Medium' 
-              } 
-            : { 
-                technician_id: currentUserId,
-                status: 'Resolved' 
-              };
-        
-        try {
-            const res = await fetch(`/tickets/api/support-api/${id}/update_technical_details/`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                initAdminSync();
-            } else {
-                const errorData = await res.json();
-                console.error("Server Error:", errorData);
-                alert("Failed to update ticket: " + (errorData.detail || "Unknown error"));
-            }
-        } catch (err) { 
-            console.error("Fetch Error:", err); 
-        }
-    }
-
-    // GLOBAL VAR FOR THE UI MODAL TO TRACK DELETIONS
-    let ticketToDelete = null;
-
-    // MISSING FUNCTION ADDED HERE TO MAKE THE UI CLOSE BUTTON WORK
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
-        ticketToDelete = null;
+    function scrollToTop() {
+        const headElement = document.getElementById('head');
+        if (headElement) {
+            headElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
-    // THIS FUNCTION NOW HOOKS DIRECTLY INTO YOUR CUSTOM UI INSTEAD OF THE BROWSER `confirm()`
-    async function deleteTicket(event, id) {
-        event.stopPropagation();
-        ticketToDelete = id;
-        
-        // Hide open dot menus before popping the modal over it
+    document.getElementById('ticketSearch').addEventListener('input', () => { 
+        currentPage = 1; 
+        updateUI(); 
+    });
+
+    document.getElementById('priorityFilter').addEventListener('change', () => {
+        currentPage = 1;
+        updateUI();
+    });
+
+    document.getElementById('sortOrder').addEventListener('change', () => {
+        currentPage = 1;
+        updateUI();
+    });
+
+    async function initAdminSync() {
+        try {
+            const response = await fetch('/tickets/api/support-api/', { 
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+            });
+            if (!response.ok) {
+                console.error("Failed to fetch tickets:", response.status);
+                return;
+            }
+            const data = await response.json();
+            allTickets = Array.isArray(data) ? data : (data.results || []); 
+            
+            updateMetrics(); 
+            updateUI();
+        } catch (err) { console.error("Sync Error:", err); }
+    }
+
+    function updateMetrics() {
+        let total = allTickets.length;
+        let pending = 0;
+        let progress = 0;
+        let completed = 0;
+
+        allTickets.forEach(t => {
+            const status = (t.status || '').toLowerCase();
+            if (status === 'pending') pending++;
+            else if (status === 'in progress' || status === 'open') progress++;
+            else if (status === 'resolved' || status === 'closed' || status === 'completed') completed++;
+        });
+
+        document.getElementById('metric-total').innerText = total;
+        document.getElementById('metric-pending').innerText = pending;
+        document.getElementById('metric-progress').innerText = progress;
+        document.getElementById('metric-completed').innerText = completed;
+    }
+
+    function getPriorityStyles(priority) {
+        const p = (priority || '').toLowerCase();
+        if (p === 'high') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800/50';
+        if (p === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
+        return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50';
+    }
+
+    function getStatusStyles(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'resolved' || s === 'closed' || s === 'completed') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50';
+        if (s === 'in progress') return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800/50';
+        if (s === 'pending') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
+        return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
+    }
+
+    function formatTimestamp(dateStr) {
+        if (!dateStr) return "N/A";
+        const date = new Date(dateStr);
+        return date.toLocaleString('en-US', { 
+            month: 'short', day: 'numeric', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', hour12: true 
+        });
+    }
+
+    function toggleActionMenu(event, specificMenuId) {
+        event.stopPropagation();
+        document.querySelectorAll('.action-menu').forEach(menu => {
+            if (menu.id !== specificMenuId) menu.style.display = 'none';
+        });
+        const menu = document.getElementById(specificMenuId);
+        if(menu) {
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+    }
+
+    document.addEventListener('click', () => {
         document.querySelectorAll('.action-menu').forEach(menu => {
             menu.style.display = 'none';
         });
-
-        document.getElementById('deleteModal').classList.remove('hidden');
-    }
-
-    // THE EVENT LISTENER REQUIRED FOR YOUR CUSTOM CONFIRM BUTTON IN THE MODAL UI
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-            if (!ticketToDelete) return;
-            try {
-                const res = await fetch(`/tickets/api/support-api/${ticketToDelete}/`, {
-                    method: 'DELETE',
-                    headers: { 
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                if (res.ok) {
-                    closeDeleteModal(); 
-                    initAdminSync();
-                }
-            } catch (err) { 
-                console.error(err); 
-            }
-        });
     });
 
-    window.addEventListener('DOMContentLoaded', () => { 
-        initAdminSync(); 
-        setInterval(initAdminSync, 30000); 
-    });
+    function updateUI() {
+        const body = document.getElementById('ticketTableBody');
+        
+        const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
+        const activeBtn = document.querySelector('.filter-btn.bg-white, .filter-btn.dark\\:bg-blue-600');
+        const filterType = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+        const priorityFilter = document.getElementById('priorityFilter').value.toLowerCase();
+        const sortOrder = document.getElementById('sortOrder').value;
+
+        let filtered = allTickets.filter(t => {
+            const paddedId = String(t.id).padStart(6, '0');
+            const searchableContent = [
+                t.id.toString(), paddedId, (t.subject || ""), (t.description || ""), (t.status || ""), 
+                (t.priority || ""), (t.user_name || ""), (t.first_name || ""), 
+                (t.last_name || ""), (t.technician_name || ""), formatTimestamp(t.created_at).toLowerCase()
+            ].join(" ").toLowerCase();
+
+            const matchesSearch = searchableContent.includes(searchTerm);
+            
+            let matchesStatusFilter = true;
+            if (filterType === 'pending') matchesStatusFilter = (t.status || "").toLowerCase() === 'pending';
+            else if (filterType === 'mine') matchesStatusFilter = t.technician_name === currentAdminUser;
+            else if (filterType === 'completed') {
+                const s = (t.status || "").toLowerCase();
+                matchesStatusFilter = (s === 'resolved' || s === 'closed' || s === 'completed');
+            }
+
+            let matchesPriorityFilter = true;
+            if (priorityFilter !== 'all') {
+                matchesPriorityFilter = (t.priority || "").toLowerCase() === priorityFilter;
+            }
+
+            return matchesSearch && matchesStatusFilter && matchesPriorityFilter;
+        });
+
+        filtered.sort((a, b) => {
+            if (sortOrder === 'newest') {
+                return new Date(b.created_at) - new Date(a.created_at);
+            } else if (sortOrder === 'oldest') {
+                return new Date(a.created_at) - new Date(b.created_at);
+            } else if (sortOrder.startsWith('priority')) {
+                const priorityWeight = { 'high': 3, 'medium': 2, 'low': 1 };
+                const pA = priorityWeight[(a.priority || '').toLowerCase()] || 0;
+                const pB = priorityWeight[(b.priority || '').toLowerCase()] || 0;
+                
+                if (pA === pB) {
+                     return new Date(b.created_at) - new Date(a.created_at);
+                }
+                
+                if (sortOrder === 'priority_desc') return pB - pA; 
+                if (sortOrder === 'priority_asc') return pA - pB;  
+            }
+            return 0;
+        });
+
+        const mobileCountEl = document.getElementById('mobileCount');
+        if(mobileCountEl) mobileCountEl.innerText = String(filtered.length).padStart(2, '0');
+
+        const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const paginatedItems = filtered.slice(start, start + itemsPerPage);
+
+        if (paginatedItems.length === 0) {
+            body.innerHTML = `<tr><td colspan="8" class="p-24 text-center text-sm font-bold text-slate-400 dark:text-slate-600 flex flex-col items-center gap-3"><i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i> No dispatch records found</td></tr>`;
+        } else {
+            body.innerHTML = paginatedItems.map(t => `
+                <tr class="ticket-row group" onclick="goToDetail(${t.id})">
+                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none">
+                        <div class="hidden lg:flex justify-between items-center w-full">
+                            <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
+                                #${String(t.id).padStart(6, '0')}
+                            </span>
+                        </div>
+                        
+                        <div class="flex lg:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-circle text-[8px] text-blue-500"></i>
+                                <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
+                                    #${String(t.id).padStart(6, '0')}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
+                                    ${t.status || 'Open'}
+                                </span>
+                                <div class="relative">
+                                    <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-md flex items-center justify-center text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                        <i class="fas fa-ellipsis-v text-xs"></i>
+                                    </button>
+                                    <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2 origin-top-right">
+                                         <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                            <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
+                                        </button>
+                                        <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                            <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
+                                        </button>
+                                        <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
+                                        <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
+                                            <i class="fas fa-trash-alt w-4"></i> Delete Record
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-label="Priority" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
+                                <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
+                            </span>
+                        </div>
+                    </td>
+                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full">${t.first_name || ''} ${t.last_name || ''}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full">@${t.user_name || 'unknown'}</span>
+                        </div>
+                    </td>
+                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center overflow-hidden">
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">${t.subject || 'No Subject'}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words">${t.description || 'No additional details provided'}</p>
+                        </div>
+                    </td>
+                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center gap-1">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full">
+                                <i class="fas fa-user-shield text-slate-400"></i> <span class="truncate">${t.technician_name || 'Unassigned'}</span>
+                            </span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full">Prev: ${t.previous_technician || 'None'}</span>
+                        </div>
+                    </td>
+                    <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell">
+                        <div class="w-full flex justify-center">
+                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
+                                ${t.status || 'Open'}
+                            </span>
+                        </div>
+                    </td>
+                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none">
+                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words">${formatTimestamp(t.created_at)}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full">Logged</span>
+                        </div>
+                    </td>
+                    <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
+                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div id="menu-desktop-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mt-2">
+                            <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
+                            </button>
+                            <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
+                            </button>
+                            <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
+                            <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
+                                <i class="fas fa-trash-alt w-4"></i> Delete Record
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        const showingStart = filtered.length > 0 ? start + 1 : 0;
+        const showingEnd = Math.min(start + itemsPerPage, filtered.length);
+        document.getElementById('pageIndicator').innerText = `Showing ${showingStart}-${showingEnd} of ${filtered.length} Records`;
+        
+        document.getElementById('prevPage').disabled = (currentPage <= 1);
+        document.getElementById('nextPage').disabled = (currentPage >= totalPages);
+
+        const pageNumbersContainer = document.getElementById('pageNumbers');
+        pageNumbersContainer.innerHTML = '';
+        
+        let startPage = Math.max(1, currentPage - 1);
+        let endPage = Math.min(totalPages, startPage + 2);
+        if (endPage - startPage < 2) startPage = Math.max(1, endPage - 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            const isCurrent = i === currentPage;
+            const btn = document.createElement('button');
+            btn.innerText = i;
+            btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-sm ${
+                isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+            }`;
+            btn.onclick = () => { 
+                currentPage = i; 
+                updateUI(); 
+                scrollToTop(); 
+            };
+            pageNumbersContainer.appendChild(btn);
+        }
+    }
+
+    function filterTable(type, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+            b.classList.add('text-slate-600', 'dark:text-slate-400');
+        });
+        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
+        currentPage = 1;
+        updateUI();
+    }
+
+    function changePage(dir) { 
+        currentPage += dir; 
+        updateUI(); 
+        scrollToTop(); 
+    }
+
+    function goToDetail(id) { window.location.href = `/tickets/detail/${id}/`; }
+
+    async function quickAction(event, id, type) {
+        event.stopPropagation();
+        
+        const payload = type === 'assign' 
+            ? { 
+                technician_id: currentUserId, 
+                status: 'In Progress', 
+                priority: 'Medium' 
+              } 
+            : { 
+                technician_id: currentUserId,
+                status: 'Resolved' 
+              };
+        
+        try {
+            const res = await fetch(`/tickets/api/support-api/${id}/update_technical_details/`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                initAdminSync();
+            } else {
+                const errorData = await res.json();
+                console.error("Server Error:", errorData);
+                alert("Failed to update ticket: " + (errorData.detail || "Unknown error"));
+            }
+        } catch (err) { 
+            console.error("Fetch Error:", err); 
+        }
+    }
+
+    async function deleteTicket(event, id) {
+        event.stopPropagation();
+        if (!confirm("Are you sure you want to permanently delete this dispatch record?")) return;
+        try {
+            const res = await fetch(`/tickets/api/support-api/${id}/`, {
+                method: 'DELETE',
+                headers: { 
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            if (res.ok) initAdminSync();
+        } catch (err) { console.error(err); }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => { 
+        initAdminSync(); 
+        setInterval(initAdminSync, 30000); 
+    });
 </script>
 {% endblock %}
