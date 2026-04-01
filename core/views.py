@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.db.models import Count, Q
 from .models import Asset, Maintenance, Incident, Notification, Profile
 from .forms import AssetForm, MaintenanceForm, UserForm
@@ -229,8 +229,16 @@ def add_user(request):
     
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'errors': form.errors}, status=400)
+    
+    # Calculate the next ID for the username generator
+    last_user = User.objects.order_by('-id').first()
+    next_id = (last_user.id + 1) if last_user else 1
         
-    return render(request, 'core/Admin/user_form.html', {'form': form, 'title': 'Add Personnel'})
+    return render(request, 'core/Admin/user_form.html', {
+        'form': form, 
+        'title': 'Add Personnel',
+        'next_id': next_id  # Passed to template
+    })
 
 @login_required
 def edit_user(request, user_id):

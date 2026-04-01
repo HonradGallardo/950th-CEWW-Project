@@ -177,6 +177,7 @@ $(document).ready(function() {
     const $text = $('#btnText');
     const userId = "{{ form.instance.id }}";
     const isEdit = userId && userId !== "None";
+    const nextId = "{{ next_id|default:'' }}"; // ID passed from view
 
     // --- 1. JQUERY AJAX: ASYNC USER CREATION ---
     $form.on('submit', function(e) {
@@ -253,6 +254,73 @@ $(document).ready(function() {
             }
         });
     });
+
+    // --- 2. AUTO-GENERATE USERNAME LOGIC ---
+    if (!isEdit && nextId) {
+        const $firstName = $('input[name="first_name"]');
+        const $lastName = $('input[name="last_name"]');
+        const $username = $('input[name="username"]');
+
+        function generateUsername() {
+            const fName = $firstName.val().trim();
+            const lName = $lastName.val().trim();
+
+            let initials = "";
+            if (fName) initials += fName.charAt(0).toUpperCase();
+            if (lName) initials += lName.charAt(0).toUpperCase();
+
+            if (initials) {
+                // Pad the nextId with zeros to make it 6 digits long (e.g. 000001)
+                const paddedId = String(nextId).padStart(6, '0');
+                $username.val(`${initials}-${paddedId}`);
+            } else {
+                $username.val('');
+            }
+        }
+
+        // Trigger on typing
+        $firstName.on('input', generateUsername);
+        $lastName.on('input', generateUsername);
+    }
+
+    // --- 3. STRONG PASSWORD GENERATOR LOGIC ---
+    const $passwordField = $('input[name="password"]');
+    
+    if ($passwordField.length) {
+        // Append a generate button next to the password field
+        const generatorBtnHTML = `
+            <button type="button" id="generatePasswordBtn" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/40 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center z-10">
+                <i class="fas fa-magic mr-1"></i> Generate
+            </button>
+        `;
+        
+        $passwordField.parent().append(generatorBtnHTML);
+        
+        // Ensure the input has padding on the right so text doesn't hide behind the button
+        $passwordField.css('padding-right', '100px');
+
+        $('#generatePasswordBtn').on('click', function(e) {
+            e.preventDefault();
+            // Generate random strong password
+            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+            let password = "";
+            for (let i = 0; i < 14; i++) {
+                const randomNumber = Math.floor(Math.random() * chars.length);
+                password += chars.substring(randomNumber, randomNumber + 1);
+            }
+            
+            // Set password and change type to text so the user can copy/view it
+            $passwordField.attr('type', 'text').val(password);
+            
+            // Briefly change button text to indicate action
+            const $btn = $(this);
+            const originalContent = $btn.html();
+            $btn.html('<i class="fas fa-check mr-1"></i> Generated!');
+            setTimeout(() => {
+                $btn.html(originalContent);
+            }, 2000);
+        });
+    }
 });
 </script>
 
