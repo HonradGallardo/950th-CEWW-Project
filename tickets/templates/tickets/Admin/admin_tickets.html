@@ -233,11 +233,11 @@
                     class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
             </div>
             
-            <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5 w-full lg:w-auto">
-                <button class="filter-btn whitespace-nowrap px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex-1" data-filter="all" onclick="filterTable('all', this)">All</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
-                <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
+            <div class="flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1 w-full lg:w-auto">
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all" data-filter="all" onclick="filterTable('all', this)">All</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
             </div>
         </div>
 
@@ -269,14 +269,14 @@
                 <option value="priority_asc">Sort: Priority (Low-High)</option>
             </select>
 
-            <div class="flex items-center gap-2 col-span-2 lg:w-auto lg:flex-1">
-                <div class="relative flex-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 col-span-2 lg:w-auto lg:flex-1">
+                <div class="relative w-full">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">From</span>
-                    <input type="date" id="dateFrom" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-12 pr-2 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                    <input type="date" id="dateFrom" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-12 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
                 </div>
-                <div class="relative flex-1">
+                <div class="relative w-full">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">To</span>
-                    <input type="date" id="dateTo" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-8 pr-2 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                    <input type="date" id="dateTo" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-8 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
                 </div>
             </div>
         </div>
