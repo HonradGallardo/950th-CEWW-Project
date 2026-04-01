@@ -257,7 +257,7 @@
             </div>
         </div>
 
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full">
             <div class="flex items-center gap-2 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 flex-1 lg:flex-none focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
                 <i class="fas fa-calendar-alt text-slate-400 text-xs"></i>
                 <label for="dateFrom" class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">From:</label>
@@ -482,18 +482,18 @@
                 matchesCategory = catStr.includes(categoryFilter) || catStr === categoryFilter;
             }
 
-            // NEW DATE RANGE MATCHING
+            // NEW DATE RANGE MATCHING (Fixed to ensure cross-browser timezone safety)
             let matchesDate = true;
             if (t.created_at) {
                 const tDate = new Date(t.created_at);
                 if (dateFromStr) {
-                    const fromDate = new Date(dateFromStr);
-                    fromDate.setHours(0, 0, 0, 0); // Start of day
+                    const fromDate = new Date(dateFromStr + 'T00:00:00'); 
+                    fromDate.setHours(0, 0, 0, 0); 
                     if (tDate < fromDate) matchesDate = false;
                 }
                 if (dateToStr) {
-                    const toDate = new Date(dateToStr);
-                    toDate.setHours(23, 59, 59, 999); // End of day
+                    const toDate = new Date(dateToStr + 'T00:00:00');
+                    toDate.setHours(23, 59, 59, 999); 
                     if (tDate > toDate) matchesDate = false;
                 }
             }
@@ -721,20 +721,49 @@
         }
     }
 
+    // GLOBAL VAR FOR THE UI MODAL TO TRACK DELETIONS
+    let ticketToDelete = null;
+
+    // MISSING FUNCTION ADDED HERE TO MAKE THE UI CLOSE BUTTON WORK
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        ticketToDelete = null;
+    }
+
+    // THIS FUNCTION NOW HOOKS DIRECTLY INTO YOUR CUSTOM UI INSTEAD OF THE BROWSER `confirm()`
     async function deleteTicket(event, id) {
         event.stopPropagation();
-        if (!confirm("Are you sure you want to permanently delete this dispatch record?")) return;
-        try {
-            const res = await fetch(`/tickets/api/support-api/${id}/`, {
-                method: 'DELETE',
-                headers: { 
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            if (res.ok) initAdminSync();
-        } catch (err) { console.error(err); }
+        ticketToDelete = id;
+        
+        // Hide open dot menus before popping the modal over it
+        document.querySelectorAll('.action-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+
+        document.getElementById('deleteModal').classList.remove('hidden');
     }
+
+    // THE EVENT LISTENER REQUIRED FOR YOUR CUSTOM CONFIRM BUTTON IN THE MODAL UI
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            if (!ticketToDelete) return;
+            try {
+                const res = await fetch(`/tickets/api/support-api/${ticketToDelete}/`, {
+                    method: 'DELETE',
+                    headers: { 
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                if (res.ok) {
+                    closeDeleteModal(); 
+                    initAdminSync();
+                }
+            } catch (err) { 
+                console.error(err); 
+            }
+        });
+    });
 
     window.addEventListener('DOMContentLoaded', () => { 
         initAdminSync(); 
