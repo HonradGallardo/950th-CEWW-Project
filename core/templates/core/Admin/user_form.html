@@ -58,6 +58,52 @@
                 <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-slate-200 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800 uppercase tracking-wider text-[11px] opacity-70">Identity & Access</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            {{ form.first_name.label }}
+                        </label>
+                        <div class="relative group">
+                            {{ form.first_name }}
+                        </div>
+                        {% if form.first_name.help_text %}
+                            <p class="text-slate-500 dark:text-slate-400 text-xs mt-1.5">{{ form.first_name.help_text }}</p>
+                        {% endif %}
+                        <div id="error-first_name" class="field-error-container">
+                            {% if form.first_name.errors %}
+                                <div class="space-y-1 mt-2">
+                                    {% for error in form.first_name.errors %}
+                                        <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20">
+                                            <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+                                        </p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            {{ form.last_name.label }}
+                        </label>
+                        <div class="relative group">
+                            {{ form.last_name }}
+                        </div>
+                        {% if form.last_name.help_text %}
+                            <p class="text-slate-500 dark:text-slate-400 text-xs mt-1.5">{{ form.last_name.help_text }}</p>
+                        {% endif %}
+                        <div id="error-last_name" class="field-error-container">
+                            {% if form.last_name.errors %}
+                                <div class="space-y-1 mt-2">
+                                    {% for error in form.last_name.errors %}
+                                        <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20">
+                                            <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+                                        </p>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                     
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -126,7 +172,7 @@
                     </div>
 
                     {% for field in form %}
-                        {% if field.name != 'role' and field.name != 'groups' %}
+                        {% if field.name != 'role' and field.name != 'groups' and field.name != 'first_name' and field.name != 'last_name' %}
                             <div class="space-y-2 {% if field.name == 'email' or field.name == 'username' %}md:col-span-2{% endif %}">
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                                     {{ field.label }}
@@ -283,22 +329,41 @@ $(document).ready(function() {
         $lastName.on('input', generateUsername);
     }
 
-    // --- 3. STRONG PASSWORD GENERATOR LOGIC ---
+    // --- 3. STRONG PASSWORD GENERATOR & TOGGLE LOGIC ---
     const $passwordField = $('input[name="password"]');
     
     if ($passwordField.length) {
-        // Append a generate button next to the password field
-        const generatorBtnHTML = `
-            <button type="button" id="generatePasswordBtn" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/40 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center z-10">
-                <i class="fas fa-magic mr-1"></i> Generate
-            </button>
+        // Wrap the generation and eye icon toggle together
+        const passwordControlsHTML = `
+            <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+                <button type="button" id="togglePasswordBtn" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-2 py-1.5 rounded-lg transition-colors flex items-center justify-center" title="Toggle Visibility">
+                    <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                </button>
+                <button type="button" id="generatePasswordBtn" class="text-xs bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-500/20 dark:hover:bg-indigo-500/40 text-indigo-700 dark:text-indigo-300 px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center">
+                    <i class="fas fa-magic mr-1"></i> Generate
+                </button>
+            </div>
         `;
         
-        $passwordField.parent().append(generatorBtnHTML);
+        $passwordField.parent().append(passwordControlsHTML);
         
-        // Ensure the input has padding on the right so text doesn't hide behind the button
-        $passwordField.css('padding-right', '100px');
+        // Ensure the input has padding on the right so text doesn't hide behind the buttons
+        $passwordField.css('padding-right', '130px');
 
+        // Apply a fake hidden mask placeholder if editing
+        if (isEdit) {
+            $passwordField.attr('placeholder', '*********');
+        }
+
+        // Toggle Password Visibility
+        $('#togglePasswordBtn').on('click', function(e) {
+            e.preventDefault();
+            const type = $passwordField.attr('type') === 'password' ? 'text' : 'password';
+            $passwordField.attr('type', type);
+            $('#togglePasswordIcon').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // Generate Password
         $('#generatePasswordBtn').on('click', function(e) {
             e.preventDefault();
             // Generate random strong password
@@ -311,13 +376,14 @@ $(document).ready(function() {
             
             // Set password and change type to text so the user can copy/view it
             $passwordField.attr('type', 'text').val(password);
+            $('#togglePasswordIcon').removeClass('fa-eye').addClass('fa-eye-slash');
             
             // Briefly change button text to indicate action
-            const $btn = $(this);
-            const originalContent = $btn.html();
-            $btn.html('<i class="fas fa-check mr-1"></i> Generated!');
+            const $genBtn = $(this);
+            const originalContent = $genBtn.html();
+            $genBtn.html('<i class="fas fa-check mr-1"></i> Generated!');
             setTimeout(() => {
-                $btn.html(originalContent);
+                $genBtn.html(originalContent);
             }, 2000);
         });
     }
