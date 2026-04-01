@@ -203,7 +203,7 @@
         </div>
     </div>
 
-    <header id="head" class="flex flex-col gap-5 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
+    <header id="head" class="flex flex-col gap-4 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
         <div class="flex items-center justify-between">
             <div class="flex flex-col gap-1">
                 <h1 class="font-rajdhani text-base md:text-xl font-black tracking-tight flex items-center gap-3">
@@ -224,7 +224,7 @@
             </div>
         </div>
         
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 mt-2">
             <div class="relative flex-grow max-w-2xl">
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i class="fas fa-search text-slate-400"></i>
@@ -233,27 +233,51 @@
                     class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
             </div>
             
-            <div class="flex flex-wrap md:flex-nowrap gap-3 items-center w-full lg:w-auto">
-                <select id="priorityFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
-                    <option value="all">All Priorities</option>
-                    <option value="high">High Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="low">Low Priority</option>
-                </select>
-
-                <select id="sortOrder" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 md:flex-none cursor-pointer">
-                    <option value="newest">Sort: Newest First</option>
-                    <option value="oldest">Sort: Oldest First</option>
-                    <option value="priority_desc">Sort: Priority (High-Low)</option>
-                    <option value="priority_asc">Sort: Priority (Low-High)</option>
-                </select>
-            </div>
-            
             <div class="flex overflow-x-auto no-scrollbar bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1.5 w-full lg:w-auto">
                 <button class="filter-btn whitespace-nowrap px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-all flex-1" data-filter="all" onclick="filterTable('all', this)">All</button>
                 <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
                 <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
                 <button class="filter-btn whitespace-nowrap px-4 py-2 text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all flex-1" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+            <select id="categoryFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 cursor-pointer">
+                <option value="all">All Categories</option>
+                <option value="New Account Provisioning">New Account Provisioning</option>
+                <option value="OTP Removal Request">OTP Removal Request</option>
+                <option value="MFA Reset / Removal">MFA Reset / Removal</option>
+                <option value="Password Reset Request">Password Reset Request</option>
+                <option value="Account Unlock Request">Account Unlock Request</option>
+                <option value="Software Bug Report">Software Bug Report</option>
+                <option value="System Authentication Failure">System Authentication Failure</option>
+                <option value="Role Modification">Role Modification</option>
+                <option value="Custom Support Request">Custom Support Request</option>
+            </select>
+
+            <select id="priorityFilter" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 cursor-pointer">
+                <option value="all">All Priorities</option>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+            </select>
+
+            <select id="sortOrder" class="bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-4 outline-none focus:border-blue-500 shadow-sm flex-1 cursor-pointer">
+                <option value="newest">Sort: Newest First</option>
+                <option value="oldest">Sort: Oldest First</option>
+                <option value="priority_desc">Sort: Priority (High-Low)</option>
+                <option value="priority_asc">Sort: Priority (Low-High)</option>
+            </select>
+
+            <div class="flex items-center gap-2 flex-1 lg:flex-none">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">From</span>
+                    <input type="date" id="dateFrom" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-12 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                </div>
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">To</span>
+                    <input type="date" id="dateTo" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-8 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                </div>
             </div>
         </div>
     </header>
@@ -303,9 +327,15 @@
         }
     }
 
+    // --- DOM Event Listeners for Filters & Search ---
     document.getElementById('ticketSearch').addEventListener('input', () => { 
         currentPage = 1; 
         updateUI(); 
+    });
+
+    document.getElementById('categoryFilter').addEventListener('change', () => {
+        currentPage = 1;
+        updateUI();
     });
 
     document.getElementById('priorityFilter').addEventListener('change', () => {
@@ -314,6 +344,16 @@
     });
 
     document.getElementById('sortOrder').addEventListener('change', () => {
+        currentPage = 1;
+        updateUI();
+    });
+
+    document.getElementById('dateFrom').addEventListener('change', () => {
+        currentPage = 1;
+        updateUI();
+    });
+
+    document.getElementById('dateTo').addEventListener('change', () => {
         currentPage = 1;
         updateUI();
     });
@@ -398,12 +438,17 @@
     function updateUI() {
         const body = document.getElementById('ticketTableBody');
         
+        // Retrieve inputs
         const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
         const activeBtn = document.querySelector('.filter-btn.bg-white, .filter-btn.dark\\:bg-blue-600');
         const filterType = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+        const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
         const priorityFilter = document.getElementById('priorityFilter').value.toLowerCase();
         const sortOrder = document.getElementById('sortOrder').value;
+        const dateFromVal = document.getElementById('dateFrom').value;
+        const dateToVal = document.getElementById('dateTo').value;
 
+        // Apply Filters & Search
         let filtered = allTickets.filter(t => {
             const paddedId = String(t.id).padStart(6, '0');
             const searchableContent = [
@@ -422,14 +467,36 @@
                 matchesStatusFilter = (s === 'resolved' || s === 'closed' || s === 'completed');
             }
 
+            let matchesCategoryFilter = true;
+            if (categoryFilter !== 'all') {
+                matchesCategoryFilter = (t.subject || "").toLowerCase().includes(categoryFilter) || 
+                                        (t.ticket_type || "").toLowerCase().includes(categoryFilter);
+            }
+
             let matchesPriorityFilter = true;
             if (priorityFilter !== 'all') {
                 matchesPriorityFilter = (t.priority || "").toLowerCase() === priorityFilter;
             }
 
-            return matchesSearch && matchesStatusFilter && matchesPriorityFilter;
+            let matchesDate = true;
+            if (dateFromVal || dateToVal) {
+                const ticketDate = new Date(t.created_at);
+                if (dateFromVal) {
+                    const [y, m, d] = dateFromVal.split('-');
+                    const fromDate = new Date(y, m - 1, d, 0, 0, 0);
+                    if (ticketDate < fromDate) matchesDate = false;
+                }
+                if (dateToVal) {
+                    const [y, m, d] = dateToVal.split('-');
+                    const toDate = new Date(y, m - 1, d, 23, 59, 59);
+                    if (ticketDate > toDate) matchesDate = false;
+                }
+            }
+
+            return matchesSearch && matchesStatusFilter && matchesCategoryFilter && matchesPriorityFilter && matchesDate;
         });
 
+        // Apply Sorting
         filtered.sort((a, b) => {
             if (sortOrder === 'newest') {
                 return new Date(b.created_at) - new Date(a.created_at);
