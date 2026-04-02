@@ -119,7 +119,11 @@ class TicketViewSet(viewsets.ModelViewSet):
         user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
         chat_with_staff_username = request.GET.get('with_staff')
 
-        all_messages = ticket.messages.all().select_related('sender', 'recipient').order_by('created_at')
+        # --- PAGINATION PARAMS ---
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 30))
+
+        all_messages = ticket.messages.all().select_related('sender', 'recipient')
 
         if chat_with_staff_username == 'GROUP_CHAT':
             filtered_messages = all_messages.filter(recipient__isnull=True)
@@ -135,6 +139,18 @@ class TicketViewSet(viewsets.ModelViewSet):
             filtered_messages = all_messages.filter(
                 Q(sender=request.user) | Q(recipient=request.user) | Q(recipient__isnull=True)
             )
+
+        # --- PAGINATION SLICING ---
+        total_messages = filtered_messages.count()
+        filtered_messages = filtered_messages.order_by('-created_at')
+        
+        start = (page - 1) * limit
+        end = start + limit
+        paginated_messages = filtered_messages[start:end]
+        
+        # Reverse to chronological order for the frontend
+        paginated_messages = list(paginated_messages)[::-1]
+        has_more = total_messages > end
 
         def get_safe_avatar(user):
             try:
@@ -178,7 +194,7 @@ class TicketViewSet(viewsets.ModelViewSet):
                 'name': get_safe_filename(a.file),
                 'url': get_safe_url(a.file)
             } for a in msg.attachments.all()] 
-        } for msg in filtered_messages]
+        } for msg in paginated_messages] # Using paginated_messages here
 
         attachments_data = [{
             'id': a.id,
@@ -189,7 +205,9 @@ class TicketViewSet(viewsets.ModelViewSet):
 
         return Response({
             'messages': messages_data,
-            'attachments': attachments_data
+            'attachments': attachments_data,
+            'has_more': has_more,
+            'current_page': page
         })
 
     @action(detail=True, methods=['post'])

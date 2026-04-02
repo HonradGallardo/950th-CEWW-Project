@@ -556,8 +556,14 @@
         }, 3000);
     };
 
+    function loadOlderMessages() {
+        const btn = document.querySelector('button[onclick="loadOlderMessages()"]');
+        if(btn) { btn.innerText = "Decrypting Records..."; btn.disabled = true; }
+        fetchMessages(true);
+    }
+
     let currentMessageCount = -1;
-    let tabCache = {}; // 🚀 NEW: Local memory cache for instant tab switching!
+    let tabCache = {};
 
     function filterByTech(username) {
         activeChatPartnerId = username;
@@ -567,7 +573,6 @@
         
         updateActiveTabStyles(username); 
 
-        // Update the header labels
         if (username === 'GROUP_CHAT') {
             label.innerHTML = '<i class="fas fa-users text-indigo-500 mr-2"></i> Group Discussion';
             if(readOnly) readOnly.classList.add('hidden');
@@ -582,23 +587,18 @@
             if(inputContainer) inputContainer.classList.add('hidden'); 
         }
         
-        // 🚀 THE FIX: Check if we have the data saved locally. If yes, render it instantly!
         if (tabCache[username]) {
             currentMessageCount = tabCache[username].count;
-            renderChat(tabCache[username].messages, tabCache[username].attachments);
+            renderChat(tabCache[username].messages, tabCache[username].attachments, tabCache[username].hasMore);
             updateAttachmentsSidebar(tabCache[username].messages, tabCache[username].attachments);
         } else {
             currentMessageCount = -1;
-            
-            // 👇 THE FIX: Target 'dynamicMessages' so we don't delete our anti-bounce wrapper!
             const chatBox = document.getElementById('dynamicMessages');
-            
             if(chatBox) chatBox.innerHTML = `<div class="flex flex-col items-center justify-center py-20 text-slate-400 opacity-50"><i class="fas fa-circle-notch fa-spin text-3xl mb-3"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest">Decrypting Thread...</p></div>`;
             const mediaGrid = document.getElementById('mediaGridView');
             if(mediaGrid) mediaGrid.innerHTML = '';
         }
 
-        // Fetch in the background to silently grab any new messages while they read the cached ones
         fetchMessages(); 
     }
 
@@ -616,33 +616,53 @@
     }
 
     let currentFetchController = null;
-    async function fetchMessages() {
-        if (currentFetchController) currentFetchController.abort();
-        currentFetchController = new AbortController();
+    async function fetchMessages(loadMore = false) {
+        if (currentFetchController && !loadMore) currentFetchController.abort();
+        if (!loadMore) currentFetchController = new AbortController();
         
-        let url = `/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/chat_thread/?with_staff=${encodeURIComponent(activeChatPartnerId)}`;
+        // Ensure cache is structured correctly
+        let cache = tabCache[activeChatPartnerId] || { messages: [], attachments: [], count: 0, page: 1, hasMore: false };
+        let targetPage = loadMore ? cache.page + 1 : 1;
+        
+        let url = `/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/chat_thread/?with_staff=${encodeURIComponent(activeChatPartnerId)}&page=${targetPage}&limit=30`;
         
         try {
             const response = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                signal: currentFetchController.signal
+                signal: loadMore ? undefined : currentFetchController.signal
             });
             const data = await response.json();
             
-            const newCount = (data.messages ? data.messages.length : 0) + (data.attachments ? data.attachments.length : 0);
+            if (loadMore) {
+                // If loading older messages, prepend them (ignoring duplicates)
+                const newMessages = data.messages.filter(m => !cache.messages.find(cm => cm.id === m.id));
+                cache.messages = [...newMessages, ...cache.messages];
+                cache.page = targetPage;
+            } else {
+                // If polling, merge latest data using a Map to ensure old records stay and new records append
+                const existingMap = new Map(cache.messages.map(m => [m.id, m]));
+                data.messages.forEach(m => existingMap.set(m.id, m));
+                cache.messages = Array.from(existingMap.values()).sort((a, b) => a.id - b.id);
+            }
             
-            // 🚀 THE FIX: Save the freshly downloaded data into our local tabCache
-            tabCache[activeChatPartnerId] = {
-                messages: data.messages || [],
-                attachments: data.attachments || [],
-                count: newCount
-            };
+            cache.attachments = data.attachments || [];
             
-            // Only re-render the HTML if the count has actually changed (prevents screen flashing)
-            if (newCount !== currentMessageCount) {
+            // Only overwrite hasMore if we are expanding our load depth
+            if (!loadMore && cache.page === 1) {
+                cache.hasMore = data.has_more;
+            } else if (loadMore) {
+                cache.hasMore = data.has_more;
+            }
+            
+            const newCount = cache.messages.length + cache.attachments.length;
+            cache.count = newCount;
+            tabCache[activeChatPartnerId] = cache;
+            
+            // Re-render if new messages arrived OR if user manually triggered loadMore
+            if (newCount !== currentMessageCount || loadMore) {
                 currentMessageCount = newCount;
-                renderChat(data.messages, data.attachments); 
-                updateAttachmentsSidebar(data.messages, data.attachments);
+                renderChat(cache.messages, cache.attachments, cache.hasMore, loadMore); 
+                updateAttachmentsSidebar(cache.messages, cache.attachments);
             }
         } catch (err) {
             if (err.name !== 'AbortError') console.error("Fetch failed:", err);
@@ -806,12 +826,21 @@
         });
     }
 
-    function renderChat(messages, allAttachments = []) {
-        // 👇 CHANGED: Now targeting the inner padding wrapper to stop layout bouncing!
+    function renderChat(messages, allAttachments = [], hasMore = false, isLoadMore = false) {
         const chatBox = document.getElementById('dynamicMessages');
-        if (!chatBox) return; // Safety check
+        if (!chatBox) return; 
         
+        // Save scroll position
+        const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+        const oldScrollHeight = scrollArea ? scrollArea.scrollHeight : 0;
+        const oldScrollTop = scrollArea ? scrollArea.scrollTop : 0;
+        const isAtBottom = scrollArea ? Math.abs(scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight) < 20 : true;
+
         chatBox.innerHTML = ''; 
+
+        if (hasMore) {
+            chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center mb-6 mt-2"><button type="button" onclick="loadOlderMessages()" class="px-5 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">Load Older Messages</button></div>`);
+        }
 
         messages.forEach(msg => {
             const isSystemUpdate = msg.message && msg.message.toUpperCase().includes('STATUS UPDATE');
@@ -830,7 +859,6 @@
             const hasText = msg.message && msg.message.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
             
-            // FIX: Using the master classifier
             const mediaFiles = messageAttachments.filter(att => SupportConsole.classifyAttachment(att) !== 'document');
             const docFiles = messageAttachments.filter(att => SupportConsole.classifyAttachment(att) === 'document');
 
@@ -845,7 +873,6 @@
                     if (/\.pdf$/i.test(fileName)) icon = 'fa-file-pdf text-red-500';
                     else if (/\.(xls|xlsx|csv)$/i.test(fileName)) icon = 'fa-file-excel text-green-600';
 
-                    // FIX: Inject Cloudinary's forced-download flag into the URL
                     const downloadUrl = (doc.url && doc.url.includes('cloudinary.com')) 
                         ? doc.url.replace('/upload/', '/upload/fl_attachment/') 
                         : doc.url;
@@ -862,7 +889,6 @@
                 docsListHtml += `</div>`;
             }
 
-            // 🚀 ADDED: loading="lazy" decoding="async" to the avatar images
             const avatarContent = msg.sender_avatar ? `<img src="${msg.sender_avatar}" loading="lazy" decoding="async" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>`;
             
             let bubbleClasses = alignRight 
@@ -887,7 +913,14 @@
             chatBox.insertAdjacentHTML('beforeend', html);
         });
 
-        SupportConsole.scrollToBottom();
+        // Smart scroll restoration
+        if (isLoadMore && scrollArea) {
+            requestAnimationFrame(() => {
+                scrollArea.scrollTop = scrollArea.scrollHeight - oldScrollHeight + oldScrollTop;
+            });
+        } else if (isAtBottom) {
+            SupportConsole.scrollToBottom();
+        }
     }
 
     function switchTab(tab) {
