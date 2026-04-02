@@ -15,33 +15,91 @@ class UserPasskey(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.name}"
 
-class Asset(models.Model):
-    ASSET_TYPES = [('PC', 'PC'), ('Laptop', 'Laptop'), ('Server', 'Server'), ('Router', 'Router')]
-    STATUS_CHOICES = [('Active', 'Active'), ('Inactive', 'Inactive'), ('Maintenance', 'Under Maintenance')]
 
-    assets_id = models.CharField(max_length=10, unique=True, editable=False)
+class Asset(models.Model):
+    # --- CHOICES ---
+    ASSET_TYPES = [
+        ('PC', 'Workstation/PC'), 
+        ('Laptop', 'Laptop'), 
+        ('Server', 'Server'), 
+        ('Router', 'Router'),
+        ('Switch', 'Network Switch')
+    ]
+    
+    STATUS_CHOICES = [
+        ('Active', 'Active'), 
+        ('Inactive', 'Inactive'), 
+        ('Maintenance', 'Under Maintenance'),
+        ('Decommissioned', 'Decommissioned')
+    ]
+
+    HARDWARE_PART_CHOICES = [
+        ('Display', 'Screen/Display'),
+        ('Battery', 'Battery'),
+        ('Keyboard', 'Keyboard/Trackpad'),
+        ('Storage', 'HDD/SSD/RAID Array'),
+        ('RAM', 'Memory (RAM)'),
+        ('Motherboard', 'Motherboard/Logic Board'),
+        ('Power', 'PSU/Redundant Power Supply'), # Specific for Servers/Switches
+        ('Network', 'NIC/SFP/Fiber Ports'),      # Specific for Networking
+        ('Cooling', 'Fan/Heatsink/Cooling Node'),
+        ('Chassis', 'Physical Chassis/Rack Mount'),
+        ('Other', 'Other Hardware Component'),
+    ]
+
+    SOFTWARE_ISSUE_CHOICES = [
+        ('OS', 'Operating System Crash/Error'),
+        ('Firmware', 'Firmware/BIOS Corruption'),  # Critical for Routers/Switches
+        ('Driver', 'Driver Conflict/Missing'),
+        ('Security', 'Malware/Virus Infection'),
+        ('Update', 'Update/Patch Failure'),
+        ('Config', 'Configuration/Registry Issue'),
+        ('License', 'Software Licensing/Subscription'),
+        ('ServicePack', 'Service Pack/Kernel Update'),
+        ('Performance', 'Slow Performance/Bottleneck'),
+        ('App', 'Third-Party Application Error'),
+    ]
+
+    # --- BASE IDENTIFICATION ---
+    assets_id = models.CharField(max_length=15, unique=True, editable=False)
     assets_name = models.CharField(max_length=100)
+    brand = models.CharField(max_length=50, blank=True, null=True, help_text="e.g. Dell, HP, Cisco, Juniper")
+    model_number = models.CharField(max_length=100, blank=True, null=True)
+    serial_number = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    
+    # --- ASSIGNMENT & STATUS ---
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     assets_type = models.CharField(max_length=20, choices=ASSET_TYPES)
-    location = models.CharField(max_length=100)
+    location = models.CharField(max_length=100, help_text="Data Center/Rack/Slot")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
-    maintenance_reason = models.TextField(blank=True, null=True)
     
-    # --- TECHNICAL HARDWARE FIELDS ---
-    # For PC/Laptop/Server
-    processor = models.CharField(max_length=100, blank=True, null=True)
-    ram_gb = models.IntegerField(help_text="RAM in GB", blank=True, null=True)
-    storage_capacity = models.CharField(max_length=50, help_text="e.g., 512GB SSD", blank=True, null=True)
+    # --- COMPUTING SPECS (Server/PC/Laptop) ---
+    processor = models.CharField(max_length=100, blank=True, null=True, help_text="e.g. Dual Xeon Silver, i9-13900")
+    ram_gb = models.IntegerField(help_text="Total RAM in GB", blank=True, null=True)
+    storage_capacity = models.CharField(max_length=100, help_text="e.g. 4x2TB RAID 10 SSD", blank=True, null=True)
+    os_version = models.CharField(max_length=100, blank=True, null=True, help_text="e.g. Windows Server 2022, RHEL 9")
     
-    # For Router/Server/Networking
+    # --- NETWORKING SPECS (Router/Switch/Server) ---
     ip_address = models.GenericIPAddressField(protocol='both', unpack_ipv4=True, blank=True, null=True)
     mac_address = models.CharField(max_length=17, blank=True, null=True)
-    firmware_version = models.CharField(max_length=50, blank=True, null=True)
+    firmware_version = models.CharField(max_length=50, blank=True, null=True, help_text="IOS/RouterOS Version")
+    total_ports = models.IntegerField(blank=True, null=True, help_text="Copper/Fiber Port Count")
+    is_redundant_power = models.BooleanField(default=False, help_text="Does it have Dual PSUs?")
     
-    # --- TIMESTAMPS ---
+    # --- PHYSICAL/ENVIRONMENTAL ---
+    rack_unit = models.IntegerField(blank=True, null=True, help_text="Height in U (e.g. 1, 2, 4)")
+    battery_health = models.IntegerField(blank=True, null=True, help_text="Laptop/UPS battery % health")
+    
+    # --- MAINTENANCE LOGGING ---
+    maintenance_reason = models.TextField(blank=True, null=True)
+    faulty_hardware_part = models.CharField(max_length=50, choices=HARDWARE_PART_CHOICES, blank=True, null=True)
+    software_issue_type = models.CharField(max_length=50, choices=SOFTWARE_ISSUE_CHOICES, blank=True, null=True)
+    
+    # --- TIMESTAMPS & SYSTEM ---
     date_added = models.DateTimeField(default=timezone.now)
-    specifications = JSONField(default=dict, blank=True, help_text="Store hardware-specific specs here")
-    
+    last_audit_date = models.DateField(blank=True, null=True)
+    specifications = models.JSONField(default=dict, blank=True, help_text="Niche specs like Port Mapping or License Keys")
+
     def save(self, *args, **kwargs):
         if not self.assets_id:
             last_asset = Asset.objects.all().order_by('id').last()
@@ -51,15 +109,14 @@ class Asset(models.Model):
                 last_id = last_asset.assets_id
                 try:
                     last_number = int(last_id.split('-')[1])
-                    new_number = last_number + 1
-                    self.assets_id = f'AST-{new_number:03d}'
+                    self.assets_id = f'AST-{last_number + 1:03d}'
                 except (IndexError, ValueError):
-                    # Fallback to ID if string parsing fails
-                    self.assets_id = f'AST-{self.id + 1:03d}' if self.id else f'AST-{Asset.objects.count() + 1:03d}'
+                    count = Asset.objects.count() + 1
+                    self.assets_id = f'AST-{count:03d}'
         super(Asset, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.assets_id} - {self.assets_name}"
+        return f"[{self.assets_id}] {self.brand} {self.assets_name}"
     
 class Maintenance(models.Model):
     STATUS_CHOICES = [
@@ -72,11 +129,18 @@ class Maintenance(models.Model):
     maintenance_type = models.CharField(max_length=100)
     notes = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='In Progress')
-    date = models.DateTimeField(auto_now_add=True)  # Creation date
+    maintenance_date = models.DateField(null=True, blank=True, help_text="The date the maintenance was or will be performed")
+    
+    # --- NEW: ADD THESE TWO FIELDS HERE ---
+    faulty_hardware_part = models.CharField(max_length=50, choices=Asset.HARDWARE_PART_CHOICES, blank=True, null=True)
+    software_issue_type = models.CharField(max_length=50, choices=Asset.SOFTWARE_ISSUE_CHOICES, blank=True, null=True)
+
+    date = models.DateTimeField(auto_now_add=True)  
     last_modified = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.asset.assets_name} - {self.date.date()}"
+        display_date = self.maintenance_date if self.maintenance_date else self.date.date()
+        return f"{self.asset.assets_name} - {display_date}"
     
 
 class Incident(models.Model):

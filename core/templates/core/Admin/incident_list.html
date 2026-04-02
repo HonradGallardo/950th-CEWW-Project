@@ -46,40 +46,74 @@
         </div>
     </div>
 
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2">
+        <div class="relative group">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+            <input type="text" id="searchInput" placeholder="Search Incident or ID..." 
+                class="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-slate-100">
+        </div>
+        
+        <select id="categoryFilter" class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-slate-100">
+            <option value="">All Categories</option>
+            <option value="Malware">Malware</option>
+            <option value="Phishing">Phishing</option>
+            <option value="Unauthorized Access">Unauthorized Access</option>
+            <option value="DDoS">DDoS</option>
+            <option value="Insider Threat">Insider Threat</option>
+            <option value="Hardware Loss">Hardware Loss</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <select id="statusFilter" class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-slate-100">
+            <option value="">All Statuses</option>
+            <option value="Open">Open</option>
+            <option value="Investigating">Investigating</option>
+            <option value="Resolved">Resolved</option>
+        </select>
+
+        <select id="severityFilter" class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-slate-100">
+            <option value="">All Severities</option>
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+    </div>
+
     <div class="flex-1 grid grid-cols-12 gap-6 min-h-0 pb-4 overflow-y-auto lg:overflow-hidden">
         
-        <div class="col-span-12 lg:col-span-7 flex flex-col h-auto lg:h-full min-w-0">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300">
-                <div class="px-5 py-4 sm:px-6 border-b border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
-                    <span class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
-                </div>
+    <div class="col-span-12 lg:col-span-7 flex flex-col h-[540px] lg:h-full min-w-0">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300">
+            
+            <div class="px-5 py-4 sm:px-6 border-b border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
+                <span class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
+            </div>
 
-                <div class="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative bg-slate-50/30 dark:bg-slate-900/20 md:bg-transparent md:dark:bg-transparent">
-                    <table class="w-full text-left border-collapse block md:table table-fixed lg:table-auto">
-                        <thead class="hidden md:table-header-group sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-sm z-10">
-                            <tr class="text-[10px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/80">
-                                <th class="px-5 sm:px-6 py-4">Incident</th>
-                                <th class="hidden lg:table-cell px-4 py-4 w-28 text-left">Category</th>
-                                <th class="hidden xl:table-cell px-4 py-4 w-32 text-left">Detection</th>
-                                <th class="hidden xl:table-cell px-4 py-4 w-32 text-left">Target / Asset</th>
-                                <th class="hidden sm:table-cell px-4 py-4 w-24 text-center">Severity</th>
-                                <th class="px-4 py-4 w-24 sm:w-28 text-center">Status</th>
-                                <th class="hidden md:table-cell px-4 py-4 w-28 text-center">Tech</th>
-                                <th class="px-5 sm:px-6 py-4 w-24 sm:w-32 text-right">Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="incidentTableBody" class="block md:table-row-group p-3 sm:p-4 md:p-0 space-y-4 md:space-y-0 md:divide-y divide-slate-100 dark:divide-slate-700/50">
-                            <tr><td colspan="8" class="p-12 text-center text-slate-400 italic block md:table-cell"><i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...</td></tr>
+            <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-900/20 md:bg-transparent md:dark:bg-transparent">
+                <table class="w-full text-left border-collapse table-auto">
+                    <thead class="hidden md:table-header-group sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-sm z-10">
+                        <tr class="text-[10px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/80">
+                            <th class="px-5 sm:px-6 py-4">Incident</th>
+                            <th class="hidden lg:table-cell px-4 py-4 w-28 text-left">Category</th>
+                            <th class="hidden xl:table-cell px-4 py-4 w-32 text-left">Detection</th>
+                            <th class="hidden xl:table-cell px-4 py-4 w-32 text-left">Target / Asset</th>
+                            <th class="hidden sm:table-cell px-4 py-4 w-24 text-center">Severity</th>
+                            <th class="px-4 py-4 w-24 sm:w-28 text-center">Status</th>
+                            <th class="hidden md:table-cell px-4 py-4 w-28 text-center">Tech</th>
+                            <th class="px-5 sm:px-6 py-4 w-24 sm:w-32 text-right">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incidentTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         </tbody>
-                    </table>
-                </div>
+                </table>
+            </div>
 
-                <div class="px-5 py-4 sm:px-6 border-t border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
-                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">Showing 0-0 of 0</span>
-                    <div class="flex items-center gap-2" id="paginationControls"></div>
-                </div>
+            <div class="px-5 py-4 sm:px-6 border-t border-slate-100 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800 shrink-0 flex items-center justify-between z-20">
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">Showing 0-0 of 0</span>
+                <div class="flex items-center gap-2" id="paginationControls"></div>
             </div>
         </div>
+    </div>
 
         <div class="col-span-12 lg:col-span-5 flex flex-col h-full min-h-[500px] lg:min-h-0">
             <div id="incidentDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300 relative group">
@@ -211,8 +245,9 @@
 <script>
 const IS_COMMANDER = {{ is_commander|yesno:"true,false" }};
 let allIncidents = [];
+let filteredIncidents = [];
 let currentPage = 1;
-const rowsPerPage = 10;
+const rowsPerPage = 8; 
 let currentOpenIncidentId = null;
 
 function loadIncidents() {
@@ -221,7 +256,7 @@ function loadIncidents() {
         type: 'GET',
         success: function(data) {
             allIncidents = data.sort((a, b) => new Date(b.date) - new Date(a.date));
-            initTable();
+            applyFilters();
         },
         error: function(err) {
             console.error("Failed to fetch incidents:", err);
@@ -230,14 +265,34 @@ function loadIncidents() {
     });
 }
 
+function applyFilters() {
+    const searchTerm = $('#searchInput').val().toLowerCase();
+    const catTerm = $('#categoryFilter').val();
+    const statusTerm = $('#statusFilter').val();
+    const sevTerm = $('#severityFilter').val(); // NEW: Severity variable
+
+    filteredIncidents = allIncidents.filter(inc => {
+        const matchesSearch = inc.title.toLowerCase().includes(searchTerm) || 
+                              `INC-${inc.id}`.toLowerCase().includes(searchTerm);
+        const matchesCategory = catTerm === "" || inc.category === catTerm;
+        const matchesStatus = statusTerm === "" || inc.status === statusTerm;
+        const matchesSeverity = sevTerm === "" || inc.severity === sevTerm; // NEW: Severity check
+
+        return matchesSearch && matchesCategory && matchesStatus && matchesSeverity;
+    });
+
+    currentPage = 1;
+    initTable();
+}
+
 function initTable() {
-    const totalEntries = allIncidents.length;
+    const totalEntries = filteredIncidents.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
 
     const start = (currentPage - 1) * rowsPerPage;
     const end = Math.min(start + rowsPerPage, totalEntries);
-    const pageData = allIncidents.slice(start, end);
+    const pageData = filteredIncidents.slice(start, end);
 
     renderTableRows(pageData);
     renderPagination(totalPages);
@@ -250,7 +305,7 @@ function renderTableRows(incidents) {
     let html = '';
 
     if (incidents.length === 0) {
-        $tbody.html('<tr><td colspan="8" class="p-12 text-center text-slate-400 italic block md:table-cell">No active incidents found in database.</td></tr>');
+        $tbody.html('<tr><td colspan="8" class="p-12 text-center text-slate-400 italic block md:table-cell">No active incidents found matching criteria.</td></tr>');
         return;
     }
 
@@ -284,7 +339,7 @@ function renderTableRows(incidents) {
         if (inc.status === 'Open') {
             statusBadge = 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50';
         } else if (inc.status === 'Investigating') {
-            statusBadge = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-900/50';
+            statusBadge = 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50';
         } else {
             statusBadge = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
         }
@@ -314,7 +369,6 @@ function renderTableRows(incidents) {
         
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
-        // Dynamic styling for active state (applies card ring on mobile, border on desktop)
         const activeClass = currentOpenIncidentId == inc.id 
             ? 'border-blue-500 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 md:border-transparent md:border-l-blue-500 md:border-l-4' 
             : 'border-slate-200 dark:border-slate-700 md:border-transparent md:border-0';
@@ -454,7 +508,6 @@ function previewIncident(data) {
     
     if ($('#editLink').length) $('#editLink').attr('href', `/incidents/edit/${data.id}/`);
 
-    // Severity Badge Rendering
     const $badge = $('#view_severity_badge');
     let colorClass = '';
     if (data.severity === 'Critical') colorClass = 'bg-red-50 dark:bg-red-500/10 text-red-600 border-red-200 dark:border-red-900/50 ring-1 ring-red-500/20';
@@ -463,11 +516,10 @@ function previewIncident(data) {
     else colorClass = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/50 ring-1 ring-emerald-500/20';
     $badge.html(`<span class="px-3 py-1 rounded-md border text-[10px] font-black uppercase tracking-wider shadow-sm ${colorClass}">${data.severity}</span>`);
 
-    // Status Badge Rendering
     const $statusBadge = $('#view_status_badge');
     let statusClass = '';
     if (data.status === 'Open') statusClass = 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50';
-    else if (data.status === 'Investigating') statusClass = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-900/50';
+    else if (data.status === 'Investigating') statusClass = 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50';
     else statusClass = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
     $statusBadge.html(`<span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider mt-0.5 ${statusClass}">${data.status}</span>`);
 
@@ -507,6 +559,10 @@ $('#confirmDeleteBtn').on('click', function() {
 $(document).ready(function() {
     loadIncidents(); 
     setInterval(loadIncidents, 30000); 
+
+    $('#searchInput').on('input', applyFilters);
+    // UPDATED: Added #severityFilter to trigger filter update
+    $('#categoryFilter, #statusFilter, #severityFilter').on('change', applyFilters);
 });
 </script>
 

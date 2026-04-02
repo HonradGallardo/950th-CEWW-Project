@@ -139,7 +139,29 @@ def add_maintenance(request):
 @login_required
 def edit_maintenance(request, pk):
     log = get_object_or_404(Maintenance, pk=pk)
-    form = MaintenanceForm(instance=log)
+    
+    # 1. Check if the user is submitting the form (POST request)
+    if request.method == 'POST':
+        # Bind the incoming POST data to the existing log instance
+        form = MaintenanceForm(request.POST, instance=log)
+        
+        if form.is_valid():
+            # 2. Save the updated progress/status and date
+            updated_log = form.save()
+            
+            # 3. SMART LOGIC: If maintenance is completed, automatically activate the asset
+            if updated_log.status == 'Completed':
+                asset = updated_log.asset
+                if asset.status != 'Active':
+                    asset.status = 'Active'
+                    asset.save()
+                    
+            # Redirect back to the service history page
+            return redirect('maintenance_list')
+    else:
+        # If the user is just loading the page, populate the form with existing data
+        form = MaintenanceForm(instance=log)
+
     return render(request, 'core/Admin/edit_maintenance.html', {
         'form': form,
         'log_id': pk  # Pass ID for API URL construction

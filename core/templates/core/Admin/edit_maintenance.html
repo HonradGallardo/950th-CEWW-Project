@@ -3,26 +3,27 @@
 {% block content %}
 <div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
     <style>
-        /* This targets the Django-generated IDs specifically to force the theme */
-        #id_maintenance_type, #id_notes {
-            background-color: #f8fafc !important; /* light mode */
-            color: #0f172a !important;
-            appearance: none !important;
+        #id_faulty_hardware_part, #id_software_issue_type, #id_maintenance_type, #id_notes, select, input[type="date"] {
+            width: 100%; padding: 1rem; background-color: #f8fafc; border: 2px solid #f1f5f9;
+            border-radius: 0.75rem; font-size: 0.875rem; font-weight: 700; color: #334155;
+            outline: none; transition: all 0.2s; appearance: none;
+        }
+        #id_notes { min-height: 120px; font-weight: 500; }
+        #id_faulty_hardware_part:focus, #id_software_issue_type:focus, #id_maintenance_type:focus, #id_notes:focus, select:focus, input[type="date"]:focus {
+            border-color: #3b82f6;
         }
 
-        /* This only triggers when the 'dark' class is active on the html/body */
-        .dark #id_maintenance_type, .dark #id_notes {
-            background-color: #1e293b !important; /* slate-800 */
-            color: #f1f5f9 !important; /* slate-100 */
-            border-color: #334155 !important; /* slate-700 */
-            color-scheme: dark !important;
+        /* Dark mode */
+        .dark #id_faulty_hardware_part, .dark #id_software_issue_type, .dark #id_maintenance_type, .dark #id_notes, .dark select, .dark input[type="date"] {
+            background-color: #1e293b !important; border-color: #0f172a !important; color: #f1f5f9 !important; color-scheme: dark !important;
         }
-
-        /* Ensures the dropdown options match the dark background */
-        .dark #id_maintenance_type option {
-            background-color: #1e293b;
-            color: #f1f5f9;
+        .dark #id_faulty_hardware_part:focus, .dark #id_software_issue_type:focus, .dark #id_maintenance_type:focus, .dark #id_notes:focus, .dark select:focus, .dark input[type="date"]:focus {
+            border-color: #3b82f6 !important;
         }
+        .dark option { background-color: #1e293b; color: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
     </style>
 
     <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 transition-colors">
@@ -51,12 +52,29 @@
                         <span class="text-[10px] text-slate-500 font-bold uppercase">System ID</span>
                         <span class="text-xs font-mono font-bold">{{ form.instance.asset.assets_id }}</span>
                     </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">Type</span>
+                        <span class="text-xs font-bold uppercase">{{ form.instance.asset.assets_type }}</span>
+                    </div>
                 </div>
             </div>
+            
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[350px]">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4 shrink-0">
+                    <i class="fas fa-history"></i> Maintenance History
+                </label>
+                
+                <div id="edit-maintenance-history-list" class="space-y-2 overflow-y-auto custom-scrollbar pr-2 flex-grow">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin text-slate-400 text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
             <div class="hidden">{{ form.asset }}{% if form.technician %}{{ form.technician }}{% endif %}</div>
         </div>
 
-        <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6 transition-colors">
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6 transition-colors flex flex-col">
             
             <div class="space-y-3">
                 <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Update Service Status</label>
@@ -72,22 +90,51 @@
                 </div>
             </div>
 
-            <div class="space-y-2 relative">
-                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Maintenance Type</label>
-                <div class="relative group">
-                    {{ form.maintenance_type }}
-                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 dark:text-slate-500">
-                        <i class="fas fa-chevron-down text-[10px]"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Hardware Component</label>
+                    <div class="relative group">
+                        {{ form.faulty_hardware_part }}
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 dark:text-slate-500">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Software/OS Issue</label>
+                    <div class="relative group">
+                        {{ form.software_issue_type }}
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 dark:text-slate-500">
+                            <i class="fas fa-chevron-down text-[10px]"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-2 relative">
+                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Maintenance Type</label>
+                    <div class="relative group">
+                        {{ form.maintenance_type }}
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Effective Service Date</label>
+                    <div class="relative group">
+                        <input type="date" name="maintenance_date" id="id_maintenance_date" 
+                            value="{% if form.instance.maintenance_date %}{{ form.instance.maintenance_date|date:'Y-m-d' }}{% else %}{{ form.instance.date|date:'Y-m-d' }}{% endif %}"
+                            class="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 transition-all dark:[color-scheme:dark]">
+                    </div>
+                </div>            
+            </div>
+
+            <div class="space-y-2 flex-grow">
                 <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Technical Description & Progress</label>
                 {{ form.notes }}
             </div>
 
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all">
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all mt-auto">
                 Update Service Record
             </button>
         </div>
@@ -97,8 +144,95 @@
 <script>
     $(document).ready(function() {
         const logId = "{{ log_id }}";
+        const assetStringId = "{{ form.instance.asset.assets_id }}".trim();
+        const assetName = "{{ form.instance.asset.assets_name }}".trim();
 
-        // Strip 'required' from hidden fields to unblock the browser
+        // 1. FETCH ASSET HISTORY VIA AJAX (FIXED)
+        $.ajax({
+            url: '/api/maintenance/',
+            type: 'GET',
+            success: function(data) {
+                // Safeguard for DRF pagination arrays
+                const logsArray = Array.isArray(data) ? data : (data.results || []);
+
+                // Filter logs to only include those matching this specific Asset
+                const assetLogs = logsArray.filter(log => {
+                    return (log.asset_string_id && log.asset_string_id.toString().trim() === assetStringId) || 
+                           (log.asset_name && log.asset_name.trim() === assetName);
+                });
+
+                // Sort by latest date first
+                assetLogs.sort((a, b) => new Date(b.maintenance_date || b.date) - new Date(a.maintenance_date || a.date));
+
+                let historyHtml = '';
+
+                if (assetLogs.length === 0) {
+                    historyHtml = '<p class="text-[10px] font-bold text-slate-400 italic pt-2">No maintenance records found.</p>';
+                } else {
+                    assetLogs.forEach(log => {
+                        const isCurrent = log.id.toString() === logId.toString();
+                        const isCompleted = log.status === 'Completed';
+                        
+                        const dotColor = isCompleted ? 'bg-emerald-500' : 'bg-blue-500';
+                        const badgeClass = isCompleted ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500';
+                        
+                        // Style differently if this is the active log we are editing
+                        const activeClass = isCurrent 
+                            ? 'bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm mb-3' 
+                            : 'pl-4 border-l-2 border-slate-200 dark:border-slate-700 pb-5 last:pb-0 mt-2';
+                        const dotPos = isCurrent ? 'hidden' : 'absolute -left-[5px] top-1';
+
+                        let logDate = 'N/A';
+                        if (log.maintenance_date) {
+                            logDate = new Date(log.maintenance_date).toLocaleDateString('en-GB').replace(/\//g, '-');
+                        } else if (log.date) {
+                            logDate = new Date(log.date).toLocaleDateString('en-GB').replace(/\//g, '-');
+                        }
+
+                        let diagHtml = '';
+                        if (log.faulty_hardware_part || log.software_issue_type) {
+                            const hw = log.faulty_hardware_part || '';
+                            const sw = log.software_issue_type || '';
+                            const sep = hw && sw ? ' | ' : '';
+                            diagHtml = `<p class="text-[9px] font-bold text-rose-500 uppercase mt-1"><i class="fas fa-wrench mr-1"></i>${hw}${sep}${sw}</p>`;
+                        }
+
+                        let notesHtml = log.notes ? `<p class="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">${log.notes}</p>` : '';
+
+                        historyHtml += `
+                            <div class="relative ${activeClass}">
+                                <div class="${dotPos} w-2 h-2 rounded-full ${dotColor}"></div>
+                                <div class="flex justify-between items-start">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase">${logDate} <span class="ml-1 text-slate-300 dark:text-slate-600">#LOG-${log.id}</span></p>
+                                    ${isCurrent ? '<span class="text-[8px] font-black text-white uppercase bg-blue-500 px-1.5 py-0.5 rounded shadow">Currently Editing</span>' : ''}
+                                </div>
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 leading-tight">${log.maintenance_type}</p>
+                                ${diagHtml}
+                                ${notesHtml}
+                                <span class="inline-block mt-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${badgeClass}">${log.status}</span>
+                            </div>
+                        `;
+                    });
+                }
+                $('#edit-maintenance-history-list').html(historyHtml);
+            },
+            error: function(err) {
+                $('#edit-maintenance-history-list').html('<p class="text-[10px] font-bold text-red-500 italic pt-2 text-center"><i class="fas fa-exclamation-circle mr-1"></i> Failed to load history.</p>');
+            }
+        });
+
+        // 2. INHERIT FAULTY HARDWARE/SOFTWARE FROM ASSET IF EMPTY
+        const assetHwPart = "{{ form.instance.asset.faulty_hardware_part|default:'' }}";
+        const assetSwIssue = "{{ form.instance.asset.software_issue_type|default:'' }}";
+
+        if (!$('#id_faulty_hardware_part').val() && assetHwPart !== "" && assetHwPart !== "None") {
+            $('#id_faulty_hardware_part').val(assetHwPart);
+        }
+        if (!$('#id_software_issue_type').val() && assetSwIssue !== "" && assetSwIssue !== "None") {
+            $('#id_software_issue_type').val(assetSwIssue);
+        }
+
+        // 3. SUBMIT FORM VIA AJAX
         $('[name="asset"], [name="technician"]').removeAttr('required').prop('required', false);
 
         $('#editMaintenanceForm').on('submit', function(e) {
@@ -106,33 +240,31 @@
 
             const $btn = $('#submitBtn');
             const originalText = $btn.html();
-
-            // 🚨 FIXED: Inject the exact ID directly from the database, ignoring the hidden HTML select entirely
             const assetPk = "{{ form.instance.asset.id }}"; 
             
-            const statusVal = $('input[name="status"]:checked').val(); 
-            const maintTypeVal = $('[name="maintenance_type"]').val();
-            const notesVal = $('textarea[name="notes"]').val();
+            const payload = {
+                asset: parseInt(assetPk),
+                status: $('input[name="status"]:checked').val(),
+                maintenance_type: $('[name="maintenance_type"]').val(),
+                faulty_hardware_part: $('[name="faulty_hardware_part"]').val() || null,
+                software_issue_type: $('[name="software_issue_type"]').val() || null,
+                notes: $('textarea[name="notes"]').val(),
+                maintenance_date: $('#id_maintenance_date').val() 
+            };
 
             $btn.prop('disabled', true)
                 .addClass('opacity-70 cursor-not-allowed')
-                .html('<i class="fas fa-sync fa-spin mr-2"></i> COMMITTING CHANGES...');
+                .html('<i class="fas fa-sync fa-spin mr-2"></i> COMMITTING TELEMETRY...');
 
             $.ajax({
                 url: `/api/maintenance/${logId}/`,
                 type: 'PUT',
-                headers: {
-                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
-                },
-                data: JSON.stringify({
-                    asset: parseInt(assetPk),
-                    status: statusVal,
-                    maintenance_type: maintTypeVal,
-                    notes: notesVal
-                }),
+                headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+                data: JSON.stringify(payload),
                 contentType: 'application/json',
                 success: function(response) {
-                    $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').html('<i class="fas fa-check mr-2"></i> RECORD UPDATED');
+                    $btn.removeClass('bg-blue-600').addClass('bg-emerald-600')
+                        .html('<i class="fas fa-check mr-2"></i> RECORD UPDATED');
                     
                     setTimeout(() => {
                         window.location.href = "{% url 'maintenance_list' %}";
@@ -140,12 +272,10 @@
                 },
                 error: function(xhr) {
                     $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalText);
-                    alert("Update Failed: " + (xhr.responseJSON?.detail || "Please ensure technical notes are provided."));
-                    console.error("API Error Response:", xhr.responseText);
+                    alert("Update Failed: " + (xhr.responseJSON?.detail || "Check required fields."));
                 }
             });
         });
     });
 </script>
-
 {% endblock %}
