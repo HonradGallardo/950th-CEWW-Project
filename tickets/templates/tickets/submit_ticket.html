@@ -616,8 +616,13 @@ main {
         currentLightboxItems: [],
         galleryMedia: [],
 
+        currentPage: 1,
+        hasMoreMessages: false,
+        isFetchingOlder: false,
+
         init() {
         this.initPasteFeature();
+        
         
         // --- HORIZONTAL SCROLL FOR TABS ---
         const staffContainer = document.getElementById('staff-threads-container');
@@ -641,6 +646,8 @@ main {
             });
         }
 
+        
+
         // --- NEW: REAL-TIME POLLING ---
         // Quietly fetch new messages every 3 seconds
         setInterval(() => {
@@ -663,6 +670,45 @@ main {
             if (isVideo) return 'video';
             if (isImage) return 'image';
             return 'document'; 
+        },
+
+        loadOlderMessages() {
+            if (this.isFetchingOlder || !this.hasMoreMessages || !this.activeTicketId) return;
+            this.isFetchingOlder = true;
+            
+            const btn = document.getElementById('loadOlderBtn');
+            if (btn) { btn.innerText = "Decrypting Records..."; btn.disabled = true; }
+            
+            this.currentPage++;
+            
+            try {
+                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=${this.currentPage}&limit=30`);
+                if (!response.ok) throw new Error("Failed to load older messages");
+                const data = await response.json();
+                
+                const olderMessages = data.messages || [];
+                this.hasMoreMessages = data.has_more || false;
+                
+                // Prepend to cache while avoiding duplicates
+                const newToAdd = olderMessages.filter(m => !this.fullMessageCache.find(cm => cm.id === m.id));
+                this.fullMessageCache = [...newToAdd, ...this.fullMessageCache];
+                
+                // Re-render based on current view
+                if (this.activeRecipient === "GROUP_CHAT") {
+                    this.loadGroupChat(true); 
+                } else if (this.activeRecipient) {
+                    this.loadTechnicianConversation(this.activeRecipient, true);
+                } else {
+                    this.renderFeed(this.fullMessageCache, true);
+                }
+                
+            } catch (err) {
+                console.error(err);
+                this.currentPage--; // Revert page count on failure
+                if (btn) { btn.innerText = "Load Older Messages"; btn.disabled = false; }
+            } finally {
+                this.isFetchingOlder = false;
+            }
         },
 
         // 2. REPLACE renderAttachmentGrid
@@ -1272,7 +1318,6 @@ main {
             document.getElementById('feed-header-label').innerHTML = '';
             
             document.getElementById('contact-details-container').classList.add('opacity-0');
-
             document.getElementById('ticket-details-empty').classList.add('hidden');
             document.getElementById('contact-details-inner').classList.remove('hidden');
             document.getElementById('contact-details-inner').classList.add('flex');
@@ -1291,7 +1336,10 @@ main {
             this.galleryMedia = []; 
             this.currentTicketStatus = status;
             this.ownerInfo = { name: user, email: email };
-            this._lastKnownCount = -1;
+            
+            // Pagination Resets
+            this.currentPage = 1;
+            this.hasMoreMessages = false;
 
             document.querySelectorAll('.ticket-item').forEach(i => i.classList.remove('active-ticket-item'));
             const activeItem = document.getElementById(`ticket-item-${id}`);
@@ -1330,7 +1378,7 @@ main {
                 </div>`;
 
             try {
-                const response = await fetch(`/tickets/api/support-api/${id}/chat_thread/`);
+                const response = await fetch(`/tickets/api/support-api/${id}/chat_thread/?page=1&limit=30`);
                 if (!response.ok) throw new Error("Sync Error");
                 const data = await response.json();
                 
@@ -1338,6 +1386,7 @@ main {
 
                 this.fullMessageCache = data.messages || [];
                 this.allAttachments = data.attachments || []; 
+                this.hasMoreMessages = data.has_more || false;
 
                 this.updateMediaAndFilesSidebar(this.allAttachments);
                 
@@ -1367,7 +1416,8 @@ main {
                 document.getElementById('messageContainer').innerHTML = `<p class="text-center py-20 text-red-500 font-bold uppercase text-[10px]">Failed to load ticket data</p>`;
             }
         },
-        loadTechnicianConversation(techName) {
+
+        loadTechnicianConversation(techName, isLoadMore = false) {
             this.activeRecipient = techName;
 
             document.querySelectorAll('.staff-thread-item').forEach(item => {
@@ -1405,43 +1455,48 @@ main {
             this.updateMediaAndFilesSidebar(combinedSidebarAssets); 
 
             const container = document.getElementById('messageContainer');
-            let initMediaHtml = '';
-            initialAtts.forEach(att => {
-                if (/\.(jpg|jpeg|png|webp|gif)$/i.test(att.name)) {
-                    initMediaHtml += `<img src="${att.url}" class="max-w-[200px] rounded-lg mt-2 shadow-sm border border-slate-200 dark:border-slate-700">`;
-                }
-            });
-
-            container.innerHTML = `<div id="dynamicMessages" class="space-y-6"></div>`;
+            if (!document.getElementById('dynamicMessages')) {
+                container.innerHTML = `<div id="dynamicMessages" class="space-y-6"></div>`;
+            }
 
             if (techMessages.length > 0) {
-                this.renderFeed(techMessages);
+                this.renderFeed(techMessages, isLoadMore);
             } else {
                 document.getElementById('dynamicMessages').innerHTML = `
                     <div class="py-10 text-center">
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Beginning of conversation with ${techName}</p>
                     </div>`;
             }
-            
-            this.scrollToBottom();
         },
 
         async refreshChatData() {
             if (!this.activeTicketId) return;
             
             try {
-                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/`);
+                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=1&limit=30`);
                 if (!response.ok) return;
                 const data = await response.json();
                 
-                // THE FIX: Check if we actually have new data before doing anything
-                const newCount = (data.messages ? data.messages.length : 0) + (data.attachments ? data.attachments.length : 0);
+                const newMessages = data.messages || [];
+                const existingMap = new Map(this.fullMessageCache.map(m => [m.id, m]));
+                let changed = false;
                 
-                if (newCount !== this._lastKnownCount) {
-                    this._lastKnownCount = newCount; // Save the new count
-                    
-                    this.fullMessageCache = data.messages || [];
+                // Merge new messages (prevents duplicates while polling)
+                newMessages.forEach(m => {
+                    if (!existingMap.has(m.id)) {
+                        existingMap.set(m.id, m);
+                        changed = true;
+                    }
+                });
+                
+                // Only re-render if something actually changed
+                if (changed || this.allAttachments.length !== (data.attachments || []).length) {
+                    this.fullMessageCache = Array.from(existingMap.values()).sort((a, b) => a.id - b.id);
                     this.allAttachments = data.attachments || [];
+                    
+                    if (this.currentPage === 1) {
+                        this.hasMoreMessages = data.has_more || false;
+                    }
                     
                     const dynamicContainer = document.getElementById('dynamicMessages');
                     if (dynamicContainer) {
@@ -1527,7 +1582,7 @@ main {
             container.innerHTML = finalHtml;
         },
 
-        loadGroupChat() {
+        loadGroupChat(isLoadMore = false) {
             this.activeRecipient = "GROUP_CHAT"; 
             
             document.querySelectorAll('.staff-thread-item').forEach(item => {
@@ -1558,18 +1613,18 @@ main {
             this.updateMediaAndFilesSidebar(combinedSidebarAssets);
 
             const container = document.getElementById('messageContainer');
-            container.innerHTML = `<div id="dynamicMessages" class="space-y-6"></div>`;
+            if (!document.getElementById('dynamicMessages')) {
+                container.innerHTML = `<div id="dynamicMessages" class="space-y-6"></div>`;
+            }
 
             if (groupMessages.length > 0) {
-                this.renderFeed(groupMessages);
+                this.renderFeed(groupMessages, isLoadMore);
             } else {
                 document.getElementById('dynamicMessages').innerHTML = `
                     <div class="py-10 text-center">
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Beginning of Group Chat</p>
                     </div>`;
             }
-            
-            this.scrollToBottom();
         },
 
         loadChatDataOnly() {
@@ -1644,11 +1699,24 @@ main {
             this.renderFeed(filtered);
         },
 
-        renderFeed(messages) {
+        renderFeed(messages, isLoadMore = false) {
             const messageDiv = document.getElementById('dynamicMessages');
             if (!messageDiv) return;
 
-            messageDiv.innerHTML = messages.map(msg => {
+            // Preserve scroll state anchoring
+            const scrollArea = document.getElementById('workspaceScroll');
+            const oldScrollHeight = scrollArea ? scrollArea.scrollHeight : 0;
+            const oldScrollTop = scrollArea ? scrollArea.scrollTop : 0;
+            const isAtBottom = scrollArea ? Math.abs(scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight) < 20 : true;
+
+            let htmlContent = '';
+
+            // Inject the load older button at the top if there are more pages
+            if (this.hasMoreMessages) {
+                htmlContent += `<div class="flex justify-center mb-6 mt-2"><button type="button" id="loadOlderBtn" onclick="SupportConsole.loadOlderMessages()" class="px-5 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">Load Older Messages</button></div>`;
+            }
+
+            htmlContent += messages.map(msg => {
                 const senderName = msg.sender_name;
                 const isMe = msg.is_me;
                 const attachments = msg.attachments || [];
@@ -1656,7 +1724,6 @@ main {
                 const hasText = msg.message && msg.message.trim().length > 0;
                 const isStatus = msg.message && msg.message.toUpperCase().includes('STATUS UPDATE');
 
-                // 🚀 ADDED: loading="lazy" decoding="async" to avatar images
                 const avatar = msg.sender_avatar
                     ? msg.sender_avatar
                     : `https://ui-avatars.com/api/?name=${senderName}&background=3b82f6&color=fff`;
@@ -1674,7 +1741,6 @@ main {
                 let fileHtml = '';
 
                 if (attachments.length > 0) {
-                    // 1. Use your master classifier!
                     const mediaList = attachments.filter(a => SupportConsole.classifyAttachment(a) !== 'document');
                     const otherDocs = attachments.filter(a => SupportConsole.classifyAttachment(a) === 'document');
 
@@ -1698,10 +1764,8 @@ main {
                             <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-[#020617] flex items-center justify-center ${itemSpan}" onclick="SupportConsole.openLightbox(${globalIndex})">`;
 
                             if (type === 'image') {
-                                // 🚀 ADDED: loading="lazy" decoding="async"
                                 mediaHtml += `<img src="${att.url}" loading="lazy" decoding="async" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                             } else if (type === 'video') {
-                                // 🚀 ADDED: preload="none"
                                 mediaHtml += `<video src="${att.url}#t=0.1" preload="none" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                                          <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                             } else {
@@ -1720,8 +1784,6 @@ main {
                         fileHtml = `<div class="mt-2 flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'} w-full">`;
                         otherDocs.forEach(att => {
                             const fileName = att.name || 'Document';
-                            
-                            // 2. FORCE DOWNLOAD TRICK IN THE CHAT BUBBLES
                             const downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
                                 ? att.url.replace('/upload/', '/upload/fl_attachment/') 
                                 : att.url;
@@ -1742,9 +1804,7 @@ main {
                 <div class="flex w-full gap-3 md:gap-4 ${isMe ? 'flex-row-reverse' : 'flex-row'} mb-4">
                     ${!isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                     
-                    <!-- THIS IS THE WRAPPER THAT GOT ACCIDENTALLY DELETED! 👇 -->
                     <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                        
                         <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${senderName}</div>
                         ${hasText ? `
                         <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
@@ -1753,14 +1813,22 @@ main {
                         ${mediaHtml}
                         ${fileHtml}
                         <div class="text-[9px] opacity-60 mt-1 ${isMe ? 'text-right' : ''}">${msg.timestamp}</div>
-                    
-                    </div> <!-- 👈 Closes the wrapper -->
+                    </div>
                     
                     ${isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                 </div>`;
             }).join('');
 
-            this.scrollToBottom();
+            messageDiv.innerHTML = htmlContent;
+
+            // Handle Smart Scroll Anchoring
+            if (isLoadMore && scrollArea) {
+                requestAnimationFrame(() => {
+                    scrollArea.scrollTop = scrollArea.scrollHeight - oldScrollHeight + oldScrollTop;
+                });
+            } else if (isAtBottom && !isLoadMore) {
+                this.scrollToBottom();
+            }
         },
 
         async sendMessage(e) {
