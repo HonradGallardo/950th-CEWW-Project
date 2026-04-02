@@ -90,7 +90,6 @@ main {
     z-index: 10;
 }
 </style>
-</style>
 
 <div class="font-plex h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden text-slate-900 dark:text-slate-100 main-container">
     
@@ -672,7 +671,7 @@ main {
             return 'document'; 
         },
 
-        loadOlderMessages() {
+        async loadOlderMessages() {
             if (this.isFetchingOlder || !this.hasMoreMessages || !this.activeTicketId) return;
             this.isFetchingOlder = true;
             
