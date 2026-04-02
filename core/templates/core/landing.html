@@ -411,6 +411,20 @@
                     <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
                 </div>
 
+                <div class="flex flex-col gap-2 sm:gap-3">
+                    <input type="text" name="subject" id="newSub" placeholder="Subject" required class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-800">
+                    <textarea name="description" id="newDescInput" placeholder="Detailed Description..." required rows="3" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"></textarea>
+                    
+                    <label class="hidden border-2 border-dashed border-slate-200 bg-slate-50 rounded-xl p-3 sm:p-4 text-center cursor-pointer hover:border-blue-500 transition-colors group">
+                        <input type="file" name="attachments" multiple disabled class="hidden" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.csv" onchange="ChatWidget.updateFileLabel(this)">
+                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 mx-auto mb-2 group-hover:border-blue-500/30">
+                            <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+                        </div>
+                        <span id="widget-file-label" class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-500 transition-colors">Attach Media</span>
+                        <div id="file-preview-list" class="mt-2 flex flex-wrap gap-1 justify-center empty:hidden"></div>
+                    </label>
+                </div>
+
                 <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg shadow-blue-500/20 mt-1">
                     Initialize Dispatch
                 </button>
