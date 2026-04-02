@@ -245,6 +245,9 @@ def edit_user(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
     
     if request.method in ['POST', 'PATCH']:
+        # 🚨 FIX: Capture the original hashed password before the form overwrites it
+        original_hashed_password = target_user.password
+        
         data = request.POST if request.method == 'POST' else QueryDict(request.body)
         form = UserForm(data, request.FILES, instance=target_user)
         
@@ -253,7 +256,11 @@ def edit_user(request, user_id):
             
             raw_password = form.cleaned_data.get('password')
             if raw_password:
+                # If a new password is provided, hash and set it
                 user.set_password(raw_password)
+            else:
+                # 🚨 FIX: If blank, restore the original password to prevent it from being wiped
+                user.password = original_hashed_password
                 
             user.save()
             form.save_m2m()
