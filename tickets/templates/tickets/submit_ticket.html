@@ -118,8 +118,11 @@ main {
                 </p>
             </div>
             <div class="relative group">
-                <img src="https://ui-avatars.com/api/?name={{ request.user.username|default:'U' }}&background=3b82f6&color=fff&bold=true" 
-                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+                {% if request.user.profile.image %}
+                    <img src="{{ request.user.profile.image.url }}" onerror="this.src='https://ui-avatars.com/api/?name={{ request.user.username|urlencode }}&background=3b82f6&color=fff&bold=true';" class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+                {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ request.user.username|default:'U'|urlencode }}&background=3b82f6&color=fff&bold=true" class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+                {% endif %}
             </div>
         </div>
     </header>
@@ -1933,14 +1936,17 @@ main {
             
             if (!messageText && filesToUpload.length === 0) return; 
 
+            // Grab the avatar directly from Django to guarantee the real profile picture loads instantly!
+            const myAvatarUrl = "{% if request.user.profile.image %}{{ request.user.profile.image.url|escapejs }}{% else %}https://ui-avatars.com/api/?name={{ request.user.username|urlencode }}&background=3b82f6&color=fff{% endif %}";
+
             // --- NEW: OPTIMISTIC UI UPDATE ---
             // Instantly display the message on screen before the server responds
             const tempId = 'temp-' + Date.now();
             const tempMsg = {
                 id: tempId,
                 message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
-                sender_name: "{{ request.user.username|escapejs }}", // FIX: Use real name so the avatar engine works
-                sender_avatar: null, // FIX: Let renderFeed natively generate the UI Avatar
+                sender_name: "{{ request.user.username|escapejs }}", 
+                sender_avatar: myAvatarUrl, // FIX: Injects the real profile image!
                 is_me: true,
                 recipient_name: this.activeRecipient === 'GROUP_CHAT' ? 'Everyone' : (this.activeRecipient || "Everyone"),
                 timestamp: 'Sending...'
