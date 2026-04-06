@@ -1721,6 +1721,23 @@ main {
             const messageDiv = document.getElementById('dynamicMessages');
             if (!messageDiv) return;
 
+            // --- NEW: CHAT LOCK LOGIC ---
+            // Finds the main wrapper around the input box to hide the whole section cleanly
+            const chatInputSection = document.getElementById('chatMsgForm')?.parentElement?.parentElement;
+            const readOnlyIndicator = document.getElementById('readOnlyIndicator');
+            
+            if (this.currentTicketStatus === 'Resolved' || this.currentTicketStatus === 'Completed') {
+                if (chatInputSection) chatInputSection.classList.add('hidden');
+                if (readOnlyIndicator) {
+                    readOnlyIndicator.classList.remove('hidden');
+                    readOnlyIndicator.innerText = "Case Closed";
+                }
+            } else {
+                if (chatInputSection) chatInputSection.classList.remove('hidden');
+                if (readOnlyIndicator) readOnlyIndicator.classList.add('hidden');
+            }
+            // ----------------------------
+
             // Preserve scroll state anchoring
             const scrollArea = document.getElementById('workspaceScroll');
             const oldScrollHeight = scrollArea ? scrollArea.scrollHeight : 0;

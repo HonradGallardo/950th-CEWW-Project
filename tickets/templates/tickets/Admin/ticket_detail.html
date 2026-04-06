@@ -608,6 +608,14 @@
         
         updateActiveTabStyles(username); 
 
+        if (currentTicketStatus === 'Resolved' || currentTicketStatus === 'Completed') {
+            if(inputContainer) inputContainer.classList.add('hidden');
+            if(readOnly) {
+                readOnly.classList.remove('hidden');
+                readOnly.innerText = "Case Closed";
+            }
+        }
+
         if (username === 'GROUP_CHAT') {
             label.innerHTML = '<i class="fas fa-users text-indigo-500 mr-2"></i> Group Discussion';
             if(readOnly) readOnly.classList.add('hidden');

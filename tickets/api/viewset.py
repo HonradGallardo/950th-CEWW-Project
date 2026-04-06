@@ -213,6 +213,14 @@ class TicketViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def send_reply(self, request, pk=None):
         ticket = self.get_object()
+
+        # --- NEW: Prevent messages on resolved or completed tickets ---
+        if ticket.status in ['Resolved', 'Completed']:
+            return Response(
+                {'status': 'error', 'message': f'Chat locked. This case is already {ticket.status}.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         text = strip_tags(request.data.get('message', '').strip())
         recipient_username = request.data.get('recipient')
         is_group_chat = request.data.get('is_group_chat') == 'true'
