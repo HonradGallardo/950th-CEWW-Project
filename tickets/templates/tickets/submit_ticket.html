@@ -695,7 +695,7 @@ main {
             this.currentPage++;
             
             try {
-                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=${this.currentPage}&limit=30`);
+                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=${this.currentPage}&limit=15`);
                 if (!response.ok) throw new Error("Failed to load older messages");
                 const data = await response.json();
                 
@@ -1391,7 +1391,7 @@ main {
                 </div>`;
 
             try {
-                const response = await fetch(`/tickets/api/support-api/${id}/chat_thread/?page=1&limit=30`);
+                const response = await fetch(`/tickets/api/support-api/${id}/chat_thread/?page=1&limit=15`);
                 if (!response.ok) throw new Error("Sync Error");
                 const data = await response.json();
                 
@@ -1486,11 +1486,15 @@ main {
             if (!this.activeTicketId) return;
             
             try {
-                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=1&limit=30`);
+                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=1&limit=15`);
                 if (!response.ok) return;
                 const data = await response.json();
                 
                 const newMessages = data.messages || [];
+                
+                // SAFEGUARD: Strip out any stuck temporary messages before merging
+                this.fullMessageCache = this.fullMessageCache.filter(m => !String(m.id).startsWith('temp-'));
+                
                 const existingMap = new Map(this.fullMessageCache.map(m => [m.id, m]));
                 let changed = false;
                 
@@ -1504,7 +1508,8 @@ main {
                 
                 // Only re-render if something actually changed
                 if (changed || this.allAttachments.length !== (data.attachments || []).length) {
-                    this.fullMessageCache = Array.from(existingMap.values()).sort((a, b) => a.id - b.id);
+                    // FIXED SORTING: Ensure IDs are treated as strictly numbers
+                    this.fullMessageCache = Array.from(existingMap.values()).sort((a, b) => Number(a.id) - Number(b.id));
                     this.allAttachments = data.attachments || [];
                     
                     if (this.currentPage === 1) {
@@ -1856,12 +1861,19 @@ main {
             
             if (!messageText && filesToUpload.length === 0) return; 
 
+            // Grab the avatar from the header to prevent broken images
+            let myAvatarUrl = "";
+            const headerAvatar = document.querySelector('header img');
+            if (headerAvatar) myAvatarUrl = headerAvatar.src;
+
             // --- NEW: OPTIMISTIC UI UPDATE ---
             // Instantly display the message on screen before the server responds
+            const tempId = 'temp-' + Date.now();
             const tempMsg = {
-                id: 'temp-' + Date.now(),
+                id: tempId,
                 message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
                 sender_name: "You", 
+                sender_avatar: myAvatarUrl,
                 is_me: true,
                 recipient_name: this.activeRecipient === 'GROUP_CHAT' ? 'Everyone' : (this.activeRecipient || "Everyone"),
                 timestamp: 'Sending...'
@@ -1878,8 +1890,11 @@ main {
                 this.renderFeed(this.fullMessageCache);
             }
 
+            SupportConsole.scrollToBottom();
+
             // Clear the inputs instantly
             input.value = '';
+            input.style.height = ''; 
             fileInput.value = '';
             const preview = document.getElementById('chat-attachment-preview');
             if(preview) preview.classList.add('hidden');
@@ -1915,7 +1930,8 @@ main {
                 });
 
                 if (res.ok) {
-                    // Fetch the real, confirmed message from the server to replace the temporary one
+                    // Wipe the duplicate temp message from the cache before fetching the real data
+                    this.fullMessageCache = this.fullMessageCache.filter(m => m.id !== tempId);
                     await this.refreshChatData();
                 }
             } catch (err) { 
