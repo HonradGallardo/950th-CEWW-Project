@@ -1933,19 +1933,14 @@ main {
             
             if (!messageText && filesToUpload.length === 0) return; 
 
-            // Grab the avatar from the header to prevent broken images
-            let myAvatarUrl = "";
-            const headerAvatar = document.querySelector('header img');
-            if (headerAvatar) myAvatarUrl = headerAvatar.src;
-
             // --- NEW: OPTIMISTIC UI UPDATE ---
             // Instantly display the message on screen before the server responds
             const tempId = 'temp-' + Date.now();
             const tempMsg = {
                 id: tempId,
                 message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
-                sender_name: "You", 
-                sender_avatar: myAvatarUrl,
+                sender_name: "{{ request.user.username|escapejs }}", // FIX: Use real name so the avatar engine works
+                sender_avatar: null, // FIX: Let renderFeed natively generate the UI Avatar
                 is_me: true,
                 recipient_name: this.activeRecipient === 'GROUP_CHAT' ? 'Everyone' : (this.activeRecipient || "Everyone"),
                 timestamp: 'Sending...'
