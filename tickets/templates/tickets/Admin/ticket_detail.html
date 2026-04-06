@@ -572,6 +572,23 @@
         setInterval(() => {
             fetchMessages();
         }, 3000);
+
+        // --- NEW: INFINITE SCROLL (MESSENGER STYLE) ---
+        const chatScrollArea = document.getElementById('chatBox');
+        if (chatScrollArea) {
+            // passive: true ensures the scroll stays buttery smooth on mobile
+            chatScrollArea.addEventListener('scroll', () => {
+                // If the user scrolls within 50px of the very top ceiling
+                if (chatScrollArea.scrollTop <= 50) {
+                    const loadBtn = document.querySelector('button[onclick="loadOlderMessages()"]');
+                    
+                    // If the button exists and hasn't been auto-clicked yet
+                    if (loadBtn && !loadBtn.disabled) {
+                        loadOlderMessages(); // Auto-trigger the fetch!
+                    }
+                }
+            }, { passive: true });
+        }
     };
 
     function loadOlderMessages() {

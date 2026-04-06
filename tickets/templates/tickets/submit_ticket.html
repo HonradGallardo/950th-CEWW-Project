@@ -620,41 +620,55 @@ main {
         isFetchingOlder: false,
 
         init() {
-        this.initPasteFeature();
-        
-        
-        // --- HORIZONTAL SCROLL FOR TABS ---
-        const staffContainer = document.getElementById('staff-threads-container');
-        if (staffContainer) {
-            staffContainer.addEventListener('wheel', (e) => {
-                if (e.deltaY !== 0) {
-                    e.preventDefault();
-                    staffContainer.scrollLeft += e.deltaY;
-                }
-            }, { passive: false });
-        }
-        
-        // --- ENTER TO SEND LOGIC ---
-        const chatInput = document.getElementById('chatInput');
-        if (chatInput) {
-            chatInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    this.sendMessage();
-                }
-            });
-        }
-
-        
-
-        // --- NEW: REAL-TIME POLLING ---
-        // Quietly fetch new messages every 3 seconds
-        setInterval(() => {
-            if (this.activeTicketId) {
-                this.refreshChatData();
+            this.initPasteFeature();
+            
+            // --- HORIZONTAL SCROLL FOR TABS ---
+            const staffContainer = document.getElementById('staff-threads-container');
+            if (staffContainer) {
+                staffContainer.addEventListener('wheel', (e) => {
+                    if (e.deltaY !== 0) {
+                        e.preventDefault();
+                        staffContainer.scrollLeft += e.deltaY;
+                    }
+                }, { passive: false });
             }
-        }, 3000);
-    },
+            
+            // --- ENTER TO SEND LOGIC ---
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+            }
+
+            // --- NEW: REAL-TIME POLLING ---
+            // Quietly fetch new messages every 3 seconds
+            setInterval(() => {
+                if (this.activeTicketId) {
+                    this.refreshChatData();
+                }
+            }, 3000);
+
+            // --- NEW: INFINITE SCROLL (MESSENGER STYLE) ---
+            const chatScrollArea = document.getElementById('workspaceScroll');
+            if (chatScrollArea) {
+                // passive: true ensures the scroll stays buttery smooth on mobile
+                chatScrollArea.addEventListener('scroll', () => {
+                    // If the user scrolls within 50px of the very top ceiling
+                    if (chatScrollArea.scrollTop <= 50) {
+                        const loadBtn = document.getElementById('loadOlderBtn');
+                        
+                        // If the button exists, isn't disabled, and we aren't already fetching
+                        if (loadBtn && !loadBtn.disabled && !SupportConsole.isFetchingOlder) {
+                            SupportConsole.loadOlderMessages(); // Auto-trigger the fetch!
+                        }
+                    }
+                }, { passive: true });
+            }
+        },
 
     // 1. ADD THIS HELPER FUNCTION AT THE TOP OF SUPPORTCONSOLE
         classifyAttachment: function(att) {
