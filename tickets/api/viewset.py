@@ -344,6 +344,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         old_tech = ticket.technician
         data = request.data
 
+        # 1. Grab the status the user explicitly selected from the dropdown
         ticket.status = data.get('status', ticket.status)
         ticket.priority = data.get('priority', ticket.priority)
         tech_id = data.get('technician_id')
@@ -359,7 +360,11 @@ class TicketViewSet(viewsets.ModelViewSet):
             if ticket.technician:
                 ticket.last_technician = ticket.technician.username
                 ticket.technician = None
-            ticket.status = 'Pending'
+            
+            # 2. FIX: Only revert to 'Pending' if the ticket lost its technician 
+            # while in an active working state. Do NOT overwrite 'Resolved' or 'Completed'.
+            if ticket.status in ['Open', 'In Progress', 'Under Review']:
+                ticket.status = 'Pending'
 
         ticket.save()
         return Response({'status': 'success'})
