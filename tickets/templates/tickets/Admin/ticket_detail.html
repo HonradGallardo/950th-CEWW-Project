@@ -107,7 +107,7 @@
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
                             <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800">
                                 {% if request.user.profile.image %}
-                                    <img src="{{ request.user.profile.image.url }}" class="w-full h-full object-cover">
+                                    <img src="{{ request.user.profile.image.url }}" onerror="this.onerror=null; this.outerHTML='<span class=\'text-xs font-bold text-blue-600 dark:text-blue-400\'>ME</span>';" class="w-full h-full object-cover">
                                 {% else %}
                                     <span class="text-xs font-bold text-blue-600 dark:text-blue-400">ME</span>
                                 {% endif %}
@@ -124,7 +124,7 @@
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
                             <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-300 dark:group-hover:border-emerald-600 transition-colors">
                                 {% if admin.profile.image %}
-                                    <img src="{{ admin.profile.image.url }}" class="w-full h-full object-cover">
+                                    <img src="{{ admin.profile.image.url }}" onerror="this.onerror=null; this.outerHTML='<span class=\'text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors\'>{{ admin.username|slice:\":2\" }}</span>';" class="w-full h-full object-cover">
                                 {% else %}
                                     <span class="text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors">{{ admin.username|slice:":2" }}</span>
                                 {% endif %}
@@ -655,11 +655,11 @@
         if (currentFetchController && !loadMore) currentFetchController.abort();
         if (!loadMore) currentFetchController = new AbortController();
         
-        // Ensure cache is structured correctly
         let cache = tabCache[activeChatPartnerId] || { messages: [], attachments: [], count: 0, page: 1, hasMore: false };
         let targetPage = loadMore ? cache.page + 1 : 1;
         
-        let url = `/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/chat_thread/?with_staff=${encodeURIComponent(activeChatPartnerId)}&page=${targetPage}&limit=30`;
+        // Changed limit to 15
+        let url = `/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/chat_thread/?with_staff=${encodeURIComponent(activeChatPartnerId)}&page=${targetPage}&limit=15`;
         
         try {
             const response = await fetch(url, {
@@ -669,20 +669,23 @@
             const data = await response.json();
             
             if (loadMore) {
-                // If loading older messages, prepend them (ignoring duplicates)
                 const newMessages = data.messages.filter(m => !cache.messages.find(cm => cm.id === m.id));
                 cache.messages = [...newMessages, ...cache.messages];
                 cache.page = targetPage;
             } else {
-                // If polling, merge latest data using a Map to ensure old records stay and new records append
                 const existingMap = new Map(cache.messages.map(m => [m.id, m]));
                 data.messages.forEach(m => existingMap.set(m.id, m));
-                cache.messages = Array.from(existingMap.values()).sort((a, b) => a.id - b.id);
+                
+                // FIXED SORTING: Forces 'temp' messages to stay at the absolute bottom
+                cache.messages = Array.from(existingMap.values()).sort((a, b) => {
+                    const idA = String(a.id).startsWith('temp-') ? Infinity : Number(a.id);
+                    const idB = String(b.id).startsWith('temp-') ? Infinity : Number(b.id);
+                    return idA - idB;
+                });
             }
             
             cache.attachments = data.attachments || [];
             
-            // Only overwrite hasMore if we are expanding our load depth
             if (!loadMore && cache.page === 1) {
                 cache.hasMore = data.has_more;
             } else if (loadMore) {
@@ -693,7 +696,6 @@
             cache.count = newCount;
             tabCache[activeChatPartnerId] = cache;
             
-            // Re-render if new messages arrived OR if user manually triggered loadMore
             if (newCount !== currentMessageCount || loadMore) {
                 currentMessageCount = newCount;
                 renderChat(cache.messages, cache.attachments, cache.hasMore, loadMore); 
@@ -713,12 +715,16 @@
         
         if (!messageText && filesToUpload.length === 0) return;
 
-        // --- NEW: OPTIMISTIC UI UPDATE ---
-        // Instantly display the message on screen before the server responds
+        // Grab your avatar from the sidebar if you have one
+        let myAvatarUrl = "";
+        const myTabImg = document.querySelector(`#tab-${MY_USERNAME} img`);
+        if (myTabImg) myAvatarUrl = myTabImg.src;
+
         const tempMsg = {
             id: 'temp-' + Date.now(),
             message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
             sender_name: MY_USERNAME,
+            sender_avatar: myAvatarUrl, // Fixes the temporary letter bug
             is_me: true,
             recipient_name: activeChatPartnerId === 'GROUP_CHAT' ? 'Everyone' : (activeChatPartnerId === MY_USERNAME ? CLIENT_USERNAME : activeChatPartnerId),
             timestamp: 'Sending...'
@@ -730,13 +736,11 @@
             renderChat(tabCache[activeChatPartnerId].messages, tabCache[activeChatPartnerId].attachments, tabCache[activeChatPartnerId].hasMore, false);
         }
 
-        // Clear the inputs instantly
         input.value = '';
         input.style.height = ''; 
         fileInput.value = '';
         const preview = document.getElementById('chat-attachment-preview');
         if (preview) preview.classList.add('hidden');
-        // --- END OPTIMISTIC UPDATE ---
 
         const formData = new FormData();
         formData.append('message', messageText);
@@ -761,7 +765,6 @@
                 }
             });
             if (response.ok) {
-                // Fetch the real, confirmed message from the server
                 fetchMessages(); 
             }
         } catch (err) { console.error("Send error:", err); }
@@ -946,7 +949,7 @@
                 docsListHtml += `</div>`;
             }
 
-            const avatarContent = msg.sender_avatar ? `<img src="${msg.sender_avatar}" loading="lazy" decoding="async" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>`;
+            const avatarContent = msg.sender_avatar ? `<img src="${msg.sender_avatar}" onerror="this.onerror=null; this.outerHTML='<span class=\\'uppercase font-bold\\'>${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>';" loading="lazy" decoding="async" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${msg.sender_name ? msg.sender_name.charAt(0) : 'U'}</span>`;
             
             let bubbleClasses = alignRight 
                 ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
