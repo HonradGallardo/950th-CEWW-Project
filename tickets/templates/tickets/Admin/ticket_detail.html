@@ -107,9 +107,9 @@
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
                             <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800">
                                 {% if request.user.profile.image %}
-                                    <img src="{{ request.user.profile.image.url }}" onerror="this.onerror=null; this.outerHTML='<span class=\'text-xs font-bold text-blue-600 dark:text-blue-400\'>ME</span>';" class="w-full h-full object-cover">
+                                    <img src="{{ request.user.profile.image.url }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" class="w-full h-full object-cover">
                                 {% else %}
-                                    <span class="text-xs font-bold text-blue-600 dark:text-blue-400">ME</span>
+                                    <span class="hidden text-xs font-bold text-blue-600 dark:text-blue-400">ME</span>
                                 {% endif %}
                             </div>
                             <div class="text-left overflow-hidden flex-1">
@@ -124,9 +124,9 @@
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
                             <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-300 dark:group-hover:border-emerald-600 transition-colors">
                                 {% if admin.profile.image %}
-                                    <img src="{{ admin.profile.image.url }}" onerror="this.onerror=null; this.outerHTML='<span class=\'text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors\'>{{ admin.username|slice:\'0:2\' }}</span>';" class="w-full h-full object-cover">
+                                    <img src="{{ admin.profile.image.url }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" class="w-full h-full object-cover">
                                 {% else %}
-                                    <span class="text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors">{{ admin.username|slice:":2" }}</span>
+                                    <span class="hidden text-xs font-bold text-slate-500 uppercase group-hover:text-emerald-500 transition-colors">{{ admin.username|slice:":2" }}</span>
                                 {% endif %}
                             </div>
                             <div class="text-left overflow-hidden flex-1">
@@ -658,7 +658,6 @@
         let cache = tabCache[activeChatPartnerId] || { messages: [], attachments: [], count: 0, page: 1, hasMore: false };
         let targetPage = loadMore ? cache.page + 1 : 1;
         
-        // Enforce the strict 15 message limit here
         let url = `/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/chat_thread/?with_staff=${encodeURIComponent(activeChatPartnerId)}&page=${targetPage}&limit=15`;
         
         try {
@@ -673,7 +672,6 @@
                 cache.messages = [...newMessages, ...cache.messages];
                 cache.page = targetPage;
             } else {
-                // Safeguard: Ensure absolutely no temp messages ever get stuck in the polling loop
                 cache.messages = cache.messages.filter(m => !String(m.id).startsWith('temp-'));
                 
                 const existingMap = new Map(cache.messages.map(m => [m.id, m]));
@@ -713,12 +711,10 @@
         
         if (!messageText && filesToUpload.length === 0) return;
 
-        // Grab your avatar from the sidebar if you have one
         let myAvatarUrl = "";
         const myTabImg = document.querySelector(`#tab-${MY_USERNAME} img`);
         if (myTabImg) myAvatarUrl = myTabImg.src;
 
-        // Assign a unique temp ID so we can delete it later
         const tempId = 'temp-' + Date.now();
         const tempMsg = {
             id: tempId,
@@ -766,7 +762,6 @@
                 }
             });
             if (response.ok) {
-                // Instantly wipe the duplicate temp message from the cache before fetching the real data
                 if (tabCache[activeChatPartnerId]) {
                     tabCache[activeChatPartnerId].messages = tabCache[activeChatPartnerId].messages.filter(m => m.id !== tempId);
                 }
