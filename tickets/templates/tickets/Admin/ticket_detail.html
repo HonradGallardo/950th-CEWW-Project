@@ -872,7 +872,7 @@
                 return;
             }
 
-            const isMe = msg.is_me === true || msg.sender_name === MY_USERNAME || msg.sender_name !== CLIENT_USERNAME;
+            const isMe = msg.sender_name === MY_USERNAME;
             const alignRight = isMe; 
             const hasText = msg.message && msg.message.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
