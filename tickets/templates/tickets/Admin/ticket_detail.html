@@ -608,14 +608,7 @@
         
         updateActiveTabStyles(username); 
 
-        if (currentTicketStatus === 'Resolved' || currentTicketStatus === 'Completed') {
-            if(inputContainer) inputContainer.classList.add('hidden');
-            if(readOnly) {
-                readOnly.classList.remove('hidden');
-                readOnly.innerText = "Case Closed";
-            }
-        }
-
+        // 1. Set base defaults for the selected tab
         if (username === 'GROUP_CHAT') {
             label.innerHTML = '<i class="fas fa-users text-indigo-500 mr-2"></i> Group Discussion';
             if(readOnly) readOnly.classList.add('hidden');
@@ -629,7 +622,17 @@
             if(readOnly) readOnly.classList.remove('hidden');
             if(inputContainer) inputContainer.classList.add('hidden'); 
         }
+
+        // 2. ENFORCE THE LOCK OVERRIDE: If the ticket is closed, force the input hidden on ALL tabs
+        if (currentTicketStatus === 'Resolved' || currentTicketStatus === 'Completed') {
+            if(inputContainer) inputContainer.classList.add('hidden');
+            if(readOnly) {
+                readOnly.classList.remove('hidden');
+                readOnly.innerText = "Case Closed";
+            }
+        }
         
+        // 3. Load the data
         if (tabCache[username]) {
             currentMessageCount = tabCache[username].count;
             renderChat(tabCache[username].messages, tabCache[username].attachments, tabCache[username].hasMore);
