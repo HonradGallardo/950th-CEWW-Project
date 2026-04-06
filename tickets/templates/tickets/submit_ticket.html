@@ -698,7 +698,15 @@ main {
             this.currentPage++;
             
             try {
-                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=${this.currentPage}&limit=15`);
+                // FIX: Append the active tab parameter to the pagination query
+                let url = `/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=${this.currentPage}&limit=15`;
+                if (this.activeRecipient === 'GROUP_CHAT') {
+                    url += `&with_staff=GROUP_CHAT`;
+                } else if (this.activeRecipient) {
+                    url += `&with_staff=${encodeURIComponent(this.activeRecipient)}`;
+                }
+
+                const response = await fetch(url);
                 if (!response.ok) throw new Error("Failed to load older messages");
                 const data = await response.json();
                 
@@ -1433,7 +1441,7 @@ main {
             }
         },
 
-        loadTechnicianConversation(techName, isLoadMore = false) {
+        async loadTechnicianConversation(techName, isLoadMore = false) {
             this.activeRecipient = techName;
 
             document.querySelectorAll('.staff-thread-item').forEach(item => {
@@ -1450,6 +1458,21 @@ main {
             document.getElementById('feed-header-label').innerHTML = `
                 <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Chatting with: ${techName}</span>
                 <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4"></div>`;
+
+            // FIX: Explicitly fetch the private thread if we are switching tabs
+            if (!isLoadMore) {
+                this.currentPage = 1;
+                document.getElementById('messageContainer').innerHTML = `<div class="flex justify-center py-20"><i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl"></i></div>`;
+                try {
+                    const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?with_staff=${encodeURIComponent(techName)}&page=1&limit=15`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.fullMessageCache = data.messages || [];
+                        this.allAttachments = data.attachments || [];
+                        this.hasMoreMessages = data.has_more || false;
+                    }
+                } catch (e) { console.error(e); }
+            }
 
             const techMessages = this.fullMessageCache.filter(msg => {
                 const isStatusUpdate = msg.message.toUpperCase().includes('STATUS UPDATE');
@@ -1489,7 +1512,15 @@ main {
             if (!this.activeTicketId) return;
             
             try {
-                const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=1&limit=15`);
+                // FIX: Respect the currently active tab when polling
+                let url = `/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=1&limit=15`;
+                if (this.activeRecipient === 'GROUP_CHAT') {
+                    url += `&with_staff=GROUP_CHAT`;
+                } else if (this.activeRecipient) {
+                    url += `&with_staff=${encodeURIComponent(this.activeRecipient)}`;
+                }
+
+                const response = await fetch(url);
                 if (!response.ok) return;
                 const data = await response.json();
                 
@@ -1603,7 +1634,7 @@ main {
             container.innerHTML = finalHtml;
         },
 
-        loadGroupChat(isLoadMore = false) {
+        async loadGroupChat(isLoadMore = false) {
             this.activeRecipient = "GROUP_CHAT"; 
             
             document.querySelectorAll('.staff-thread-item').forEach(item => {
@@ -1617,6 +1648,21 @@ main {
             document.getElementById('feed-header-label').innerHTML = `
                 <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Public Group Chat</span>
                 <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4"></div>`;
+
+            // FIX: Explicitly fetch the group thread from the server to bypass mixed pagination
+            if (!isLoadMore) {
+                this.currentPage = 1;
+                document.getElementById('messageContainer').innerHTML = `<div class="flex justify-center py-20"><i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl"></i></div>`;
+                try {
+                    const response = await fetch(`/tickets/api/support-api/${this.activeTicketId}/chat_thread/?with_staff=GROUP_CHAT&page=1&limit=15`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.fullMessageCache = data.messages || [];
+                        this.allAttachments = data.attachments || [];
+                        this.hasMoreMessages = data.has_more || false;
+                    }
+                } catch (e) { console.error(e); }
+            }
 
             const groupMessages = this.fullMessageCache.filter(msg => {
                 return msg.recipient_name === "Everyone" || msg.message.toUpperCase().includes('STATUS UPDATE');
