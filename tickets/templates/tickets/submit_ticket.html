@@ -1512,7 +1512,7 @@ main {
             if (!this.activeTicketId) return;
             
             try {
-                // FIX: Respect the currently active tab when polling
+                // Respect the currently active tab when polling
                 let url = `/tickets/api/support-api/${this.activeTicketId}/chat_thread/?page=1&limit=15`;
                 if (this.activeRecipient === 'GROUP_CHAT') {
                     url += `&with_staff=GROUP_CHAT`;
@@ -1552,14 +1552,24 @@ main {
                     
                     const dynamicContainer = document.getElementById('dynamicMessages');
                     if (dynamicContainer) {
+                        // FIX: Instead of calling full tab reloads (which cause the UI to wipe and flicker),
+                        // we quietly filter the new data and seamlessly update the chat bubbles in place.
+                        let messagesToRender = this.fullMessageCache;
+
                         if (this.activeRecipient === "GROUP_CHAT") {
-                            this.loadGroupChat();
+                            messagesToRender = this.fullMessageCache.filter(msg => 
+                                msg.recipient_name === "Everyone" || msg.message.toUpperCase().includes('STATUS UPDATE')
+                            );
                         } else if (this.activeRecipient) {
-                            this.loadTechnicianConversation(this.activeRecipient);
-                        } else {
-                            this.renderFeed(this.fullMessageCache);
-                            this.updateMediaAndFilesSidebar(this.allAttachments);
+                            messagesToRender = this.fullMessageCache.filter(msg => {
+                                if (msg.message.toUpperCase().includes('STATUS UPDATE')) return true;
+                                return (msg.sender_name === this.activeRecipient && msg.recipient_name !== "Everyone") || 
+                                       (msg.is_me && msg.recipient_name === this.activeRecipient);
+                            });
                         }
+                        
+                        this.renderFeed(messagesToRender);
+                        this.updateMediaAndFilesSidebar(this.allAttachments);
                     }
                 }
             } catch (err) {
