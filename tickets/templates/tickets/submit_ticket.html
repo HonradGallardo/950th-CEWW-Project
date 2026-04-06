@@ -2038,13 +2038,25 @@ main {
         },
 
         scrollToBottom() {
+            const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+            if (!scrollArea) return;
+
+            let userInterrupted = false;
+            const cancelScroll = () => { userInterrupted = true; };
+
+            // Listen for any manual scroll attempts
+            scrollArea.addEventListener('wheel', cancelScroll, { once: true, passive: true });
+            scrollArea.addEventListener('touchstart', cancelScroll, { once: true, passive: true });
+            scrollArea.addEventListener('mousedown', cancelScroll, { once: true, passive: true });
+
             const forceScroll = () => {
-                // Target ONLY the inner scrolling containers (No scrollIntoView overrides!)
-                const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+                if (userInterrupted) return; // Abort if the user took control
                 
-                if (scrollArea) {
+                // Target ONLY the inner scrolling containers (No scrollIntoView overrides!)
+                const currentArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+                if (currentArea) {
                     // Force the scrollbar to the absolute bottom of the div
-                    scrollArea.scrollTop = scrollArea.scrollHeight;
+                    currentArea.scrollTop = currentArea.scrollHeight;
                 }
             };
 
@@ -2054,7 +2066,13 @@ main {
             // 2. Fire a few more times as the browser calculates the height of the loading images/videos
             setTimeout(forceScroll, 100);
             setTimeout(forceScroll, 500);
-            setTimeout(forceScroll, 1200); 
+            setTimeout(() => {
+                forceScroll();
+                // Clean up event listeners after the final timeout
+                scrollArea.removeEventListener('wheel', cancelScroll);
+                scrollArea.removeEventListener('touchstart', cancelScroll);
+                scrollArea.removeEventListener('mousedown', cancelScroll);
+            }, 1200); 
         }
     };
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
