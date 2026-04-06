@@ -1851,7 +1851,39 @@ main {
             const fileInput = document.getElementById('chatFileInput');
             const sendBtn = document.getElementById('shareBtn'); 
             
-            if (!input.value.trim() && fileInput.files.length === 0) return; 
+            const messageText = input.value.trim();
+            const filesToUpload = Array.from(fileInput.files);
+            
+            if (!messageText && filesToUpload.length === 0) return; 
+
+            // --- NEW: OPTIMISTIC UI UPDATE ---
+            // Instantly display the message on screen before the server responds
+            const tempMsg = {
+                id: 'temp-' + Date.now(),
+                message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
+                sender_name: "You", 
+                is_me: true,
+                recipient_name: this.activeRecipient === 'GROUP_CHAT' ? 'Everyone' : (this.activeRecipient || "Everyone"),
+                timestamp: 'Sending...'
+            };
+
+            this.fullMessageCache.push(tempMsg);
+            
+            // Re-render the feed to show the instant message
+            if (this.activeRecipient === "GROUP_CHAT") {
+                this.renderFeed(this.fullMessageCache.filter(m => m.recipient_name === "Everyone" || m.message.toUpperCase().includes('STATUS UPDATE')));
+            } else if (this.activeRecipient) {
+                this.renderFeed(this.fullMessageCache.filter(m => (m.sender_name === this.activeRecipient && m.recipient_name !== "Everyone") || (m.is_me && m.recipient_name === this.activeRecipient) || m.message.toUpperCase().includes('STATUS UPDATE')));
+            } else {
+                this.renderFeed(this.fullMessageCache);
+            }
+
+            // Clear the inputs instantly
+            input.value = '';
+            fileInput.value = '';
+            const preview = document.getElementById('chat-attachment-preview');
+            if(preview) preview.classList.add('hidden');
+            // --- END OPTIMISTIC UPDATE ---
 
             if (sendBtn) {
                 sendBtn.disabled = true;
@@ -1859,7 +1891,7 @@ main {
             }
 
             const formData = new FormData();
-            formData.append('message', input.value.trim());
+            formData.append('message', messageText);
             
             if (this.activeRecipient === "GROUP_CHAT") {
                 formData.append('recipient', 'Everyone');
@@ -1872,8 +1904,8 @@ main {
             const csrf = document.querySelector('[name=csrfmiddlewaretoken]');
             if(csrf) formData.append('csrfmiddlewaretoken', csrf.value);
 
-            if (fileInput.files.length > 0) {
-                Array.from(fileInput.files).forEach(f => formData.append('attachments', f));
+            if (filesToUpload.length > 0) {
+                filesToUpload.forEach(f => formData.append('attachments', f));
             }
 
             try {
@@ -1883,11 +1915,7 @@ main {
                 });
 
                 if (res.ok) {
-                    input.value = '';
-                    fileInput.value = '';
-                    const preview = document.getElementById('chat-attachment-preview');
-                    if(preview) preview.classList.add('hidden');
-                    
+                    // Fetch the real, confirmed message from the server to replace the temporary one
                     await this.refreshChatData();
                 }
             } catch (err) { 

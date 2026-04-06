@@ -708,12 +708,38 @@
         if (e) e.preventDefault();
         const input = document.getElementById('messageText');
         const fileInput = document.getElementById('chatFileInput');
-        const message = input.value.trim();
+        const messageText = input.value.trim();
+        const filesToUpload = Array.from(fileInput.files);
         
-        if (!message && fileInput.files.length === 0) return;
+        if (!messageText && filesToUpload.length === 0) return;
+
+        // --- NEW: OPTIMISTIC UI UPDATE ---
+        // Instantly display the message on screen before the server responds
+        const tempMsg = {
+            id: 'temp-' + Date.now(),
+            message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
+            sender_name: MY_USERNAME,
+            is_me: true,
+            recipient_name: activeChatPartnerId === 'GROUP_CHAT' ? 'Everyone' : (activeChatPartnerId === MY_USERNAME ? CLIENT_USERNAME : activeChatPartnerId),
+            timestamp: 'Sending...'
+        };
+
+        if (tabCache[activeChatPartnerId]) {
+            tabCache[activeChatPartnerId].messages.push(tempMsg);
+            tabCache[activeChatPartnerId].count++;
+            renderChat(tabCache[activeChatPartnerId].messages, tabCache[activeChatPartnerId].attachments, tabCache[activeChatPartnerId].hasMore, false);
+        }
+
+        // Clear the inputs instantly
+        input.value = '';
+        input.style.height = ''; 
+        fileInput.value = '';
+        const preview = document.getElementById('chat-attachment-preview');
+        if (preview) preview.classList.add('hidden');
+        // --- END OPTIMISTIC UPDATE ---
 
         const formData = new FormData();
-        formData.append('message', message);
+        formData.append('message', messageText);
         
         if (activeChatPartnerId === 'GROUP_CHAT') {
             formData.append('recipient', 'Everyone'); 
@@ -723,7 +749,7 @@
             formData.append('is_group_chat', 'false');
         }
         
-        Array.from(fileInput.files).forEach(f => formData.append('attachments', f));
+        filesToUpload.forEach(f => formData.append('attachments', f));
 
         try {
             const response = await fetch(`/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/send_reply/`, {
@@ -735,16 +761,12 @@
                 }
             });
             if (response.ok) {
-                input.value = '';
-                input.style.height = ''; 
-                fileInput.value = '';
-                const preview = document.getElementById('chat-attachment-preview');
-                if (preview) preview.classList.add('hidden');
+                // Fetch the real, confirmed message from the server
                 fetchMessages(); 
             }
         } catch (err) { console.error("Send error:", err); }
     }
-
+    
     async function updateTicketAdmin(e) {
         if (e) e.preventDefault();
         const btn = document.getElementById('saveDetailsBtn');
