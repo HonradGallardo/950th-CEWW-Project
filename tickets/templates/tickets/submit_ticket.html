@@ -650,6 +650,16 @@ main {
                 });
             }
 
+            // --- LIGHTBOX KEYBOARD CONTROLS ---
+            document.addEventListener('keydown', (e) => {
+                const lightbox = document.getElementById('chatLightbox');
+                if (lightbox && !lightbox.classList.contains('hidden')) {
+                    if (e.key === 'ArrowRight') this.nextLightbox();
+                    if (e.key === 'ArrowLeft') this.prevLightbox();
+                    if (e.key === 'Escape') this.closeLightbox();
+                }
+            });
+
             // --- NEW: REAL-TIME POLLING ---
             // Quietly fetch new messages every 3 seconds
             setInterval(() => {
@@ -792,35 +802,20 @@ main {
         },
 
         // --- LIGHTBOX ENGINE ---
-        openLightbox(index) {
-            this.currentLightboxIndex = index < 0 ? 0 : index;
-            
-            const lightbox = document.getElementById('chatLightbox');
-            if (!lightbox || !this.galleryMedia || this.galleryMedia.length === 0) return;
-
-            lightbox.classList.remove('hidden');
-            this.updateLightboxContent();
-            
-            if (this._boundKeyHandler) window.removeEventListener('keydown', this._boundKeyHandler);
-
-            this._boundKeyHandler = (e) => {
-                if (e.key === "ArrowRight") this.nextLightbox();
-                if (e.key === "ArrowLeft") this.prevLightbox();
-                if (e.key === "Escape") this.closeLightbox();
-            };
-            window.addEventListener('keydown', this._boundKeyHandler);
+        openLightbox(items, index) {
+            this.currentLightboxItems = items;
+            this.currentLightboxIndex = index;
+            const lb = document.getElementById('chatLightbox');
+            if(lb) lb.classList.remove('hidden');
+            this.renderLightboxItem();
         },
 
         closeLightbox() {
-            const lightbox = document.getElementById('chatLightbox');
-            if (lightbox) {
-                lightbox.classList.add('hidden');
-                document.getElementById('lightboxContent').innerHTML = ''; 
-            }
-            
-            if (this._boundKeyHandler) {
-                window.removeEventListener('keydown', this._boundKeyHandler);
-                this._boundKeyHandler = null;
+            const lb = document.getElementById('chatLightbox');
+            if(lb) {
+                lb.classList.add('hidden');
+                const container = document.getElementById('lightboxContent');
+                if(container) container.innerHTML = '';
             }
         },
 
@@ -864,29 +859,37 @@ main {
         renderLightboxItem() {
             const container = document.getElementById('lightboxContent');
             const item = this.currentLightboxItems[this.currentLightboxIndex];
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (prevBtn) prevBtn.style.display = (this.currentLightboxIndex === 0) ? 'none' : 'flex';
+            if (nextBtn) nextBtn.style.display = (this.currentLightboxIndex === this.currentLightboxItems.length - 1) ? 'none' : 'flex';
+
+            if (!container || !item) return;
+
+            const type = this.classifyAttachment(item);
             
-            // FIX: Removed '$' and checking url as fallback
-            const isVideo = /\.(mp4|mov|webm)/i.test(item.name || item.url || '');
+            if (type === 'video') {
+                container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
+            } else {
+                container.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl animate-in zoom-in duration-300">`;
+            }
             
-            container.innerHTML = isVideo 
-                ? `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-lg"></video>`
-                : `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-lg animate-in zoom-in duration-300">`;
-            
-            document.getElementById('lightboxCaption').innerText = item.name;
-            document.getElementById('lightboxCounter').innerText = `${this.currentLightboxIndex + 1} OF ${this.currentLightboxItems.length}`;
+            const caption = document.getElementById('lightboxCaption');
+            if (caption) caption.innerText = item.name || `Attachment ${this.currentLightboxIndex + 1}`;
         },
         
         nextLightbox() {
-            if (this.currentLightboxIndex < this.galleryMedia.length - 1) {
+            if (this.currentLightboxIndex < this.currentLightboxItems.length - 1) {
                 this.currentLightboxIndex++;
-                this.updateLightboxContent();
+                this.renderLightboxItem();
             }
         },
 
         prevLightbox() {
             if (this.currentLightboxIndex > 0) {
                 this.currentLightboxIndex--;
-                this.updateLightboxContent();
+                this.renderLightboxItem();
             }
         },
 
@@ -2050,8 +2053,7 @@ main {
                     const item = document.createElement('div');
                     item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
                     
-                    item.onclick = () => this.openLightbox(index);
-                    // 🚀 ADDED: preload="none" for video, and loading="lazy" decoding="async" for images
+                    item.onclick = () => this.openLightbox(this.galleryMedia, index);
                     let contentHtml = isVid 
                         ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${file.url}#t=0.1" preload="none" class="w-full h-full object-cover"></video>`
                         : `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
@@ -2212,16 +2214,15 @@ main {
         <i class="fas fa-times"></i>
     </button>
     
-    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-lg md:text-xl transition-all focus:outline-none z-[100]">
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-[100]">
         <i class="fas fa-chevron-left"></i>
     </button>
     
-    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-lg md:text-xl transition-all focus:outline-none z-[100]">
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-[100]">
         <i class="fas fa-chevron-right"></i>
     </button>
 
     <div id="lightboxContent" class="w-full h-full flex items-center justify-center z-10"></div>
-    
-    <div id="lightboxInfo" class="absolute bottom-6 md:bottom-10 max-w-lg text-center flex flex-col items-center justify-center bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-[100]"></div>
+    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-[100]"></div>
 </div>
 {% endblock %}

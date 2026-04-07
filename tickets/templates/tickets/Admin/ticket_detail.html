@@ -222,11 +222,6 @@
                     <form onsubmit="sendMessage(event)" id="chatForm" class="max-w-5xl mx-auto flex items-end gap-3">
                         {% csrf_token %}
                         <div class="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500 transition-all shadow-sm flex flex-col">
-                            <textarea id="messageText" rows="1" placeholder="Type your message..." 
-                                class="w-full bg-transparent border-none px-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none resize-none custom-scrollbar min-h-[50px] max-h-[200px]"
-                                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"
-                                onkeydown="handleEnterKey(event)"></textarea>
-                            
                             <div class="px-3 py-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-800/30">
                                 <div class="flex items-center">
                                     <input type="file" id="chatFileInput" multiple class="hidden" onchange="handleFilePreview(event)">
@@ -234,6 +229,7 @@
                                         <i class="fas fa-paperclip text-base"></i>
                                     </button>
                                 </div>
+                                <textarea id="messageText" rows="1" placeholder="Type your message..." class="w-full bg-transparent border-none px-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none resize-none custom-scrollbar min-h-[50px] max-h-[200px]" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="handleEnterKey(event)"></textarea>
                                 <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-1 dark:focus:ring-offset-slate-900">
                                     <span>Send</span>
                                     <i class="fas fa-paper-plane text-xs"></i>
