@@ -214,6 +214,7 @@
                         errorMsg = xhr.responseJSON.message;
                     }
                     
+                    // 🔥 TRIGGER THE NEW CLEAN POPUP HERE
                     showErrorModal(errorMsg);
                 }
             });
@@ -263,6 +264,7 @@
                         errorMsg = xhr.responseJSON.message;
                     }
                     
+                    // 🔥 TRIGGER THE NEW CLEAN POPUP HERE
                     showErrorModal(errorMsg);
                     
                     $btn.prop('disabled', false).html(originalText);
