@@ -163,6 +163,7 @@
                                 <option value="Admin" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Admin' %}selected{% endif %}{% endfor %}{% endif %}>Admin</option>
                                 <option value="Commander" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Commander' %}selected{% endif %}{% endfor %}{% endif %}>Commander</option>
                                 <option value="Personnel" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Personnel' %}selected{% endif %}{% endfor %}{% endif %}>Personnel</option>
+                                <option value="Regular" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Regular' %}selected{% endif %}{% endfor %}{% endif %}>Regular</option>
                             </select>
                         </div>
                     </div>
