@@ -748,78 +748,6 @@ main {
             }
         },
 
-        // 2. REPLACE renderAttachmentGrid
-        renderAttachmentGrid: function(attachments) {
-            if (!attachments || attachments.length === 0) return '';
-
-            const count = attachments.length;
-            let gridClass = 'grid-cols-1';
-            if (count >= 2) gridClass = 'grid-cols-2';
-
-            let html = `<div class="grid gap-1 mt-2 rounded-xl overflow-hidden ${gridClass} shadow-sm border border-slate-200 dark:border-slate-700/60 w-fit max-w-[280px] sm:max-w-[380px]">`;
-
-            const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
-
-            attachments.slice(0, 4).forEach((file, index) => {
-                const type = this.classifyAttachment(file);
-                const isLast = index === 3;
-                const hasMore = count > 4;
-
-                // FIX: Added 'relative' and fixed heights to the wrapper
-                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
-                let heightClass = "h-40 sm:h-48 w-full"; // Default container height
-
-                if (count === 1) {
-                    heightClass = "h-[300px] sm:h-[350px] w-full";
-                } else if (count === 3 && index === 0) {
-                    cellClass += " col-span-2"; 
-                    heightClass = "h-48 sm:h-56 w-full";
-                } else if (count >= 2) {
-                    heightClass = "h-32 sm:h-40 w-full";
-                }
-
-                html += `<div class="${cellClass} ${heightClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
-
-                if (type === 'image') {
-                    // 🚀 ADDED: loading="lazy" decoding="async"
-                    html += `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
-                } else if (type === 'video') {
-                    // 🚀 ADDED: preload="none"
-                    html += `<video src="${file.url}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
-                             <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
-                } else {
-                    html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
-                }
-
-                if (hasMore && isLast) {
-                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-20"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
-                }
-                
-                html += `</div>`;
-            });
-            html += `</div>`;
-            return html;
-        },
-
-        // --- LIGHTBOX ENGINE ---
-        openLightbox(items, index) {
-            if (!items || items.length === 0) return;
-            this.currentLightboxItems = items;
-            this.currentLightboxIndex = index;
-            const lb = document.getElementById('chatLightbox');
-            if (lb) lb.classList.remove('hidden');
-            this.renderLightboxItem();
-        },
-
-        closeLightbox() {
-            const lb = document.getElementById('chatLightbox');
-            if (lb) {
-                lb.classList.add('hidden');
-                const container = document.getElementById('lightboxContent');
-                if (container) container.innerHTML = '';
-            }
-        },
-
         updateLightboxContent() {
             // FIX: Target the exact IDs of the new buttons so they safely toggle
             const nextBtn = document.getElementById('nextBtn');
@@ -853,13 +781,32 @@ main {
             `;
         },
 
+        // --- LIGHTBOX ENGINE ---
+        openLightbox(items, index) {
+            if (!items || items.length === 0) return;
+            this.currentLightboxItems = items;
+            this.currentLightboxIndex = index;
+            const lb = document.getElementById('chatLightbox');
+            if(lb) lb.classList.remove('hidden');
+            this.renderLightboxItem();
+        },
+
+        closeLightbox() {
+            const lb = document.getElementById('chatLightbox');
+            if(lb) {
+                lb.classList.add('hidden');
+                const container = document.getElementById('lightboxContent');
+                if(container) container.innerHTML = '';
+            }
+        },
+
         renderLightboxItem() {
             const container = document.getElementById('lightboxContent');
             const item = this.currentLightboxItems[this.currentLightboxIndex];
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
 
-            // Button visibility logic (Fades out when no more images exist)
+            // Handle button visibility
             if (prevBtn) {
                 const isFirst = this.currentLightboxIndex === 0;
                 prevBtn.style.opacity = isFirst ? "0" : "1";
@@ -871,19 +818,18 @@ main {
                 nextBtn.style.opacity = isLast ? "0" : "1";
                 nextBtn.style.pointerEvents = isLast ? "none" : "auto";
             }
-
+            
             if (!container || !item) return;
 
             const type = this.classifyAttachment(item);
             
-            // Render Media
             if (type === 'video') {
                 container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"></video>`;
             } else {
                 container.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl animate-in zoom-in duration-300">`;
             }
             
-            // Render the stylish info caption
+            // Format the exact same caption style from the admin panel
             const caption = document.getElementById('lightboxCaption');
             if (caption) {
                 caption.innerHTML = `
@@ -960,7 +906,6 @@ main {
             if (isDesktop) {
                 // Desktop Mode (Smooth width collapse)
                 if (sidebar.classList.contains('xl:w-0')) {
-                    // 🚀 EXPANDING THE SIDEBAR (Opening)
                     sidebar.classList.remove('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
                     sidebar.classList.add('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
                     
@@ -970,7 +915,6 @@ main {
                         mainHeaderBtn.classList.remove('xl:flex');
                     }
                 } else {
-                    // 🚀 COLLAPSING THE SIDEBAR (Closing)
                     sidebar.classList.add('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
                     sidebar.classList.remove('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
                     
@@ -2224,19 +2168,19 @@ main {
 </script>
 
 <div id="chatLightbox" class="hidden fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
-    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none z-[100]">
+    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none z-50">
         <i class="fas fa-times"></i>
     </button>
     
-    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-[100]">
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-50">
         <i class="fas fa-chevron-left"></i>
     </button>
     
-    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-[100]">
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-50">
         <i class="fas fa-chevron-right"></i>
     </button>
 
     <div id="lightboxContent" class="w-full h-full flex items-center justify-center relative z-10"></div>
-    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-[100]"></div>
+    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center flex flex-col items-center justify-center bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-50"></div>
 </div>
 {% endblock %}
