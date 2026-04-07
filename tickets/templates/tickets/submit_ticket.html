@@ -829,8 +829,9 @@ main {
             const info = document.getElementById('lightboxInfo');
             const file = this.galleryMedia[this.currentLightboxIndex];
 
-            const nextBtn = document.querySelector('[onclick="SupportConsole.nextLightbox()"]');
-            const prevBtn = document.querySelector('[onclick="SupportConsole.prevLightbox()"]');
+            // FIX: Target the exact IDs of the new buttons so they safely toggle
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
 
             if (prevBtn) {
                 const isFirst = this.currentLightboxIndex === 0;
@@ -846,13 +847,11 @@ main {
             
             if (!file) return;
 
-            // FIX: Use our new master classifier
             const type = this.classifyAttachment(file);
             
             if (type === 'video') {
                 content.innerHTML = `<video src="${file.url}" controls autoplay class="max-w-full max-h-full object-contain"></video>`;
             } else {
-                // Default everything else to an image tag
                 content.innerHTML = `<img src="${file.url}" class="max-w-full max-h-full object-contain animate-in fade-in zoom-in duration-300">`;
             }
 
@@ -2017,7 +2016,6 @@ main {
             }
         },
         
-
         updateMediaAndFilesSidebar(attachments) {
             const mediaGrid = document.getElementById('mediaGridView');
             const filesList = document.getElementById('filesListView');
@@ -2209,21 +2207,21 @@ main {
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
 </script>
 
-<div id="chatLightbox" class="fixed inset-0 z-[9999] hidden bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
-    <button type="button" onclick="SupportConsole.closeLightbox()" 
-            class="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 p-4 focus:outline-none transition-colors">
+<div id="chatLightbox" class="hidden fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
+    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none z-[100]">
         <i class="fas fa-times"></i>
     </button>
     
-    <button type="button" onclick="SupportConsole.prevLightbox()" class="absolute left-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 focus:outline-none transition-colors">
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-lg md:text-xl transition-all focus:outline-none z-[100]">
         <i class="fas fa-chevron-left"></i>
     </button>
-    <button type="button" onclick="SupportConsole.nextLightbox()" class="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-4xl p-4 z-40 focus:outline-none transition-colors">
+    
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-lg md:text-xl transition-all focus:outline-none z-[100]">
         <i class="fas fa-chevron-right"></i>
     </button>
 
-    <div id="lightboxContent" class="w-full h-full flex items-center justify-center"></div>
-
-    <div id="lightboxInfo" class="absolute bottom-10 left-0 right-0 text-center"></div>
+    <div id="lightboxContent" class="w-full h-full flex items-center justify-center z-10"></div>
+    
+    <div id="lightboxInfo" class="absolute bottom-6 md:bottom-10 max-w-lg text-center flex flex-col items-center justify-center bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-[100]"></div>
 </div>
 {% endblock %}
