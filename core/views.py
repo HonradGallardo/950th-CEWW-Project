@@ -18,21 +18,29 @@ def landing(request):
 
 @login_required
 def role_redirect(request):
-    if request.user.is_superuser:
-        return redirect('dashboard')
-    
     user_groups = request.user.groups.values_list('name', flat=True)
     
-    if any(role in user_groups for role in ['Admin', 'Commander', 'Personnel']):
-        return redirect('dashboard')
-    elif 'Regular' in user_groups:
+    # 1. Check strict roles FIRST so superuser status doesn't override them
+    if 'Regular' in user_groups:
         return redirect('tickets:submit_ticket')
+    elif any(role in user_groups for role in ['Admin', 'Commander', 'Personnel']):
+        return redirect('dashboard')
+        
+    # 2. Fallback for Superusers who haven't assigned themselves a group
+    if request.user.is_superuser:
+        return redirect('dashboard')
         
     messages.warning(request, "Account active. Awaiting Wing role assignment.")
     return redirect('landing')
 
 @login_required
 def dashboard(request):
+    user_groups = request.user.groups.values_list('name', flat=True)
+    
+    # Check Regular FIRST so they can't sneak into the dashboard URL
+    if 'Regular' in user_groups:
+        return redirect('tickets:submit_ticket')
+
     # 1. Base Summary Metrics
     total_assets = Asset.objects.count()
     assigned_assets = Asset.objects.exclude(status='Inactive').count()
@@ -76,8 +84,6 @@ def dashboard(request):
         
     }
 
-    user_groups = request.user.groups.values_list('name', flat=True)
-
     # 5. Role-Based Routing with Fallback
     if 'Commander' in user_groups:
         return render(request, 'core/Commander/commander_dashboard.html', context)
@@ -85,8 +91,6 @@ def dashboard(request):
         return render(request, 'core/Personnel/personnel_dashboard.html', context)
     elif 'Admin' in user_groups or request.user.is_superuser:
         return render(request, 'core/Admin/admin_dashboard.html', context)
-    elif 'Regular' in user_groups:
-        return redirect('tickets:submit_ticket')
 
     # Final Fallback to prevent ValueError
     return render(request, 'core/Admin/admin_dashboard.html', context)
