@@ -30,24 +30,53 @@
 
         .hero-bg {
             background: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
+        }
+
+        /* NEW: Tactical grid pattern for the IT aesthetic */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(37, 99, 235, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
         }
 
         .glass-nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
         }
 
         .hero-image-container {
             position: relative;
             perspective: 1000px;
+            z-index: 10;
+        }
+
+        /* NEW: Ambient glow behind the hero image */
+        .glow-effect {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, rgba(0,0,0,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: pulse-glow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
         }
 
         .floating-laptop {
-            filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.1));
+            filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.15));
             animation: float 6s ease-in-out infinite;
             transition: transform 0.5s ease;
         }
@@ -60,22 +89,25 @@
         .feature-card {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid #f1f5f9;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
         }
 
         .feature-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(37, 99, 235, 0.2);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(37, 99, 235, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.15);
         }
 
         .btn-gradient {
             background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
             transition: all 0.3s ease;
+            background-size: 200% auto;
         }
 
         .btn-gradient:hover {
-            filter: brightness(1.1);
-            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+            background-position: right center;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5);
+            transform: translateY(-2px);
         }
 
         .text-balance { text-wrap: balance; }
@@ -88,27 +120,30 @@
         
         /* Widget Entry Animation */
         @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .widget-anim-enter {
-            animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         
         .chat-pill {
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .chat-pill:hover {
             border-color: var(--primary);
+            background-color: #eff6ff;
             color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
         }
     </style>
 </head>
-<body class="antialiased relative">
+<body class="antialiased relative selection:bg-blue-200 selection:text-blue-900">
 
-    <nav class="glass-nav sticky top-0 z-40 px-4 sm:px-6 md:px-16 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
-        <div class="flex items-center space-x-3 text-center sm:text-left">
-            <div class="bg-blue-600 p-2 rounded-lg shrink-0">
+    <nav class="glass-nav sticky top-0 z-40 px-4 sm:px-6 md:px-16 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 transition-all duration-300">
+        <div class="flex items-center space-x-3 text-center sm:text-left group cursor-pointer">
+            <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-2.5 rounded-xl shrink-0 shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
                 <i class="fas fa-shield-halved text-white text-lg"></i>
             </div>
             <span class="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 leading-tight">
@@ -117,26 +152,26 @@
         </div>
         
         <div class="flex flex-wrap justify-center items-center gap-4 sm:space-x-6">
-            <div id="network-status" class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest transition-opacity duration-500 hidden md:flex">
-                <span id="status-dot" class="w-2 h-2 bg-slate-300 rounded-full mr-2"></span>
+            <div id="network-status" class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest transition-opacity duration-500 hidden md:flex bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
+                <span id="status-dot" class="w-2 h-2 bg-emerald-400 rounded-full mr-2 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span>
                 <span id="status-text">Network Sync...</span>
             </div>
             
-            <button onclick="TicketTracker.open()" class="text-slate-500 hover:text-blue-600 font-bold text-sm transition-colors flex items-center">
+            <button onclick="TicketTracker.open()" class="text-slate-500 hover:text-blue-600 font-bold text-sm transition-all duration-300 flex items-center hover:bg-blue-50 px-3 py-2 rounded-lg">
                 <i class="fas fa-search mr-2"></i> Track Ticket
             </button>
             
-            <a href="{% url 'login' %}" class="btn-gradient text-white px-5 sm:px-7 py-2 sm:py-2.5 rounded-full font-bold text-sm flex items-center shadow-lg">
+            <a href="{% url 'login' %}" class="btn-gradient text-white px-6 sm:px-7 py-2 sm:py-2.5 rounded-full font-bold text-sm flex items-center shadow-lg">
                 <i class="fas fa-lock-open mr-2 text-xs"></i> Portal Login
             </a>
         </div>
     </nav>
 
-    <section class="hero-bg px-4 sm:px-6 md:px-24 pt-12 sm:pt-16 md:pt-28 pb-16 sm:pb-24 flex flex-col lg:flex-row items-center gap-10 lg:gap-20">
-        <div class="w-full lg:w-3/5 space-y-6 sm:space-y-8 text-center lg:text-left">
+    <section class="hero-bg bg-grid-pattern px-4 sm:px-6 md:px-24 pt-12 sm:pt-16 md:pt-28 pb-16 sm:pb-24 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 relative overflow-hidden">
+        <div class="w-full lg:w-3/5 space-y-6 sm:space-y-8 text-center lg:text-left relative z-10">
             
             <h1 class="text-3xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight text-balance">
-                The Standard in <span class="text-blue-600">Infrastructure</span> Oversight
+                The Standard in <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Infrastructure</span> Oversight
             </h1>
             
             <p class="text-slate-500 text-base sm:text-lg md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
@@ -144,80 +179,81 @@
             </p>
             
             <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2 sm:pt-4">
-                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-xl active:scale-95 text-center">
-                    Get Started
+                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-xl active:scale-95 text-center flex justify-center items-center gap-3">
+                    Get Started <i class="fas fa-arrow-right text-sm opacity-80"></i>
                 </a>
             </div>
         </div>
 
         <div class="w-full sm:w-3/4 lg:w-2/5 hero-image-container mt-8 lg:mt-0">
+            <div class="glow-effect"></div>
             <img src="{% static 'image_2.png' %}" 
                  alt="System Infographic" 
-                 class="w-full h-auto floating-laptop rounded-3xl">
+                 class="w-full h-auto floating-laptop rounded-3xl border border-white/50">
         </div>
     </section>
 
-    <section class="px-4 sm:px-6 md:px-16 py-16 sm:py-24 bg-white relative">
+    <section class="px-4 sm:px-6 md:px-16 py-16 sm:py-24 bg-white relative border-t border-slate-100">
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-12 sm:mb-20 space-y-4">
-                <h2 class="text-[10px] sm:text-xs font-extrabold text-blue-600 uppercase tracking-[0.3em]">Core Capabilities</h2>
+                <h2 class="text-[10px] sm:text-xs font-extrabold text-blue-600 uppercase tracking-[0.3em] bg-blue-50 inline-block px-3 py-1 rounded-full">Core Capabilities</h2>
                 <h3 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-slate-900">Integrated Control Center</h3>
-                <div class="w-16 sm:w-20 h-1.5 bg-blue-600 mx-auto rounded-full"></div>
+                <div class="w-16 sm:w-20 h-1.5 bg-gradient-to-r from-blue-600 to-indigo-500 mx-auto rounded-full mt-6"></div>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
-                <div class="feature-card bg-slate-50/50 p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left">
-                    <div class="bg-white w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
-                        <i class="fas fa-cubes text-blue-600 text-xl sm:text-2xl"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 relative z-10">
+                <div class="feature-card p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left group">
+                    <div class="bg-blue-50 group-hover:bg-blue-600 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
+                        <i class="fas fa-cubes text-blue-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4">Asset Ledger</h4>
+                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4 group-hover:text-blue-700 transition-colors">Asset Ledger</h4>
                     <p class="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">Automated cataloging and lifecycle tracking for mission-critical hardware and software nodes.</p>
                 </div>
 
-                <div class="feature-card bg-slate-50/50 p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left">
-                    <div class="bg-white w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
-                        <i class="fas fa-screwdriver-wrench text-blue-600 text-xl sm:text-2xl"></i>
+                <div class="feature-card p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left group">
+                    <div class="bg-blue-50 group-hover:bg-blue-600 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
+                        <i class="fas fa-screwdriver-wrench text-blue-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4">Maintenance Core</h4>
+                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4 group-hover:text-blue-700 transition-colors">Maintenance Core</h4>
                     <p class="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">Predictive logging and historical audit trails to ensure 24/7 infrastructure availability.</p>
                 </div>
 
-                <div class="feature-card bg-slate-50/50 p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left sm:col-span-2 md:col-span-1">
-                    <div class="bg-white w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
-                        <i class="fas fa-shield-virus text-blue-600 text-xl sm:text-2xl"></i>
+                <div class="feature-card p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left sm:col-span-2 md:col-span-1 group">
+                    <div class="bg-blue-50 group-hover:bg-blue-600 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
+                        <i class="fas fa-shield-virus text-blue-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4">Incident Matrix</h4>
+                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4 group-hover:text-blue-700 transition-colors">Incident Matrix</h4>
                     <p class="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">High-security logging of network anomalies and cybersecurity events with rapid triage tools.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="py-12 border-t border-slate-100 px-4 sm:px-6 bg-slate-50/30">
+    <footer class="py-12 border-t border-slate-200 px-4 sm:px-6 bg-slate-50">
         <div class="max-w-7xl mx-auto flex flex-col items-center space-y-6">
-            <div class="w-full max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-wrap sm:flex-nowrap justify-between items-center gap-4 text-center sm:text-left">
+            <div class="w-full max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-wrap sm:flex-nowrap justify-between items-center gap-4 text-center sm:text-left transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
                 <div class="w-full sm:w-auto">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">System Readiness</p>
                     <div class="flex items-center justify-center sm:justify-start gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
                         <span class="text-xs font-bold text-slate-700">All Nodes Active</span>
                     </div>
                 </div>
                 <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
                 <div class="w-[45%] sm:w-auto">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Local Uplink</p>
-                    <p id="local-time-display" class="text-xs font-bold text-slate-700 font-mono">--:--:--</p>
+                    <p id="local-time-display" class="text-xs font-bold text-slate-700 font-mono bg-slate-50 px-2 py-0.5 rounded">--:--:--</p>
                 </div>
                 <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
                 <div class="w-[45%] sm:w-auto">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Server Uptime</p>
-                    <p id="server-uptime-display" class="text-xs font-bold text-blue-600 font-mono">--h --m</p>
+                    <p id="server-uptime-display" class="text-xs font-bold text-blue-600 font-mono bg-blue-50 px-2 py-0.5 rounded">--h --m</p>
                 </div>
             </div>
 
-            <div class="flex items-center justify-center space-x-4 grayscale opacity-50 pt-4">
-                <i class="fas fa-shield-halved text-xl sm:text-2xl"></i>
-                <span class="font-bold text-base sm:text-lg">On The Go AIMS</span>
+            <div class="flex items-center justify-center space-x-4 grayscale opacity-60 pt-4 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                <i class="fas fa-shield-halved text-xl sm:text-2xl text-blue-600"></i>
+                <span class="font-bold text-base sm:text-lg text-slate-800">On The Go AIMS</span>
             </div>
             <p class="text-slate-400 text-[9px] sm:text-[10px] font-extrabold tracking-[0.2em] uppercase text-center px-4">
                 &copy; 2026 OFFICIAL USE ONLY - SECURE OFFLINE ARCHITECTURE
@@ -225,93 +261,96 @@
         </div>
     </footer>
 
-    <div id="trackerModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300" id="trackerModalContent">
-            <div class="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+    <div id="trackerModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-400 border border-slate-100" id="trackerModalContent">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
                 <h3 class="font-extrabold text-base sm:text-lg text-slate-900 flex items-center">
-                    <i class="fas fa-radar mr-3 text-blue-600"></i> Track Your Ticket
+                    <div class="bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-radar text-blue-600 text-sm"></i>
+                    </div>
+                    Track Your Ticket
                 </h3>
-                <button onclick="TicketTracker.close()" class="text-slate-400 hover:text-red-500 transition-colors">
+                <button onclick="TicketTracker.close()" class="text-slate-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 rounded-full transition-all flex items-center justify-center">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
-            <div class="p-5 sm:p-6">
-                <p class="text-xs text-slate-500 mb-4 font-medium">Enter your 6-digit ticket number below to check its current status and assigned technician.</p>
+            <div class="p-6">
+                <p class="text-xs text-slate-500 mb-5 font-medium leading-relaxed">Enter your 6-digit ticket number below to check its current status and assigned technician.</p>
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <div class="relative flex-1">
-                        <i class="fas fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <div class="relative flex-1 group">
+                        <i class="fas fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
                         <input type="text" id="trackTicketInput" placeholder="000001" 
-                               class="w-full bg-white border border-slate-200 py-3 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700 uppercase tracking-wider shadow-sm" 
+                               class="w-full bg-slate-50 border border-slate-200 py-3 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold text-slate-700 uppercase tracking-wider shadow-inner transition-all duration-300" 
                                onkeypress="if(event.key === 'Enter') TicketTracker.search()">
                     </div>
-                    <button onclick="TicketTracker.search()" id="trackBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-colors flex justify-center items-center shadow-lg shadow-blue-500/30">
+                    <button onclick="TicketTracker.search()" id="trackBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all flex justify-center items-center shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5">
                         Search
                     </button>
                 </div>
                 
-                <div id="trackResults" class="hidden mt-6 bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-inner">
+                <div id="trackResults" class="hidden mt-6 bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-inner transition-all">
                     </div>
-                <div id="trackError" class="hidden mt-4 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100 text-center">
+                <div id="trackError" class="hidden mt-4 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100 text-center animate-pulse">
                 </div>
             </div>
         </div>
     </div>
 
-    <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 z-50">
-        <i class="fas fa-comment-dots text-xl sm:text-2xl"></i>
+    <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full shadow-xl shadow-blue-500/40 flex items-center justify-center transition-all hover:-translate-y-1 active:scale-95 z-50 border-2 border-white/20 group">
+        <i class="fas fa-comment-dots text-xl sm:text-2xl group-hover:animate-bounce"></i>
     </button>
 
-    <div id="chatWidgetContainer" class="hidden fixed bottom-20 sm:bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[360px] h-[500px] sm:h-[600px] max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-8rem)] bg-slate-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200 origin-bottom-right">
+    <div id="chatWidgetContainer" class="hidden fixed bottom-24 sm:bottom-28 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[380px] h-[500px] sm:h-[650px] max-h-[calc(100vh-8rem)] bg-slate-50/95 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200 origin-bottom-right transition-all">
         
-        <div class="bg-white px-4 sm:px-5 py-3 sm:py-4 flex justify-between items-center shadow-sm shrink-0 relative z-10 border-b border-slate-100">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-4 flex justify-between items-center shadow-md shrink-0 relative z-10 border-b border-blue-800/50">
             <div class="flex items-center gap-3">
                 <div class="relative">
-                    <img src="https://ui-avatars.com/api/?name=Smart+Assistant&background=2563eb&color=fff&bold=true" alt="Avatar" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-slate-200 object-cover">
-                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                    <img src="https://ui-avatars.com/api/?name=Smart+Assistant&background=ffffff&color=2563eb&bold=true" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-white/50 object-cover shadow-sm">
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full shadow-sm animate-pulse"></div>
                 </div>
                 <div>
-                    <h3 class="text-xs sm:text-sm font-bold text-slate-800 leading-tight">Smart Assistant</h3>
-                    <p class="text-[9px] sm:text-[10px] text-slate-500">The team can also help</p>
+                    <h3 class="text-sm font-bold text-white leading-tight tracking-wide">Smart Assistant</h3>
+                    <p class="text-[10px] text-blue-100 font-medium">Global Support Team</p>
                 </div>
             </div>
-            <div class="flex items-center gap-1 sm:gap-2">
-                <button class="text-slate-400 hover:text-slate-600 transition-colors px-2">
+            <div class="flex items-center gap-2">
+                <button class="text-blue-200 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors">
                     <i class="fas fa-ellipsis-h"></i>
                 </button>
-                <button onclick="ChatWidget.toggle()" class="text-slate-400 hover:text-slate-600 transition-colors px-2">
+                <button onclick="ChatWidget.toggle()" class="text-blue-200 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
 
-        <div id="chatWidgetBody" class="flex-1 overflow-y-auto widget-scrollbar p-4 sm:p-5 space-y-4 flex flex-col scroll-smooth">
+        <div id="chatWidgetBody" class="flex-1 overflow-y-auto widget-scrollbar p-5 space-y-5 flex flex-col scroll-smooth bg-[#f8fafc]">
             </div>
 
         <div id="hiddenForms" class="hidden">
-            <form id="newTicketForm" class="bg-white p-3 sm:p-4 rounded-xl border border-slate-200 shadow-sm mt-2 flex flex-col gap-3 sm:gap-4" enctype="multipart/form-data">
+            <form id="newTicketForm" class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.05)] mt-3 flex flex-col gap-4" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="category" id="newCat" value="General">
                 <input type="hidden" name="priority" id="newPriority" value="Medium">
 
-                <div class="border-b border-slate-100 pb-2">
-                    <p id="form-context-msg" class="text-[9px] sm:text-[10px] font-bold text-blue-600 uppercase tracking-widest"></p>
+                <div class="border-b border-slate-100 pb-2 mb-1">
+                    <p id="form-context-msg" class="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center"><i class="fas fa-folder-open mr-2 text-blue-400"></i></p>
                 </div>
 
-                <div id="account-fields" class="hidden flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                <div id="account-fields" class="hidden flex flex-col gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100 shadow-inner">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-blue-100 flex items-center justify-center shrink-0">
-                            <i class="fas fa-id-card text-blue-600 text-[9px] sm:text-[10px]"></i>
+                        <div class="w-6 h-6 rounded bg-blue-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-id-card text-blue-600 text-[10px]"></i>
                         </div>
                         <div>
-                            <p class="text-[8px] sm:text-[9px] font-black text-blue-600 uppercase tracking-widest">Identity Support</p>
+                            <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Identity Support</p>
                         </div>
                     </div>
-                    <input type="text" name="first_name" maxlength="25" placeholder="First Name" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                    <input type="text" name="last_name" maxlength="25" placeholder="Last Name" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                    <input type="email" name="email" maxlength="50" placeholder="Inst. Email" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                    <input type="tel" name="phone" maxlength="11" placeholder="Phone Number" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <input type="text" name="first_name" maxlength="25" placeholder="First Name" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
+                    <input type="text" name="last_name" maxlength="25" placeholder="Last Name" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
+                    <input type="email" name="email" maxlength="50" placeholder="Inst. Email" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
+                    <input type="tel" name="phone" maxlength="11" placeholder="Phone Number" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
                     
-                    <select name="rank" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 appearance-none">
+                    <select name="rank" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 appearance-none transition-all shadow-sm cursor-pointer">
                         <option value="" disabled selected>Requested Rank</option>
                         <optgroup label="Enlisted">
                             <option value="Airman">Airman</option>
@@ -343,90 +382,90 @@
                     </select>
                 </div>
 
-                <div id="security-removal-fields" class="hidden flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 bg-amber-50/50 rounded-xl border border-amber-100">
+                <div id="security-removal-fields" class="hidden flex flex-col gap-3 p-4 bg-amber-50/80 rounded-xl border border-amber-200 shadow-inner">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-amber-100 flex items-center justify-center shrink-0">
-                            <i class="fas fa-shield-alt text-amber-600 text-[9px] sm:text-[10px]"></i>
+                        <div class="w-6 h-6 rounded bg-amber-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-shield-alt text-amber-600 text-[10px]"></i>
                         </div>
                         <div>
-                            <p class="text-[8px] sm:text-[9px] font-black text-amber-600 uppercase tracking-widest">Security Clearance</p>
+                            <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Security Clearance</p>
                         </div>
                     </div>
-                    <input type="text" name="auth_id" placeholder="Identifier (ID/Username)" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
-                    <select name="removal_type" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 appearance-none">
+                    <input type="text" name="auth_id" placeholder="Identifier (ID/Username)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-sm">
+                    <select name="removal_type" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 appearance-none transition-all shadow-sm cursor-pointer">
                         <option value="OTP">OTP Reset</option>
                         <option value="MFA">Complete MFA Removal</option>
                         <option value="Hardware">Hardware Token Unlink</option>
                     </select>
                 </div>
 
-                <div id="bug-fields" class="hidden flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 bg-red-50/50 rounded-xl border border-red-100">
+                <div id="bug-fields" class="hidden flex flex-col gap-3 p-4 bg-red-50/80 rounded-xl border border-red-200 shadow-inner">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-red-100 flex items-center justify-center shrink-0">
-                            <i class="fas fa-bug text-red-600 text-[9px] sm:text-[10px]"></i>
+                        <div class="w-6 h-6 rounded bg-red-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-bug text-red-600 text-[10px]"></i>
                         </div>
                         <div>
-                            <p class="text-[8px] sm:text-[9px] font-black text-red-600 uppercase tracking-widest">System Anomaly</p>
+                            <p class="text-[9px] font-black text-red-600 uppercase tracking-widest">System Anomaly</p>
                         </div>
                     </div>
-                    <select name="bug_module" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 appearance-none">
+                    <select name="bug_module" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 appearance-none transition-all shadow-sm cursor-pointer">
                         <option value="Dashboard">Dashboard / Analytics</option>
                         <option value="Tickets">Ticket System</option>
                         <option value="Assets">IT Assets</option>
                         <option value="Authentication">Authentication</option>
                         <option value="Other">Other Component</option>
                     </select>
-                    <input type="text" name="error_code" placeholder="Error Code (If any)" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500">
-                    <textarea name="reproduce_steps" rows="2" placeholder="Steps to reproduce..." class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 resize-none"></textarea>
+                    <input type="text" name="error_code" placeholder="Error Code (If any)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all shadow-sm">
+                    <textarea name="reproduce_steps" rows="2" placeholder="Steps to reproduce..." class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 resize-none transition-all shadow-sm"></textarea>
                 </div>
 
-                <div id="permission-fields" class="hidden flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 bg-emerald-50/50 rounded-xl border border-emerald-100">
+                <div id="permission-fields" class="hidden flex flex-col gap-3 p-4 bg-emerald-50/80 rounded-xl border border-emerald-200 shadow-inner">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-emerald-100 flex items-center justify-center shrink-0">
-                            <i class="fas fa-key text-emerald-600 text-[9px] sm:text-[10px]"></i>
+                        <div class="w-6 h-6 rounded bg-emerald-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-key text-emerald-600 text-[10px]"></i>
                         </div>
                         <div>
-                            <p class="text-[8px] sm:text-[9px] font-black text-emerald-600 uppercase tracking-widest">Access Control</p>
+                            <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Access Control</p>
                         </div>
                     </div>
-                    <input type="text" name="target_resource" placeholder="Target Resource" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
-                    <select name="access_level" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 appearance-none">
+                    <input type="text" name="target_resource" placeholder="Target Resource" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
+                    <select name="access_level" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 appearance-none transition-all shadow-sm cursor-pointer">
                         <option value="Read-Only">Read-Only (Viewer)</option>
                         <option value="Contributor">Contributor (Editor)</option>
                         <option value="Administrator">Administrator (Elevated)</option>
                     </select>
-                    <input type="text" name="approving_officer" placeholder="Approving Officer Ref" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    <input type="text" name="approving_officer" placeholder="Approving Officer Ref" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
                 </div>
 
-                <div id="access-fields" class="hidden flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 bg-purple-50/50 rounded-xl border border-purple-100">
+                <div id="access-fields" class="hidden flex flex-col gap-3 p-4 bg-purple-50/80 rounded-xl border border-purple-200 shadow-inner">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded bg-purple-100 flex items-center justify-center shrink-0">
-                            <i class="fas fa-sign-in-alt text-purple-600 text-[9px] sm:text-[10px]"></i>
+                        <div class="w-6 h-6 rounded bg-purple-100 flex items-center justify-center shrink-0">
+                            <i class="fas fa-sign-in-alt text-purple-600 text-[10px]"></i>
                         </div>
                         <div>
-                            <p class="text-[8px] sm:text-[9px] font-black text-purple-600 uppercase tracking-widest">Auth Diagnostics</p>
+                            <p class="text-[9px] font-black text-purple-600 uppercase tracking-widest">Auth Diagnostics</p>
                         </div>
                     </div>
-                    <input type="text" name="affected_id" placeholder="Affected ID / Username" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
-                    <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500">
+                    <input type="text" name="affected_id" placeholder="Affected ID / Username" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm">
+                    <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm">
                 </div>
 
-                <div class="flex flex-col gap-2 sm:gap-3">
-                    <input type="text" name="subject" id="newSub" placeholder="Subject" required class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-800">
-                    <textarea name="description" id="newDescInput" placeholder="Detailed Description..." required rows="3" class="w-full bg-white border border-slate-200 p-2 sm:p-2.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"></textarea>
+                <div class="flex flex-col gap-3 mt-1">
+                    <input type="text" name="subject" id="newSub" placeholder="Subject" required class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white font-bold text-slate-800 transition-all shadow-inner">
+                    <textarea name="description" id="newDescInput" placeholder="Detailed Description..." required rows="3" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white resize-none transition-all shadow-inner"></textarea>
                     
-                    <label class="hidden border-2 border-dashed border-slate-200 bg-slate-50 rounded-xl p-3 sm:p-4 text-center cursor-pointer hover:border-blue-500 transition-colors group">
+                    <label class="hidden border-2 border-dashed border-slate-300 bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
                         <input type="file" name="attachments" multiple disabled class="hidden" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.csv" onchange="ChatWidget.updateFileLabel(this)">
-                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white shadow-sm flex items-center justify-center border border-slate-100 mx-auto mb-2 group-hover:border-blue-500/30">
+                        <div class="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border border-slate-100 mx-auto mb-2 group-hover:border-blue-400 group-hover:scale-110 transition-transform">
                             <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-blue-500 transition-colors"></i>
                         </div>
-                        <span id="widget-file-label" class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-500 transition-colors">Attach Media</span>
-                        <div id="file-preview-list" class="mt-2 flex flex-wrap gap-1 justify-center empty:hidden"></div>
+                        <span id="widget-file-label" class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-600 transition-colors">Attach Media</span>
+                        <div id="file-preview-list" class="mt-3 flex flex-wrap gap-1.5 justify-center empty:hidden"></div>
                     </label>
                 </div>
 
-                <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg shadow-blue-500/20 mt-1">
-                    Initialize Dispatch
+                <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 sm:py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 mt-2 flex justify-center items-center gap-2">
+                    <i class="fas fa-paper-plane"></i> Initialize Dispatch
                 </button>
             </form>
         </div>
@@ -597,11 +636,11 @@
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ticket ID</p>
                             <p class="font-extrabold text-slate-800 text-xl">${formattedId}</p>
                         </div>
-                        <div class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border ${statusColor}">
+                        <div class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border shadow-sm ${statusColor}">
                             ${status}
                         </div>
                     </div>
-                    <div class="space-y-4 pt-3">
+                    <div class="space-y-4 pt-4">
                         <div>
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Subject</p>
                             <p class="text-sm font-bold text-slate-700">${subject}</p>
@@ -701,7 +740,7 @@
             const div = document.createElement('div');
             div.className = "flex justify-start w-full mb-2";
             div.innerHTML = `
-                <div class="bg-white border border-slate-100 text-slate-700 px-4 py-3 rounded-2xl rounded-tl-sm text-[13px] shadow-sm leading-relaxed max-w-[90%]">
+                <div class="bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-2xl rounded-tl-sm text-[13px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] leading-relaxed max-w-[90%]">
                     ${text}
                 </div>`;
             this.body.appendChild(div);
@@ -715,7 +754,7 @@
             const div = document.createElement('div');
             div.className = "flex justify-end w-full mb-2";
             div.innerHTML = `
-                <div class="bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-sm text-[13px] shadow-sm max-w-[85%]">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-4 py-3 rounded-2xl rounded-tr-sm text-[13px] shadow-md max-w-[85%]">
                     ${sanitizedText}
                 </div>`;
             this.body.appendChild(div);
@@ -728,7 +767,7 @@
             
             optionsDiv.innerHTML = options.map(o => `
                 <button type="button" onclick="ChatWidget.${o.action}()" 
-                        class="chat-pill bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-full text-xs font-medium hover:bg-slate-50 transition-colors">
+                        class="chat-pill bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-full text-xs font-bold hover:bg-blue-50 transition-all shadow-sm">
                     ${o.label}
                 </button>
             `).join('');
@@ -937,7 +976,7 @@
                 label.classList.add('text-blue-600');
                 Array.from(input.files).forEach(file => {
                     const span = document.createElement('span');
-                    span.className = "px-2 py-1 bg-blue-50 text-[9px] font-bold rounded text-blue-600 truncate max-w-[100px]";
+                    span.className = "px-2.5 py-1 bg-blue-100/50 text-[9px] font-bold rounded-md text-blue-700 truncate max-w-[100px] border border-blue-200/50 shadow-sm";
                     span.innerText = file.name;
                     preview.appendChild(span);
                 });
