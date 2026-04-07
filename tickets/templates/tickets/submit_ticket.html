@@ -783,7 +783,13 @@ main {
 
         // --- LIGHTBOX ENGINE ---
         openLightbox(items, index) {
+            // FIX: If only one argument is passed (like from the chat bubbles), automatically use the galleryMedia array!
+            if (typeof items === 'number' || index === undefined) {
+                index = typeof items === 'number' ? items : 0;
+                items = this.galleryMedia;
+            }
             if (!items || items.length === 0) return;
+            
             this.currentLightboxItems = items;
             this.currentLightboxIndex = index;
             const lb = document.getElementById('chatLightbox');
@@ -2167,20 +2173,20 @@ main {
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
 </script>
 
-<div id="chatLightbox" class="hidden fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
-    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none z-50">
+<div id="chatLightbox" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12" style="z-index: 99999;">
+    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none" style="z-index: 100;">
         <i class="fas fa-times"></i>
     </button>
     
-    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-50">
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none" style="z-index: 100;">
         <i class="fas fa-chevron-left"></i>
     </button>
     
-    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-50">
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none" style="z-index: 100;">
         <i class="fas fa-chevron-right"></i>
     </button>
 
-    <div id="lightboxContent" class="w-full h-full flex items-center justify-center relative z-10"></div>
-    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center flex flex-col items-center justify-center bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-50"></div>
+    <div id="lightboxContent" class="w-full h-full flex items-center justify-center relative" style="z-index: 10;"></div>
+    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center flex flex-col items-center justify-center bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10" style="z-index: 100;"></div>
 </div>
 {% endblock %}
