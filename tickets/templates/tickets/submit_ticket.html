@@ -803,19 +803,20 @@ main {
 
         // --- LIGHTBOX ENGINE ---
         openLightbox(items, index) {
+            if (!items || items.length === 0) return;
             this.currentLightboxItems = items;
             this.currentLightboxIndex = index;
             const lb = document.getElementById('chatLightbox');
-            if(lb) lb.classList.remove('hidden');
+            if (lb) lb.classList.remove('hidden');
             this.renderLightboxItem();
         },
 
         closeLightbox() {
             const lb = document.getElementById('chatLightbox');
-            if(lb) {
+            if (lb) {
                 lb.classList.add('hidden');
                 const container = document.getElementById('lightboxContent');
-                if(container) container.innerHTML = '';
+                if (container) container.innerHTML = '';
             }
         },
 
@@ -858,23 +859,40 @@ main {
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
 
-            if (prevBtn) prevBtn.style.display = (this.currentLightboxIndex === 0) ? 'none' : 'flex';
-            if (nextBtn) nextBtn.style.display = (this.currentLightboxIndex === this.currentLightboxItems.length - 1) ? 'none' : 'flex';
+            // Button visibility logic (Fades out when no more images exist)
+            if (prevBtn) {
+                const isFirst = this.currentLightboxIndex === 0;
+                prevBtn.style.opacity = isFirst ? "0" : "1";
+                prevBtn.style.pointerEvents = isFirst ? "none" : "auto";
+            }
+
+            if (nextBtn) {
+                const isLast = this.currentLightboxIndex === this.currentLightboxItems.length - 1;
+                nextBtn.style.opacity = isLast ? "0" : "1";
+                nextBtn.style.pointerEvents = isLast ? "none" : "auto";
+            }
 
             if (!container || !item) return;
 
             const type = this.classifyAttachment(item);
             
+            // Render Media
             if (type === 'video') {
-                container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
+                container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"></video>`;
             } else {
                 container.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl animate-in zoom-in duration-300">`;
             }
             
+            // Render the stylish info caption
             const caption = document.getElementById('lightboxCaption');
-            if (caption) caption.innerText = item.name || `Attachment ${this.currentLightboxIndex + 1}`;
+            if (caption) {
+                caption.innerHTML = `
+                    <p class="text-white font-black uppercase text-[10px] tracking-widest">${item.name || 'Media'}</p>
+                    <p class="text-white/50 text-[8px] uppercase font-bold mt-1">File ${this.currentLightboxIndex + 1} of ${this.currentLightboxItems.length}</p>
+                `;
+            }
         },
-        
+
         nextLightbox() {
             if (this.currentLightboxIndex < this.currentLightboxItems.length - 1) {
                 this.currentLightboxIndex++;
@@ -2206,19 +2224,19 @@ main {
 </script>
 
 <div id="chatLightbox" class="hidden fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
-    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none z-50">
+    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none z-[100]">
         <i class="fas fa-times"></i>
     </button>
     
-    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-50">
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-[100]">
         <i class="fas fa-chevron-left"></i>
     </button>
     
-    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-50">
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none z-[100]">
         <i class="fas fa-chevron-right"></i>
     </button>
 
     <div id="lightboxContent" class="w-full h-full flex items-center justify-center relative z-10"></div>
-    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-50"></div>
+    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 z-[100]"></div>
 </div>
 {% endblock %}
