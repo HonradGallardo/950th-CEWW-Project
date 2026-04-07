@@ -23,6 +23,7 @@
         width: 100%;
         padding-bottom: env(safe-area-inset-bottom); /* Added for mobile responsiveness */
         padding-top: env(safe-area-inset-top); /* Added for mobile responsiveness */
+        transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth fade when lightbox opens */
     }
     
     /* Ensure images don't break layouts */
@@ -749,7 +750,6 @@ main {
         },
 
         updateLightboxContent() {
-            // FIX: Target the exact IDs of the new buttons so they safely toggle
             const nextBtn = document.getElementById('nextBtn');
             const prevBtn = document.getElementById('prevBtn');
             const file = this.currentLightboxItems[this.currentLightboxIndex];
@@ -758,13 +758,13 @@ main {
 
             if (prevBtn) {
                 const isFirst = this.currentLightboxIndex === 0;
-                prevBtn.style.opacity = isFirst ? "0" : "1";
+                prevBtn.style.opacity = isFirst ? "0.3" : "1";
                 prevBtn.style.pointerEvents = isFirst ? "none" : "auto";
             }
 
             if (nextBtn) {
                 const isLast = this.currentLightboxIndex === this.galleryMedia.length - 1;
-                nextBtn.style.opacity = isLast ? "0" : "1";
+                nextBtn.style.opacity = isLast ? "0.3" : "1";
                 nextBtn.style.pointerEvents = isLast ? "none" : "auto";
             }
             
@@ -783,7 +783,6 @@ main {
 
         // --- LIGHTBOX ENGINE ---
         openLightbox(items, index) {
-            // FIX: If only one argument is passed (like from the chat bubbles), automatically use the galleryMedia array!
             if (typeof items === 'number' || index === undefined) {
                 index = typeof items === 'number' ? items : 0;
                 items = this.galleryMedia;
@@ -794,6 +793,14 @@ main {
             this.currentLightboxIndex = index;
             const lb = document.getElementById('chatLightbox');
             if(lb) lb.classList.remove('hidden');
+
+            // NEW: Hide the main container so header and sidebars completely disappear
+            const mainContainer = document.querySelector('.main-container');
+            if (mainContainer) {
+                mainContainer.style.opacity = '0';
+                mainContainer.style.visibility = 'hidden';
+            }
+
             this.renderLightboxItem();
         },
 
@@ -804,6 +811,13 @@ main {
                 const container = document.getElementById('lightboxContent');
                 if(container) container.innerHTML = '';
             }
+
+            // NEW: Restore the main container
+            const mainContainer = document.querySelector('.main-container');
+            if (mainContainer) {
+                mainContainer.style.opacity = '1';
+                mainContainer.style.visibility = 'visible';
+            }
         },
 
         renderLightboxItem() {
@@ -812,18 +826,26 @@ main {
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
 
-            if (prevBtn) prevBtn.style.display = (this.currentLightboxIndex === 0) ? 'none' : 'flex';
-            if (nextBtn) nextBtn.style.display = (this.currentLightboxIndex === this.currentLightboxItems.length - 1) ? 'none' : 'flex';
+            if (prevBtn) {
+                const isFirst = this.currentLightboxIndex === 0;
+                prevBtn.style.opacity = isFirst ? "0.3" : "1";
+                prevBtn.style.pointerEvents = isFirst ? "none" : "auto";
+                prevBtn.style.display = 'flex';
+            }
+            if (nextBtn) {
+                const isLast = this.currentLightboxIndex === this.currentLightboxItems.length - 1;
+                nextBtn.style.opacity = isLast ? "0.3" : "1";
+                nextBtn.style.pointerEvents = isLast ? "none" : "auto";
+                nextBtn.style.display = 'flex';
+            }
 
             if (!container || !item) return;
 
-            // FIX: Use our new master classifier
             const type = this.classifyAttachment(item);
             
             if (type === 'video') {
                 container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
             } else {
-                // Default everything else to an image tag
                 container.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
             }
             
@@ -891,17 +913,15 @@ main {
             const sidebar = document.getElementById('rightAssetsSidebar');
             const overlay = document.getElementById('assetsOverlay');
             const mainHeaderBtn = document.getElementById('mainHeaderToggleBtn');
-            const isDesktop = window.innerWidth >= 1280; // submit_ticket uses Tailwind's 'xl' breakpoint
+            const isDesktop = window.innerWidth >= 1280; 
 
             if (!sidebar) return;
 
             if (isDesktop) {
-                // Desktop Mode (Smooth width collapse)
                 if (sidebar.classList.contains('xl:w-0')) {
                     sidebar.classList.remove('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
                     sidebar.classList.add('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
                     
-                    // Hide the main header "<" button
                     if (mainHeaderBtn) {
                         mainHeaderBtn.classList.add('hidden');
                         mainHeaderBtn.classList.remove('xl:flex');
@@ -910,14 +930,12 @@ main {
                     sidebar.classList.add('xl:w-0', 'xl:min-w-0', 'xl:border-l-0', 'xl:p-0', 'opacity-0');
                     sidebar.classList.remove('xl:w-80', 'xl:min-w-[20rem]', 'opacity-100');
                     
-                    // Show the main header "<" button
                     if (mainHeaderBtn) {
                         mainHeaderBtn.classList.remove('hidden');
                         mainHeaderBtn.classList.add('xl:flex');
                     }
                 }
             } else {
-                // Mobile Mode: Slide in/out from the right
                 sidebar.classList.toggle('translate-x-full');
                 if (overlay) overlay.classList.toggle('hidden');
             }
@@ -1261,7 +1279,7 @@ main {
                     if (isImage) {
                         const img = document.createElement('img');
                         img.src = URL.createObjectURL(file);
-                        img.className = "w-full h-full object-contain bg-slate-100 dark:bg-slate-800";
+                        img.className = "w-full h-full object-cover bg-slate-100 dark:bg-slate-800";
                         item.appendChild(img);
                     } else {
                         const icon = document.createElement('div');
@@ -1271,9 +1289,11 @@ main {
                     }
                     
                     const removeBtn = document.createElement('button');
-                    removeBtn.className = "absolute top-0 right-0 bg-red-500 text-white w-5 h-5 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center focus:outline-none";
+                    removeBtn.className = "absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-bl-lg flex items-center justify-center focus:outline-none shadow-md transition-colors";
+                    removeBtn.style.zIndex = "9999";
                     removeBtn.innerHTML = '<i class="fas fa-times text-[10px]"></i>';
-                    removeBtn.onclick = () => {
+                    removeBtn.onclick = (e) => {
+                        e.preventDefault();
                         const dt = new DataTransfer();
                         for (let i = 0; i < input.files.length; i++) {
                             if (i !== index) dt.items.add(input.files[i]);
@@ -2159,20 +2179,20 @@ main {
     document.addEventListener('DOMContentLoaded', () => SupportConsole.init());
 </script>
 
-<div id="chatLightbox" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
-    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none">
+<div id="chatLightbox" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12" style="z-index: 999990;">
+    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-black/50 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none" style="z-index: 999999;">
         <i class="fas fa-times"></i>
     </button>
     
-    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none" style="z-index: 999999;">
         <i class="fas fa-chevron-left"></i>
     </button>
     
-    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/80 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none" style="z-index: 999999;">
         <i class="fas fa-chevron-right"></i>
     </button>
 
-    <div id="lightboxContent" class="w-full h-full flex items-center justify-center"></div>
-    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10"></div>
+    <div id="lightboxContent" class="w-full h-full flex items-center justify-center relative" style="z-index: 999995;"></div>
+    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10" style="z-index: 999999;"></div>
 </div>
 {% endblock %}
