@@ -183,7 +183,6 @@
     <div class="flex">
         
         <div id="sidebar" class="text-white">
-            <!-- The 260px sliding door container -->
             <div class="sidebar-inner">
                 
                 <div class="sidebar-header">
@@ -196,6 +195,7 @@
                 <nav class="flex-1 mt-4 space-y-1.5 custom-scrollbar overflow-y-auto pt-2 pb-4">
                     {% with current=request.resolver_match.url_name %}
 
+                    {% if 'Regular' not in request.user.groups.all.0.name and 'Regular' not in request.user.groups.all.1.name %}
                     <a href="{% url 'dashboard' %}" class="nav-item {% if current == 'dashboard' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-th-large"></i> <span class="sidebar-text">Dashboard</span>
                     </a>
@@ -215,6 +215,13 @@
                     <a href="{% url 'maintenance_list' %}" class="nav-item {% if current == 'maintenance_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-tools"></i> <span class="sidebar-text">Maintenance</span>
                     </a>
+                    {% endif %}
+
+                    {% if 'Regular' in request.user.groups.all.0.name or 'Regular' in request.user.groups.all.1.name %}
+                    <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                        <i class="fas fa-file-alt"></i> <span class="sidebar-text">Tickets</span>
+                    </a>
+                    {% endif %}
 
                     {% if 'Personnel' in request.user.groups.all.0.name or 'Personnel' in request.user.groups.all.1.name %}
                     <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
@@ -275,7 +282,6 @@
         <div id="main-content"> 
             <header class="bg-white px-4 md:px-8 h-[73px] flex items-center justify-between border-b border-slate-200 shrink-0 sticky top-0 z-40">
                 <div class="flex items-center min-w-0 flex-1">
-                    <!-- HIDDEN ON DESKTOP -->
                     <button id="burgerBtn" class="lg:hidden p-2 mr-2 text-slate-600 hover:text-blue-600 focus:outline-none flex-shrink-0 transition-transform">
                         <i class="fas fa-bars text-lg"></i>
                     </button>
