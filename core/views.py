@@ -80,6 +80,8 @@ def dashboard(request):
         return render(request, 'core/Personnel/personnel_dashboard.html', context)
     elif 'Admin' in user_groups or request.user.is_superuser:
         return render(request, 'core/Admin/admin_dashboard.html', context)
+    elif 'Regular' in user_groups or request.user.is_superuser:
+        return render(request, 'tickets/submit_ticket.html', context)
 
     # Final Fallback to prevent ValueError
     return render(request, 'core/Admin/admin_dashboard.html', context)
