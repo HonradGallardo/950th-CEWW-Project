@@ -90,6 +90,13 @@ header {
 main {
     z-index: 10;
 }
+/* Add this alongside your existing styles */
+    #chatLightbox {
+        z-index: 9999 !important; /* Defeats the sidebars' 60 !important */
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* Smoothly covers mobile browser address bars */
+    }
 </style>
 
 <div class="font-plex h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden text-slate-900 dark:text-slate-100 main-container">
@@ -627,6 +634,10 @@ main {
         isFetchingOlder: false,
 
         init() {
+            const lightbox = document.getElementById('chatLightbox');
+            if (lightbox) {
+                document.body.appendChild(lightbox);
+            }
             this.initPasteFeature();
             
             // --- HORIZONTAL SCROLL FOR TABS ---
