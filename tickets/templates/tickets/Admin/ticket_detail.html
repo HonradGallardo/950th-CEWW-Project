@@ -269,7 +269,8 @@
 
                         <div class="md:col-span-2 space-y-2">
                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Assign Technician</label>
-                            <select id="editTechnician" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow">
+                            <select id="editTechnician" {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify ownership"{% endif %}
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
                                 <option value="">Unassigned</option>
                                 {% for admin in all_admins %}
                                     <option value="{{ admin.id }}" {% if ticket.technician.id == admin.id %}selected{% endif %}>
@@ -586,6 +587,28 @@
             }, { passive: true });
         }
     };
+
+    // --- NEW: Auto-toggle Status based on Technician assignment ---
+    document.addEventListener("DOMContentLoaded", function() {
+        const techDropdown = document.getElementById('editTechnician');
+        const statusDropdown = document.getElementById('editStatus');
+        
+        if (techDropdown && statusDropdown) {
+            techDropdown.addEventListener('change', function() {
+                if (this.value !== "") {
+                    // If an admin takes ownership, auto-set to In Progress
+                    if (statusDropdown.value === "Pending") {
+                        statusDropdown.value = "In Progress";
+                    }
+                } else {
+                    // If they leave it unassigned, auto-revert to Pending
+                    if (["In Progress", "Open", "Under Review"].includes(statusDropdown.value)) {
+                        statusDropdown.value = "Pending";
+                    }
+                }
+            });
+        }
+    });
 
     function loadOlderMessages() {
         const btn = document.querySelector('button[onclick="loadOlderMessages()"]');

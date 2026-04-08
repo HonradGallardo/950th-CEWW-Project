@@ -349,36 +349,34 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.priority = data.get('priority', ticket.priority)
         tech_id = data.get('technician_id')
 
-        # --- NEW LOGIC: Ownership Restriction Check ---
-        # If the ticket has an owner, and the requester is NOT the owner
+        # --- SECURITY LOGIC: Ownership Restriction Check ---
         if old_tech is not None and old_tech != request.user:
-            # Check if they are attempting to change the technician field
             if 'technician_id' in data:
+                # Even if they bypassed the disabled HTML dropdown, block it here
                 if str(tech_id).strip() == "" or str(tech_id) != str(old_tech.id):
                     return Response(
                         {'error': 'Ownership restricted. Only the currently assigned admin can change ownership or leave it vacant.'}, 
                         status=status.HTTP_403_FORBIDDEN
                     )
-        # ----------------------------------------------
         
         if tech_id and str(tech_id).strip() != "":
             new_tech = get_object_or_404(User, id=tech_id)
             if old_tech != new_tech:
-                # MODIFIED LOGIC: Only set last_technician if an admin is giving up ownership.
-                # If old_tech is None (vacant), we preserve the existing last_technician.
+                # MODIFIED: Mark previous technician
                 if old_tech:
                     ticket.last_technician = old_tech.username 
                     
                 ticket.technician = new_tech
+                
+                # --- NEW LOGIC: Auto-change to 'In Progress' when taken ---
                 if ticket.status == 'Pending':
-                    ticket.status = 'Open'
+                    ticket.status = 'In Progress'
         else:
             if ticket.technician:
                 ticket.last_technician = ticket.technician.username
                 ticket.technician = None
             
-            # 2. FIX: Only revert to 'Pending' if the ticket lost its technician 
-            # while in an active working state. Do NOT overwrite 'Resolved' or 'Completed'.
+            # --- NEW LOGIC: Auto-revert to 'Pending' when left vacant ---
             if ticket.status in ['Open', 'In Progress', 'Under Review']:
                 ticket.status = 'Pending'
 
