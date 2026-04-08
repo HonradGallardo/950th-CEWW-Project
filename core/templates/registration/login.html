@@ -3,6 +3,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://ui-avatars.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Assets & Incident Monitoring System</title>
     
@@ -98,7 +101,7 @@
 <body class="bg-grid-pattern flex items-center justify-center min-h-screen p-4 font-sans relative selection:bg-blue-100 dark:selection:bg-cyan-900 selection:text-blue-900 dark:selection:text-cyan-100">
 
     <div class="fixed top-6 right-6 z-50">
-        <button onclick="toggleTheme()" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors p-3.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg">
+        <button onclick="toggleTheme()" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors p-3.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg">
             <i class="fas fa-sun hidden dark:inline text-xl"></i>
             <i class="fas fa-moon inline dark:hidden text-xl"></i>
         </button>
@@ -144,9 +147,10 @@
             <p class="text-slate-500 dark:text-slate-400 text-sm mt-2 font-medium">On The Go Secure Gateway</p>
         </div>
 
-        <div id="loginCard" class="overflow-hidden bg-transparent border-none transition-all duration-300">
+        <div id="loginCard" class="relative overflow-hidden bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-white/60 dark:border-slate-700/80 shadow-[0_8px_30px_rgb(0,0,0,0.05)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)] rounded-[2.5rem] transition-all duration-300">
+            <div class="absolute inset-0 rounded-[2.5rem] border border-white/80 dark:border-white/10 pointer-events-none z-0"></div>
             
-            <form id="loginForm" method="post" action="{% url 'login' %}" class="p-2 sm:p-6 space-y-5">
+            <form id="loginForm" method="post" action="{% url 'login' %}" class="relative z-10 p-6 sm:p-10 space-y-6">
                 {% csrf_token %}
                 
                 <div class="space-y-2">
@@ -156,7 +160,7 @@
                             <i class="fas fa-user text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 dark:group-focus-within:text-cyan-400 transition-colors"></i>
                         </div>
                         <input type="text" name="username" id="id_username" required 
-                            class="w-full pl-11 pr-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-cyan-500/30 focus:border-blue-500 dark:focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-sm"
+                            class="w-full pl-11 pr-4 py-3.5 bg-white/90 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-cyan-500/30 focus:border-blue-500 dark:focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-slate-800 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-sm"
                             placeholder="Enter your ID">
                     </div>
                 </div>
@@ -168,7 +172,7 @@
                             <i class="fas fa-lock text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 dark:group-focus-within:text-cyan-400 transition-colors"></i>
                         </div>
                         <input type="password" name="password" id="id_password" required 
-                            class="w-full pl-11 pr-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-cyan-500/30 focus:border-blue-500 dark:focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-sm"
+                            class="w-full pl-11 pr-4 py-3.5 bg-white/90 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-cyan-500/30 focus:border-blue-500 dark:focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-slate-800 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-sm"
                             placeholder="••••••••">
                     </div>
                 </div>
@@ -186,12 +190,12 @@
 
                 <div class="relative flex items-center justify-center my-6">
                     <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-slate-300 dark:border-slate-700"></div>
+                        <div class="w-full border-t border-slate-300/50 dark:border-slate-700"></div>
                     </div>
-                    <span class="relative bg-transparent px-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Or</span>
+                    <span class="relative bg-[#f6f9fc] dark:bg-[#141b2e] px-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest rounded-full">Or</span>
                 </div>
 
-                <button type="button" id="passkey-login-btn" class="w-full bg-white/70 dark:bg-slate-900/70 backdrop-blur-md hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold py-4 rounded-2xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-3">
+                <button type="button" id="passkey-login-btn" class="w-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300/80 dark:border-slate-700 font-bold py-4 rounded-2xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-3">
                     <i class="fas fa-fingerprint text-blue-600 dark:text-cyan-400 text-xl"></i> Sign in with Passkey
                 </button>
 
@@ -202,7 +206,7 @@
                 </div>
             </form>
 
-            <form id="mfaForm" class="hidden p-2 sm:p-6 space-y-6 animate-in fade-in slide-in-from-right-4">
+            <form id="mfaForm" class="hidden relative z-10 p-6 sm:p-10 space-y-6 animate-in fade-in slide-in-from-right-4">
                 <div class="text-center mb-6">
                     <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 dark:bg-emerald-900/40 rounded-full mb-4 border border-emerald-200 dark:border-emerald-800/50 shadow-inner">
                         <i class="fas fa-shield-check text-emerald-600 dark:text-emerald-400 text-2xl"></i>
@@ -212,7 +216,7 @@
                 </div>
 
                 <input type="text" name="otp_code" id="otp_code" required maxlength="6" autocomplete="off"
-                       class="w-full px-4 py-5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-300 dark:border-slate-700 rounded-2xl text-center font-mono text-3xl font-black tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:focus:ring-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-white shadow-inner"
+                       class="w-full px-4 py-5 bg-white/90 dark:bg-slate-950/60 backdrop-blur-md border border-slate-300 dark:border-slate-800 rounded-2xl text-center font-mono text-3xl font-black tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:focus:ring-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 focus:bg-white dark:focus:bg-slate-900 transition-all text-slate-800 dark:text-white shadow-inner"
                        placeholder="••••••">
 
                 <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-500/30 active:scale-[0.98] transition-all mt-4 flex justify-center items-center gap-2">
@@ -226,7 +230,7 @@
                 </div>
             </form>
 
-            <div class="mt-8 mb-4 p-4 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-slate-800 text-center mx-2 sm:mx-6">
+            <div class="relative z-10 bg-slate-100/50 dark:bg-slate-900/60 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 text-center py-4">
                 <div class="flex items-center justify-center space-x-2">
                     <span class="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full animate-ping"></span>
                     <p class="text-[9px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-[0.2em]">
@@ -236,7 +240,7 @@
             </div>
         </div>
         
-        <p class="text-center text-slate-400 dark:text-slate-600 text-[10px] mt-4 font-bold uppercase tracking-widest">
+        <p class="text-center text-slate-400 dark:text-slate-600 text-[10px] mt-6 font-bold uppercase tracking-widest">
             &copy; 2026 On The Go AIMS
         </p>
     </div>
