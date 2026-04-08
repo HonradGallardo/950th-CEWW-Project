@@ -344,31 +344,26 @@ class TicketViewSet(viewsets.ModelViewSet):
         old_tech = ticket.technician
         data = request.data
 
-        # 1. Grab the status the user explicitly selected from the dropdown
+        # --- SECURITY LOGIC: Strict Ownership Restriction ---
+        # If the ticket has an owner, and the requester is NOT the owner, block the entire update.
+        if old_tech is not None and old_tech != request.user:
+            return Response(
+                {'error': 'Ownership restricted. Only the currently assigned admin can edit or save changes to this ticket.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # ----------------------------------------------------
+
         ticket.status = data.get('status', ticket.status)
         ticket.priority = data.get('priority', ticket.priority)
         tech_id = data.get('technician_id')
-
-        # --- SECURITY LOGIC: Ownership Restriction Check ---
-        if old_tech is not None and old_tech != request.user:
-            if 'technician_id' in data:
-                # Even if they bypassed the disabled HTML dropdown, block it here
-                if str(tech_id).strip() == "" or str(tech_id) != str(old_tech.id):
-                    return Response(
-                        {'error': 'Ownership restricted. Only the currently assigned admin can change ownership or leave it vacant.'}, 
-                        status=status.HTTP_403_FORBIDDEN
-                    )
         
         if tech_id and str(tech_id).strip() != "":
             new_tech = get_object_or_404(User, id=tech_id)
             if old_tech != new_tech:
-                # MODIFIED: Mark previous technician
                 if old_tech:
                     ticket.last_technician = old_tech.username 
                     
                 ticket.technician = new_tech
-                
-                # --- NEW LOGIC: Auto-change to 'In Progress' when taken ---
                 if ticket.status == 'Pending':
                     ticket.status = 'In Progress'
         else:
@@ -376,12 +371,34 @@ class TicketViewSet(viewsets.ModelViewSet):
                 ticket.last_technician = ticket.technician.username
                 ticket.technician = None
             
-            # --- NEW LOGIC: Auto-revert to 'Pending' when left vacant ---
             if ticket.status in ['Open', 'In Progress', 'Under Review']:
                 ticket.status = 'Pending'
 
         ticket.save()
         return Response({'status': 'success'})
+    
+    def destroy(self, request, pk=None):
+        ticket = self.get_object()
+        user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
+        
+        if user_is_admin:
+            # --- SECURITY LOGIC: Admin Deletion Restriction ---
+            # If an admin tries to delete, they MUST be the assigned technician (if one is assigned)
+            if ticket.technician and ticket.technician != request.user:
+                return Response(
+                    {'message': 'Ownership restricted. Only the assigned admin can delete this ticket.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        else:
+            # Standard user deletion logic
+            if ticket.user != request.user:
+                return Response(
+                    {'message': 'You do not have permission to delete this ticket.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+                
+        ticket.delete()
+        return Response({'status': 'success', 'message': 'Ticket deleted'}, status=status.HTTP_204_NO_CONTENT)
     
     def destroy(self, request, pk=None):
         ticket = self.get_object()
