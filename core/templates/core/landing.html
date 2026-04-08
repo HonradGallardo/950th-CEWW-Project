@@ -26,30 +26,38 @@
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             color: var(--slate-900);
-            /* Less harsh white, replaced with a subtle slate tint */
-            background-color: #f1f5f9; 
+            /* Minimalist off-white background to prevent eye strain */
+            background-color: #f8fafc; 
+            /* Subtle, ambient hints of color to break up the solid white */
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.04) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 50%);
+            background-attachment: fixed;
         }
 
         .hero-bg {
-            /* Smooth, professional soft blue gradient to remove the all-white look */
-            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #eef2ff 100%);
+            /* Kept light, using the body's ambient gradient */
+            background: transparent;
         }
 
+        /* Very faint, clean grid */
         .bg-grid-pattern {
-            background-size: 32px 32px;
+            background-size: 40px 40px;
             background-image: 
-                linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
-            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+                linear-gradient(to right, rgba(15, 23, 42, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(15, 23, 42, 0.02) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
         }
 
+        /* Clean frosted glass */
         .glass-nav {
-            background: rgba(248, 250, 252, 0.75); /* Slate 50 with transparency */
-            backdrop-filter: blur(24px) saturate(180%);
-            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), inset 0 -1px 0 0 rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
         }
 
         .hero-image-container {
@@ -58,338 +66,314 @@
             z-index: 10;
         }
 
+        /* Softened glow so it isn't overpowering */
         .glow-effect {
             position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, rgba(6,182,212,0.12) 40%, rgba(0,0,0,0) 70%);
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(37,99,235,0.1) 0%, rgba(6,182,212,0.05) 40%, rgba(0,0,0,0) 70%);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: -1;
             border-radius: 50%;
-            filter: blur(50px);
-            animation: pulse-glow 5s ease-in-out infinite alternate;
+            filter: blur(40px);
+            animation: pulse-glow 6s ease-in-out infinite alternate;
         }
 
         @keyframes pulse-glow {
-            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
         }
 
         .floating-laptop {
-            filter: drop-shadow(0 40px 60px rgba(15, 23, 42, 0.15)) drop-shadow(0 0 40px rgba(37, 99, 235, 0.1));
-            animation: float 8s ease-in-out infinite;
+            filter: drop-shadow(0 25px 40px rgba(15, 23, 42, 0.08)) drop-shadow(0 0 20px rgba(37, 99, 235, 0.05));
+            animation: float 7s ease-in-out infinite;
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
-            50% { transform: translateY(-20px) rotateX(2deg) rotateY(-1deg); }
+            0%, 100% { transform: translateY(0px) rotateX(0deg); }
+            50% { transform: translateY(-15px) rotateX(1deg); }
         }
 
-        /* Tinted feature cards to avoid glaring white */
+        /* Enhanced Contrast for Cards: Pure white on an off-white background with clear borders */
         .feature-card {
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
-            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(203, 213, 225, 0.8); /* Distinct border */
+            background: #ffffff; /* Pure white */
+            box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.03); /* Subtle shadow base */
             position: relative;
             overflow: hidden;
+            border-radius: 2rem;
         }
 
         .feature-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .feature-card:hover {
-            transform: translateY(-10px);
-            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-            border-color: rgba(37, 99, 235, 0.2);
-            box-shadow: 0 30px 60px -15px rgba(37, 99, 235, 0.15), 0 0 20px rgba(6, 182, 212, 0.08);
+            transform: translateY(-6px);
+            border-color: rgba(148, 163, 184, 0.4);
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.08), 0 0 15px rgba(37, 99, 235, 0.05);
         }
 
         .feature-card:hover::before {
-            transform: translateX(100%);
+            opacity: 1;
         }
 
         .btn-gradient {
-            background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #06b6d4 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #06b6d4 100%);
             background-size: 200% auto;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-gradient::after {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(rgba(255,255,255,0.2), transparent, transparent);
-            transform: rotate(45deg);
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
 
         .btn-gradient:hover {
             background-position: right center;
-            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.4), 0 0 15px rgba(6, 182, 212, 0.3);
-            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+            transform: translateY(-2px);
         }
 
         .text-balance { text-wrap: balance; }
 
         .widget-scrollbar::-webkit-scrollbar { width: 6px; }
-        .widget-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
-        .widget-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #f8fafc; }
+        .widget-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .widget-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .widget-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .widget-anim-enter {
-            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         
         .chat-pill {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            background: #f8fafc;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
         }
         .chat-pill:hover {
-            border-color: var(--secondary);
-            background-color: #ecfeff;
-            color: #0369a1;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px -2px rgba(6, 182, 212, 0.15);
+            border-color: var(--primary);
+            background-color: #eff6ff;
+            color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.08);
         }
     </style>
 </head>
-<body class="antialiased relative selection:bg-cyan-200 selection:text-cyan-900">
+<body class="antialiased relative selection:bg-blue-100 selection:text-blue-900">
 
     <nav class="glass-nav sticky top-0 z-40 px-4 sm:px-6 md:px-16 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 transition-all duration-300">
-        <div class="flex items-center space-x-4 text-center sm:text-left group cursor-pointer">
-            <div class="bg-slate-900 p-2.5 rounded-xl shrink-0 shadow-lg shadow-slate-900/20 group-hover:rotate-3 transition-transform duration-300 relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20"></div>
-                <i class="fas fa-shield-halved text-cyan-400 text-xl relative z-10"></i>
+        <div class="flex items-center space-x-3 text-center sm:text-left group cursor-pointer">
+            <div class="bg-gradient-to-br from-blue-600 to-cyan-500 p-2.5 rounded-xl shrink-0 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+                <i class="fas fa-shield-halved text-white text-lg"></i>
             </div>
-            <span class="font-extrabold text-base sm:text-xl tracking-tight text-slate-900 leading-tight">
-                On The Go<span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500"> Assets & Incident Monitoring System</span>
+            <span class="font-extrabold text-base sm:text-xl tracking-tight text-slate-800 leading-tight">
+                On The Go<span class="text-blue-600"> Assets & Incident Monitoring System</span>
             </span>
         </div>
         
         <div class="flex flex-wrap justify-center items-center gap-4 sm:space-x-6">
-            <div id="network-status" class="flex items-center text-[10px] font-black text-slate-500 uppercase tracking-widest transition-opacity duration-500 hidden md:flex bg-slate-50 px-4 py-2 rounded-full border border-slate-200 shadow-sm">
-                <span id="status-dot" class="w-2.5 h-2.5 bg-emerald-500 rounded-full mr-2.5 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse relative">
-                    <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
-                </span>
+            <div id="network-status" class="flex items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest transition-opacity duration-500 hidden md:flex bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                <span id="status-dot" class="w-2 h-2 bg-emerald-500 rounded-full mr-2 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></span>
                 <span id="status-text">Network Sync...</span>
             </div>
             
-            <button onclick="TicketTracker.open()" class="text-slate-600 hover:text-blue-700 font-bold text-sm transition-all duration-300 flex items-center hover:bg-slate-200/50 px-4 py-2 rounded-xl">
-                <i class="fas fa-crosshairs mr-2"></i> Track Ticket
+            <button onclick="TicketTracker.open()" class="text-slate-600 hover:text-blue-600 font-bold text-sm transition-all duration-300 flex items-center hover:bg-slate-100 px-3 py-2 rounded-lg">
+                <i class="fas fa-search mr-2 text-slate-400"></i> Track Ticket
             </button>
             
-            <a href="{% url 'login' %}" class="btn-gradient text-white px-6 sm:px-7 py-2 sm:py-2.5 rounded-xl font-bold text-sm flex items-center shadow-lg border border-white/10">
-                <i class="fas fa-fingerprint mr-2 text-xs"></i> Portal Login
+            <a href="{% url 'login' %}" class="btn-gradient text-white px-6 py-2.5 rounded-full font-bold text-sm flex items-center shadow-md">
+                <i class="fas fa-lock-open mr-2 text-xs opacity-80"></i> Portal Login
             </a>
         </div>
     </nav>
 
-    <section class="hero-bg bg-grid-pattern px-4 sm:px-6 md:px-24 pt-16 sm:pt-20 md:pt-32 pb-20 sm:pb-32 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 relative overflow-hidden">
-        <div class="w-full lg:w-3/5 space-y-8 sm:space-y-10 text-center lg:text-left relative z-10">
+    <section class="hero-bg bg-grid-pattern px-4 sm:px-6 md:px-24 pt-12 sm:pt-16 md:pt-28 pb-16 sm:pb-24 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 relative overflow-hidden">
+        <div class="w-full lg:w-3/5 space-y-6 sm:space-y-8 text-center lg:text-left relative z-10">
             
-            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 border border-blue-200 text-blue-800 text-[10px] font-black uppercase tracking-widest mx-auto lg:mx-0 shadow-sm">
-                <i class="fas fa-satellite-dish animate-pulse text-cyan-600"></i> Secure Offline Architecture Ready
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-widest mx-auto lg:mx-0">
+                <i class="fas fa-check-circle text-blue-500"></i> Secure Offline Architecture Ready
             </div>
 
-            <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-[5rem] font-extrabold text-slate-900 leading-[1.05] tracking-tight text-balance">
-                The Standard in <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500">Infrastructure</span> Oversight
+            <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 leading-[1.08] tracking-tight text-balance">
+                The Standard in <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Infrastructure</span> Oversight
             </h1>
             
-            <p class="text-slate-600 text-base sm:text-lg md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
+            <p class="text-slate-500 text-base sm:text-lg md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
                 A unified, air-gapped ecosystem for the rigorous management of IT assets and high-fidelity cybersecurity incident tracking.
             </p>
             
-            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5 pt-4 sm:pt-6">
-                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-10 py-4 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-xl shadow-blue-500/20 active:scale-95 text-center flex justify-center items-center gap-3 border border-white/10">
-                    Initialize System <i class="fas fa-chevron-right text-sm opacity-80"></i>
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2 sm:pt-4">
+                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 active:scale-95 text-center flex justify-center items-center gap-2 transition-transform">
+                    Initialize System <i class="fas fa-arrow-right text-sm opacity-80"></i>
                 </a>
             </div>
         </div>
 
-        <div class="w-full sm:w-3/4 lg:w-2/5 hero-image-container mt-12 lg:mt-0">
+        <div class="w-full sm:w-3/4 lg:w-2/5 hero-image-container mt-8 lg:mt-0">
             <div class="glow-effect"></div>
-            <img src="{% static 'image_2.png' %}" 
-                 alt="System Infographic" 
-                 class="w-full h-auto floating-laptop rounded-2xl border border-blue-200/50 shadow-2xl bg-white/40 backdrop-blur-md p-2">
+            <div class="relative bg-white/60 backdrop-blur-md rounded-[2rem] p-2 border border-white/80 shadow-xl shadow-slate-200/50 floating-laptop">
+                <img src="{% static 'image_2.png' %}" alt="System Infographic" class="w-full h-auto rounded-[1.5rem]">
+            </div>
         </div>
     </section>
 
-    <section class="px-4 sm:px-6 md:px-16 py-20 sm:py-32 bg-slate-50 relative border-t border-blue-100/50">
+    <section class="px-4 sm:px-6 md:px-16 py-16 sm:py-24 bg-slate-100/50 relative border-t border-slate-200/60">
         <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-16 sm:mb-24 space-y-4">
-                <h2 class="text-[10px] sm:text-xs font-black text-cyan-700 uppercase tracking-[0.3em] bg-cyan-100/50 inline-block px-4 py-1.5 rounded-full border border-cyan-200">Core Capabilities</h2>
-                <h3 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Integrated Command Center</h3>
-                <div class="w-24 sm:w-32 h-1 bg-gradient-to-r from-blue-600 to-cyan-400 mx-auto rounded-full mt-8 opacity-60"></div>
+            <div class="text-center mb-12 sm:mb-20 space-y-3">
+                <h2 class="text-[10px] sm:text-xs font-black text-blue-600 uppercase tracking-[0.25em] bg-blue-50 inline-block px-3 py-1 rounded-md border border-blue-100">Core Capabilities</h2>
+                <h3 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Integrated Command Center</h3>
+                <div class="w-16 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 mx-auto rounded-full mt-6 opacity-70"></div>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-10 relative z-10">
-                <div class="feature-card p-10 sm:p-12 rounded-[2rem] flex flex-col items-center text-center sm:items-start sm:text-left group">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 group-hover:border-blue-400 group-hover:bg-blue-100 transition-all duration-300 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
-                        <i class="fas fa-server text-blue-700 group-hover:text-blue-800 transition-colors duration-300 text-2xl sm:text-3xl"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 relative z-10">
+                <div class="feature-card p-8 sm:p-10 flex flex-col items-center text-center sm:items-start sm:text-left group">
+                    <div class="bg-blue-50 border border-blue-100 group-hover:bg-blue-600 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
+                        <i class="fas fa-server text-blue-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-xl sm:text-2xl text-slate-900 mb-4 tracking-tight group-hover:text-blue-800 transition-colors">Asset Ledger</h4>
-                    <p class="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">Automated cataloging and lifecycle tracking for mission-critical hardware and software nodes.</p>
+                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">Asset Ledger</h4>
+                    <p class="text-slate-500 text-sm leading-relaxed font-medium">Automated cataloging and lifecycle tracking for mission-critical hardware and software nodes.</p>
                 </div>
 
-                <div class="feature-card p-10 sm:p-12 rounded-[2rem] flex flex-col items-center text-center sm:items-start sm:text-left group">
-                    <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200 group-hover:border-cyan-400 group-hover:bg-cyan-100 transition-all duration-300 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
-                        <i class="fas fa-microchip text-cyan-700 group-hover:text-cyan-800 transition-colors duration-300 text-2xl sm:text-3xl"></i>
+                <div class="feature-card p-8 sm:p-10 flex flex-col items-center text-center sm:items-start sm:text-left group">
+                    <div class="bg-cyan-50 border border-cyan-100 group-hover:bg-cyan-500 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
+                        <i class="fas fa-microchip text-cyan-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-xl sm:text-2xl text-slate-900 mb-4 tracking-tight group-hover:text-cyan-800 transition-colors">Maintenance Core</h4>
-                    <p class="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">Predictive logging and historical audit trails to ensure 24/7 infrastructure availability.</p>
+                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 group-hover:text-cyan-600 transition-colors">Maintenance Core</h4>
+                    <p class="text-slate-500 text-sm leading-relaxed font-medium">Predictive logging and historical audit trails to ensure 24/7 infrastructure availability.</p>
                 </div>
 
-                <div class="feature-card p-10 sm:p-12 rounded-[2rem] flex flex-col items-center text-center sm:items-start sm:text-left sm:col-span-2 md:col-span-1 group">
-                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 group-hover:border-indigo-400 group-hover:bg-indigo-100 transition-all duration-300 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
-                        <i class="fas fa-shield-halved text-indigo-700 group-hover:text-indigo-800 transition-colors duration-300 text-2xl sm:text-3xl"></i>
+                <div class="feature-card p-8 sm:p-10 flex flex-col items-center text-center sm:items-start sm:text-left sm:col-span-2 md:col-span-1 group">
+                    <div class="bg-indigo-50 border border-indigo-100 group-hover:bg-indigo-500 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
+                        <i class="fas fa-shield-virus text-indigo-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-xl sm:text-2xl text-slate-900 mb-4 tracking-tight group-hover:text-indigo-800 transition-colors">Incident Matrix</h4>
-                    <p class="text-slate-600 text-sm sm:text-base leading-relaxed font-medium">High-security logging of network anomalies and cybersecurity events with rapid triage tools.</p>
+                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">Incident Matrix</h4>
+                    <p class="text-slate-500 text-sm leading-relaxed font-medium">High-security logging of network anomalies and cybersecurity events with rapid triage tools.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="py-16 bg-slate-900 text-slate-300 relative overflow-hidden">
-        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col items-center space-y-10">
-            <div class="w-full max-w-xl bg-slate-800/80 backdrop-blur-md border border-slate-700 rounded-2xl p-5 flex flex-wrap sm:flex-nowrap justify-between items-center gap-4 text-center sm:text-left shadow-2xl">
-                <div class="w-full sm:w-auto">
-                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">System Readiness</p>
-                    <div class="flex items-center justify-center sm:justify-start gap-2.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
-                        <span class="text-xs font-bold text-slate-200 tracking-wide">All Nodes Active</span>
+    <footer class="py-12 border-t border-slate-200 px-4 sm:px-6 bg-white">
+        <div class="max-w-7xl mx-auto flex flex-col items-center space-y-8">
+            <div class="w-full max-w-lg bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-wrap sm:flex-nowrap justify-between items-center gap-4 text-center sm:text-left">
+                <div class="w-full sm:w-auto px-2">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">System Readiness</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                        <span class="text-xs font-bold text-slate-700">All Nodes Active</span>
                     </div>
                 </div>
-                <div class="h-10 w-px bg-slate-700 hidden sm:block"></div>
-                <div class="w-[45%] sm:w-auto">
-                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Local Uplink</p>
-                    <p id="local-time-display" class="text-xs font-bold text-cyan-400 font-mono tracking-wider">--:--:--</p>
+                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div class="w-[45%] sm:w-auto px-2">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Local Uplink</p>
+                    <p id="local-time-display" class="text-xs font-bold text-slate-700 font-mono">--:--:--</p>
                 </div>
-                <div class="h-10 w-px bg-slate-700 hidden sm:block"></div>
-                <div class="w-[45%] sm:w-auto">
-                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Server Uptime</p>
-                    <p id="server-uptime-display" class="text-xs font-bold text-blue-400 font-mono tracking-wider">--h --m</p>
+                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div class="w-[45%] sm:w-auto px-2">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Server Uptime</p>
+                    <p id="server-uptime-display" class="text-xs font-bold text-blue-600 font-mono">--h --m</p>
                 </div>
             </div>
 
-            <div class="flex items-center justify-center space-x-4 opacity-70 hover:opacity-100 transition-opacity duration-300">
-                <div class="bg-slate-800 p-2 rounded-lg border border-slate-700">
-                    <i class="fas fa-shield-halved text-2xl text-cyan-500"></i>
-                </div>
-                <span class="font-extrabold text-lg sm:text-xl text-white tracking-tight">On The Go AIMS</span>
+            <div class="flex items-center justify-center space-x-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300 cursor-default">
+                <i class="fas fa-shield-halved text-xl text-blue-600"></i>
+                <span class="font-bold text-base text-slate-800">On The Go AIMS</span>
             </div>
-            <p class="text-slate-500 text-[10px] font-black tracking-[0.25em] uppercase text-center px-4">
+            <p class="text-slate-400 text-[10px] font-bold tracking-[0.2em] uppercase text-center">
                 &copy; 2026 OFFICIAL USE ONLY - SECURE OFFLINE ARCHITECTURE
             </p>
         </div>
     </footer>
 
-    <div id="trackerModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-slate-50 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-400 border border-slate-300/60" id="trackerModalContent">
-            <div class="px-6 py-5 border-b border-slate-200/60 flex justify-between items-center bg-blue-50/50">
-                <h3 class="font-extrabold text-lg text-slate-800 flex items-center tracking-tight">
-                    <div class="bg-blue-200/60 w-10 h-10 rounded-xl flex items-center justify-center mr-3 border border-blue-300/50 shadow-inner">
-                        <i class="fas fa-crosshairs text-blue-700"></i>
+    <div id="trackerModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-400 border border-slate-200" id="trackerModalContent">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+                <h3 class="font-bold text-lg text-slate-800 flex items-center">
+                    <div class="bg-blue-100 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                        <i class="fas fa-search text-sm"></i>
                     </div>
                     Track Your Ticket
                 </h3>
-                <button onclick="TicketTracker.close()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 w-10 h-10 rounded-full transition-all flex items-center justify-center">
+                <button onclick="TicketTracker.close()" class="text-slate-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 rounded-full transition-all flex items-center justify-center">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
             <div class="p-6">
-                <p class="text-sm text-slate-600 mb-6 font-medium leading-relaxed">Enter your 6-digit incident number below to retrieve live status and assigned technical personnel.</p>
+                <p class="text-sm text-slate-500 mb-5 font-medium">Enter your 6-digit incident number below to retrieve live status and assigned technical personnel.</p>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1 group">
-                        <i class="fas fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors"></i>
+                        <i class="fas fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
                         <input type="text" id="trackTicketInput" placeholder="000001" 
-                               class="w-full bg-white border border-slate-300 py-3.5 pl-11 pr-4 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-black text-slate-800 uppercase tracking-widest shadow-inner transition-all duration-300 placeholder:text-slate-300 placeholder:font-medium" 
+                               class="w-full bg-slate-50 border border-slate-200 py-3 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-700 uppercase tracking-widest transition-all" 
                                onkeypress="if(event.key === 'Enter') TicketTracker.search()">
                     </div>
-                    <button onclick="TicketTracker.search()" id="trackBtn" class="w-full sm:w-auto bg-slate-800 hover:bg-blue-700 active:bg-blue-800 text-white px-7 py-3.5 rounded-xl text-sm font-bold transition-all flex justify-center items-center shadow-md">
+                    <button onclick="TicketTracker.search()" id="trackBtn" class="w-full sm:w-auto bg-slate-900 hover:bg-blue-600 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all flex justify-center items-center shadow-md">
                         Scan
                     </button>
                 </div>
                 
-                <div id="trackResults" class="hidden mt-6 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm transition-all"></div>
-                <div id="trackError" class="hidden mt-4 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-200 text-center animate-pulse"></div>
+                <div id="trackResults" class="hidden mt-6 bg-slate-50 rounded-xl p-5 border border-slate-200 transition-all"></div>
+                <div id="trackError" class="hidden mt-4 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100 text-center animate-pulse"></div>
             </div>
         </div>
     </div>
 
-    <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-6 right-6 w-16 h-16 bg-slate-900 hover:bg-blue-700 text-white rounded-2xl shadow-xl flex items-center justify-center transition-all hover:-translate-y-1 active:scale-95 z-50 border border-white/20 group">
-        <i class="fas fa-comment-dots text-2xl group-hover:animate-bounce"></i>
+    <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-6 right-6 w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-500/30 flex items-center justify-center transition-all hover:-translate-y-1 active:scale-95 z-50 border-2 border-white group">
+        <i class="fas fa-comment-dots text-xl sm:text-2xl group-hover:animate-bounce"></i>
     </button>
 
-    <div id="chatWidgetContainer" class="hidden fixed bottom-28 right-6 w-[calc(100vw-3rem)] sm:w-[400px] h-[600px] sm:h-[700px] max-h-[calc(100vh-8rem)] bg-slate-50/95 backdrop-blur-xl rounded-[2rem] shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-300/80 origin-bottom-right transition-all">
+    <div id="chatWidgetContainer" class="hidden fixed bottom-28 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[380px] h-[500px] sm:h-[650px] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200 origin-bottom-right transition-all">
         
-        <div class="bg-slate-900 px-6 py-5 flex justify-between items-center relative z-10">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-            <div class="flex items-center gap-3 relative z-10">
+        <div class="bg-slate-900 px-5 py-4 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-3">
                 <div class="relative">
-                    <img src="https://ui-avatars.com/api/?name=System+AI&background=0f172a&color=06b6d4&bold=true" alt="Avatar" class="w-11 h-11 rounded-xl border border-slate-700 object-cover shadow-sm bg-slate-800">
-                    <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-cyan-400 border-2 border-slate-900 rounded-full shadow-sm animate-pulse"></div>
+                    <img src="https://ui-avatars.com/api/?name=AI&background=1e293b&color=38bdf8&bold=true" alt="Avatar" class="w-10 h-10 rounded-full border border-slate-700 object-cover">
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full"></div>
                 </div>
                 <div>
-                    <h3 class="text-sm font-extrabold text-white tracking-wide">Command AI</h3>
-                    <p class="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mt-0.5">Automated Diagnostics</p>
+                    <h3 class="text-sm font-bold text-white tracking-wide">Command AI</h3>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Automated Diagnostics</p>
                 </div>
             </div>
-            <div class="flex items-center gap-1 relative z-10">
-                <button class="text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg p-2 transition-colors">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
+            <div class="flex items-center gap-1">
                 <button onclick="ChatWidget.toggle()" class="text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg p-2 transition-colors">
-                    <i class="fas fa-chevron-down"></i>
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
 
-        <div id="chatWidgetBody" class="flex-1 overflow-y-auto widget-scrollbar p-6 space-y-6 flex flex-col scroll-smooth bg-slate-100 border-t border-slate-200"></div>
+        <div id="chatWidgetBody" class="flex-1 overflow-y-auto widget-scrollbar p-5 space-y-4 flex flex-col scroll-smooth bg-slate-50"></div>
 
         <div id="hiddenForms" class="hidden">
-            <form id="newTicketForm" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-md mt-4 flex flex-col gap-4" enctype="multipart/form-data">
+            <form id="newTicketForm" class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm mt-2 flex flex-col gap-3" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="category" id="newCat" value="General">
                 <input type="hidden" name="priority" id="newPriority" value="Medium">
 
-                <div class="border-b border-slate-100 pb-2 mb-2">
-                    <p id="form-context-msg" class="text-[10px] font-black text-slate-700 uppercase tracking-widest flex items-center"><i class="fas fa-folder-open mr-2 text-blue-500"></i></p>
+                <div class="border-b border-slate-100 pb-2 mb-1">
+                    <p id="form-context-msg" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center"><i class="fas fa-folder-open mr-2 text-blue-400"></i></p>
                 </div>
 
-                <div id="account-fields" class="hidden flex flex-col gap-3 p-4 bg-blue-50/70 rounded-xl border border-blue-200/60 shadow-inner">
+                <div id="account-fields" class="hidden flex flex-col gap-2.5 p-3.5 bg-blue-50/50 rounded-lg border border-blue-100">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-6 h-6 rounded bg-blue-200/50 flex items-center justify-center shrink-0">
-                            <i class="fas fa-id-card text-blue-700 text-[10px]"></i>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-blue-700 uppercase tracking-widest">Identity Support</p>
-                        </div>
+                        <i class="fas fa-id-card text-blue-600 text-[10px]"></i>
+                        <p class="text-[9px] font-bold text-blue-700 uppercase tracking-widest">Identity Support</p>
                     </div>
-                    <input type="text" name="first_name" maxlength="25" placeholder="First Name" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
-                    <input type="text" name="last_name" maxlength="25" placeholder="Last Name" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
-                    <input type="email" name="email" maxlength="50" placeholder="Inst. Email" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
-                    <input type="tel" name="phone" maxlength="11" placeholder="Phone Number" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <input type="text" name="first_name" maxlength="25" placeholder="First Name" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-blue-500 focus:bg-white transition-colors">
+                    <input type="text" name="last_name" maxlength="25" placeholder="Last Name" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-blue-500 focus:bg-white transition-colors">
+                    <input type="email" name="email" maxlength="50" placeholder="Inst. Email" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-blue-500 focus:bg-white transition-colors">
+                    <input type="tel" name="phone" maxlength="11" placeholder="Phone Number" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-blue-500 focus:bg-white transition-colors">
                     
-                    <select name="rank" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
+                    <select name="rank" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-blue-500 focus:bg-white transition-colors cursor-pointer text-slate-600">
                         <option value="" disabled selected>Requested Rank</option>
                         <optgroup label="Enlisted">
                             <option value="Airman">Airman</option>
@@ -421,90 +405,72 @@
                     </select>
                 </div>
 
-                <div id="security-removal-fields" class="hidden flex flex-col gap-3 p-4 bg-amber-50/70 rounded-xl border border-amber-200/60 shadow-inner">
+                <div id="security-removal-fields" class="hidden flex flex-col gap-2.5 p-3.5 bg-amber-50/50 rounded-lg border border-amber-100">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-6 h-6 rounded bg-amber-200/50 flex items-center justify-center shrink-0">
-                            <i class="fas fa-shield-alt text-amber-700 text-[10px]"></i>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-amber-700 uppercase tracking-widest">Security Clearance</p>
-                        </div>
+                        <i class="fas fa-shield-alt text-amber-600 text-[10px]"></i>
+                        <p class="text-[9px] font-bold text-amber-700 uppercase tracking-widest">Security Clearance</p>
                     </div>
-                    <input type="text" name="auth_id" placeholder="Identifier (ID/Username)" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-sm font-medium">
-                    <select name="removal_type" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
+                    <input type="text" name="auth_id" placeholder="Identifier (ID/Username)" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-amber-500 focus:bg-white transition-colors">
+                    <select name="removal_type" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-amber-500 focus:bg-white transition-colors cursor-pointer text-slate-600">
                         <option value="OTP">OTP Reset</option>
                         <option value="MFA">Complete MFA Removal</option>
                         <option value="Hardware">Hardware Token Unlink</option>
                     </select>
                 </div>
 
-                <div id="bug-fields" class="hidden flex flex-col gap-3 p-4 bg-red-50/70 rounded-xl border border-red-200/60 shadow-inner">
+                <div id="bug-fields" class="hidden flex flex-col gap-2.5 p-3.5 bg-red-50/50 rounded-lg border border-red-100">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-6 h-6 rounded bg-red-200/50 flex items-center justify-center shrink-0">
-                            <i class="fas fa-bug text-red-700 text-[10px]"></i>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-red-700 uppercase tracking-widest">System Anomaly</p>
-                        </div>
+                        <i class="fas fa-bug text-red-600 text-[10px]"></i>
+                        <p class="text-[9px] font-bold text-red-700 uppercase tracking-widest">System Anomaly</p>
                     </div>
-                    <select name="bug_module" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
+                    <select name="bug_module" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-red-500 focus:bg-white transition-colors cursor-pointer text-slate-600">
                         <option value="Dashboard">Dashboard / Analytics</option>
                         <option value="Tickets">Ticket System</option>
                         <option value="Assets">IT Assets</option>
                         <option value="Authentication">Authentication</option>
                         <option value="Other">Other Component</option>
                     </select>
-                    <input type="text" name="error_code" placeholder="Error Code (If any)" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-sm font-medium">
-                    <textarea name="reproduce_steps" rows="2" placeholder="Steps to reproduce..." class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all shadow-sm font-medium"></textarea>
+                    <input type="text" name="error_code" placeholder="Error Code (If any)" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-red-500 focus:bg-white transition-colors">
+                    <textarea name="reproduce_steps" rows="2" placeholder="Steps to reproduce..." class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-red-500 focus:bg-white resize-none transition-colors"></textarea>
                 </div>
 
-                <div id="permission-fields" class="hidden flex flex-col gap-3 p-4 bg-emerald-50/70 rounded-xl border border-emerald-200/60 shadow-inner">
+                <div id="permission-fields" class="hidden flex flex-col gap-2.5 p-3.5 bg-emerald-50/50 rounded-lg border border-emerald-100">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-6 h-6 rounded bg-emerald-200/50 flex items-center justify-center shrink-0">
-                            <i class="fas fa-key text-emerald-700 text-[10px]"></i>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Access Control</p>
-                        </div>
+                        <i class="fas fa-key text-emerald-600 text-[10px]"></i>
+                        <p class="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Access Control</p>
                     </div>
-                    <input type="text" name="target_resource" placeholder="Target Resource" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm font-medium">
-                    <select name="access_level" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
+                    <input type="text" name="target_resource" placeholder="Target Resource" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-emerald-500 focus:bg-white transition-colors">
+                    <select name="access_level" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-emerald-500 focus:bg-white transition-colors cursor-pointer text-slate-600">
                         <option value="Read-Only">Read-Only (Viewer)</option>
                         <option value="Contributor">Contributor (Editor)</option>
                         <option value="Administrator">Administrator (Elevated)</option>
                     </select>
-                    <input type="text" name="approving_officer" placeholder="Approving Officer Ref" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <input type="text" name="approving_officer" placeholder="Approving Officer Ref" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-emerald-500 focus:bg-white transition-colors">
                 </div>
 
-                <div id="access-fields" class="hidden flex flex-col gap-3 p-4 bg-purple-50/70 rounded-xl border border-purple-200/60 shadow-inner">
+                <div id="access-fields" class="hidden flex flex-col gap-2.5 p-3.5 bg-purple-50/50 rounded-lg border border-purple-100">
                     <div class="flex items-center gap-2 mb-1">
-                        <div class="w-6 h-6 rounded bg-purple-200/50 flex items-center justify-center shrink-0">
-                            <i class="fas fa-sign-in-alt text-purple-700 text-[10px]"></i>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-purple-700 uppercase tracking-widest">Auth Diagnostics</p>
-                        </div>
+                        <i class="fas fa-sign-in-alt text-purple-600 text-[10px]"></i>
+                        <p class="text-[9px] font-bold text-purple-700 uppercase tracking-widest">Auth Diagnostics</p>
                     </div>
-                    <input type="text" name="affected_id" placeholder="Affected ID / Username" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-sm font-medium">
-                    <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-white border border-slate-300 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <input type="text" name="affected_id" placeholder="Affected ID / Username" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-purple-500 focus:bg-white transition-colors">
+                    <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-slate-50 border border-slate-200 p-2.5 rounded text-xs outline-none focus:border-purple-500 focus:bg-white transition-colors">
                 </div>
 
-                <div class="flex flex-col gap-3 mt-2">
-                    <input type="text" name="subject" id="newSub" placeholder="Subject / Incident Title" required class="w-full bg-slate-50 border border-slate-300 p-3.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent focus:bg-white font-bold text-slate-800 transition-all shadow-inner placeholder:font-medium">
-                    <textarea name="description" id="newDescInput" placeholder="Detailed Operation Description..." required rows="4" class="w-full bg-slate-50 border border-slate-300 p-3.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent focus:bg-white resize-none transition-all shadow-inner font-medium placeholder:font-medium"></textarea>
+                <div class="flex flex-col gap-2.5 mt-1">
+                    <input type="text" name="subject" id="newSub" placeholder="Subject / Incident Title" required class="w-full bg-slate-50 border border-slate-200 p-3 rounded text-xs outline-none focus:border-blue-500 focus:bg-white font-semibold text-slate-800 transition-colors">
+                    <textarea name="description" id="newDescInput" placeholder="Detailed Description..." required rows="3" class="w-full bg-slate-50 border border-slate-200 p-3 rounded text-xs outline-none focus:border-blue-500 focus:bg-white resize-none transition-colors"></textarea>
                     
-                    <label class="hidden border-2 border-dashed border-slate-300 bg-slate-50/50 rounded-xl p-5 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
+                    <label class="hidden border border-dashed border-slate-300 bg-slate-50 rounded p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors group">
                         <input type="file" name="attachments" multiple disabled class="hidden" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.csv" onchange="ChatWidget.updateFileLabel(this)">
-                        <div class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center border border-slate-200 mx-auto mb-3 group-hover:border-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                            <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-white transition-colors"></i>
-                        </div>
-                        <span id="widget-file-label" class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-700 transition-colors">Attach Secure Media</span>
-                        <div id="file-preview-list" class="mt-4 flex flex-wrap gap-2 justify-center empty:hidden"></div>
+                        <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-blue-500 mb-2 text-lg"></i><br>
+                        <span id="widget-file-label" class="text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-blue-600 transition-colors">Attach File</span>
+                        <div id="file-preview-list" class="mt-2 flex flex-wrap gap-1 justify-center empty:hidden"></div>
                     </label>
                 </div>
 
-                <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-slate-800 hover:bg-blue-700 text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-md mt-2 flex justify-center items-center gap-3">
-                    <i class="fas fa-satellite-dish"></i> Initialize Dispatch
+                <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-slate-900 hover:bg-blue-600 text-white py-3.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors mt-1 flex justify-center items-center gap-2">
+                    <i class="fas fa-paper-plane"></i> Submit Request
                 </button>
             </form>
         </div>
@@ -620,32 +586,32 @@
 
                 const subject = SecurityUtils.escapeHTML(data.subject || 'Not specified');
                 
-                let statusColor = 'text-blue-700 bg-blue-100 border-blue-200';
+                let statusColor = 'text-blue-600 bg-blue-50 border-blue-200';
                 if(lowerStatus === 'pending' || lowerStatus === 'open') {
-                    statusColor = 'text-amber-700 bg-amber-100 border-amber-200';
+                    statusColor = 'text-amber-600 bg-amber-50 border-amber-200';
                 } else if(lowerStatus === 'resolved' || lowerStatus === 'closed' || lowerStatus === 'completed') {
-                    statusColor = 'text-emerald-700 bg-emerald-100 border-emerald-200';
+                    statusColor = 'text-emerald-600 bg-emerald-50 border-emerald-200';
                 }
 
                 let resolutionMessageHtml = '';
                 if (lowerStatus === 'resolved' || lowerStatus === 'closed' || lowerStatus === 'completed') {
                     if (subject === 'New Account Provisioning') {
                         resolutionMessageHtml = `
-                            <div class="mt-5 p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex items-start space-x-3">
-                                <i class="fas fa-check-circle text-emerald-600 mt-0.5"></i>
+                            <div class="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
                                 <div>
-                                    <p class="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Your Account Is Ready</p>
-                                    <p class="text-xs text-emerald-700 font-medium mt-1">Please check your email for the credentials. Thank you!</p>
+                                    <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Your Account Is Ready</p>
+                                    <p class="text-xs text-emerald-600 mt-1">Please check your email for the credentials. Thank you!</p>
                                 </div>
                             </div>
                         `;
                     } else {
                         resolutionMessageHtml = `
-                            <div class="mt-5 p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex items-start space-x-3">
-                                <i class="fas fa-check-circle text-emerald-600 mt-0.5"></i>
+                            <div class="mt-4 p-3 bg-emerald-50 rounded-lg border border-emerald-100 flex items-start space-x-3">
+                                <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
                                 <div>
-                                    <p class="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Issue Resolved</p>
-                                    <p class="text-xs text-emerald-700 font-medium mt-1">Your request has been successfully processed.</p>
+                                    <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Issue Resolved</p>
+                                    <p class="text-xs text-emerald-600 mt-1">Your request has been successfully processed.</p>
                                 </div>
                             </div>
                         `;
@@ -653,23 +619,23 @@
                 }
 
                 this.results.innerHTML = `
-                    <div class="flex justify-between items-start border-b border-slate-200 pb-4">
+                    <div class="flex justify-between items-start border-b border-slate-200 pb-3">
                         <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Ticket ID</p>
-                            <p class="font-black text-slate-900 text-2xl tracking-tight">${formattedId}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ticket ID</p>
+                            <p class="font-extrabold text-slate-800 text-xl">${formattedId}</p>
                         </div>
-                        <div class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${statusColor}">
+                        <div class="px-3 py-1 rounded border text-[10px] font-bold uppercase tracking-widest ${statusColor}">
                             ${status}
                         </div>
                     </div>
-                    <div class="space-y-5 pt-5">
+                    <div class="space-y-4 pt-4">
                         <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Subject</p>
-                            <p class="text-sm font-bold text-slate-800">${subject}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Subject</p>
+                            <p class="text-sm font-semibold text-slate-700">${subject}</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Assigned Technician</p>
-                            <p class="text-sm font-bold ${technician === 'No technician yet' ? 'text-slate-500 italic' : 'text-slate-800'} flex items-center">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned Technician</p>
+                            <p class="text-sm font-semibold ${technician === 'No technician yet' ? 'text-slate-400 italic' : 'text-slate-700'} flex items-center">
                                 <i class="fas ${technician === 'No technician yet' ? 'fa-user-clock' : 'fa-user-check'} mr-2 text-slate-400"></i> 
                                 ${technician}
                             </p>
@@ -762,7 +728,7 @@
             const div = document.createElement('div');
             div.className = "flex justify-start w-full mb-2";
             div.innerHTML = `
-                <div class="bg-white border border-slate-200 text-slate-700 px-5 py-3.5 rounded-2xl rounded-tl-sm text-[13px] shadow-sm leading-relaxed max-w-[90%] font-medium">
+                <div class="bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-2xl rounded-tl-sm text-[13px] shadow-sm leading-relaxed max-w-[90%]">
                     ${text}
                 </div>`;
             this.body.appendChild(div);
@@ -775,7 +741,7 @@
             const div = document.createElement('div');
             div.className = "flex justify-end w-full mb-2";
             div.innerHTML = `
-                <div class="bg-slate-800 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm text-[13px] shadow-md max-w-[85%] font-medium">
+                <div class="bg-slate-800 text-white px-4 py-3 rounded-2xl rounded-tr-sm text-[13px] shadow-sm max-w-[85%]">
                     ${sanitizedText}
                 </div>`;
             this.body.appendChild(div);
@@ -784,11 +750,11 @@
 
         setBotOptions(options) {
             const optionsDiv = document.createElement('div');
-            optionsDiv.className = "flex flex-wrap gap-2.5 mt-2 w-full justify-end";
+            optionsDiv.className = "flex flex-wrap gap-2 mt-2 w-full justify-end";
             
             optionsDiv.innerHTML = options.map(o => `
                 <button type="button" onclick="ChatWidget.${o.action}()" 
-                        class="chat-pill border border-slate-300 text-slate-700 px-5 py-2.5 rounded-full text-xs font-bold hover:bg-white transition-all shadow-sm">
+                        class="chat-pill border border-slate-200 text-slate-600 px-4 py-2 rounded-full text-xs font-semibold hover:bg-slate-50 transition-colors">
                     ${o.label}
                 </button>
             `).join('');
@@ -798,7 +764,7 @@
         },
 
         removeLastOptions() {
-            const optionContainers = this.body.querySelectorAll('.flex.flex-wrap.gap-2\\.5.mt-2.w-full.justify-end');
+            const optionContainers = this.body.querySelectorAll('.flex.flex-wrap.gap-2.mt-2.w-full.justify-end');
             if (optionContainers.length > 0) {
                 const last = optionContainers[optionContainers.length - 1];
                 last.remove();
@@ -830,8 +796,7 @@
             
             const fileLabel = document.getElementById('widget-file-label');
             if (fileLabel) {
-                fileLabel.innerText = "Attach Secure Media";
-                fileLabel.classList.remove('text-blue-700');
+                fileLabel.innerText = "Attach File";
             }
             const previewList = document.getElementById('file-preview-list');
             if (previewList) previewList.innerHTML = '';
@@ -982,22 +947,19 @@
                 if (!validation.valid) {
                     alert("SECURITY ALERT: " + validation.error);
                     input.value = ''; 
-                    label.innerText = "Attach Secure Media";
-                    label.classList.remove('text-blue-700');
+                    label.innerText = "Attach File";
                     return;
                 }
 
                 label.innerText = `${input.files.length} Files Selected`;
-                label.classList.add('text-blue-700');
                 Array.from(input.files).forEach(file => {
                     const span = document.createElement('span');
-                    span.className = "px-3 py-1 bg-slate-200 text-[10px] font-bold rounded text-slate-800 truncate max-w-[120px] border border-slate-300 shadow-sm";
+                    span.className = "px-2 py-0.5 bg-slate-100 text-[9px] font-semibold rounded text-slate-600 truncate max-w-[100px] border border-slate-200";
                     span.innerText = file.name;
                     preview.appendChild(span);
                 });
             } else {
-                label.innerText = "Attach Secure Media";
-                label.classList.remove('text-blue-700');
+                label.innerText = "Attach File";
             }
         },
 
@@ -1009,7 +971,7 @@
 
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Transmitting...';
+            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Submitting...';
             
             const formData = new FormData(form);
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -1032,11 +994,11 @@
                     this.removeLastOptions();
                     
                     const rawTicketId = responseData.ticket_number || responseData.ticket_id || responseData.id;
-                    let successMessage = "✅ Dispatch successful. Our team will review your report shortly.";
+                    let successMessage = "✅ Request successful. Our team will review it shortly.";
                     
                     if (rawTicketId) {
                         const formattedTicketId = '#' + String(rawTicketId).padStart(6, '0');
-                        successMessage = `✅ Dispatch successful. Your incident number is <strong>${formattedTicketId}</strong>. Please save this for your tracking.`;
+                        successMessage = `✅ Request successful. Your ticket number is <strong>${formattedTicketId}</strong>. Please save this for your tracking.`;
                     }
                     
                     this.appendBotMessage(successMessage);
@@ -1048,7 +1010,7 @@
                 console.error(err);
                 btn.disabled = false; 
                 btn.innerHTML = originalText; 
-                this.appendBotMessage("❌ Error submitting dispatch. Please try again.");
+                this.appendBotMessage("❌ Error submitting request. Please try again.");
             }
         }
     };
