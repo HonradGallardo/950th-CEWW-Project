@@ -36,7 +36,7 @@
         
         body, html { 
             height: 100vh; margin: 0; overflow-x: hidden;
-            background-color: #cbd5e1; /* Base Light Mode Background: slate-300 */
+            background-color: #e2e8f0; /* Soft slate-200 */
         }
 
         /* Stops all animations from firing when the page first loads to prevent FOUC */
@@ -163,57 +163,61 @@
         .theme-pill { position: absolute; width: 50%; height: calc(100% - 4px); background: #3b82f6; border-radius: 50px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); left: 2px; }
         body.dark-mode .theme-pill { transform: translateX(calc(100% - 4px)); }
         
-        /* --- LIGHT MODE SPECIFIC OVERRIDES (Shades of Grey & High Contrast Borders) --- */
-        body:not(.dark-mode) { background-color: #cbd5e1 !important; } /* slate-300 Base Background */
+        /* --- LIGHT MODE SPECIFIC OVERRIDES (Modernized & Professional) --- */
+        body:not(.dark-mode) { background-color: #e2e8f0 !important; } /* slate-200 Base Background */
         
         body:not(.dark-mode) .bg-white { 
-            background-color: #f1f5f9 !important; /* slate-100 for all cards/panels */
-            border-color: #94a3b8 !important; /* slate-400 for visible borders */
+            background-color: #f8fafc !important; /* slate-50 for all cards/panels - softer than pure white */
+            border-color: #cbd5e1 !important; /* slate-300 for subtle, professional borders */
             border-width: 1px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important; /* Adds modern depth */
         }
         
         body:not(.dark-mode) .border-slate-50, 
         body:not(.dark-mode) .border-slate-100, 
         body:not(.dark-mode) .border-slate-200,
         body:not(.dark-mode) .border-slate-300 { 
-            border-color: #94a3b8 !important; /* slate-400 forces faint borders to be visible */ 
+            border-color: #cbd5e1 !important; /* slate-300 for interior lines */ 
         }
 
         /* Table Overrides */
         body:not(.dark-mode) table { 
-            background-color: #f1f5f9 !important; /* slate-100 */
-            border: 1px solid #94a3b8 !important; /* slate-400 */
+            background-color: #f8fafc !important; /* slate-50 */
+            border: 1px solid #cbd5e1 !important; /* slate-300 */
         }
         body:not(.dark-mode) th { 
-            background-color: #e2e8f0 !important; /* slate-200 */
-            color: #334155 !important; /* slate-700 text */
-            border-bottom: 2px solid #94a3b8 !important; /* slate-400 */
+            background-color: #f1f5f9 !important; /* slate-100 header */
+            color: #475569 !important; /* slate-600 text for strong readability */
+            border-bottom: 1px solid #cbd5e1 !important; /* slate-300 */
+            font-weight: 600 !important;
         }
         body:not(.dark-mode) td { 
-            border-bottom: 1px solid #94a3b8 !important; /* slate-400 */
+            border-bottom: 1px solid #e2e8f0 !important; /* slate-200 softer internal borders */
         }
         body:not(.dark-mode) tr:hover td { 
-            background-color: #e2e8f0 !important; /* slate-200 hover effect */
+            background-color: #f1f5f9 !important; /* slate-100 hover effect */
         }
 
         /* Graph/Canvas Overrides */
         body:not(.dark-mode) canvas { 
-            background-color: #e2e8f0 !important; /* slate-200 */
-            border: 1px solid #94a3b8 !important; /* slate-400 */
+            background-color: #f8fafc !important; /* slate-50 */
+            border: 1px solid #cbd5e1 !important; /* slate-300 */
             border-radius: 0.5rem; 
             padding: 0.5rem; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
         }
 
         /* --- DARK MODE OVERRIDES --- */
         body.dark-mode header { background-color: #1e293b; border-color: #334155; }
         body.dark-mode header h1, body.dark-mode header span, body.dark-mode header i { color: #f1f5f9; }
-        body.dark-mode .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .bg-white { background-color: #1e293b !important; border-color: #334155 !important; box-shadow: none !important; }
         body.dark-mode .text-slate-700, body.dark-mode .text-slate-800 { color: #f1f5f9 !important; }
         body.dark-mode .text-slate-500 { color: #cbd5e1 !important; }
     </style>
 </head>
 
-<body class="bg-slate-300 font-rajdhani preload"> <script>
+<body class="bg-slate-200 font-rajdhani preload"> 
+    <script>
         (function() {
             if (localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
@@ -321,7 +325,7 @@
         </div>
 
         <div id="main-content"> 
-            <header class="bg-slate-200 px-4 md:px-8 h-[73px] flex items-center justify-between border-b border-slate-400 shrink-0 sticky top-0 z-40">
+            <header class="bg-slate-50 px-4 md:px-8 h-[73px] flex items-center justify-between border-b border-slate-300 shrink-0 sticky top-0 z-40">
                 <div class="flex items-center min-w-0 flex-1">
                     <button id="burgerBtn" class="lg:hidden p-2 mr-2 text-slate-600 hover:text-blue-600 focus:outline-none flex-shrink-0 transition-transform">
                         <i class="fas fa-bars text-lg"></i>
@@ -340,18 +344,18 @@
                             </span>
                             {% endif %}
                         </button>
-                        <div id="notifDropdown" class="hidden absolute right-[-50px] sm:right-0 mt-3 w-72 sm:w-80 bg-slate-100 rounded-xl shadow-2xl border border-slate-400 z-50 overflow-hidden">
-                            <div class="px-4 py-3 border-b border-slate-300 flex justify-between items-center bg-slate-200/50">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-600">Incidents</span>
+                        <div id="notifDropdown" class="hidden absolute right-[-50px] sm:right-0 mt-3 w-72 sm:w-80 bg-white rounded-xl border border-slate-300 z-50 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Incidents</span>
                                 <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-600 hover:underline font-rajdhani uppercase">Mark all</a>
                             </div>
                             <div class="max-h-96 overflow-y-auto custom-scrollbar">
                                 {% for n in user.notifications.all|dictsortreversed:"created_at"|slice:":5" %}
-                                    <div class="px-4 py-3 border-b border-slate-300 hover:bg-slate-200">
+                                    <div class="px-4 py-3 border-b border-slate-100 hover:bg-slate-50">
                                         <p class="text-xs text-slate-700 leading-snug">{{ n.message }}</p>
                                     </div>
                                 {% empty %}
-                                    <div class="px-4 py-8 text-center"><p class="text-xs text-slate-500 italic">No reports</p></div>
+                                    <div class="px-4 py-8 text-center"><p class="text-xs text-slate-400 italic">No reports</p></div>
                                 {% endfor %}
                             </div>
                         </div>
@@ -364,13 +368,13 @@
                             </span>
                             <i class="fas fa-chevron-down text-[10px]"></i>
                         </button>
-                        <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-slate-100 rounded-xl shadow-xl py-2 border border-slate-400 z-50 overflow-hidden">
-                            <a href="{% url 'profile' %}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-xl py-2 border border-slate-300 z-50 overflow-hidden">
+                            <a href="{% url 'profile' %}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                 <i class="fas fa-user-shield text-xs text-blue-500"></i><span>Profile</span>
                             </a>
                             <form action="{% url 'logout' %}" method="post">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/10 text-left transition-colors">
+                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left transition-colors">
                                     <i class="fas fa-sign-out-alt text-xs"></i><span>Logout</span>
                                 </button>
                             </form>
