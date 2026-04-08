@@ -252,17 +252,17 @@
                             <p class="text-sm text-slate-500 mt-1">Manage routing, priority, and internal notes.</p>
                         </div>
                         <div class="flex items-center gap-3">
-    <button type="button" onclick="deleteTicket()" 
-            {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can delete this case"{% endif %}
-            class="px-4 py-2 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:dark:hover:bg-slate-900">
-        Delete Case
-    </button>
-    <button type="submit" id="saveDetailsBtn" 
-            {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can save changes"{% endif %}
-            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
-        Save Changes
-    </button>
-</div>
+                            <button type="button" onclick="deleteTicket()" 
+                                    {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can delete this case"{% endif %}
+                                    class="px-4 py-2 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:dark:hover:bg-slate-900">
+                                Delete Case
+                            </button>
+                            <button type="submit" id="saveDetailsBtn" 
+                                    {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can save changes"{% endif %}
+                                    class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
+                                Save Changes
+                            </button>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -293,9 +293,9 @@
                         <div class="space-y-2">
                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Ticket Status</label>
                             <select name="status" id="editStatus" 
-        {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
-        class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
-    <option value="Pending" {% if ticket.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
+                                <option value="Pending" {% if ticket.status == 'Pending' %}selected{% endif %}>Pending</option>
                                 <option value="In Progress" {% if ticket.status == 'In Progress' %}selected{% endif %}>In Progress</option>
                                 <option value="Under Review" {% if ticket.status == 'Under Review' %}selected{% endif %}>Under Review</option>
                                 <option value="Unresolved" {% if ticket.status == 'Unresolved' %}selected{% endif %}>Unresolved</option>
@@ -306,53 +306,6 @@
 
                         <div class="space-y-2">
                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Priority Level</label>
-                            Gemini said
-This is a perfect addition. To lock down the entire form (reading only) and restrict the Save/Delete buttons, we will add Tailwind's disabled: utility classes to the remaining inputs and buttons in the frontend, and we'll broaden the security check in the backend so it blocks any update or delete request from a non-owning admin.
-
-Here are the exact updates. No existing logic has been removed.
-
-1. Frontend Updates (base.html)
-Find these specific elements inside your <form id="editTicketForm"> and update them to include the {% if %} check and the disabled: styling classes.
-
-Update the Buttons (Delete & Save):
-
-HTML
-<div class="flex items-center gap-3">
-    <button type="button" onclick="deleteTicket()" 
-            {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can delete this case"{% endif %}
-            class="px-4 py-2 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:dark:hover:bg-slate-900">
-        Delete Case
-    </button>
-    <button type="submit" id="saveDetailsBtn" 
-            {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can save changes"{% endif %}
-            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
-        Save Changes
-    </button>
-</div>
-Update the Status Dropdown:
-
-HTML
-<select name="status" id="editStatus" 
-        {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
-        class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
-    <option value="Pending" {% if ticket.status == 'Pending' %}selected{% endif %}>Pending</option>
-    </select>
-Update the Priority Dropdown:
-
-HTML
-<select name="priority" id="editPriority" 
-        {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
-        class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
-    <option value="Low" {% if ticket.priority == 'Low' %}selected{% endif %}>Low</option>
-                                <option value="Medium" {% if ticket.priority == 'Medium' %}selected{% endif %}>Medium</option>
-                                <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>High</option>
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-2 space-y-2 mt-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Internal Technical Description</label>
-                            <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Priority Level</label>
                             <select name="priority" id="editPriority" 
                                     {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
                                     class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
@@ -361,6 +314,12 @@ HTML
                                 <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>High</option>
                             </select>
                         </div>
+
+                        <div class="md:col-span-2 space-y-2 mt-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Internal Technical Description</label>
+                            <textarea name="description" id="editDesc" rows="6" 
+                                      {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
+                                      class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow custom-scrollbar disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">{{ ticket.description }}</textarea>
                             <p class="text-xs text-slate-500">Only visible to internal staff members.</p>
                         </div>
                     </div>
