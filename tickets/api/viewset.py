@@ -348,11 +348,27 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.status = data.get('status', ticket.status)
         ticket.priority = data.get('priority', ticket.priority)
         tech_id = data.get('technician_id')
+
+        # --- NEW LOGIC: Ownership Restriction Check ---
+        # If the ticket has an owner, and the requester is NOT the owner
+        if old_tech is not None and old_tech != request.user:
+            # Check if they are attempting to change the technician field
+            if 'technician_id' in data:
+                if str(tech_id).strip() == "" or str(tech_id) != str(old_tech.id):
+                    return Response(
+                        {'error': 'Ownership restricted. Only the currently assigned admin can change ownership or leave it vacant.'}, 
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+        # ----------------------------------------------
         
         if tech_id and str(tech_id).strip() != "":
             new_tech = get_object_or_404(User, id=tech_id)
             if old_tech != new_tech:
-                ticket.last_technician = old_tech.username if old_tech else "None"
+                # MODIFIED LOGIC: Only set last_technician if an admin is giving up ownership.
+                # If old_tech is None (vacant), we preserve the existing last_technician.
+                if old_tech:
+                    ticket.last_technician = old_tech.username 
+                    
                 ticket.technician = new_tech
                 if ticket.status == 'Pending':
                     ticket.status = 'Open'

@@ -812,13 +812,20 @@
                 btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                 setTimeout(() => { window.location.reload(); }, 600);
             } else {
-                throw new Error("Update failed");
+                // Modified to catch backend custom error messages
+                throw new Error(result.error || "Update failed");
             }
         } catch (err) { 
             console.error("Update error:", err);
             btn.innerText = "Error";
             btn.classList.add('bg-red-600');
             btn.disabled = false;
+            
+            // Added an alert to explicitly notify the user if ownership is restricted
+            if (err.message && err.message !== "Update failed") {
+                alert(err.message);
+            }
+            
             setTimeout(() => { 
                 btn.innerText = originalText;
                 btn.classList.remove('bg-red-600'); 
