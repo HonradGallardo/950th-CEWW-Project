@@ -176,7 +176,16 @@ def add_incident(request):
 @login_required
 def edit_incident(request, incident_id):
     incident = get_object_or_404(Incident, id=incident_id)
-    return render(request, 'core/Admin/edit_incident.html', {'incident': incident})
+
+    # --- UPDATED: Fetch Admins, Personnel, AND Superusers for the dropdown ---
+    all_admins = User.objects.filter(
+        Q(groups__name__in=['Admin', 'Personnel']) | Q(is_superuser=True)
+    ).distinct().order_by('username')
+    
+    return render(request, 'core/Admin/edit_incident.html', {
+        'incident': incident,
+        'all_admins': all_admins  # Pass the list to the template
+    })
 
 @login_required
 def delete_incident(request, incident_id):
