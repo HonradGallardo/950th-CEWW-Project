@@ -11,7 +11,7 @@
   .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 </style>
 
-<div class="font-plex flex flex-col min-h-screen space-y-6 p-4 md:p-8 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+<div class="font-plex flex flex-col min-h-screen space-y-6 p-4 md:p-8 bg-transparent transition-colors duration-300">
   
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
@@ -45,7 +45,7 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <div id="rank-badge-display" class="flex items-center justify-center w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-900/50 p-1">
+            <div id="rank-badge-display" class="flex items-center justify-center w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 p-1">
               <img id="current-rank-img" src="/static/core/images/badge/{{ profile.rank|default:'Airman' }}.png" class="w-full h-full object-contain filter dark:brightness-110" onerror="this.style.display = 'none'" />
             </div>
             <div>
@@ -71,11 +71,11 @@
         </div>
       </div>
 
-      <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-blue-900/10">
-        <h3 class="font-rajdhani text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Operational Impact</h3>
+      <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 text-slate-800 dark:text-white border border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-xl dark:shadow-blue-900/10">
+        <h3 class="font-rajdhani text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">Operational Impact</h3>
         <div class="grid grid-cols-1 gap-4">
-          <div class="bg-slate-800/50 rounded-2xl p-4">
-            <p class="text-2xl font-black text-blue-400">{{ incidents_reported|default:"0" }}</p>
+          <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-transparent rounded-2xl p-4">
+            <p class="text-2xl font-black text-blue-500 dark:text-blue-400">{{ incidents_reported|default:"0" }}</p>
             <p class="text-[9px] font-bold uppercase text-slate-500">Incidents Identified</p>
           </div>
         </div>
@@ -95,12 +95,12 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-2">
               <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Username</label>
-              <input type="text" value="{{ user.username }}" disabled class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 opacity-70 cursor-not-allowed" />
+              <input type="text" value="{{ user.username }}" disabled class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 opacity-70 cursor-not-allowed" />
             </div>
 
             <div class="space-y-2">
               <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Air Force Rank</label>
-              <select name="rank" id="rank_select" onchange="updateRankBadge(this)" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+              <select name="rank" id="rank_select" onchange="updateRankBadge(this)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                 <optgroup label="Enlisted">
                   <option value="Airman" {% if profile.rank == "Airman" %}selected{% endif %}>Airman</option>
                   <option value="Airman Second Class" {% if profile.rank == "Airman Second Class" %}selected{% endif %}>Airman Second Class</option>
@@ -133,22 +133,22 @@
 
             <div class="space-y-2">
               <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Email Address</label>
-              <input type="email" name="email" id="email_input" value="{{ user.email }}" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              <input type="email" name="email" id="email_input" value="{{ user.email }}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
             </div>
 
             <div class="space-y-2">
               <label class="text-[10px] font-black text-slate-400 uppercase ml-1">First Name</label>
-              <input type="text" name="first_name" id="first_name_input" value="{{ user.first_name }}" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              <input type="text" name="first_name" id="first_name_input" value="{{ user.first_name }}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
             </div>
 
             <div class="space-y-2">
               <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Last Name</label>
-              <input type="text" name="last_name" id="last_name_input" value="{{ user.last_name }}" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+              <input type="text" name="last_name" id="last_name_input" value="{{ user.last_name }}" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
             </div>
 
             <div class="space-y-2">
               <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Phone Number</label>
-              <input type="text" name="phone" id="phone_input" value="{{ profile.phone|default_if_none:'' }}" maxlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09123456789" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+              <input type="text" name="phone" id="phone_input" value="{{ profile.phone|default_if_none:'' }}" maxlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09123456789" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
             </div> 
           </div>
 
@@ -165,7 +165,7 @@
           <h3 class="font-rajdhani text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Security & Privacy</h3>
         </div>
         <div class="p-6 flex flex-wrap gap-4">
-          <a href="#" id="register-passkey-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-500 transition-all group cursor-pointer">
+          <a href="#" id="register-passkey-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/20 hover:border-emerald-500 transition-all group cursor-pointer">
             <div class="flex items-center gap-4">
               <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
                 <i class="fas fa-fingerprint"></i>
@@ -178,7 +178,7 @@
             <i class="fas fa-plus text-emerald-300 group-hover:text-emerald-500 transition-colors"></i>
           </a>
           
-          <a href="{% url 'custom_password_change' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-blue-500 transition-all group">
+          <a href="{% url 'custom_password_change' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-blue-500 transition-all group">
             <div class="flex items-center gap-4">
               <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600">
                 <i class="fas fa-lock"></i>
@@ -191,7 +191,7 @@
             <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
           </a>
 
-          <a href="{% url 'logout' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/20 transition-all group">
+          <a href="{% url 'logout' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/20 hover:border-red-500 transition-all group">
             <div class="flex items-center gap-4">
               <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600">
                 <i class="fas fa-sign-out-alt"></i>
@@ -216,7 +216,7 @@
     
     // Load Open Incidents Metric
     $.get("/api/dashboard-stats/", function (data) {
-      $(".text-blue-400").text(data.open_incidents);
+      $(".text-blue-500, .text-blue-400").text(data.open_incidents);
     });
 
     // --- 1. PROFILE UPDATE LOGIC ---
