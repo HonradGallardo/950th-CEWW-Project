@@ -18,322 +18,365 @@
         
         :root {
             --primary: #2563eb;
-            --primary-hover: #1d4ed8;
+            --primary-hover: #1e40af;
+            --secondary: #06b6d4;
             --slate-900: #0f172a;
         }
 
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             color: var(--slate-900);
-            background-color: #ffffff;
+            background-color: #f8fafc;
         }
 
         .hero-bg {
             background: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
+                radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.06), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.08), transparent 25%);
+            background-color: #ffffff;
         }
 
-        /* NEW: Tactical grid pattern for the IT aesthetic */
+        /* Upgraded: Sharper tactical grid */
         .bg-grid-pattern {
-            background-size: 40px 40px;
-            background-image: linear-gradient(to right, rgba(37, 99, 235, 0.03) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
         }
 
+        /* Upgraded: Deeper glassmorphism */
         .glass-nav {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), inset 0 -1px 0 0 rgba(226, 232, 240, 0.5);
         }
 
         .hero-image-container {
             position: relative;
-            perspective: 1000px;
+            perspective: 1200px;
             z-index: 10;
         }
 
-        /* NEW: Ambient glow behind the hero image */
+        /* Upgraded: Dynamic dual-tone ambient glow */
         .glow-effect {
             position: absolute;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, rgba(0,0,0,0) 70%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, rgba(37,99,235,0.15) 40%, rgba(0,0,0,0) 70%);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: -1;
             border-radius: 50%;
-            filter: blur(40px);
-            animation: pulse-glow 4s ease-in-out infinite alternate;
+            filter: blur(50px);
+            animation: pulse-glow 5s ease-in-out infinite alternate;
         }
 
         @keyframes pulse-glow {
-            0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
         }
 
         .floating-laptop {
-            filter: drop-shadow(0 30px 50px rgba(0, 0, 0, 0.15));
-            animation: float 6s ease-in-out infinite;
-            transition: transform 0.5s ease;
+            filter: drop-shadow(0 40px 60px rgba(15, 23, 42, 0.15)) drop-shadow(0 0 40px rgba(37, 99, 235, 0.1));
+            animation: float 8s ease-in-out infinite;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px) rotateX(0deg); }
-            50% { transform: translateY(-20px) rotateX(2deg); }
+            0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
+            50% { transform: translateY(-20px) rotateX(2deg) rotateY(-1deg); }
         }
 
+        /* Upgraded: Sleeker feature cards with dynamic borders */
         .feature-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #f1f5f9;
-            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
         }
 
         .feature-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: rgba(37, 99, 235, 0.3);
-            box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.15);
+            transform: translateY(-10px);
+            border-color: rgba(37, 99, 235, 0.2);
+            box-shadow: 0 30px 60px -15px rgba(37, 99, 235, 0.1), 0 0 20px rgba(6, 182, 212, 0.05);
         }
 
+        .feature-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        /* Upgraded: High-contrast gradient button */
         .btn-gradient {
-            background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #06b6d4 100%);
             background-size: 200% auto;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gradient::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent, transparent);
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
         }
 
         .btn-gradient:hover {
             background-position: right center;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5);
-            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.4), 0 0 15px rgba(6, 182, 212, 0.3);
+            transform: translateY(-3px) scale(1.02);
         }
 
         .text-balance { text-wrap: balance; }
 
-        /* Widget Custom Scrollbar */
         .widget-scrollbar::-webkit-scrollbar { width: 6px; }
-        .widget-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .widget-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .widget-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+        .widget-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #f8fafc; }
         .widget-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Widget Entry Animation */
         @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .widget-anim-enter {
-            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         
         .chat-pill {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
         .chat-pill:hover {
-            border-color: var(--primary);
-            background-color: #eff6ff;
-            color: var(--primary);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1);
+            border-color: var(--secondary);
+            background-color: #ecfeff;
+            color: #0369a1;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px -2px rgba(6, 182, 212, 0.15);
         }
     </style>
 </head>
-<body class="antialiased relative selection:bg-blue-200 selection:text-blue-900">
+<body class="antialiased relative selection:bg-cyan-200 selection:text-cyan-900">
 
     <nav class="glass-nav sticky top-0 z-40 px-4 sm:px-6 md:px-16 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 transition-all duration-300">
-        <div class="flex items-center space-x-3 text-center sm:text-left group cursor-pointer">
-            <div class="bg-gradient-to-br from-blue-600 to-blue-700 p-2.5 rounded-xl shrink-0 shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
-                <i class="fas fa-shield-halved text-white text-lg"></i>
+        <div class="flex items-center space-x-4 text-center sm:text-left group cursor-pointer">
+            <div class="bg-slate-900 p-2.5 rounded-xl shrink-0 shadow-lg shadow-slate-900/20 group-hover:rotate-3 transition-transform duration-300 relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20"></div>
+                <i class="fas fa-shield-halved text-cyan-400 text-xl relative z-10"></i>
             </div>
-            <span class="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 leading-tight">
-                On The Go<span class="text-blue-600"> Assets & Incident Monitoring System</span>
+            <span class="font-extrabold text-base sm:text-xl tracking-tight text-slate-900 leading-tight">
+                On The Go<span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500"> Assets & Incident Monitoring System</span>
             </span>
         </div>
         
         <div class="flex flex-wrap justify-center items-center gap-4 sm:space-x-6">
-            <div id="network-status" class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest transition-opacity duration-500 hidden md:flex bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
-                <span id="status-dot" class="w-2 h-2 bg-emerald-400 rounded-full mr-2 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span>
+            <div id="network-status" class="flex items-center text-[10px] font-black text-slate-500 uppercase tracking-widest transition-opacity duration-500 hidden md:flex bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                <span id="status-dot" class="w-2.5 h-2.5 bg-emerald-500 rounded-full mr-2.5 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse relative">
+                    <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                </span>
                 <span id="status-text">Network Sync...</span>
             </div>
             
-            <button onclick="TicketTracker.open()" class="text-slate-500 hover:text-blue-600 font-bold text-sm transition-all duration-300 flex items-center hover:bg-blue-50 px-3 py-2 rounded-lg">
-                <i class="fas fa-search mr-2"></i> Track Ticket
+            <button onclick="TicketTracker.open()" class="text-slate-600 hover:text-blue-700 font-bold text-sm transition-all duration-300 flex items-center hover:bg-slate-100 px-4 py-2 rounded-xl">
+                <i class="fas fa-crosshairs mr-2"></i> Track Ticket
             </button>
             
-            <a href="{% url 'login' %}" class="btn-gradient text-white px-6 sm:px-7 py-2 sm:py-2.5 rounded-full font-bold text-sm flex items-center shadow-lg">
-                <i class="fas fa-lock-open mr-2 text-xs"></i> Portal Login
+            <a href="{% url 'login' %}" class="btn-gradient text-white px-6 sm:px-7 py-2 sm:py-2.5 rounded-xl font-bold text-sm flex items-center shadow-lg border border-white/10">
+                <i class="fas fa-fingerprint mr-2 text-xs"></i> Portal Login
             </a>
         </div>
     </nav>
 
-    <section class="hero-bg bg-grid-pattern px-4 sm:px-6 md:px-24 pt-12 sm:pt-16 md:pt-28 pb-16 sm:pb-24 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 relative overflow-hidden">
-        <div class="w-full lg:w-3/5 space-y-6 sm:space-y-8 text-center lg:text-left relative z-10">
+    <section class="hero-bg bg-grid-pattern px-4 sm:px-6 md:px-24 pt-16 sm:pt-20 md:pt-32 pb-20 sm:pb-32 flex flex-col lg:flex-row items-center gap-10 lg:gap-20 relative overflow-hidden">
+        <div class="w-full lg:w-3/5 space-y-8 sm:space-y-10 text-center lg:text-left relative z-10">
             
-            <h1 class="text-3xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight text-balance">
-                The Standard in <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Infrastructure</span> Oversight
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest mx-auto lg:mx-0 shadow-sm">
+                <i class="fas fa-satellite-dish animate-pulse text-cyan-500"></i> Secure Offline Architecture Ready
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-[5rem] font-extrabold text-slate-900 leading-[1.05] tracking-tight text-balance">
+                The Standard in <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500">Infrastructure</span> Oversight
             </h1>
             
             <p class="text-slate-500 text-base sm:text-lg md:text-xl leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
                 A unified, air-gapped ecosystem for the rigorous management of IT assets and high-fidelity cybersecurity incident tracking.
             </p>
             
-            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2 sm:pt-4">
-                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-10 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-xl active:scale-95 text-center flex justify-center items-center gap-3">
-                    Get Started <i class="fas fa-arrow-right text-sm opacity-80"></i>
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5 pt-4 sm:pt-6">
+                <a href="{% url 'login' %}" class="w-full sm:w-auto btn-gradient text-white px-10 py-4 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-xl shadow-blue-500/20 active:scale-95 text-center flex justify-center items-center gap-3 border border-white/10">
+                    Initialize System <i class="fas fa-chevron-right text-sm opacity-80"></i>
                 </a>
             </div>
         </div>
 
-        <div class="w-full sm:w-3/4 lg:w-2/5 hero-image-container mt-8 lg:mt-0">
+        <div class="w-full sm:w-3/4 lg:w-2/5 hero-image-container mt-12 lg:mt-0">
             <div class="glow-effect"></div>
             <img src="{% static 'image_2.png' %}" 
                  alt="System Infographic" 
-                 class="w-full h-auto floating-laptop rounded-3xl border border-white/50">
+                 class="w-full h-auto floating-laptop rounded-2xl border border-white/60 shadow-2xl bg-white/50 backdrop-blur-sm p-2">
         </div>
     </section>
 
-    <section class="px-4 sm:px-6 md:px-16 py-16 sm:py-24 bg-white relative border-t border-slate-100">
+    <section class="px-4 sm:px-6 md:px-16 py-20 sm:py-32 bg-white relative">
+        <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
         <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-12 sm:mb-20 space-y-4">
-                <h2 class="text-[10px] sm:text-xs font-extrabold text-blue-600 uppercase tracking-[0.3em] bg-blue-50 inline-block px-3 py-1 rounded-full">Core Capabilities</h2>
-                <h3 class="text-2xl sm:text-3xl md:text-5xl font-extrabold text-slate-900">Integrated Control Center</h3>
-                <div class="w-16 sm:w-20 h-1.5 bg-gradient-to-r from-blue-600 to-indigo-500 mx-auto rounded-full mt-6"></div>
+            <div class="text-center mb-16 sm:mb-24 space-y-4">
+                <h2 class="text-[10px] sm:text-xs font-black text-cyan-600 uppercase tracking-[0.3em] bg-cyan-50 inline-block px-4 py-1.5 rounded-full border border-cyan-100">Core Capabilities</h2>
+                <h3 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Integrated Command Center</h3>
+                <div class="w-24 sm:w-32 h-1 bg-gradient-to-r from-blue-600 to-cyan-400 mx-auto rounded-full mt-8 opacity-50"></div>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 relative z-10">
-                <div class="feature-card p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left group">
-                    <div class="bg-blue-50 group-hover:bg-blue-600 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
-                        <i class="fas fa-cubes text-blue-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-10 relative z-10">
+                <div class="feature-card p-10 sm:p-12 rounded-[2rem] flex flex-col items-center text-center sm:items-start sm:text-left group shadow-lg shadow-slate-200/50">
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 group-hover:border-blue-300 group-hover:bg-blue-50 transition-all duration-300 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
+                        <i class="fas fa-server text-slate-600 group-hover:text-blue-600 transition-colors duration-300 text-2xl sm:text-3xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4 group-hover:text-blue-700 transition-colors">Asset Ledger</h4>
+                    <h4 class="font-extrabold text-xl sm:text-2xl text-slate-900 mb-4 tracking-tight group-hover:text-blue-700 transition-colors">Asset Ledger</h4>
                     <p class="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">Automated cataloging and lifecycle tracking for mission-critical hardware and software nodes.</p>
                 </div>
 
-                <div class="feature-card p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left group">
-                    <div class="bg-blue-50 group-hover:bg-blue-600 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
-                        <i class="fas fa-screwdriver-wrench text-blue-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
+                <div class="feature-card p-10 sm:p-12 rounded-[2rem] flex flex-col items-center text-center sm:items-start sm:text-left group shadow-lg shadow-slate-200/50">
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 group-hover:border-cyan-300 group-hover:bg-cyan-50 transition-all duration-300 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
+                        <i class="fas fa-microchip text-slate-600 group-hover:text-cyan-600 transition-colors duration-300 text-2xl sm:text-3xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4 group-hover:text-blue-700 transition-colors">Maintenance Core</h4>
+                    <h4 class="font-extrabold text-xl sm:text-2xl text-slate-900 mb-4 tracking-tight group-hover:text-cyan-700 transition-colors">Maintenance Core</h4>
                     <p class="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">Predictive logging and historical audit trails to ensure 24/7 infrastructure availability.</p>
                 </div>
 
-                <div class="feature-card p-8 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] flex flex-col items-center text-center sm:items-start sm:text-left sm:col-span-2 md:col-span-1 group">
-                    <div class="bg-blue-50 group-hover:bg-blue-600 transition-colors duration-300 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 sm:mb-8 shadow-sm">
-                        <i class="fas fa-shield-virus text-blue-600 group-hover:text-white transition-colors duration-300 text-xl sm:text-2xl"></i>
+                <div class="feature-card p-10 sm:p-12 rounded-[2rem] flex flex-col items-center text-center sm:items-start sm:text-left sm:col-span-2 md:col-span-1 group shadow-lg shadow-slate-200/50">
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 group-hover:border-indigo-300 group-hover:bg-indigo-50 transition-all duration-300 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mb-8 shadow-inner">
+                        <i class="fas fa-shield-halved text-slate-600 group-hover:text-indigo-600 transition-colors duration-300 text-2xl sm:text-3xl"></i>
                     </div>
-                    <h4 class="font-extrabold text-lg sm:text-xl text-slate-900 mb-3 sm:mb-4 group-hover:text-blue-700 transition-colors">Incident Matrix</h4>
+                    <h4 class="font-extrabold text-xl sm:text-2xl text-slate-900 mb-4 tracking-tight group-hover:text-indigo-700 transition-colors">Incident Matrix</h4>
                     <p class="text-slate-500 text-sm sm:text-base leading-relaxed font-medium">High-security logging of network anomalies and cybersecurity events with rapid triage tools.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="py-12 border-t border-slate-200 px-4 sm:px-6 bg-slate-50">
-        <div class="max-w-7xl mx-auto flex flex-col items-center space-y-6">
-            <div class="w-full max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-wrap sm:flex-nowrap justify-between items-center gap-4 text-center sm:text-left transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+    <footer class="py-16 bg-slate-900 text-slate-300 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 flex flex-col items-center space-y-10">
+            <div class="w-full max-w-xl bg-slate-800/80 backdrop-blur-md border border-slate-700 rounded-2xl p-5 flex flex-wrap sm:flex-nowrap justify-between items-center gap-4 text-center sm:text-left shadow-2xl">
                 <div class="w-full sm:w-auto">
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">System Readiness</p>
-                    <div class="flex items-center justify-center sm:justify-start gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
-                        <span class="text-xs font-bold text-slate-700">All Nodes Active</span>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">System Readiness</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-2.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
+                        <span class="text-xs font-bold text-slate-200 tracking-wide">All Nodes Active</span>
                     </div>
                 </div>
-                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div class="h-10 w-px bg-slate-700 hidden sm:block"></div>
                 <div class="w-[45%] sm:w-auto">
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Local Uplink</p>
-                    <p id="local-time-display" class="text-xs font-bold text-slate-700 font-mono bg-slate-50 px-2 py-0.5 rounded">--:--:--</p>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Local Uplink</p>
+                    <p id="local-time-display" class="text-xs font-bold text-cyan-400 font-mono tracking-wider">--:--:--</p>
                 </div>
-                <div class="h-8 w-px bg-slate-200 hidden sm:block"></div>
+                <div class="h-10 w-px bg-slate-700 hidden sm:block"></div>
                 <div class="w-[45%] sm:w-auto">
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Server Uptime</p>
-                    <p id="server-uptime-display" class="text-xs font-bold text-blue-600 font-mono bg-blue-50 px-2 py-0.5 rounded">--h --m</p>
+                    <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Server Uptime</p>
+                    <p id="server-uptime-display" class="text-xs font-bold text-blue-400 font-mono tracking-wider">--h --m</p>
                 </div>
             </div>
 
-            <div class="flex items-center justify-center space-x-4 grayscale opacity-60 pt-4 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                <i class="fas fa-shield-halved text-xl sm:text-2xl text-blue-600"></i>
-                <span class="font-bold text-base sm:text-lg text-slate-800">On The Go AIMS</span>
+            <div class="flex items-center justify-center space-x-4 opacity-70 hover:opacity-100 transition-opacity duration-300">
+                <div class="bg-slate-800 p-2 rounded-lg border border-slate-700">
+                    <i class="fas fa-shield-halved text-2xl text-cyan-500"></i>
+                </div>
+                <span class="font-extrabold text-lg sm:text-xl text-white tracking-tight">On The Go AIMS</span>
             </div>
-            <p class="text-slate-400 text-[9px] sm:text-[10px] font-extrabold tracking-[0.2em] uppercase text-center px-4">
+            <p class="text-slate-500 text-[10px] font-black tracking-[0.25em] uppercase text-center px-4">
                 &copy; 2026 OFFICIAL USE ONLY - SECURE OFFLINE ARCHITECTURE
             </p>
         </div>
     </footer>
 
-    <div id="trackerModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-400 border border-slate-100" id="trackerModalContent">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
-                <h3 class="font-extrabold text-base sm:text-lg text-slate-900 flex items-center">
-                    <div class="bg-blue-100 w-8 h-8 rounded-full flex items-center justify-center mr-3">
-                        <i class="fas fa-radar text-blue-600 text-sm"></i>
+    <div id="trackerModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-lg z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-all duration-400 border border-slate-200" id="trackerModalContent">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-extrabold text-lg text-slate-900 flex items-center tracking-tight">
+                    <div class="bg-blue-100 w-10 h-10 rounded-xl flex items-center justify-center mr-3 border border-blue-200/50 shadow-inner">
+                        <i class="fas fa-crosshairs text-blue-600"></i>
                     </div>
                     Track Your Ticket
                 </h3>
-                <button onclick="TicketTracker.close()" class="text-slate-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 rounded-full transition-all flex items-center justify-center">
+                <button onclick="TicketTracker.close()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-200 w-10 h-10 rounded-full transition-all flex items-center justify-center">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
             <div class="p-6">
-                <p class="text-xs text-slate-500 mb-5 font-medium leading-relaxed">Enter your 6-digit ticket number below to check its current status and assigned technician.</p>
+                <p class="text-sm text-slate-500 mb-6 font-medium leading-relaxed">Enter your 6-digit incident number below to retrieve live status and assigned technical personnel.</p>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <div class="relative flex-1 group">
                         <i class="fas fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
                         <input type="text" id="trackTicketInput" placeholder="000001" 
-                               class="w-full bg-slate-50 border border-slate-200 py-3 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold text-slate-700 uppercase tracking-wider shadow-inner transition-all duration-300" 
+                               class="w-full bg-slate-50 border border-slate-200 py-3.5 pl-11 pr-4 rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-black text-slate-800 uppercase tracking-widest shadow-inner transition-all duration-300 placeholder:text-slate-300 placeholder:font-medium" 
                                onkeypress="if(event.key === 'Enter') TicketTracker.search()">
                     </div>
-                    <button onclick="TicketTracker.search()" id="trackBtn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all flex justify-center items-center shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5">
-                        Search
+                    <button onclick="TicketTracker.search()" id="trackBtn" class="w-full sm:w-auto bg-slate-900 hover:bg-blue-700 active:bg-blue-800 text-white px-7 py-3.5 rounded-xl text-sm font-bold transition-all flex justify-center items-center shadow-lg shadow-slate-900/20">
+                        Scan
                     </button>
                 </div>
                 
-                <div id="trackResults" class="hidden mt-6 bg-slate-50 rounded-2xl p-5 border border-slate-100 shadow-inner transition-all">
-                    </div>
-                <div id="trackError" class="hidden mt-4 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100 text-center animate-pulse">
-                </div>
+                <div id="trackResults" class="hidden mt-6 bg-slate-50 rounded-2xl p-5 border border-slate-200 shadow-inner transition-all"></div>
+                <div id="trackError" class="hidden mt-4 p-4 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-200 text-center animate-pulse"></div>
             </div>
         </div>
     </div>
 
-    <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full shadow-xl shadow-blue-500/40 flex items-center justify-center transition-all hover:-translate-y-1 active:scale-95 z-50 border-2 border-white/20 group">
-        <i class="fas fa-comment-dots text-xl sm:text-2xl group-hover:animate-bounce"></i>
+    <button id="widgetToggleBtn" onclick="ChatWidget.toggle()" class="fixed bottom-6 right-6 w-16 h-16 bg-slate-900 hover:bg-blue-700 text-white rounded-2xl shadow-2xl shadow-slate-900/30 flex items-center justify-center transition-all hover:-translate-y-1 active:scale-95 z-50 border border-white/20 group">
+        <i class="fas fa-comment-dots text-2xl group-hover:animate-bounce"></i>
     </button>
 
-    <div id="chatWidgetContainer" class="hidden fixed bottom-24 sm:bottom-28 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[380px] h-[500px] sm:h-[650px] max-h-[calc(100vh-8rem)] bg-slate-50/95 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200 origin-bottom-right transition-all">
+    <div id="chatWidgetContainer" class="hidden fixed bottom-28 right-6 w-[calc(100vw-3rem)] sm:w-[400px] h-[600px] sm:h-[700px] max-h-[calc(100vh-8rem)] bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl flex flex-col overflow-hidden z-50 border border-slate-200 origin-bottom-right transition-all">
         
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-4 flex justify-between items-center shadow-md shrink-0 relative z-10 border-b border-blue-800/50">
-            <div class="flex items-center gap-3">
+        <div class="bg-slate-900 px-6 py-5 flex justify-between items-center relative z-10">
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+            <div class="flex items-center gap-3 relative z-10">
                 <div class="relative">
-                    <img src="https://ui-avatars.com/api/?name=Smart+Assistant&background=ffffff&color=2563eb&bold=true" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-white/50 object-cover shadow-sm">
-                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full shadow-sm animate-pulse"></div>
+                    <img src="https://ui-avatars.com/api/?name=System+AI&background=0f172a&color=06b6d4&bold=true" alt="Avatar" class="w-11 h-11 rounded-xl border border-slate-700 object-cover shadow-sm bg-slate-800">
+                    <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-cyan-400 border-2 border-slate-900 rounded-full shadow-sm animate-pulse"></div>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-white leading-tight tracking-wide">Smart Assistant</h3>
-                    <p class="text-[10px] text-blue-100 font-medium">Global Support Team</p>
+                    <h3 class="text-sm font-extrabold text-white tracking-wide">Command AI</h3>
+                    <p class="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mt-0.5">Automated Diagnostics</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button class="text-blue-200 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors">
-                    <i class="fas fa-ellipsis-h"></i>
+            <div class="flex items-center gap-1 relative z-10">
+                <button class="text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg p-2 transition-colors">
+                    <i class="fas fa-ellipsis-v"></i>
                 </button>
-                <button onclick="ChatWidget.toggle()" class="text-blue-200 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors">
-                    <i class="fas fa-times"></i>
+                <button onclick="ChatWidget.toggle()" class="text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg p-2 transition-colors">
+                    <i class="fas fa-chevron-down"></i>
                 </button>
             </div>
         </div>
 
-        <div id="chatWidgetBody" class="flex-1 overflow-y-auto widget-scrollbar p-5 space-y-5 flex flex-col scroll-smooth bg-[#f8fafc]">
-            </div>
+        <div id="chatWidgetBody" class="flex-1 overflow-y-auto widget-scrollbar p-6 space-y-6 flex flex-col scroll-smooth bg-slate-50 border-t border-slate-200"></div>
 
         <div id="hiddenForms" class="hidden">
-            <form id="newTicketForm" class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-[0_4px_20px_rgb(0,0,0,0.05)] mt-3 flex flex-col gap-4" enctype="multipart/form-data">
+            <form id="newTicketForm" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-lg shadow-slate-200/50 mt-4 flex flex-col gap-4" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="category" id="newCat" value="General">
                 <input type="hidden" name="priority" id="newPriority" value="Medium">
 
-                <div class="border-b border-slate-100 pb-2 mb-1">
-                    <p id="form-context-msg" class="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center"><i class="fas fa-folder-open mr-2 text-blue-400"></i></p>
+                <div class="border-b border-slate-100 pb-2 mb-2">
+                    <p id="form-context-msg" class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center"><i class="fas fa-folder-open mr-2 text-blue-500"></i></p>
                 </div>
 
                 <div id="account-fields" class="hidden flex flex-col gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100 shadow-inner">
@@ -345,12 +388,12 @@
                             <p class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Identity Support</p>
                         </div>
                     </div>
-                    <input type="text" name="first_name" maxlength="25" placeholder="First Name" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
-                    <input type="text" name="last_name" maxlength="25" placeholder="Last Name" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
-                    <input type="email" name="email" maxlength="50" placeholder="Inst. Email" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
-                    <input type="tel" name="phone" maxlength="11" placeholder="Phone Number" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm">
+                    <input type="text" name="first_name" maxlength="25" placeholder="First Name" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <input type="text" name="last_name" maxlength="25" placeholder="Last Name" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <input type="email" name="email" maxlength="50" placeholder="Inst. Email" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <input type="tel" name="phone" maxlength="11" placeholder="Phone Number" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm font-medium">
                     
-                    <select name="rank" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 appearance-none transition-all shadow-sm cursor-pointer">
+                    <select name="rank" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
                         <option value="" disabled selected>Requested Rank</option>
                         <optgroup label="Enlisted">
                             <option value="Airman">Airman</option>
@@ -391,8 +434,8 @@
                             <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest">Security Clearance</p>
                         </div>
                     </div>
-                    <input type="text" name="auth_id" placeholder="Identifier (ID/Username)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all shadow-sm">
-                    <select name="removal_type" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 appearance-none transition-all shadow-sm cursor-pointer">
+                    <input type="text" name="auth_id" placeholder="Identifier (ID/Username)" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <select name="removal_type" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
                         <option value="OTP">OTP Reset</option>
                         <option value="MFA">Complete MFA Removal</option>
                         <option value="Hardware">Hardware Token Unlink</option>
@@ -408,15 +451,15 @@
                             <p class="text-[9px] font-black text-red-600 uppercase tracking-widest">System Anomaly</p>
                         </div>
                     </div>
-                    <select name="bug_module" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 appearance-none transition-all shadow-sm cursor-pointer">
+                    <select name="bug_module" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
                         <option value="Dashboard">Dashboard / Analytics</option>
                         <option value="Tickets">Ticket System</option>
                         <option value="Assets">IT Assets</option>
                         <option value="Authentication">Authentication</option>
                         <option value="Other">Other Component</option>
                     </select>
-                    <input type="text" name="error_code" placeholder="Error Code (If any)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all shadow-sm">
-                    <textarea name="reproduce_steps" rows="2" placeholder="Steps to reproduce..." class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 resize-none transition-all shadow-sm"></textarea>
+                    <input type="text" name="error_code" placeholder="Error Code (If any)" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <textarea name="reproduce_steps" rows="2" placeholder="Steps to reproduce..." class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none transition-all shadow-sm font-medium"></textarea>
                 </div>
 
                 <div id="permission-fields" class="hidden flex flex-col gap-3 p-4 bg-emerald-50/80 rounded-xl border border-emerald-200 shadow-inner">
@@ -428,13 +471,13 @@
                             <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Access Control</p>
                         </div>
                     </div>
-                    <input type="text" name="target_resource" placeholder="Target Resource" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
-                    <select name="access_level" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 appearance-none transition-all shadow-sm cursor-pointer">
+                    <input type="text" name="target_resource" placeholder="Target Resource" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <select name="access_level" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm cursor-pointer font-medium">
                         <option value="Read-Only">Read-Only (Viewer)</option>
                         <option value="Contributor">Contributor (Editor)</option>
                         <option value="Administrator">Administrator (Elevated)</option>
                     </select>
-                    <input type="text" name="approving_officer" placeholder="Approving Officer Ref" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all shadow-sm">
+                    <input type="text" name="approving_officer" placeholder="Approving Officer Ref" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm font-medium">
                 </div>
 
                 <div id="access-fields" class="hidden flex flex-col gap-3 p-4 bg-purple-50/80 rounded-xl border border-purple-200 shadow-inner">
@@ -446,26 +489,26 @@
                             <p class="text-[9px] font-black text-purple-600 uppercase tracking-widest">Auth Diagnostics</p>
                         </div>
                     </div>
-                    <input type="text" name="affected_id" placeholder="Affected ID / Username" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm">
-                    <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-white border border-slate-200 p-2.5 rounded-lg text-xs outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all shadow-sm">
+                    <input type="text" name="affected_id" placeholder="Affected ID / Username" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-sm font-medium">
+                    <input type="text" name="alt_contact" placeholder="Alt Contact (Email/Phone)" class="w-full bg-white border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all shadow-sm font-medium">
                 </div>
 
-                <div class="flex flex-col gap-3 mt-1">
-                    <input type="text" name="subject" id="newSub" placeholder="Subject" required class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white font-bold text-slate-800 transition-all shadow-inner">
-                    <textarea name="description" id="newDescInput" placeholder="Detailed Description..." required rows="3" class="w-full bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white resize-none transition-all shadow-inner"></textarea>
+                <div class="flex flex-col gap-3 mt-2">
+                    <input type="text" name="subject" id="newSub" placeholder="Subject / Incident Title" required class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:bg-white font-bold text-slate-800 transition-all shadow-inner placeholder:font-medium">
+                    <textarea name="description" id="newDescInput" placeholder="Detailed Operation Description..." required rows="4" class="w-full bg-slate-50 border border-slate-200 p-3.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent focus:bg-white resize-none transition-all shadow-inner font-medium placeholder:font-medium"></textarea>
                     
-                    <label class="hidden border-2 border-dashed border-slate-300 bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
+                    <label class="hidden border-2 border-dashed border-slate-300 bg-slate-50/50 rounded-xl p-5 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
                         <input type="file" name="attachments" multiple disabled class="hidden" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.csv" onchange="ChatWidget.updateFileLabel(this)">
-                        <div class="w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center border border-slate-100 mx-auto mb-2 group-hover:border-blue-400 group-hover:scale-110 transition-transform">
-                            <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+                        <div class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center border border-slate-100 mx-auto mb-3 group-hover:border-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                            <i class="fas fa-cloud-upload-alt text-slate-400 group-hover:text-white transition-colors"></i>
                         </div>
-                        <span id="widget-file-label" class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-600 transition-colors">Attach Media</span>
-                        <div id="file-preview-list" class="mt-3 flex flex-wrap gap-1.5 justify-center empty:hidden"></div>
+                        <span id="widget-file-label" class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-700 transition-colors">Attach Secure Media</span>
+                        <div id="file-preview-list" class="mt-4 flex flex-wrap gap-2 justify-center empty:hidden"></div>
                     </label>
                 </div>
 
-                <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 sm:py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 mt-2 flex justify-center items-center gap-2">
-                    <i class="fas fa-paper-plane"></i> Initialize Dispatch
+                <button type="button" id="dispatchBtn" onclick="ChatWidget.finalizeTicketSubmission()" class="w-full bg-slate-900 hover:bg-blue-700 text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-lg shadow-slate-900/20 mt-2 flex justify-center items-center gap-3">
+                    <i class="fas fa-satellite-dish"></i> Initialize Dispatch
                 </button>
             </form>
         </div>
@@ -474,7 +517,6 @@
 <script>
     // --- SECURITY: Utility Framework ---
     const SecurityUtils = {
-        // Defends against Cross-Site Scripting (XSS) and Vanilla JS Injection vulnerabilities
         escapeHTML(str) {
             if (typeof str !== 'string') return str;
             return str.replace(/[&<>'"]/g, tag => ({
@@ -486,10 +528,8 @@
             }[tag] || tag));
         },
         
-        // SECURITY: Client-Side Malware & DoS Prevention
-        // Prevents massive files and harmful filetypes from consuming server resources
         validateFiles(files) {
-            const maxSize = 5 * 1024 * 1024; // 5MB limit per file
+            const maxSize = 5 * 1024 * 1024; 
             const allowedTypes = [
                 'image/jpeg', 'image/png', 'image/gif', 
                 'application/pdf', 'text/plain', 
@@ -502,7 +542,6 @@
                 if (files[i].size > maxSize) {
                     return { valid: false, error: `File "${files[i].name}" exceeds the 5MB limit.` };
                 }
-                // Check if file type is valid (allow empty types for edge cases where browser can't detect it, backend will handle)
                 if (files[i].type !== '' && !allowedTypes.includes(files[i].type)) {
                     return { valid: false, error: `File "${files[i].name}" has an invalid/unsupported format.` };
                 }
@@ -522,7 +561,6 @@
 
         open() {
             this.modal.classList.remove('hidden');
-            // Slight delay for transition effect
             setTimeout(() => {
                 this.modal.classList.remove('opacity-0');
                 this.content.classList.remove('scale-95');
@@ -546,17 +584,13 @@
         },
         
         async search() {
-            // SECURITY: Anti-Spam (Debounce)
             if (this.btn.disabled) return;
 
             let val = this.input.value.trim();
             if (!val) return;
             
-            // Clean input (remove '#' if user typed it)
             val = val.replace('#', '');
             
-            // SECURITY FIX: STRICT REGEX FOR SQLi PREVENTION
-            // The input MUST contain only digits, otherwise it is rejected immediately.
             if (!/^\d+$/.test(val)) {
                 this.showError("Security Alert: Invalid format. Please enter numbers only.");
                 return;
@@ -564,7 +598,6 @@
             
             const searchId = parseInt(val, 10);
 
-            // Set loading state
             const originalBtnHtml = this.btn.innerHTML;
             this.btn.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i>';
             this.btn.disabled = true;
@@ -572,19 +605,16 @@
             this.error.classList.add('hidden');
 
             try {
-                // IMPORTANT: Adjust this URL to match your Django URL setup for retrieving ticket statuses
                 const res = await fetch(`/tickets/api/track/?id=${searchId}`);
                 
                 if (!res.ok) throw new Error("Ticket not found.");
                 
                 const data = await res.json();
                 
-                // Format Variables AND Secure against DOM Injection (XSS)
                 const formattedId = SecurityUtils.escapeHTML('#' + String(data.id || searchId).padStart(6, '0'));
                 const status = SecurityUtils.escapeHTML(data.status || 'Pending');
                 const lowerStatus = status.toLowerCase();
                 
-                // Handle missing or null technician
                 let technician = data.technician;
                 if (!technician || technician.trim() === '') {
                     technician = 'No technician yet';
@@ -594,20 +624,18 @@
 
                 const subject = SecurityUtils.escapeHTML(data.subject || 'Not specified');
                 
-                // Styling based on status
-                let statusColor = 'text-blue-600 bg-blue-100 border-blue-200';
+                let statusColor = 'text-blue-600 bg-blue-50 border-blue-200';
                 if(lowerStatus === 'pending' || lowerStatus === 'open') {
-                    statusColor = 'text-amber-600 bg-amber-100 border-amber-200';
+                    statusColor = 'text-amber-600 bg-amber-50 border-amber-200';
                 } else if(lowerStatus === 'resolved' || lowerStatus === 'closed' || lowerStatus === 'completed') {
-                    statusColor = 'text-emerald-600 bg-emerald-100 border-emerald-200';
+                    statusColor = 'text-emerald-600 bg-emerald-50 border-emerald-200';
                 }
 
-                // Check if we need to show a resolution message
                 let resolutionMessageHtml = '';
                 if (lowerStatus === 'resolved' || lowerStatus === 'closed' || lowerStatus === 'completed') {
                     if (subject === 'New Account Provisioning') {
                         resolutionMessageHtml = `
-                            <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
+                            <div class="mt-5 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
                                 <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
                                 <div>
                                     <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Your Account Is Ready</p>
@@ -616,9 +644,8 @@
                             </div>
                         `;
                     } else {
-                        // Standard resolved message for other tickets
                         resolutionMessageHtml = `
-                            <div class="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
+                            <div class="mt-5 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start space-x-3">
                                 <i class="fas fa-check-circle text-emerald-500 mt-0.5"></i>
                                 <div>
                                     <p class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Issue Resolved</p>
@@ -629,25 +656,24 @@
                     }
                 }
 
-                // Inject Results safely
                 this.results.innerHTML = `
-                    <div class="flex justify-between items-start border-b border-slate-200 pb-3">
+                    <div class="flex justify-between items-start border-b border-slate-200 pb-4">
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ticket ID</p>
-                            <p class="font-extrabold text-slate-800 text-xl">${formattedId}</p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ticket ID</p>
+                            <p class="font-black text-slate-900 text-2xl tracking-tight">${formattedId}</p>
                         </div>
-                        <div class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border shadow-sm ${statusColor}">
+                        <div class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${statusColor}">
                             ${status}
                         </div>
                     </div>
-                    <div class="space-y-4 pt-4">
+                    <div class="space-y-5 pt-5">
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Subject</p>
-                            <p class="text-sm font-bold text-slate-700">${subject}</p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Subject</p>
+                            <p class="text-sm font-bold text-slate-800">${subject}</p>
                         </div>
                         <div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Assigned Technician</p>
-                            <p class="text-sm font-bold ${technician === 'No technician yet' ? 'text-slate-400 italic' : 'text-slate-700'} flex items-center">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Assigned Technician</p>
+                            <p class="text-sm font-bold ${technician === 'No technician yet' ? 'text-slate-400 italic' : 'text-slate-800'} flex items-center">
                                 <i class="fas ${technician === 'No technician yet' ? 'fa-user-clock' : 'fa-user-check'} mr-2 text-slate-400"></i> 
                                 ${technician}
                             </p>
@@ -740,7 +766,7 @@
             const div = document.createElement('div');
             div.className = "flex justify-start w-full mb-2";
             div.innerHTML = `
-                <div class="bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-2xl rounded-tl-sm text-[13px] shadow-[0_2px_10px_rgba(0,0,0,0.03)] leading-relaxed max-w-[90%]">
+                <div class="bg-white border border-slate-200 text-slate-700 px-5 py-3.5 rounded-2xl rounded-tl-sm text-[13px] shadow-sm leading-relaxed max-w-[90%] font-medium">
                     ${text}
                 </div>`;
             this.body.appendChild(div);
@@ -749,12 +775,11 @@
         },
 
         appendUserMessage(text) {
-            // Apply HTML escape to prevent XSS from user injected payloads
             const sanitizedText = SecurityUtils.escapeHTML(text);
             const div = document.createElement('div');
             div.className = "flex justify-end w-full mb-2";
             div.innerHTML = `
-                <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white px-4 py-3 rounded-2xl rounded-tr-sm text-[13px] shadow-md max-w-[85%]">
+                <div class="bg-slate-900 text-white px-5 py-3.5 rounded-2xl rounded-tr-sm text-[13px] shadow-md max-w-[85%] font-medium">
                     ${sanitizedText}
                 </div>`;
             this.body.appendChild(div);
@@ -763,11 +788,11 @@
 
         setBotOptions(options) {
             const optionsDiv = document.createElement('div');
-            optionsDiv.className = "flex flex-wrap gap-2 mt-2 w-full justify-end";
+            optionsDiv.className = "flex flex-wrap gap-2.5 mt-2 w-full justify-end";
             
             optionsDiv.innerHTML = options.map(o => `
                 <button type="button" onclick="ChatWidget.${o.action}()" 
-                        class="chat-pill bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-full text-xs font-bold hover:bg-blue-50 transition-all shadow-sm">
+                        class="chat-pill bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-full text-xs font-bold hover:bg-slate-50 transition-all shadow-sm">
                     ${o.label}
                 </button>
             `).join('');
@@ -777,7 +802,7 @@
         },
 
         removeLastOptions() {
-            const optionContainers = this.body.querySelectorAll('.flex.flex-wrap.gap-2.mt-2.w-full.justify-end');
+            const optionContainers = this.body.querySelectorAll('.flex.flex-wrap.gap-2\\.5.mt-2.w-full.justify-end');
             if (optionContainers.length > 0) {
                 const last = optionContainers[optionContainers.length - 1];
                 last.remove();
@@ -800,7 +825,6 @@
             document.getElementById('permission-fields').classList.add('hidden');
             document.getElementById('access-fields').classList.add('hidden');
             
-            // Safely move the form back to the hidden container before anything gets wiped
             const form = document.getElementById('newTicketForm');
             if (form) {
                 form.reset();
@@ -810,15 +834,13 @@
             
             const fileLabel = document.getElementById('widget-file-label');
             if (fileLabel) {
-                fileLabel.innerText = "Attach Media";
-                fileLabel.classList.remove('text-blue-600');
+                fileLabel.innerText = "Attach Secure Media";
+                fileLabel.classList.remove('text-blue-700');
             }
             const previewList = document.getElementById('file-preview-list');
             if (previewList) previewList.innerHTML = '';
         },
 
-        // --- Mapped Bot Handlers from submit_ticket.html ---
-        
         handle_account_creation() {
             this.removeLastOptions();
             this.appendUserMessage("I need to create a new user account.");
@@ -947,11 +969,9 @@
                 document.getElementById(fieldIdToShow).classList.remove('hidden');
             }
 
-            // Move form inside the chat body at the bottom
             this.body.appendChild(form);
             form.classList.remove('hidden');
             
-            // Add a "Start over" button after the form
             this.setBotOptions([{ label: "Start over", action: "restart" }]);
             this.scrollToBottom();
         },
@@ -961,28 +981,27 @@
             const label = document.getElementById('widget-file-label');
             preview.innerHTML = '';
             
-            // SECURITY: Run file validation before accepting inputs
             if (input.files.length > 0) {
                 const validation = SecurityUtils.validateFiles(input.files);
                 if (!validation.valid) {
                     alert("SECURITY ALERT: " + validation.error);
-                    input.value = ''; // Safely clear the harmful file
-                    label.innerText = "Attach Media";
-                    label.classList.remove('text-blue-600');
+                    input.value = ''; 
+                    label.innerText = "Attach Secure Media";
+                    label.classList.remove('text-blue-700');
                     return;
                 }
 
                 label.innerText = `${input.files.length} Files Selected`;
-                label.classList.add('text-blue-600');
+                label.classList.add('text-blue-700');
                 Array.from(input.files).forEach(file => {
                     const span = document.createElement('span');
-                    span.className = "px-2.5 py-1 bg-blue-100/50 text-[9px] font-bold rounded-md text-blue-700 truncate max-w-[100px] border border-blue-200/50 shadow-sm";
+                    span.className = "px-3 py-1 bg-slate-100 text-[10px] font-bold rounded text-slate-700 truncate max-w-[120px] border border-slate-200 shadow-sm";
                     span.innerText = file.name;
                     preview.appendChild(span);
                 });
             } else {
-                label.innerText = "Attach Media";
-                label.classList.remove('text-blue-600');
+                label.innerText = "Attach Secure Media";
+                label.classList.remove('text-blue-700');
             }
         },
 
@@ -990,12 +1009,11 @@
             const form = document.getElementById('newTicketForm');
             const btn = document.getElementById('dispatchBtn');
             
-            // SECURITY: Anti-Spam (Debounce click)
             if (btn.disabled) return;
 
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Processing...';
+            btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> Transmitting...';
             
             const formData = new FormData(form);
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -1014,17 +1032,15 @@
                     const responseData = await res.json(); 
                     
                     form.classList.add('hidden');
-                    document.getElementById('hiddenForms').appendChild(form); // Move it back safely
+                    document.getElementById('hiddenForms').appendChild(form); 
                     this.removeLastOptions();
                     
-                    // Retrieve the raw ticket ID from the response
                     const rawTicketId = responseData.ticket_number || responseData.ticket_id || responseData.id;
                     let successMessage = "✅ Dispatch successful. Our team will review your report shortly.";
                     
                     if (rawTicketId) {
-                        // Format the ticket ID to be 6 digits padded with zeros and prefixed with a '#'
                         const formattedTicketId = '#' + String(rawTicketId).padStart(6, '0');
-                        successMessage = `✅ Dispatch successful. Your ticket number is <strong>${formattedTicketId}</strong>. Please save this for your tracking.`;
+                        successMessage = `✅ Dispatch successful. Your incident number is <strong>${formattedTicketId}</strong>. Please save this for your tracking.`;
                     }
                     
                     this.appendBotMessage(successMessage);
