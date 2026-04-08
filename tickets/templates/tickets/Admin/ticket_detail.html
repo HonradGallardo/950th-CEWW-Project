@@ -351,9 +351,16 @@ HTML
 
                         <div class="md:col-span-2 space-y-2 mt-2">
                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Internal Technical Description</label>
-                            <textarea name="description" id="editDesc" rows="6" 
-          {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
-          class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow custom-scrollbar disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">{{ ticket.description }}</textarea>
+                            <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Priority Level</label>
+                            <select name="priority" id="editPriority" 
+                                    {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
+                                <option value="Low" {% if ticket.priority == 'Low' %}selected{% endif %}>Low</option>
+                                <option value="Medium" {% if ticket.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                                <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>High</option>
+                            </select>
+                        </div>
                             <p class="text-xs text-slate-500">Only visible to internal staff members.</p>
                         </div>
                     </div>
