@@ -9,44 +9,122 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            if (document.documentElement.classList.contains('dark')) {
+                localStorage.theme = 'dark';
+            } else {
+                localStorage.theme = 'light';
+            }
+        }
+    </script>
+
     <style>
-        .login-gradient {
-            background: radial-gradient(circle at top left, #e0e9f4 0%, #cbd5e1 100%);
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary: #06b6d4;
+            --slate-900: #0f172a;
+            --bg-dark: #0b1121;
         }
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: #0f172a; 
+            background-color: #f8fafc; 
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(99, 102, 241, 0.04) 0px, transparent 50%);
+            background-attachment: fixed;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
+
+        .dark body {
+            color: #cbd5e1; 
+            background-color: var(--bg-dark); 
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
+        }
+
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+        }
+
+        .dark .bg-grid-pattern {
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        }
+
         .animate-in { animation-duration: 300ms; animation-fill-mode: forwards; }
         .fade-in { animation-name: fadeIn; }
         .slide-in-from-right-4 { animation-name: slideInRight; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInRight { from { transform: translateX(1rem); } to { transform: translateX(0); } }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+            background-size: 200% auto;
+            transition: all 0.4s ease;
+        }
+        .btn-gradient:hover {
+            background-position: right center;
+            box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.4);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
-<body class="login-gradient flex items-center justify-center min-h-screen p-4 font-sans text-slate-900 relative">
+<body class="bg-grid-pattern flex items-center justify-center min-h-screen p-4 font-sans relative selection:bg-blue-100 dark:selection:bg-cyan-900 selection:text-blue-900 dark:selection:text-cyan-100">
+
+    <div class="fixed top-6 right-6 z-50">
+        <button onclick="toggleTheme()" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors p-3.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-lg">
+            <i class="fas fa-sun hidden dark:inline text-xl"></i>
+            <i class="fas fa-moon inline dark:hidden text-xl"></i>
+        </button>
+    </div>
 
     <div id="errorModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
-            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeErrorModal()"></div>
+            <div class="fixed inset-0 bg-slate-900/60 dark:bg-[#0b1121]/80 backdrop-blur-sm transition-opacity" onclick="closeErrorModal()"></div>
 
-            <div class="relative bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-sm w-full border border-slate-100 animate-in fade-in scale-95 duration-200">
-                <div class="bg-white px-6 pt-6 pb-6">
+            <div class="relative bg-white dark:bg-slate-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-sm w-full border border-slate-100 dark:border-slate-700 animate-in fade-in scale-95 duration-200">
+                <div class="bg-white dark:bg-slate-800 px-6 pt-6 pb-6">
                     <div class="sm:flex sm:items-start">
-                        <div class="mx-auto shrink-0 flex items-center justify-center h-16 w-16 rounded-full bg-red-50 sm:mx-0 sm:h-12 sm:w-12">
-                            <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                        <div class="mx-auto shrink-0 flex items-center justify-center h-16 w-16 rounded-full bg-red-50 dark:bg-red-900/30 border dark:border-red-800/50 sm:mx-0 sm:h-12 sm:w-12">
+                            <i class="fas fa-exclamation-triangle text-red-500 dark:text-red-400 text-xl"></i>
                         </div>
                         <div class="mt-4 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                            <h3 class="text-lg font-black text-slate-800 tracking-tight" id="modal-title">Authentication Error</h3>
+                            <h3 class="text-lg font-black text-slate-800 dark:text-white tracking-tight" id="modal-title">Authentication Error</h3>
                             <div class="mt-2">
-                                <p class="text-sm text-slate-500 font-medium" id="errorModalMessage">
+                                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium" id="errorModalMessage">
                                     An error occurred during login.
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-slate-100">
+                <div class="bg-slate-50 dark:bg-slate-900/50 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-slate-100 dark:border-slate-700">
                     <button type="button" onclick="closeErrorModal()" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-3 bg-red-600 text-sm font-bold text-white hover:bg-red-700 focus:outline-none sm:w-auto transition-colors">
                         Understood
                     </button>
@@ -54,111 +132,112 @@
             </div>
         </div>
     </div>
+
     <div class="w-full max-w-md relative z-10">
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl shadow-lg shadow-cyan-500/30 mb-4 transform hover:scale-105 transition-transform">
                 <i class="fas fa-shield-alt text-white text-3xl"></i>
             </div>
-            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">
-                IT Asset & <span class="text-blue-600">Incident Monitoring</span> System
+            <h1 class="text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+                IT Asset & <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300">Incident Monitoring</span>
             </h1>
-            <p class="text-slate-500 text-sm mt-1">On The Go Secure Gateway</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-2 font-medium">On The Go Secure Gateway</p>
         </div>
 
-        <div id="loginCard" class="glass-effect rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/50 transition-all duration-300">
+        <div id="loginCard" class="overflow-hidden bg-transparent border-none transition-all duration-300">
             
-            <form id="loginForm" method="post" action="{% url 'login' %}" class="p-10 space-y-5">
+            <form id="loginForm" method="post" action="{% url 'login' %}" class="p-2 sm:p-6 space-y-5">
                 {% csrf_token %}
                 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Username</label>
+                    <label class="text-[10px] font-black text-slate-500 dark:text-cyan-400 uppercase tracking-widest ml-1">Username / ID</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-user text-slate-400"></i>
+                            <i class="fas fa-user text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 dark:group-focus-within:text-cyan-400 transition-colors"></i>
                         </div>
                         <input type="text" name="username" id="id_username" required 
-                            class="w-full pl-11 pr-4 py-3.5 bg-slate-100/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-slate-700"
+                            class="w-full pl-11 pr-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-cyan-500/30 focus:border-blue-500 dark:focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-sm"
                             placeholder="Enter your ID">
                     </div>
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Password</label>
+                    <label class="text-[10px] font-black text-slate-500 dark:text-cyan-400 uppercase tracking-widest ml-1">Password</label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-slate-400"></i>
+                            <i class="fas fa-lock text-slate-400 dark:text-slate-500 group-focus-within:text-blue-500 dark:group-focus-within:text-cyan-400 transition-colors"></i>
                         </div>
                         <input type="password" name="password" id="id_password" required 
-                            class="w-full pl-11 pr-4 py-3.5 bg-slate-100/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-slate-700"
+                            class="w-full pl-11 pr-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-300 dark:border-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-cyan-500/30 focus:border-blue-500 dark:focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-slate-600 shadow-sm"
                             placeholder="••••••••">
                     </div>
                 </div>
                 
                 <div class="flex justify-between items-center px-1">
-                    <a href="{% url 'forgot_password' %}" class="text-xs font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">
+                    <a href="{% url 'forgot_password' %}" class="text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 uppercase tracking-wider transition-colors">
                         Forgot Password?
                     </a>
                 </div>
 
                 <button type="submit" 
-                    class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 mt-2">
-                    Sign In
+                    class="btn-gradient w-full text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 dark:shadow-cyan-500/20 active:scale-[0.98] transition-all duration-200 mt-4 flex justify-center items-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
                 </button>
 
                 <div class="relative flex items-center justify-center my-6">
                     <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-slate-200"></div>
+                        <div class="w-full border-t border-slate-300 dark:border-slate-700"></div>
                     </div>
-                    <span class="relative bg-white/80 backdrop-blur-md px-4 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest">Or</span>
+                    <span class="relative bg-transparent px-4 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Or</span>
                 </div>
 
-                <button type="button" id="passkey-login-btn" class="w-full bg-white/60 hover:bg-white text-slate-700 border border-slate-200 font-bold py-3.5 rounded-2xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-3">
-                    <i class="fas fa-fingerprint text-blue-600 text-xl"></i> Sign in with Passkey
+                <button type="button" id="passkey-login-btn" class="w-full bg-white/70 dark:bg-slate-900/70 backdrop-blur-md hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold py-4 rounded-2xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-3">
+                    <i class="fas fa-fingerprint text-blue-600 dark:text-cyan-400 text-xl"></i> Sign in with Passkey
                 </button>
 
-                <div class="text-center mt-6">
-                    <a href="{% url 'landing' %}" class="text-sm text-slate-400 hover:text-blue-600 transition-colors inline-flex items-center font-medium">
-                        <i class="fas fa-chevron-left mr-2 text-xs"></i> Back to Homepage
+                <div class="text-center mt-8">
+                    <a href="{% url 'landing' %}" class="text-xs text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors inline-flex items-center font-bold uppercase tracking-wide">
+                        <i class="fas fa-chevron-left mr-2"></i> Return to Homepage
                     </a>
                 </div>
             </form>
 
-            <form id="mfaForm" class="hidden p-10 space-y-6 animate-in fade-in slide-in-from-right-4">
-                <div class="text-center mb-4">
-                    <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 rounded-full mb-3">
-                        <i class="fas fa-mobile-alt text-emerald-600 text-xl"></i>
+            <form id="mfaForm" class="hidden p-2 sm:p-6 space-y-6 animate-in fade-in slide-in-from-right-4">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 dark:bg-emerald-900/40 rounded-full mb-4 border border-emerald-200 dark:border-emerald-800/50 shadow-inner">
+                        <i class="fas fa-shield-check text-emerald-600 dark:text-emerald-400 text-2xl"></i>
                     </div>
-                    <h3 class="text-lg font-black text-slate-800 uppercase">2-Step Verification</h3>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Enter the 6-digit code sent to your email</p>
+                    <h3 class="text-xl font-extrabold text-slate-800 dark:text-white uppercase tracking-tight">2-Step Verification</h3>
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">Enter the 6-digit code sent to your device</p>
                 </div>
 
                 <input type="text" name="otp_code" id="otp_code" required maxlength="6" autocomplete="off"
-                       class="w-full px-4 py-4 bg-slate-100/50 border border-slate-200 rounded-2xl text-center font-mono text-2xl tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-slate-700"
+                       class="w-full px-4 py-5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-300 dark:border-slate-700 rounded-2xl text-center font-mono text-3xl font-black tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:focus:ring-emerald-500/30 focus:border-emerald-500 dark:focus:border-emerald-400 focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-white shadow-inner"
                        placeholder="••••••">
 
-                <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all mt-2">
-                    Verify & Login
+                <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-500/30 active:scale-[0.98] transition-all mt-4 flex justify-center items-center gap-2">
+                    <i class="fas fa-check-circle"></i> Verify Access
                 </button>
                 
-                <div class="text-center mt-4">
-                    <button type="button" id="backToLoginBtn" class="text-xs font-bold text-slate-400 hover:text-blue-600 uppercase transition-colors">
-                        <i class="fas fa-arrow-left mr-1"></i> Cancel & Go Back
+                <div class="text-center mt-6">
+                    <button type="button" id="backToLoginBtn" class="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-cyan-400 uppercase tracking-wider transition-colors flex items-center justify-center mx-auto">
+                        <i class="fas fa-arrow-left mr-2"></i> Cancel & Go Back
                     </button>
                 </div>
             </form>
 
-            <div class="bg-slate-50/80 p-5 border-t border-slate-100 text-center">
+            <div class="mt-8 mb-4 p-4 rounded-2xl bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200 dark:border-slate-800 text-center mx-2 sm:mx-6">
                 <div class="flex items-center justify-center space-x-2">
-                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping"></span>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">
+                    <span class="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full animate-ping"></span>
+                    <p class="text-[9px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-[0.2em]">
                         Classified Network Access Only
                     </p>
                 </div>
             </div>
         </div>
         
-        <p class="text-center text-slate-400 text-[10px] mt-8 uppercase tracking-widest">
-            &copy; On The Go AIMS
+        <p class="text-center text-slate-400 dark:text-slate-600 text-[10px] mt-4 font-bold uppercase tracking-widest">
+            &copy; 2026 On The Go AIMS
         </p>
     </div>
 
@@ -214,7 +293,6 @@
                         errorMsg = xhr.responseJSON.message;
                     }
                     
-                    // 🔥 TRIGGER THE NEW CLEAN POPUP HERE
                     showErrorModal(errorMsg);
                 }
             });
@@ -233,7 +311,7 @@
         $('#backToLoginBtn').on('click', function() {
             $('#mfaForm').addClass('hidden');
             $('#loginForm').removeClass('hidden');
-            $('#loginForm').find('button[type="submit"]').prop('disabled', false).text('Sign In');
+            $('#loginForm').find('button[type="submit"]').prop('disabled', false).html('<i class="fas fa-sign-in-alt"></i> Sign In');
             $('#otp_code').val(''); 
         });
 
@@ -264,7 +342,6 @@
                         errorMsg = xhr.responseJSON.message;
                     }
                     
-                    // 🔥 TRIGGER THE NEW CLEAN POPUP HERE
                     showErrorModal(errorMsg);
                     
                     $btn.prop('disabled', false).html(originalText);
@@ -280,14 +357,14 @@
             const username = $('#id_username').val();
             
             if (!username) {
-                showErrorModal("Please enter your Username first to use a Passkey.");
+                showErrorModal("Please enter your Username / ID first to use a Passkey.");
                 $('#id_username').focus();
                 return;
             }
 
             const $btn = $(this);
             const originalText = $btn.html();
-            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2 text-blue-600"></i> Connecting to Device...');
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2 text-blue-600 dark:text-cyan-400"></i> Connecting...');
 
             try {
                 // Step 1: Ask the server for a cryptographic challenge
@@ -306,7 +383,7 @@
                 // Step 2: Trigger the OS biometric prompt (FaceID/Fingerprint)
                 const assertion = await SimpleWebAuthnBrowser.startAuthentication(options);
 
-                $btn.html('<i class="fas fa-spinner fa-spin mr-2 text-blue-600"></i> Verifying Signature...');
+                $btn.html('<i class="fas fa-spinner fa-spin mr-2 text-blue-600 dark:text-cyan-400"></i> Verifying...');
 
                 // Step 3: Send the cryptographically signed proof back to the server
                 const verifyResponse = await fetch('/api/webauthn/login-verify/', {
