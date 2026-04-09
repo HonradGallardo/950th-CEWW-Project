@@ -9,10 +9,15 @@
             <h2 class="font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest text-xs">
                 {% if asset %} <i class="fas fa-edit mr-2 text-blue-500"></i> Modify Asset: {{ asset.assets_id }} {% else %} <i class="fas fa-plus-circle mr-2 text-blue-500"></i> Provision New Asset {% endif %}
             </h2>
-            <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">950th CEWW Inventory</span>
+            <div class="flex items-center gap-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter hidden sm:block">950th CEWW Inventory</span>
+                <a href="/assets/" class="text-[10px] font-black text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 uppercase tracking-widest transition-colors flex items-center">
+                    <i class="fas fa-arrow-left mr-1.5"></i> Back
+                </a>
+            </div>
         </div>
         
-        <form method="POST" class="p-6 space-y-6" id="assetForm">
+        <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6" id="assetForm">
             {% csrf_token %}
             
             <div class="space-y-4">
@@ -127,19 +132,42 @@
                         <label class="text-[9px] font-black text-amber-600 uppercase ml-1">Detailed Technical Reason</label>
                         {{ form.maintenance_reason }}
                     </div>
+
+                    <div class="space-y-2 pt-3 mt-3 border-t border-amber-500/20">
+                        <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block">Maintenance Record</span>
+                        <label class="text-[8px] text-slate-500 uppercase font-bold">Repair Logs, Diagnostic Proof</label>
+                        <div class="w-full mt-1">
+                            <input type="file" name="maintenance_attachment" id="id_maintenance_attachment" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200 dark:file:bg-amber-900/30 dark:file:text-amber-400 transition-all cursor-pointer focus:outline-none">
+                            {% if form.instance.maintenance_attachment %}
+                                <div class="mt-3 text-[9px] font-bold text-amber-600 flex items-center gap-1 bg-amber-50 dark:bg-amber-900/20 w-fit px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-800">
+                                    <i class="fas fa-tools"></i> <a href="{{ form.instance.maintenance_attachment.url }}" target="_blank" class="underline">Current Maintenance File</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-3 pt-4">
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all text-xs uppercase tracking-widest active:scale-95">
+            <div class="space-y-2 py-4 border-t border-slate-100 dark:border-slate-800">
+                <span class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest block">IT Asset Document / Photo</span>
+                <label class="text-[8px] text-slate-400 uppercase font-bold">Upload a photo of the asset or associated invoice</label>
+                <div class="w-full mt-1">
+                    <input type="file" name="attachment" id="id_attachment" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400 transition-all cursor-pointer focus:outline-none">
+                    
+                    {% if form.instance.attachment %}
+                        <div class="mt-3 text-[9px] font-bold text-blue-600 flex flex-col gap-2 bg-blue-50 dark:bg-blue-900/20 w-fit px-3 py-3 rounded-xl border border-blue-100 dark:border-blue-800 shadow-sm">
+                            <span class="uppercase tracking-widest text-[8px] text-blue-500">Currently Uploaded Asset Photo:</span>
+                            <img src="{{ form.instance.attachment.url }}" class="max-h-40 rounded-md object-contain border border-blue-200 dark:border-blue-700 bg-white dark:bg-slate-800" alt="Asset Photo">
+                            <a href="{{ form.instance.attachment.url }}" target="_blank" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all text-xs uppercase tracking-widest active:scale-95">
                     Commit Changes to Database
                 </button>
-
-                {% if asset %}
-                <button type="button" id="deleteBtn" class="w-full bg-transparent hover:bg-red-500 hover:text-white text-red-500 font-black py-3 rounded-xl transition-all text-[10px] uppercase tracking-widest border border-red-500/20">
-                    Decommission Asset
-                </button>
-                {% endif %}
             </div>
         </form>
     </div>
@@ -150,9 +178,9 @@ $(document).ready(function() {
     const assetPk = "{{ asset.pk|default:'' }}";
     const isEdit = assetPk !== "";
 
+    // Toggle Specs logic preserved
     function toggleSpecs() {
         const type = $('select[name="assets_type"]').val();
-        
         $('#specs-logic-container').removeClass('hidden');
         $('#specs-computing, #specs-networking, #laptop-only-field').addClass('hidden');
 
@@ -168,64 +196,133 @@ $(document).ready(function() {
         }
     }
 
+    // Toggle Maintenance details visibility
     function checkMaintenance() {
         const status = $('input[name="status"]:checked').val();
         if (status === 'Maintenance') {
             $('#maintenance-logic-container').stop().slideDown(300);
         } else {
             $('#maintenance-logic-container').stop().slideUp(300);
+            
+            // Auto-clear maintenance fields if status is changed away from Maintenance
+            $('select[name="faulty_hardware_part"]').val('');
+            $('select[name="software_issue_type"]').val('');
+            $('textarea[name="maintenance_reason"]').val('');
+            $('input[name="maintenance_attachment"]').val('');
         }
     }
 
-    // Initial check
     toggleSpecs();
     checkMaintenance();
 
-    // Listeners
     $('select[name="assets_type"]').on('change', toggleSpecs);
     $('input[name="status"]').on('change', checkMaintenance);
 
     $('#assetForm').on('submit', function(e) {
         e.preventDefault();
         const $btn = $('#submitBtn');
-        $btn.prop('disabled', true).text('PROCESSING...');
+        $btn.prop('disabled', true).text('PROCESSING ASSET...');
 
-        const payload = {
-            assets_name: $('input[name="assets_name"]').val(),
-            assets_type: $('select[name="assets_type"]').val(),
-            brand: $('input[name="brand"]').val(),
-            serial_number: $('input[name="serial_number"]').val(),
-            location: $('input[name="location"]').val(),
-            status: $('input[name="status"]:checked').val(),
-            assigned_to: $('select[name="assigned_to"]').val() || null,
-            
-            // Maintenance
-            maintenance_reason: $('textarea[name="maintenance_reason"]').val() || null,
-            faulty_hardware_part: $('select[name="faulty_hardware_part"]').val() || null,
-            software_issue_type: $('select[name="software_issue_type"]').val() || null,
+        const formData = new FormData();
+        
+        // Append text fields dynamically
+        const fields = [
+            'assets_name', 'assets_type', 'brand', 'serial_number', 'location', 
+            'os_version', 'processor', 'ram_gb', 'storage_capacity', 
+            'ip_address', 'mac_address', 'total_ports', 'battery_health', 
+            'maintenance_reason', 'faulty_hardware_part', 'software_issue_type'
+        ];
 
-            // Specs
-            processor: $('input[name="processor"]').val() || null,
-            ram_gb: parseInt($('input[name="ram_gb"]').val()) || null,
-            storage_capacity: $('input[name="storage_capacity"]').val() || null,
-            os_version: $('input[name="os_version"]').val() || null,
-            ip_address: $('input[name="ip_address"]').val() || null,
-            mac_address: $('input[name="mac_address"]').val() || null,
-            total_ports: parseInt($('input[name="total_ports"]').val()) || null,
-            is_redundant_power: $('input[name="is_redundant_power"]').is(':checked'),
-            battery_health: parseInt($('input[name="battery_health"]').val()) || null
-        };
+        fields.forEach(field => {
+            const val = $(`[name="${field}"]`).val();
+            // This safely prevents empty strings from crashing numerical fields
+            if (val && val.trim() !== "") {
+                formData.append(field, val);
+            }
+        });
 
+        const statusVal = $('input[name="status"]:checked').val() || 'Active';
+        formData.append('status', statusVal);
+        formData.append('is_redundant_power', $('input[name="is_redundant_power"]').is(':checked'));
+
+        // FIX: Safely append Assigned To ONLY if an actual User is selected
+        const assignedToVal = $('select[name="assigned_to"]').val();
+        if (assignedToVal && assignedToVal.trim() !== "") {
+            formData.append('assigned_to', assignedToVal);
+        }
+
+        // HANDLE SEPARATED FILES FOR ASSET
+        const assetFile = $('input[name="attachment"]')[0];
+        if (assetFile && assetFile.files.length > 0) {
+            formData.append('attachment', assetFile.files[0]);
+        }
+
+        const maintFile = $('input[name="maintenance_attachment"]')[0];
+        if (maintFile && maintFile.files.length > 0) {
+            formData.append('maintenance_attachment', maintFile.files[0]);
+        }
+
+        // STEP 1: SAVE THE ASSET
         $.ajax({
             url: isEdit ? `/api/assets/${assetPk}/` : '/api/assets/',
             type: isEdit ? 'PATCH' : 'POST',
             headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-            data: JSON.stringify(payload),
-            contentType: 'application/json',
-            success: () => window.location.href = '/assets/',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: (response) => {
+                
+                // STEP 2: AUTO-GENERATE MAINTENANCE TICKET IF NEEDED
+                if (statusVal === 'Maintenance') {
+                    $btn.text('GENERATING MAINTENANCE TICKET...');
+                    
+                    const maintData = new FormData();
+                    maintData.append('asset', response.id); 
+                    maintData.append('status', 'In Progress');
+                    maintData.append('maintenance_type', 'System Auto-Generated Report');
+                    
+                    const reason = $('textarea[name="maintenance_reason"]').val();
+                    if (reason) maintData.append('notes', reason);
+                    
+                    const hw = $('select[name="faulty_hardware_part"]').val();
+                    if (hw) maintData.append('faulty_hardware_part', hw);
+                    
+                    const sw = $('select[name="software_issue_type"]').val();
+                    if (sw) maintData.append('software_issue_type', sw);
+
+                    // FIX: Pass the maintenance attachment into the Ticket's Reported Issue field
+                    if (maintFile && maintFile.files.length > 0) {
+                        maintData.append('maintenance_attachment', maintFile.files[0]);
+                    }
+
+                    $.ajax({
+                        url: '/api/maintenance/',
+                        type: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        data: maintData,
+                        processData: false,
+                        contentType: false,
+                        success: () => window.location.href = '/assets/',
+                        error: () => {
+                            alert("Asset saved, but failed to auto-generate the Maintenance Ticket.");
+                            window.location.href = '/assets/';
+                        }
+                    });
+                } else {
+                    window.location.href = '/assets/';
+                }
+            },
             error: (xhr) => {
-                $btn.prop('disabled', false).text('COMMIT CHANGES');
-                alert("Database Error: " + JSON.stringify(xhr.responseJSON));
+                $btn.prop('disabled', false).text('COMMIT CHANGES TO DATABASE');
+                
+                // This will pop up a clean error message telling you exactly which field failed!
+                let errorMsg = "Database Error:\n";
+                if (xhr.responseJSON) {
+                    for (const [key, value] of Object.entries(xhr.responseJSON)) {
+                        errorMsg += `- ${key}: ${value}\n`;
+                    }
+                }
+                alert(errorMsg);
             }
         });
     });
@@ -233,24 +330,14 @@ $(document).ready(function() {
 </script>
 
 <style>
-    /* Professional input styling overrides */
-    #assetForm input:not([type="checkbox"]):not([type="radio"]), 
-    #assetForm select, 
-    #assetForm textarea {
-        background: transparent;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        padding: 0.6rem 0.8rem;
-        font-weight: 600;
-        transition: all 0.2s;
+    #assetForm input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), 
+    #assetForm select, #assetForm textarea {
+        background: transparent; border: 1px solid rgba(148, 163, 184, 0.2);
+        padding: 0.6rem 0.8rem; font-weight: 600; transition: all 0.2s; width: 100%; border-radius: 0.375rem;
     }
-    #assetForm input:focus, #assetForm select:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-    .dark #assetForm input, .dark #assetForm select, .dark #assetForm textarea {
-        color: #f1f5f9;
-        background: #0f172a;
-    }
+    
+    .dark #assetForm input:not([type="file"]), .dark #assetForm select, .dark #assetForm textarea { background: #0f172a; color: #f1f5f9; }
+    
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 </style>

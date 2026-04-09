@@ -88,11 +88,17 @@
     </div>
 </div>
 
+<form style="display:none;">{% csrf_token %}</form>
+
 <script>
 let allAssets = [];
 let currentPage = 1;
 const rowsPerPage = 6;
 let myChart;
+
+// GUARANTEED EDIT CHECK: If NOT Commander, you can edit (Admins & Personnel).
+const userGroup = "{{ request.user.groups.all.0.name|default:'' }}";
+const canEditAsset = (userGroup !== "Commander");
 
 function loadAssets() {
     $.ajax({
@@ -147,7 +153,6 @@ function renderCards(items) {
     items.forEach(asset => {
         const statusClasses = getStatusClasses(asset.status);
         const iconClass = getIconClass(asset.assets_type);
-        const isCommander = "{{ request.user.groups.all.0.name }}" === "Commander";
         const hoverColorClass = getStatusHoverColor(asset.status);
 
         html += `
@@ -167,7 +172,7 @@ function renderCards(items) {
                 
                 <div class="flex flex-col items-end gap-2 z-10 relative">
                     <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusClasses}">${asset.status}</span>
-                    ${!isCommander ? `<a href="/assets/edit/${asset.id}/" class="text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 p-1"><i class="fas fa-edit"></i></a>` : ''}
+                    ${canEditAsset ? `<a href="/assets/edit/${asset.id}/" class="text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 p-1"><i class="fas fa-edit"></i></a>` : ''}
                 </div>
             </div>
 
@@ -340,6 +345,9 @@ function showAssetDetails(id) {
     $('#detail-type').text(asset.assets_type);
     $('#detail-icon').attr('class', `fas ${getIconClass(asset.assets_type)}`);
 
+    // Helper for inputs
+    const inputClass = "w-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded px-2 py-1.5 outline-none focus:border-blue-500 transition-colors placeholder-slate-300 dark:placeholder-slate-600 shadow-sm";
+
     let specsHtml = `
         <div class="grid grid-cols-2 gap-4">
             <div>
@@ -351,66 +359,181 @@ function showAssetDetails(id) {
                 <p class="text-xs font-mono font-bold dark:text-slate-300">#${asset.assets_id}</p>
             </div>
         </div>
-        <div class="pt-4 border-t border-slate-100 dark:border-slate-700/50">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Technical Payload</label>
-            <div class="space-y-3">
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-700/50 mt-4">
+            <div class="flex justify-between items-center mb-3">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Technical Payload</label>
+                ${canEditAsset ? `<span class="text-[8px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded uppercase tracking-wider"><i class="fas fa-lock-open mr-1"></i>Edit Mode</span>` : ''}
+            </div>
     `;
 
-    // 1. Logic for Networking/Infrastructure ONLY (Router, Switch, Server)
-    // We specifically exclude Laptop and PC here
-    if (['Router', 'Switch', 'Server'].includes(asset.assets_type)) {
-        specsHtml += `
-            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Network Config</p>
-                <p class="text-xs font-mono font-bold text-blue-500">${asset.ip_address || 'NO IP'}</p>
-                <p class="text-[10px] font-mono text-slate-500 mt-1">${asset.mac_address || ''}</p>
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Firmware</p>
-                <p class="text-xs font-bold dark:text-slate-200">${asset.firmware_version || 'N/A'}</p>
-            </div>
-        `;
+    if (canEditAsset) {
+        specsHtml += `<form id="inlineSpecsForm" onsubmit="saveAssetSpecs(event, '${asset.id}')" class="space-y-3">`;
+    } else {
+        specsHtml += `<div class="space-y-3">`;
     }
 
-    // 2. Logic for Computing Details (PC, Laptop, Server)
-    // 2. Computing Details (PC, Laptop, Server)
-    if (['PC', 'Laptop', 'Server'].includes(asset.assets_type)) {
-        specsHtml += `
-            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Hardware Core</p>
-                <p class="text-xs font-bold dark:text-slate-200">${asset.processor || 'N/A'}</p>
-                <p class="text-[10px] font-bold text-blue-600 mt-1">${asset.ram_gb || 0}GB RAM | ${asset.storage_capacity || ''}</p>
-            </div>
-        `;
-
-        // ADDED: Battery Logic for Laptops
-        if (asset.assets_type === 'Laptop' && asset.battery_health) {
-            const health = asset.battery_health;
-            const barColor = health > 70 ? 'bg-emerald-500' : health > 40 ? 'bg-amber-500' : 'bg-red-500';
-            
+    // 1. Logic for Networking/Infrastructure (Router, Switch, Server)
+    if (['Router', 'Switch', 'Server'].includes(asset.assets_type)) {
+        if (canEditAsset) {
+            specsHtml += `
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Network Config</p>
+                    <input type="text" id="edit-ip" value="${asset.ip_address || ''}" placeholder="IP Address (e.g. 192.168.1.1)" class="${inputClass} font-mono text-blue-500">
+                    <input type="text" id="edit-mac" value="${asset.mac_address || ''}" placeholder="MAC Address" class="${inputClass} font-mono">
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Firmware Version</p>
+                    <input type="text" id="edit-firmware" value="${asset.firmware_version || ''}" placeholder="OS/Firmware Version" class="${inputClass}">
+                </div>
+            `;
+        } else {
             specsHtml += `
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <div class="flex justify-between items-center mb-1">
-                        <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health</p>
-                        <span class="text-[10px] font-bold dark:text-slate-300">${health}%</span>
-                    </div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                        <div class="${barColor} h-full" style="width: ${health}%"></div>
-                    </div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Network Config</p>
+                    <p class="text-xs font-mono font-bold text-blue-500">${asset.ip_address || 'NO IP'}</p>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1">${asset.mac_address || ''}</p>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Firmware</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${asset.firmware_version || 'N/A'}</p>
                 </div>
             `;
         }
-
-        specsHtml += `
-            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Environment</p>
-                <p class="text-xs font-bold dark:text-slate-200">${asset.os_version || 'Unknown OS'}</p>
-            </div>
-        `;
     }
 
-    specsHtml += `</div></div>`;
+    // 2. Logic for Computing Details (PC, Laptop, Server)
+    if (['PC', 'Laptop', 'Server'].includes(asset.assets_type)) {
+        if (canEditAsset) {
+            specsHtml += `
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Hardware Core</p>
+                    <input type="text" id="edit-processor" value="${asset.processor || ''}" placeholder="Processor (e.g. i7-12700K)" class="${inputClass}">
+                    <div class="flex gap-2">
+                        <div class="w-1/3 relative">
+                            <input type="number" id="edit-ram" value="${asset.ram_gb || ''}" placeholder="RAM" class="${inputClass}">
+                            <span class="absolute right-2 top-1.5 text-[9px] font-bold text-slate-400">GB</span>
+                        </div>
+                        <input type="text" id="edit-storage" value="${asset.storage_capacity || ''}" placeholder="Storage (e.g. 512GB SSD)" class="${inputClass} w-2/3">
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Operating System</p>
+                    <input type="text" id="edit-os" value="${asset.os_version || ''}" placeholder="OS Version" class="${inputClass}">
+                </div>
+            `;
+
+            if (asset.assets_type === 'Laptop') {
+                specsHtml += `
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health</p>
+                        <div class="relative w-1/3">
+                            <input type="number" min="0" max="100" id="edit-battery" value="${asset.battery_health || ''}" placeholder="Health" class="${inputClass}">
+                            <span class="absolute right-2 top-1.5 text-[9px] font-bold text-slate-400">%</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            specsHtml += `
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Hardware Core</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${asset.processor || 'N/A'}</p>
+                    <p class="text-[10px] font-bold text-blue-600 mt-1">${asset.ram_gb || 0}GB RAM | ${asset.storage_capacity || ''}</p>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Environment</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${asset.os_version || 'Unknown OS'}</p>
+                </div>
+            `;
+
+            if (asset.assets_type === 'Laptop' && asset.battery_health) {
+                const health = asset.battery_health;
+                const barColor = health > 70 ? 'bg-emerald-500' : health > 40 ? 'bg-amber-500' : 'bg-red-500';
+                specsHtml += `
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health</p>
+                            <span class="text-[10px] font-bold dark:text-slate-300">${health}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full" style="width: ${health}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    if (canEditAsset) {
+        specsHtml += `
+                <button type="submit" id="saveSpecsBtn" class="w-full mt-4 bg-slate-800 hover:bg-slate-900 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all shadow-sm">
+                    Save Specifications
+                </button>
+            </form></div>
+        `;
+    } else {
+        specsHtml += `</div></div>`;
+    }
+
     $('#detail-specs-list').html(specsHtml);
+}
+
+// Function to handle the AJAX PATCH request from the generated form
+function saveAssetSpecs(event, assetId) {
+    event.preventDefault();
+    const btn = $('#saveSpecsBtn');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+
+    const payload = {};
+    
+    // Safely extract text inputs
+    if($('#edit-ip').length) payload.ip_address = $('#edit-ip').val() || null;
+    if($('#edit-mac').length) payload.mac_address = $('#edit-mac').val() || null;
+    if($('#edit-firmware').length) payload.firmware_version = $('#edit-firmware').val() || null;
+    if($('#edit-processor').length) payload.processor = $('#edit-processor').val() || null;
+    if($('#edit-storage').length) payload.storage_capacity = $('#edit-storage').val() || null;
+    if($('#edit-os').length) payload.os_version = $('#edit-os').val() || null;
+    
+    // Safely extract integers (avoids NaN crashing the API)
+    if($('#edit-ram').length) {
+        const r = $('#edit-ram').val();
+        payload.ram_gb = r ? parseInt(r) : null;
+    }
+    if($('#edit-battery').length) {
+        const b = $('#edit-battery').val();
+        payload.battery_health = b ? parseInt(b) : null;
+    }
+
+    const csrfToken = $('form[style="display:none;"] input[name="csrfmiddlewaretoken"]').val() || '{{ csrf_token }}';
+
+    $.ajax({
+        url: `/api/assets/${assetId}/`,
+        type: 'PATCH',
+        headers: { 'X-CSRFToken': csrfToken },
+        data: JSON.stringify(payload),
+        contentType: 'application/json',
+        success: function(updatedAsset) {
+            const index = allAssets.findIndex(a => a.id == assetId);
+            if (index !== -1) allAssets[index] = updatedAsset;
+            
+            btn.removeClass('bg-slate-800 dark:bg-blue-600').addClass('bg-emerald-500').html('<i class="fas fa-check mr-1"></i> Saved');
+            
+            setTimeout(() => {
+                btn.prop('disabled', false).removeClass('bg-emerald-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Specifications');
+                showAssetDetails(assetId);
+            }, 1000);
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false).removeClass('bg-slate-800 dark:bg-blue-600').addClass('bg-red-500').html('<i class="fas fa-exclamation-triangle mr-1"></i> Error');
+            
+            setTimeout(() => {
+                btn.removeClass('bg-red-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Specifications');
+            }, 3000);
+            
+            console.error("API Error:", xhr.responseText);
+            alert("Failed to update specifications. " + (xhr.responseJSON?.detail || "Please check input formats."));
+        }
+    });
 }
 </script>
 
@@ -418,5 +541,9 @@ function showAssetDetails(id) {
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+    
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
 </style>
 {% endblock %}

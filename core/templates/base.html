@@ -39,7 +39,6 @@
             background-color: #f8fafc; 
         }
 
-        /* Stops all animations from firing when the page first loads to prevent FOUC */
         .preload * {
             transition: none !important;
         }
@@ -51,11 +50,10 @@
             height: 100vh;
             background-color: #1e293b; 
             z-index: 50; 
-            overflow-x: hidden; /* This masks the inner container */
+            overflow-x: hidden; 
             transition: width var(--transition), box-shadow var(--transition), transform var(--transition);
         }
 
-        /* The inner container stays rigidly 260px so content NEVER squishes or snaps */
         .sidebar-inner {
             width: var(--sb-width);
             height: 100%;
@@ -70,13 +68,13 @@
             transition: margin-left var(--transition), width var(--transition); 
         }
 
-        /* --- DESKTOP BEHAVIOR: Always collapsed, floats on hover --- */
+        /* --- DESKTOP BEHAVIOR --- */
         @media (min-width: 1025px) {
             #sidebar { width: var(--sb-collapsed); }
             
             #sidebar:hover {
                 width: var(--sb-width);
-                box-shadow: 4px 0 25px rgba(0,0,0,0.3); /* Floats over content */
+                box-shadow: 4px 0 25px rgba(0,0,0,0.3);
             }
 
             #main-content { 
@@ -84,7 +82,6 @@
                 width: calc(100% - var(--sb-collapsed));
             }
 
-            /* Geometrically perfect centering for the 80px state */
             .nav-item {
                 display: flex;
                 align-items: center;
@@ -102,7 +99,6 @@
                 flex-shrink: 0;
             }
 
-            /* Text fades in and out */
             .sidebar-text { 
                 opacity: 0; 
                 margin-left: 0.75rem;
@@ -115,7 +111,6 @@
                 transform: translateX(0);
             }
 
-            /* Header Absolute Positioning */
             .sidebar-header { position: relative; height: 73px; display: flex; align-items: center; border-bottom: 1px solid rgba(71, 85, 105, 0.5); flex-shrink: 0; }
             .sidebar-icon-only { position: absolute; left: 24px; width: 32px; text-align: center; transition: opacity var(--transition); }
             .sidebar-brand-text { position: absolute; left: 68px; opacity: 0; transform: translateX(10px); transition: opacity var(--transition), transform var(--transition); }
@@ -123,7 +118,6 @@
             #sidebar:hover .sidebar-icon-only { opacity: 0; pointer-events: none; }
             #sidebar:hover .sidebar-brand-text { opacity: 1; transform: translateX(0); }
 
-            /* Theme Switcher */
             .theme-switch-container { opacity: 0; pointer-events: none; padding: 0 24px; margin-bottom: 1.5rem; transition: opacity var(--transition); }
             #sidebar:hover .theme-switch-container { opacity: 1; pointer-events: auto; }
         }
@@ -167,6 +161,8 @@
 </head>
 
 <body class="bg-slate-50 font-sans preload">
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
     <script>
         (function() {
             if (localStorage.getItem('theme') === 'dark') {
@@ -178,7 +174,6 @@
     <div class="flex">
         
         <div id="sidebar" class="text-white">
-            <!-- The 260px sliding door container -->
             <div class="sidebar-inner">
                 
                 <div class="sidebar-header">
@@ -196,41 +191,65 @@
                         <i class="fas fa-th-large"></i> <span class="sidebar-text">Dashboard</span>
                     </a>
                     
-                    <a href="{% url 'incident_list' %}" class="nav-item {% if current == 'incident_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
-                        <i class="fas fa-exclamation-triangle"></i> <span class="sidebar-text">Incidents</span>
+                    <a href="{% url 'incident_list' %}" data-category="incident" class="nav-item {% if current == 'incident_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                        <span class="relative">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span id="badge-incident" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
+                        </span>
+                        <span class="sidebar-text">Incidents</span>
                     </a>
 
                     <a href="{% url 'analytics_list' %}" class="nav-item {% if current == 'analytics_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-line"></i> <span class="sidebar-text">Analytics</span>
                     </a>
 
-                    <a href="{% url 'asset_list' %}" class="nav-item {% if current == 'asset_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
-                        <i class="fas fa-laptop"></i> <span class="sidebar-text">IT Assets</span>
+                    <a href="{% url 'asset_list' %}" data-category="asset" class="nav-item {% if current == 'asset_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                        <span class="relative">
+                            <i class="fas fa-laptop"></i>
+                            <span id="badge-asset" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
+                        </span>
+                        <span class="sidebar-text">IT Assets</span>
                     </a>
 
-                    <a href="{% url 'maintenance_list' %}" class="nav-item {% if current == 'maintenance_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
-                        <i class="fas fa-tools"></i> <span class="sidebar-text">Maintenance</span>
+                    <a href="{% url 'maintenance_list' %}" data-category="maintenance" class="nav-item {% if current == 'maintenance_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                        <span class="relative">
+                            <i class="fas fa-tools"></i>
+                            <span id="badge-maintenance" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
+                        </span>
+                        <span class="sidebar-text">Maintenance</span>
                     </a>
 
                     {% if 'Personnel' in request.user.groups.all.0.name or 'Personnel' in request.user.groups.all.1.name %}
-                    <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
-                        <i class="fas fa-file-alt"></i> <span class="sidebar-text">Tickets</span>
+                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                        <span class="relative">
+                            <i class="fas fa-file-alt"></i>
+                            <span id="badge-ticket" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
+                        </span>
+                        <span class="sidebar-text">Tickets</span>
                     </a>
                     {% endif %}
 
                     {% if 'Commander' in request.user.groups.all.0.name or 'Commander' in request.user.groups.all.1.name %}
-                    <a href="{% url 'tickets:submit_ticket' %}" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
-                        <i class="fas fa-file-alt"></i> <span class="sidebar-text">Tickets</span>
+                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                        <span class="relative">
+                            <i class="fas fa-file-alt"></i>
+                            <span id="badge-ticket" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
+                        </span>
+                        <span class="sidebar-text">Tickets</span>
                     </a>
-                                            
+                                                                    
                     <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-pie"></i> <span class="sidebar-text">Reports</span>
                     </a>
                     {% endif %}
 
                     {% if 'Admin' in request.user.groups.all.0.name or 'Admin' in request.user.groups.all.1.name %}
-                    <a href="{% url 'tickets:admin_tickets' %}" class="nav-item {% if current == 'admin_tickets' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
-                        <i class="fas fa-file-alt"></i> <span class="sidebar-text">Tickets</span>
+                    <a href="{% url 'tickets:admin_tickets' %}" data-category="ticket" class="nav-item {% if current == 'admin_tickets' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                        <span class="relative">
+                            <i class="fas fa-file-alt"></i>
+                            <span id="badge-ticket" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
+                        </span>
+                        <span class="sidebar-text">Tickets</span>
                     </a>
                     <a href="{% url 'user_list' %}" class="nav-item {% if current == 'user_list' %} bg-white/10 text-white font-bold shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-users"></i> <span class="sidebar-text">Users</span>
@@ -271,7 +290,6 @@
         <div id="main-content">
             <header class="bg-white px-4 md:px-8 h-[73px] flex items-center justify-between border-b border-slate-200 shrink-0 sticky top-0 z-40">
                 <div class="flex items-center min-w-0 flex-1">
-                    <!-- HIDDEN ON DESKTOP -->
                     <button id="burgerBtn" class="lg:hidden p-2 mr-2 text-slate-600 hover:text-blue-600 focus:outline-none flex-shrink-0 transition-transform">
                         <i class="fas fa-bars text-lg"></i>
                     </button>
@@ -282,44 +300,39 @@
                     <div class="relative">
                         <button id="notifBtn" class="relative p-2 text-slate-600 hover:text-blue-600 transition-colors focus:outline-none">
                             <i class="fas fa-bell text-lg"></i>
-                            {% if unread_count > 0 %}
-                            <span class="absolute top-1 right-1 flex h-4 w-4">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-[10px] text-white items-center justify-center font-bold">{{ unread_count }}</span>
-                            </span>
-                            {% endif %}
-                        </button>
-                        <div id="notifDropdown" class="hidden absolute right-[-50px] sm:right-0 mt-3 w-72 sm:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
-                            <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Incidents</span>
-                                <a href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-600 hover:underline font-bold uppercase">Mark all</a>
+                            </button>
+                        
+                        <div id="notifDropdown" class="hidden absolute right-[-50px] sm:right-0 mt-3 w-72 sm:w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">System Alerts</span>
+                                <a id="markAllReadBtn" href="{% url 'mark_all_read' %}" class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-bold uppercase">Mark all read</a>
                             </div>
-                            <div class="max-h-96 overflow-y-auto custom-scrollbar">
-                                {% for n in user.notifications.all|dictsortreversed:"created_at"|slice:":5" %}
-                                    <div class="px-4 py-3 border-b border-slate-50 hover:bg-slate-50">
-                                        <p class="text-xs text-slate-700 leading-snug">{{ n.message }}</p>
+                            <div id="notifListContainer" class="max-h-96 overflow-y-auto custom-scrollbar">
+                                {% for n in request.user.notifications.all|dictsortreversed:"created_at"|slice:":10" %}
+                                    <div class="notif-item px-4 py-3 border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors" data-id="{{ n.id }}" data-read="{{ n.is_read|yesno:'true,false' }}">
+                                        <p class="text-xs text-slate-700 dark:text-slate-300 leading-snug notif-message-item">{{ n.message }}</p>
                                     </div>
                                 {% empty %}
-                                    <div class="px-4 py-8 text-center"><p class="text-xs text-slate-400 italic">No reports</p></div>
+                                    <div class="px-4 py-8 text-center"><p class="text-xs text-slate-400 italic">No new alerts</p></div>
                                 {% endfor %}
                             </div>
                         </div>
                     </div>
 
                     <div class="relative">
-                        <button id="userMenuBtn" class="flex items-center space-x-1 sm:space-x-2 text-slate-700 font-bold focus:outline-none hover:text-blue-600 transition text-sm">
+                        <button id="userMenuBtn" class="flex items-center space-x-1 sm:space-x-2 text-slate-700 dark:text-slate-200 font-bold focus:outline-none hover:text-blue-600 dark:hover:text-blue-400 transition text-sm">
                             <span class="max-w-[70px] sm:max-w-none truncate inline-block">
                                 {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}
                             </span>
                             <i class="fas fa-chevron-down text-[10px]"></i>
                         </button>
-                        <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-xl py-2 border border-slate-200 z-50 overflow-hidden">
-                            <a href="{% url 'profile' %}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                        <div id="userDropdown" class="hidden absolute right-0 mt-3 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl py-2 border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
+                            <a href="{% url 'profile' %}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                 <i class="fas fa-user-shield text-xs text-blue-500"></i><span>Profile</span>
                             </a>
                             <form action="{% url 'logout' %}" method="post">
                                 {% csrf_token %}
-                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 text-left">
+                                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 text-left transition-colors">
                                     <i class="fas fa-sign-out-alt text-xs"></i><span>Logout</span>
                                 </button>
                             </form>
@@ -337,22 +350,18 @@
 
     <script>
         $(document).ready(function() {
-            // Remove preload class after rendering to prevent FOUC / snap-jank on load
             $(window).on('load', function() {
                 $('body').removeClass('preload');
             });
 
-            // Sidebar Burger Toggle (Now strictly handles Mobile view)
             $('#burgerBtn').on('click', function() {
                 $('body').toggleClass('sidebar-open');
             });
 
-            // Mobile Sidebar Close
             $('#closeSidebarMobile').on('click', function() {
                 $('body').removeClass('sidebar-open');
             });
 
-            // Dropdowns
             $('#notifBtn').on('click', function(e) {
                 e.stopPropagation();
                 $('#userDropdown').addClass('hidden');
@@ -370,7 +379,6 @@
                 if (!$(e.target).closest('#notifBtn').length) $('#notifDropdown').addClass('hidden');
             });
 
-            // Theme Toggle
             $('#themeSwitcher').on('click', function() {
                 const isDark = $('body').toggleClass('dark-mode').hasClass('dark-mode');
                 if (isDark) {
@@ -393,15 +401,12 @@
                 }
             }
 
-            // Auto-close sidebar on link click (mobile)
             $('#sidebar nav a').on('click', function() {
                 if (window.innerWidth <= 1024) $('body').removeClass('sidebar-open');
             });
 
-            // Initial UI update
             updateToggleUI($('body').hasClass('dark-mode'));
 
-            // --- INACTIVITY TIMER SCRIPT ---
             let inactivityTimer;
             const timeoutInMS = 30 * 60 * 1000; 
 
@@ -415,7 +420,185 @@
 
             $(document).on('mousemove keypress click scroll', resetTimer);
             resetTimer();
+
+
+            // ==========================================
+            // INTELLIGENT REAL-TIME NOTIFICATION SYSTEM
+            // ==========================================
+            
+            // 1. Initialize Session Memory & Sidebar Badges
+            let storedNotifs = sessionStorage.getItem('knownNotifs');
+            let knownNotifIds = new Set(storedNotifs ? JSON.parse(storedNotifs) : []);
+            let isFirstLoad = !storedNotifs; 
+            
+            // Tracks how many new alerts belong to which sidebar link
+            let badgeCounts = JSON.parse(sessionStorage.getItem('navBadgeCounts')) || { asset: 0, incident: 0, maintenance: 0, ticket: 0 };
+            
+            // Auto-clear a category's badge if the user is currently looking at that page
+            const currentPath = window.location.pathname.toLowerCase();
+            if (currentPath.includes('asset')) badgeCounts.asset = 0;
+            if (currentPath.includes('incident')) badgeCounts.incident = 0;
+            if (currentPath.includes('maintenance')) badgeCounts.maintenance = 0;
+            if (currentPath.includes('ticket')) badgeCounts.ticket = 0;
+            
+            // Function to update the red dots on the sidebar AND the top bell icon
+            function updateNavBadges() {
+                let totalUnread = 0;
+                for (let key in badgeCounts) {
+                    let $badge = $('#badge-' + key);
+                    if (badgeCounts[key] > 0) {
+                        $badge.text(badgeCounts[key]).removeClass('hidden'); // Shows the red dot with a number
+                        totalUnread += badgeCounts[key];
+                    } else {
+                        $badge.addClass('hidden');
+                    }
+                }
+
+                // Update the Top Bell Icon
+                $('#main-bell-badge').remove();
+                if (totalUnread > 0) {
+                    $('#notifBtn').append(`
+                        <span id="main-bell-badge" class="absolute top-1 right-1 flex h-4 w-4">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-4 w-4 bg-red-600 text-[10px] text-white items-center justify-center font-bold">${totalUnread}</span>
+                        </span>
+                    `);
+                }
+            }
+
+            // 2. Dynamic Toast Spawner
+            function spawnToast(title, message, iconClass, colorClass) {
+                const toastId = 'toast-' + Date.now() + Math.floor(Math.random() * 1000);
+                const toastHtml = `
+                    <div id="${toastId}" class="pointer-events-auto w-72 sm:w-80 bg-white dark:bg-slate-800 border-l-4 border-${colorClass}-500 shadow-2xl rounded-lg p-4 transform transition-all duration-500 translate-x-full opacity-0">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 mt-0.5 text-${colorClass}-500">
+                                <i class="fas ${iconClass} animate-[ring_2s_ease-in-out_infinite]"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">${title}</h4>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-snug">${message}</p>
+                            </div>
+                            <button onclick="$('#${toastId}').remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                $('#toast-container').append(toastHtml);
+                
+                setTimeout(() => { $(`#${toastId}`).removeClass('translate-x-full opacity-0').addClass('translate-x-0 opacity-100'); }, 50);
+                setTimeout(() => {
+                    $(`#${toastId}`).removeClass('translate-x-0 opacity-100').addClass('translate-x-full opacity-0');
+                    setTimeout(() => $(`#${toastId}`).remove(), 500);
+                }, 6000);
+            }
+
+            // 3. Evaluate Notification (Spawns toast, adds red dot badge)
+            function processNotificationItem($item, allowSpawn) {
+                let id = $item.data('id');
+                if (!id) return;
+                
+                let idStr = id.toString();
+                let isRead = $item.data('read') === true; // Check if the DB says it's unread!
+                
+                if (!knownNotifIds.has(idStr)) {
+                    let msg = $item.find('.notif-message-item').text().trim();
+                    let msgLower = msg.toLowerCase();
+                    
+                    let title = "System Alert";
+                    let iconClass = "fa-bell";
+                    let colorClass = "blue";
+                    let category = null;
+
+                    if (msgLower.includes('asset')) { title = "New IT Asset"; iconClass = "fa-laptop-code"; colorClass = "emerald"; category = "asset"; } 
+                    else if (msgLower.includes('incident') || msgLower.includes('threat')) { title = "Security Incident"; iconClass = "fa-shield-alt"; colorClass = "rose"; category = "incident"; } 
+                    else if (msgLower.includes('maintenance') || msgLower.includes('repair')) { title = "Maintenance Update"; iconClass = "fa-tools"; colorClass = "amber"; category = "maintenance"; } 
+                    else if (msgLower.includes('ticket')) { title = "Support Ticket"; iconClass = "fa-ticket-alt"; colorClass = "indigo"; category = "ticket"; }
+
+                    if (allowSpawn) {
+                        spawnToast(title, msg, iconClass, colorClass);
+                    }
+                    
+                    // Increment the red dot if it's a live update OR if it's unread in the database!
+                    if (category && (allowSpawn || !isRead)) {
+                        badgeCounts[category] = (badgeCounts[category] || 0) + 1;
+                    }
+
+                    knownNotifIds.add(idStr);
+                }
+            }
+
+            // 4. Initial check on page load 
+            $('.notif-item').each(function() {
+                processNotificationItem($(this), !isFirstLoad);
+            });
+            
+            // Save state and draw dots on load
+            sessionStorage.setItem('navBadgeCounts', JSON.stringify(badgeCounts));
+            sessionStorage.setItem('knownNotifs', JSON.stringify(Array.from(knownNotifIds)));
+            updateNavBadges(); 
+
+            // 5. Clear Sidebar Badge when a user clicks the sidebar link
+            $('.nav-item').on('click', function() {
+                let cat = $(this).data('category');
+                if (cat) {
+                    badgeCounts[cat] = 0;
+                    sessionStorage.setItem('navBadgeCounts', JSON.stringify(badgeCounts));
+                    updateNavBadges(); 
+                }
+            });
+
+            // 6. Clear ALL badges if they click "Mark all read"
+            $('#markAllReadBtn').on('click', function() {
+                sessionStorage.setItem('navBadgeCounts', JSON.stringify({asset: 0, incident: 0, maintenance: 0, ticket: 0}));
+            });
+
+            // 7. Background Polling Logic
+            function checkForNewNotifications() {
+                $.ajax({
+                    url: window.location.href, 
+                    type: 'GET',
+                    success: function(response) {
+                        let tempDom = $('<output>').append($.parseHTML(response));
+                        let fetchedItems = tempDom.find('.notif-item').toArray().reverse();
+                        let originalCount = knownNotifIds.size;
+
+                        fetchedItems.forEach(function(item) {
+                            processNotificationItem($(item), true);
+                        });
+
+                        // If any new notifications were added, save memory and redraw
+                        if (knownNotifIds.size > originalCount) {
+                            sessionStorage.setItem('navBadgeCounts', JSON.stringify(badgeCounts));
+                            sessionStorage.setItem('knownNotifs', JSON.stringify(Array.from(knownNotifIds)));
+                            updateNavBadges();
+                            
+                            let newDropdownHtml = tempDom.find('#notifListContainer').html();
+                            $('#notifListContainer').html(newDropdownHtml);
+                        }
+                    }
+                });
+            }
+
+            // Check for new notifications every 15 seconds
+            setInterval(checkForNewNotifications, 15000);
         });
     </script>
+
+    <style>
+        @keyframes ring {
+            0% { transform: rotate(0); }
+            10% { transform: rotate(15deg); }
+            20% { transform: rotate(-15deg); }
+            30% { transform: rotate(10deg); }
+            40% { transform: rotate(-10deg); }
+            50% { transform: rotate(5deg); }
+            60% { transform: rotate(-5deg); }
+            70% { transform: rotate(0); }
+            100% { transform: rotate(0); }
+        }
+    </style>
 </body>
 </html>

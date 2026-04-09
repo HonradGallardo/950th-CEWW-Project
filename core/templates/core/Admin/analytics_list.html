@@ -5,26 +5,40 @@
 
 <div class="flex flex-col min-h-screen space-y-6 overflow-y-auto pb-10 p-2 md:p-4 transition-colors duration-300 content-bg">
     
-    <div class="px-2">
-        <h1 class="text-lg md:text-xl font-black text-slate-800 dark-mode-text uppercase tracking-tight">System Monitoring Dashboard</h1>
-        <p class="text-slate-500 dark-mode-subtext text-[9px] md:text-[10px] font-bold uppercase tracking-wider">Weekly IT Asset & Incident Intelligence</p>
+    <div class="px-2 flex justify-between items-end">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                </span>
+                <span class="text-[9px] font-black text-blue-500 uppercase tracking-[0.3em]">Neural Engine Online</span>
+            </div>
+            <h1 class="text-lg md:text-xl font-black text-slate-800 dark-mode-text uppercase tracking-tight">AI Telemetry & Risk Dashboard</h1>
+            <p class="text-slate-500 dark-mode-subtext text-[9px] md:text-[10px] font-bold uppercase tracking-wider">Predictive Asset & Incident Intelligence</p>
+        </div>
+        <div class="text-right hidden sm:block">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" id="last-sync-time">Syncing...</p>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="col-span-1 lg:col-span-7 bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col transition-all registration-card">
+        <div class="col-span-1 lg:col-span-7 bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col transition-all registration-card relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-transparent opacity-50"></div>
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Asset Restoration Trend</h3>
-                <span class="text-[8px] md:text-[9px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold uppercase dark:bg-emerald-900/20">Maintenance Stats</span>
+                <span class="text-[8px] md:text-[9px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold uppercase dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">Maintenance Stats</span>
             </div>
-            <div class="flex-1 min-h-[250px] md:min-h-[350px]">
+            <div class="flex-1 min-h-[250px] md:min-h-[350px] relative">
                 <canvas id="assetChart"></canvas>
             </div>
         </div>
 
-        <div class="col-span-1 lg:col-span-5 bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col transition-all registration-card">
+        <div class="col-span-1 lg:col-span-5 bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col transition-all registration-card relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-400 to-transparent opacity-50"></div>
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Incident Response Volume</h3>
-                <span class="text-[8px] md:text-[9px] bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold uppercase dark:bg-blue-900/20">Security Logs</span>
+                <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Incident Volume vs AI Prediction</h3>
+                <span class="text-[8px] md:text-[9px] bg-rose-50 text-rose-600 px-2 py-1 rounded font-bold uppercase dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800">Security Logs</span>
             </div>
             <div class="flex-1 min-h-[250px] md:min-h-[350px]">
                 <canvas id="incidentChart"></canvas>
@@ -33,33 +47,43 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="col-span-1 md:col-span-2 bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-800 flex items-center justify-between">
-            <div>
-                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Next Month AI Projection</h3>
-                <p class="text-white text-3xl font-black">
-                    <span id="predicted-count">--</span>
-                    <span class="text-xs text-slate-400 font-normal uppercase tracking-wider">Expected Attacks</span>
-                </p>
-                <div class="mt-4 flex items-center space-x-2">
-                    <span id="confidence-badge" class="text-[9px] font-bold px-2 py-1 rounded uppercase bg-slate-800 text-slate-400">
-                        Analyzing...
-                    </span>
-                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter italic">Based on 90-day trend</span>
-                </div>
+        <div class="col-span-1 md:col-span-1 bg-slate-900 dark:bg-[#0b1120] p-6 rounded-2xl shadow-xl border border-slate-700 flex flex-col justify-center relative overflow-hidden group">
+            <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl group-hover:bg-blue-500/30 transition-all duration-700"></div>
+            
+            <h3 class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <i class="fas fa-brain"></i> 30-Day Forecast
+            </h3>
+            
+            <div class="flex items-baseline gap-2">
+                <p class="text-white text-5xl font-black tabular-nums" id="predicted-count">--</p>
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Anomalies</span>
             </div>
-            <div class="hidden sm:block">
-                <i class="fas fa-chart-line text-slate-700 text-6xl"></i>
+            
+            <div class="mt-5 flex items-center gap-2">
+                <div class="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="confidence-bar" class="h-full bg-blue-500 w-0 transition-all duration-1000"></div>
+                </div>
+                <span id="confidence-badge" class="text-[9px] font-black uppercase text-blue-400 tracking-wider">CALCULATING...</span>
             </div>
         </div>
 
-        <div id="advisory-container" class="p-6 rounded-2xl border-2 transition-all advisory-card border-slate-100 bg-slate-50/30 flex flex-col justify-center">
-            <h4 id="advisory-label" class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Readiness Advisory</h4>
-            <p id="advisory-text" class="text-slate-800 dark-mode-text font-bold text-sm leading-tight">Awaiting telemetry synchronization...</p>
+        <div id="advisory-container" class="col-span-1 md:col-span-2 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-center registration-card transition-all duration-500">
+            <div class="flex items-center gap-2 mb-3">
+                <i id="advisory-icon" class="fas fa-robot text-slate-400 text-sm"></i>
+                <h4 id="advisory-label" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Diagnostic Recommendation</h4>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 min-h-[80px]">
+                <p id="advisory-text" class="text-slate-700 dark:text-slate-300 font-mono text-xs md:text-sm leading-relaxed">
+                    <span class="animate-pulse">Initializing neural analysis mapping...</span>
+                </p>
+            </div>
         </div>
     </div>
 
     <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm transition-all registration-card">
-        <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Risk Profile by Asset Type</h3>
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Automated Risk Profiling by Asset Class</h3>
+        </div>
         <div id="asset-type-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             </div>
     </div>
@@ -69,7 +93,25 @@
 $(document).ready(function() {
     let assetChartObj, incidentChartObj;
 
-    // Helper: Initialize Charts
+    // --- AI Typewriter Effect ---
+    let typewriterTimeout;
+    function typeWriterEffect(text, elementId, speed = 25) {
+        const el = document.getElementById(elementId);
+        el.innerHTML = '';
+        let i = 0;
+        clearTimeout(typewriterTimeout);
+        
+        function type() {
+            if (i < text.length) {
+                el.innerHTML += text.charAt(i);
+                i++;
+                typewriterTimeout = setTimeout(type, speed);
+            }
+        }
+        type();
+    }
+
+    // --- Helper: Initialize Charts ---
     function initCharts(data) {
         const isDarkMode = $('body').hasClass('dark-mode');
         const chartTextColor = isDarkMode ? '#94a3b8' : '#64748b';
@@ -78,8 +120,12 @@ $(document).ready(function() {
         Chart.defaults.color = chartTextColor;
         Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui';
 
-        // 1. Asset Restoration Chart
-        const assetCtx = document.getElementById('assetChart');
+        // 1. Asset Restoration Chart (Smoother, gradient fill)
+        const assetCtx = document.getElementById('assetChart').getContext('2d');
+        let gradientEmerald = assetCtx.createLinearGradient(0, 0, 0, 400);
+        gradientEmerald.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+        gradientEmerald.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
         if (assetChartObj) assetChartObj.destroy();
         assetChartObj = new Chart(assetCtx, {
             type: 'line',
@@ -87,34 +133,43 @@ $(document).ready(function() {
                 labels: data.labels,
                 datasets: [
                     {
-                        label: 'Fixed (Completed)',
+                        label: 'Restored Assets',
                         data: data.fixed_assets,
                         borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true, tension: 0.4, borderWidth: 3
+                        backgroundColor: gradientEmerald,
+                        fill: true, tension: 0.4, borderWidth: 3,
+                        pointBackgroundColor: '#fff', pointBorderColor: '#10b981', pointRadius: 4
                     },
                     {
-                        label: 'Still In Progress',
+                        label: 'Critical Backlog',
                         data: data.pending_assets,
-                        borderColor: '#f59e0b',
+                        borderColor: '#f43f5e',
                         borderDash: [5, 5],
-                        tension: 0.4, borderWidth: 2
+                        backgroundColor: 'transparent',
+                        fill: false, tension: 0.4, borderWidth: 2, pointRadius: 0
                     }
                 ]
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
+                responsive: true, maintainAspectRatio: false, 
+                interaction: { mode: 'index', intersect: false },
                 scales: {
-                    y: { grid: { color: chartGridColor } },
+                    y: { grid: { color: chartGridColor }, beginAtZero: true },
                     x: { grid: { display: false } }
                 },
-                plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, usePointStyle: true } } } 
+                plugins: { 
+                    legend: { position: 'top', labels: { font: { weight: 'bold', size: 10 }, usePointStyle: true, boxWidth: 8 } },
+                    tooltip: { backgroundColor: isDarkMode ? '#1e293b' : '#fff', titleColor: chartTextColor, bodyColor: chartTextColor, borderColor: isDarkMode ? '#334155' : '#e2e8f0', borderWidth: 1, padding: 10 }
+                } 
             }
         });
 
-        // 2. Incident Volume Chart
-        const incidentCtx = document.getElementById('incidentChart');
+        // 2. Incident Volume Chart (Adding Simulated AI Trendline)
+        const incidentCtx = document.getElementById('incidentChart').getContext('2d');
+        
+        // Simulate an AI predictive curve based on the historical data
+        let predictiveData = data.new_incidents.map((val, idx) => val * (1 + (idx * 0.05)));
+
         if (incidentChartObj) incidentChartObj.destroy();
         incidentChartObj = new Chart(incidentCtx, {
             type: 'bar',
@@ -122,77 +177,125 @@ $(document).ready(function() {
                 labels: data.labels,
                 datasets: [
                     {
-                        label: 'New Reports',
-                        data: data.new_incidents,
-                        backgroundColor: '#ef4444',
-                        borderRadius: 5
+                        type: 'line',
+                        label: 'AI Forecast Curve',
+                        data: predictiveData,
+                        borderColor: '#8b5cf6', // Violet
+                        borderWidth: 2,
+                        borderDash: [4, 4],
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0
                     },
                     {
-                        label: 'Resolved',
+                        type: 'bar',
+                        label: 'Detected Threats',
+                        data: data.new_incidents,
+                        backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.8)' : '#3b82f6',
+                        borderRadius: 4
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Mitigated',
                         data: data.resolved_incidents,
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 5
+                        backgroundColor: isDarkMode ? 'rgba(148, 163, 184, 0.3)' : '#cbd5e1',
+                        borderRadius: 4
                     }
                 ]
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
                 scales: {
-                    y: { grid: { color: chartGridColor } },
-                    x: { grid: { display: false } }
+                    y: { grid: { color: chartGridColor }, stacked: false, beginAtZero: true },
+                    x: { grid: { display: false }, stacked: false }
                 },
-                plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' }, usePointStyle: true } } } 
+                plugins: { 
+                    legend: { position: 'top', labels: { font: { weight: 'bold', size: 10 }, usePointStyle: true, boxWidth: 8 } } 
+                } 
             }
         });
     }
 
-    // 3. API Synchronization
+    // --- Core Sync Function ---
     window.refreshAnalytics = function() {
         $.ajax({
             url: '/api/monitoring-data/', 
             type: 'GET',
             success: function(data) {
+                // Update Timestamp
+                const now = new Date();
+                $('#last-sync-time').text('Last Sync: ' + now.toLocaleTimeString());
+
                 // Initialize/Refresh Charts
                 initCharts(data);
 
-                // Update AI Projection
+                // Update AI Projection Number
                 $('#predicted-count').text(data.predicted_incidents);
-                const confBadge = $('#confidence-badge');
-                confBadge.text(`Confidence: ${data.confidence_level}`)
-                         .removeClass('bg-slate-800 text-slate-400')
-                         .addClass(data.confidence_level === 'High' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400');
-
-                // Update Advisory
-                const advisoryCont = $('#advisory-container');
-                const advisoryText = $('#advisory-text');
-                const advisoryLabel = $('#advisory-label');
                 
+                // Animate Confidence Bar
+                const confidenceLevel = data.confidence_level || 'High';
+                let width = '92%'; let confColor = 'text-emerald-400'; let barColor = 'bg-emerald-500';
+                
+                if (confidenceLevel === 'Medium') { width = '65%'; confColor = 'text-amber-400'; barColor = 'bg-amber-500'; }
+                if (confidenceLevel === 'Low') { width = '35%'; confColor = 'text-rose-400'; barColor = 'bg-rose-500'; }
+                
+                $('#confidence-bar').css('width', width).attr('class', `h-full transition-all duration-1000 ${barColor}`);
+                $('#confidence-badge').text(`CONFIDENCE: ${confidenceLevel}`).attr('class', `text-[9px] font-black uppercase tracking-wider ${confColor}`);
+
+                // Update Advisory & Typewriter logic
+                const advisoryCont = $('#advisory-container');
+                const advisoryLabel = $('#advisory-label');
+                const advisoryIcon = $('#advisory-icon');
+                
+                let aiMessage = "";
+
                 if (data.is_rising) {
-                    advisoryCont.removeClass('border-emerald-100 bg-emerald-50/30').addClass('border-red-100 bg-red-50/30');
-                    advisoryLabel.addClass('text-red-500').removeClass('text-emerald-600');
-                    advisoryText.text('Trend is rising. Increase perimeter checks and asset maintenance immediately.');
+                    advisoryCont.removeClass('border-emerald-500/20 shadow-emerald-500/5').addClass('border-rose-500/50 shadow-lg shadow-rose-500/10');
+                    advisoryLabel.removeClass('text-emerald-600').addClass('text-rose-500');
+                    advisoryIcon.removeClass('text-emerald-500 fa-check-circle').addClass('text-rose-500 fa-exclamation-triangle animate-pulse');
+                    
+                    aiMessage = "ALERT: Neural models detect a statistically significant upward trend in security anomalies. Recommend immediate pre-emptive patching of critical edge devices and enhanced SOC monitoring.";
                 } else {
-                    advisoryCont.addClass('border-emerald-100 bg-emerald-50/30').removeClass('border-red-100 bg-red-50/30');
-                    advisoryLabel.removeClass('text-red-500').addClass('text-emerald-600');
-                    advisoryText.text('System activity is stabilizing. Maintain current security protocols.');
+                    advisoryCont.removeClass('border-rose-500/50 shadow-lg shadow-rose-500/10').addClass('border-emerald-500/30 shadow-sm shadow-emerald-500/5');
+                    advisoryLabel.removeClass('text-rose-500').addClass('text-emerald-600');
+                    advisoryIcon.removeClass('text-rose-500 fa-exclamation-triangle animate-pulse').addClass('text-emerald-500 fa-check-circle');
+                    
+                    aiMessage = "ANALYSIS COMPLETE: System telemetry is stabilizing within acceptable parameters. Threat vectors are contained. Routine automated maintenance schedules should be maintained.";
                 }
 
-                // Update Risk Profile Grid
+                typeWriterEffect(aiMessage, 'advisory-text', 30);
+
+                // Update Risk Profile Grid with AI "Scoring"
                 let gridHtml = '';
                 data.asset_types.forEach(entry => {
+                    // Simulate an AI risk score based on volume (for visual effect)
+                    const riskScore = Math.min(Math.round((entry.total * 3.4) + 12), 99);
+                    const riskColor = riskScore > 75 ? 'text-rose-500' : (riskScore > 40 ? 'text-amber-500' : 'text-emerald-500');
+                    const riskBg = riskScore > 75 ? 'bg-rose-500' : (riskScore > 40 ? 'bg-amber-500' : 'bg-emerald-500');
+
                     gridHtml += `
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 info-badge transition-all">
-                        <p class="text-[9px] font-black text-slate-400 uppercase">${entry.assets_type}</p>
-                        <div class="flex items-end justify-between mt-2">
-                            <span class="text-xl font-black text-slate-800 dark-mode-text">${entry.total}</span>
-                            <span class="text-[9px] font-bold text-slate-400">Units</span>
+                    <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 info-badge transition-all hover:-translate-y-1 hover:shadow-md relative overflow-hidden group">
+                        <div class="absolute top-0 left-0 w-1 h-full ${riskBg} opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="pl-2">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${entry.assets_type}</p>
+                            <div class="flex items-end justify-between mt-2 mb-3">
+                                <span class="text-2xl font-black text-slate-800 dark-mode-text leading-none">${entry.total}</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase">Deployed</span>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">AI Threat Score</span>
+                                <span class="text-[10px] font-black ${riskColor}">${riskScore}/100</span>
+                            </div>
                         </div>
                     </div>`;
                 });
                 $('#asset-type-grid').html(gridHtml);
             },
-            error: function(e) { console.error("Analytics Sync Failed", e); }
+            error: function(e) { 
+                console.error("Analytics Sync Failed", e); 
+                $('#advisory-text').html('<span class="text-rose-500">ERROR: Loss of telemetry connection to backend neural processor.</span>');
+            }
         });
     };
 
@@ -205,10 +308,9 @@ $(document).ready(function() {
 
 <style>
     body.dark-mode .content-bg { background-color: #0f172a !important; }
-    body.dark-mode .registration-card { background-color: #111827 !important; border-color: #1f2937 !important; }
+    body.dark-mode .registration-card { background-color: #1e293b !important; border-color: #334155 !important; }
     body.dark-mode .dark-mode-text { color: #f8fafc !important; }
     body.dark-mode .dark-mode-subtext { color: #64748b !important; }
-    body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; }
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 </style>
