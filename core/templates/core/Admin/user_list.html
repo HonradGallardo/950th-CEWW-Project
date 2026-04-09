@@ -31,7 +31,7 @@
     </div>
 </div>
 
-<div class="font-plex flex flex-col min-h-screen lg:h-[calc(100vh-140px)] space-y-6 lg:overflow-hidden p-4 sm:p-6 bg-slate-50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-200 transition-colors duration-300 relative z-0">
+<div class="font-plex flex flex-col min-h-screen lg:h-[calc(100vh-140px)] space-y-6 lg:overflow-hidden p-4 sm:p-6 bg-slate-50 dark:bg-[#0F172A] text-slate-800 dark:text-slate-200 transition-colors duration-300 relative z-0 w-full">
     
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-4 relative z-10 w-full">
         <div class="flex items-center gap-3">
@@ -44,7 +44,7 @@
             </div>
         </div>
         
-        <div class="flex items-center gap-3 w-full sm:w-auto">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
              <div id="api-indicator" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm">
                 <div class="relative flex h-2.5 w-2.5">
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -60,13 +60,13 @@
 
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:min-h-0 pb-10 sm:pb-0 relative z-10 w-full">
         
-        <div class="lg:col-span-8 flex flex-col h-fit lg:h-full min-h-0">
-            <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden shadow-sm relative z-10">
+        <div class="col-span-12 lg:col-span-8 flex flex-col h-auto lg:h-full min-h-[300px] lg:min-h-0 w-full">
+            <div class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden shadow-sm relative z-10 w-full">
                 
-                <div class="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 space-y-4 sm:space-y-0 flex flex-col xl:flex-row justify-between xl:items-center bg-slate-50/50 dark:bg-slate-800/20">
+                <div class="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 flex flex-col lg:flex-row justify-between lg:items-center gap-4 bg-slate-50/50 dark:bg-slate-800/20 w-full">
                     
-                    <div class="flex overflow-x-auto no-scrollbar pb-1 xl:pb-0">
-                        <div class="inline-flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50 w-max shadow-inner">
+                    <div class="flex overflow-x-auto custom-scrollbar pb-1 lg:pb-0 w-full lg:w-auto">
+                        <div class="flex flex-nowrap bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50 min-w-max shadow-inner">
                             <button onclick="setRoleFilter('ALL')" class="role-filter-btn active bg-blue-600 text-white shadow-sm text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">All</button>
                             <button onclick="setRoleFilter('ADMIN')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">Admins</button>
                             <button onclick="setRoleFilter('COMMANDER')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-lg transition-all whitespace-nowrap">Commanders</button>
@@ -75,7 +75,7 @@
                         </div>
                     </div>
 
-                    <div class="relative w-full sm:w-auto sm:min-w-[250px] shrink-0 group">
+                    <div class="relative w-full lg:w-auto lg:min-w-[250px] shrink-0 group">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-500 transition-colors"></i>
                         <input type="text" id="userSearch" onkeyup="handleLiveSearch()" placeholder="Search directory..."
                                class="text-sm pl-10 pr-9 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full outline-none transition-all placeholder-slate-400 dark:placeholder-slate-500 shadow-sm">
@@ -98,25 +98,25 @@
                                 <th class="py-3 px-4 lg:px-6"><i class="fas fa-phone-alt mr-1"></i> Phone</th> 
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-transparent block lg:table-row-group lg:whitespace-nowrap" id="userTableBody">
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-transparent block lg:table-row-group lg:whitespace-nowrap w-full" id="userTableBody">
                             {% for person in users %}
-                            <tr class="user-row block lg:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 lg:p-0" 
+                            <tr class="user-row block lg:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 lg:p-0 w-full" 
                                 onclick="showUserDetails('{{ person.id }}', '{{ person.username|escapejs }}', '{{ person.get_full_name|default:person.username|escapejs }}', '{{ person.email|escapejs }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}', '{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}', '{{ person.profile.rank|default:'Airman' }}', '{{ person.profile.phone|default:''|escapejs }}')">
-                                <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">#{{ person.id }}</td>
-                                <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6">
+                                <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors w-full lg:w-auto">#{{ person.id }}</td>
+                                <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                                     <div class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 p-1.5 mx-auto border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-200 dark:group-hover:border-slate-600 transition-colors shadow-sm">
                                         <img src="/static/core/images/badge/{{ person.profile.rank|default:'Airman' }}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';">
                                     </div>
                                 </td>
-                                <td data-label="Personnel" class="block lg:table-cell py-3 px-4 lg:px-6">
+                                <td data-label="Personnel" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                                     <div class="flex flex-col justify-end items-end lg:items-start w-full min-w-0">
                                         <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ person.get_full_name|default:person.username }}</div>
                                         <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 lg:hidden">{{ person.profile.rank|default:"Airman" }}</div>
                                     </div>
                                 </td>
-                                <td data-label="Username" class="block lg:table-cell py-3 px-4 lg:px-6 font-medium text-slate-600 dark:text-slate-300">@{{ person.username }}</td>
-                                <td data-label="Email" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400">{{ person.email|default:"—" }}</td>
-                                <td data-label="Phone" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400">{{ person.profile.phone|default:"—" }}</td>
+                                <td data-label="Username" class="block lg:table-cell py-3 px-4 lg:px-6 font-medium text-slate-600 dark:text-slate-300 w-full lg:w-auto">@{{ person.username }}</td>
+                                <td data-label="Email" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">{{ person.email|default:"—" }}</td>
+                                <td data-label="Phone" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">{{ person.profile.phone|default:"—" }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -124,12 +124,12 @@
                 </div>
 
                 {% if users.has_other_pages %}
-                <div class="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex flex-col sm:flex-row gap-4 items-center justify-between no-print shrink-0" id="pagination-container">
-                    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div class="px-4 sm:px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex flex-col sm:flex-row gap-4 items-center justify-between no-print shrink-0 w-full" id="pagination-container">
+                    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm w-full sm:w-auto text-center">
                         Showing page <span class="font-bold text-slate-900 dark:text-white">{{ users.number }}</span> of <span class="font-bold text-slate-900 dark:text-white">{{ users.paginator.num_pages }}</span>
                     </div>
                     
-                    <div class="flex items-center gap-1 shadow-sm rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                    <div class="flex items-center justify-center gap-1 shadow-sm rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 w-full sm:w-auto">
                         {% if users.has_previous %}
                             <a href="?page={{ users.previous_page_number }}" class="w-8 h-8 flex items-center justify-center bg-transparent text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border-r border-slate-200 dark:border-slate-700">
                                 <i class="fas fa-chevron-left text-[10px]"></i>
@@ -168,8 +168,8 @@
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-4 flex flex-col h-full min-h-[400px] lg:min-h-0 relative z-10">
-            <div id="detail-panel" class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden relative shadow-sm">
+        <div class="col-span-12 lg:col-span-4 flex flex-col h-full min-h-[400px] lg:min-h-0 relative z-10 w-full">
+            <div id="detail-panel" class="bg-white dark:bg-[#111827] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-hidden relative shadow-sm w-full">
                 
                 <div id="empty-message" class="flex-1 flex flex-col items-center justify-center text-center py-16 lg:py-0 relative z-10 px-6">
                     <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 border border-slate-200 dark:border-slate-800 shadow-inner">
@@ -228,7 +228,7 @@
                                 </div>
 
                                 <div class="bg-white dark:bg-[#0F172A] rounded-xl border border-slate-200 dark:border-slate-800 p-1 shadow-sm">
-                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60">
+                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60 w-full overflow-hidden">
                                         <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
                                             <i class="fas fa-star text-slate-400 text-[10px]"></i>
                                         </div>
@@ -240,7 +240,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60">
+                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60 w-full overflow-hidden">
                                         <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
                                             <i class="fas fa-envelope text-slate-400 text-[10px]"></i>
                                         </div>
@@ -249,7 +249,7 @@
                                             <p id="detail-email" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-3 p-3">
+                                    <div class="flex items-center gap-3 p-3 w-full overflow-hidden">
                                         <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
                                             <i class="fas fa-phone-alt text-slate-400 text-[10px]"></i>
                                         </div>
@@ -328,8 +328,8 @@ function handleLiveSearch() {
     $('#no-match-row').remove();
     if (!hasMatch && q !== "") {
         $('#userTableBody').append(`
-            <tr id="no-match-row" class="block lg:table-row p-4 lg:p-0 border-b border-slate-100 dark:border-slate-800">
-                <td colspan="6" class="py-12 text-center">
+            <tr id="no-match-row" class="block lg:table-row p-4 lg:p-0 border-b border-slate-100 dark:border-slate-800 w-full">
+                <td colspan="6" class="py-12 text-center w-full block lg:table-cell">
                     <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 mb-3 border border-slate-200 dark:border-slate-700">
                         <i class="fas fa-search text-xl text-slate-400 dark:text-slate-500"></i>
                     </div>
@@ -390,8 +390,8 @@ function updateUserTable(users) {
 
     if (users.length === 0) {
         container.innerHTML = `
-            <tr class="block lg:table-row p-4 lg:p-0">
-                <td colspan="6" class="py-12 text-center text-xs font-bold text-slate-500 dark:text-slate-400">
+            <tr class="block lg:table-row p-4 lg:p-0 w-full">
+                <td colspan="6" class="py-12 text-center text-xs font-bold text-slate-500 dark:text-slate-400 w-full block lg:table-cell">
                     No matching personnel found.
                 </td>
             </tr>`;
@@ -400,23 +400,23 @@ function updateUserTable(users) {
 
     users.forEach(u => {
         const row = `
-            <tr class="user-row block lg:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 lg:p-0" 
+            <tr class="user-row block lg:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 lg:p-0 w-full" 
                 onclick="showUserDetails('${u.id}', '${u.username}', '${u.full_name}', '${u.email}', '${u.role}', '${u.last_login}', '${u.date_joined}', '${u.image_url || ''}', '${u.rank}', '${u.phone || ''}')">
-                <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors">#${u.id}</td>
-                <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6">
+                <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors w-full lg:w-auto">#${u.id}</td>
+                <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                     <div class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 p-1.5 mx-auto border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-200 dark:group-hover:border-slate-600 transition-colors shadow-sm">
                         <img src="/static/core/images/badge/${u.rank}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';">
                     </div>
                 </td>
-                <td data-label="Personnel" class="block lg:table-cell py-3 px-4 lg:px-6">
+                <td data-label="Personnel" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                     <div class="flex flex-col justify-end items-end lg:items-start w-full min-w-0">
                         <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${u.full_name || u.username}</div>
                         <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 lg:hidden">${u.rank}</div>
                     </div>
                 </td>
-                <td data-label="Username" class="block lg:table-cell py-3 px-4 lg:px-6 font-medium text-slate-600 dark:text-slate-300">@${u.username}</td>
-                <td data-label="Email" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400">${u.email || '—'}</td>
-                <td data-label="Phone" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400">${u.phone || '—'}</td>
+                <td data-label="Username" class="block lg:table-cell py-3 px-4 lg:px-6 font-medium text-slate-600 dark:text-slate-300 w-full lg:w-auto">@${u.username}</td>
+                <td data-label="Email" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">${u.email || '—'}</td>
+                <td data-label="Phone" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">${u.phone || '—'}</td>
             </tr>`;
         container.insertAdjacentHTML('beforeend', row);
     });
@@ -461,7 +461,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
             if (detailPanel) {
                 detailPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-        }, 50); // Minor delay ensures the DOM transitions have fired before calculating scroll position
+        }, 50); 
     }
 }
 </script>
@@ -488,7 +488,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
 
     /* --- MOBILE RESPONSIVE TABLE (GRID CARD LAYOUT) --- */
     @media (max-width: 1024px) {
-        .responsive-table, .responsive-table thead, .responsive-table th, .responsive-table td {
+        .responsive-table, .responsive-table thead, .responsive-table tbody, .responsive-table th, .responsive-table td, .responsive-table tr {
             display: block;
             width: 100%;
         }
@@ -497,11 +497,12 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
         }
         
         #userTableBody {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 1rem;
             background: transparent !important;
-            padding: 1rem;
+            padding: 0.5rem 0;
+            width: 100%;
         }
 
         .user-row {
@@ -515,6 +516,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
             overflow: hidden;
             margin-bottom: 0 !important;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
         }
         .user-row:hover {
             transform: translateY(-2px);
@@ -538,6 +540,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
             padding: 0.85rem 1.25rem !important;
             text-align: right;
             white-space: normal !important;
+            width: 100%;
         }
         .dark .user-row td {
             border-bottom-color: #1e293b !important;
@@ -568,7 +571,8 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
             display: flex;
             justify-content: flex-end;
             text-align: right;
-            word-break: break-word; /* Fixes long emails blowing up the card width */
+            word-break: break-word; /* Prevents long emails from blowing out the card width */
+            overflow-wrap: break-word;
         }
         
         .user-row td > .w-8 {
