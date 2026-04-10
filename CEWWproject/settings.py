@@ -233,6 +233,8 @@ CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
 CSP_IMG_SRC = ("'self'", "data:", "https://res.cloudinary.com")
 CSP_CONNECT_SRC = ("'self'",)
 CSP_FRAME_ANCESTORS = ("'none'",)
+CSP_SCRIPT_SRC = ("'self'", "https://cdn.tailwindcss.com")
+CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com", "https://cdn.tailwindcss.com")
 
 # Enforces the CSP actively (blocking malicious actions) instead of just logging them
-CSP_REPORT_ONLY = True
+CSP_REPORT_ONLY = False
