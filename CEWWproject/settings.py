@@ -235,4 +235,4 @@ CSP_CONNECT_SRC = ("'self'",)
 CSP_FRAME_ANCESTORS = ("'none'",)
 
 # Enforces the CSP actively (blocking malicious actions) instead of just logging them
-CSP_REPORT_ONLY = False
+CSP_REPORT_ONLY = True
