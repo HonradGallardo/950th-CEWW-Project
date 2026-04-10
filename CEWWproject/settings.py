@@ -166,7 +166,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'csp.middleware.CSPMiddleware', # <-- SECURE: CSP is activated here in the active middleware list
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -198,39 +197,3 @@ TIME_ZONE = 'Asia/Manila'
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# ==========================================
-# 15. MAXIMUM SECURITY CONFIGURATIONS
-# ==========================================
-
-# A. Production SSL & Cookie Security
-if not DEBUG:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
-    SECURE_HSTS_SECONDS = 31536000 
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-# B. Content Security Policy (CSP)
-CSP_DEFAULT_SRC = ("'self'",)
-
-# CRITICAL FIX: Only enforcing nonces on scripts so Tailwind can inject inline styles
-CSP_INCLUDE_NONCE_IN = ('script-src',) 
-
-# Scripts: Allow your own files and the Tailwind CDN
-CSP_SCRIPT_SRC = ("'self'", "https://cdn.tailwindcss.com")
-
-# Styles: Allow your own files, Google Fonts, and inline styles (Required for Tailwind CDN)
-CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com", "'unsafe-inline'")
-
-# Fonts, Media, and Connections
-CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
-CSP_IMG_SRC = ("'self'", "data:", "https://res.cloudinary.com")
-CSP_CONNECT_SRC = ("'self'",)
-CSP_FRAME_ANCESTORS = ("'none'",)
-
-# Enforces the security policy
-CSP_REPORT_ONLY = False
