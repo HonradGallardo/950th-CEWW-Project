@@ -33,7 +33,10 @@ DEBUG = env.bool('DEBUG', default=False)
 # Christian-Branch (Preserved as comments): 
 # DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
 # CRITICAL FIX: Hardcode the allowed hosts right here, overwriting the env file completely.
-ALLOWED_HOSTS = ['*']
+
+# SECURITY FIX: Commented out the wildcard '*' to prevent Host Header attacks.
+# ALLOWED_HOSTS = ['*'] 
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'onthego-aims.onrender.com'])
 # -------------------------------
 
 # 5. Application Definition
@@ -197,3 +200,30 @@ TIME_ZONE = 'Asia/Manila'
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ==========================================
+# 15. SECURITY HARDENING (Added section)
+# ==========================================
+
+# These settings are safe to have active globally and will not affect UI rendering.
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+
+# Protects against Clickjacking. If your UI specifically relies on embedding 
+# your site within iframes, change 'DENY' to 'SAMEORIGIN'.
+X_FRAME_OPTIONS = 'DENY' 
+
+# HTTPS/SSL Settings applied ONLY in production so local development stays intact.
+if not DEBUG:
+    # Redirect all non-HTTPS requests to HTTPS
+    SECURE_SSL_REDIRECT = True
+    
+    # Ensures cookies are only sent over HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # HTTP Strict Transport Security (HSTS) - Forces browsers to use HTTPS
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
