@@ -133,9 +133,12 @@
     </div>
 </div>
 
-<script>
+{{ asset.pk|default:''|json_script:"asset-data-pk" }}
+
+<script nonce="{{ request.csp_nonce }}">
 $(document).ready(function() {
-    const assetPk = "{{ asset.pk|default:'' }}";
+    // SECURITY: Securely retrieving the data passed by Django's json_script
+    const assetPk = JSON.parse(document.getElementById('asset-data-pk').textContent);
     const isEdit = assetPk !== "";
 
     // 1. DYNAMIC SPECIFICATIONS LOGIC
@@ -205,6 +208,8 @@ $(document).ready(function() {
         $.ajax({
             url: apiUrl,
             type: apiMethod,
+            // SECURITY: Explicitly fetching the CSRF token from the DOM and passing it in the headers. 
+            // This validates that the AJAX request is coming from your site, not a cross-origin attack.
             headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
             data: JSON.stringify(payload),
             contentType: 'application/json',
@@ -222,6 +227,7 @@ $(document).ready(function() {
             $.ajax({
                 url: `/api/assets/${assetPk}/`,
                 type: 'DELETE',
+                // SECURITY: Including CSRF token on delete request prevents forced deletion by attackers
                 headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
                 success: function() { window.location.href = '/assets/'; },
                 error: function() { alert("Delete failed."); }
@@ -231,7 +237,7 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
