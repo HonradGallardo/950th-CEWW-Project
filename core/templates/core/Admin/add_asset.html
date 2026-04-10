@@ -11,7 +11,7 @@
             </h2>
         </div>
         
-        <form method="POST" class="p-4 sm:p-6 space-y-4" id="assetForm">
+        <form method="POST" class="p-4 sm:p-6 space-y-4" id="assetForm" autocomplete="off">
             {% csrf_token %}
             
             <div class="grid grid-cols-1 gap-4">
@@ -137,7 +137,7 @@
 
 <script nonce="{{ request.csp_nonce }}">
 $(document).ready(function() {
-    // SECURITY: Securely retrieving the data passed by Django's json_script
+    // SECURITY: Securely retrieving the data passed by Django's json_script mitigates inline script XSS injection.
     const assetPk = JSON.parse(document.getElementById('asset-data-pk').textContent);
     const isEdit = assetPk !== "";
 
@@ -181,6 +181,15 @@ $(document).ready(function() {
     $('select[name="assets_type"]').on('change', toggleSpecs);
     $('input[name="status"]').on('change', checkMaintenance);
 
+    // SECURITY HELPER: Basic client-side string sanitizer (Defense in Depth against XSS)
+    // Note: The backend MUST still validate and sanitize this data.
+    function sanitizeInput(input) {
+        if (typeof input !== 'string') return input;
+        return input.replace(/[<>]/g, function(c) {
+            return c === '<' ? '&lt;' : '&gt;';
+        });
+    }
+
     // 3. API Save/Update Logic
     $('#assetForm').on('submit', function(e) {
         e.preventDefault();
@@ -191,18 +200,18 @@ $(document).ready(function() {
         const apiMethod = isEdit ? 'PATCH' : 'POST';
 
         const payload = {
-            assets_name: $('input[name="assets_name"]').val(),
+            assets_name: sanitizeInput($('input[name="assets_name"]').val()),
             assets_type: $('select[name="assets_type"]').val(),
-            location: $('input[name="location"]').val(),
+            location: sanitizeInput($('input[name="location"]').val()),
             status: $('input[name="status"]:checked').val(),
-            maintenance_reason: $('input[name="maintenance_reason"]').val() || null,
+            maintenance_reason: sanitizeInput($('input[name="maintenance_reason"]').val()) || null,
 
-            processor: $('input[name="processor"]').val() || null,
+            processor: sanitizeInput($('input[name="processor"]').val()) || null,
             ram_gb: parseInt($('input[name="ram_gb"]').val()) || null,
-            storage_capacity: $('input[name="storage_capacity"]').val() || null,
-            ip_address: $('input[name="ip_address"]').val() || null,
-            mac_address: $('input[name="mac_address"]').val() || null,
-            firmware_version: $('input[name="firmware_version"]').val() || null
+            storage_capacity: sanitizeInput($('input[name="storage_capacity"]').val()) || null,
+            ip_address: sanitizeInput($('input[name="ip_address"]').val()) || null,
+            mac_address: sanitizeInput($('input[name="mac_address"]').val()) || null,
+            firmware_version: sanitizeInput($('input[name="firmware_version"]').val()) || null
         };
 
         $.ajax({
@@ -216,7 +225,8 @@ $(document).ready(function() {
             success: function() { window.location.href = '/assets/'; },
             error: function(xhr) {
                 $submitBtn.prop('disabled', false).removeClass('opacity-50').text('SAVE ASSET ENTRY');
-                alert("API Error: " + (xhr.responseJSON?.detail || "Update failed."));
+                // SECURITY: Avoid rendering raw unescaped HTML from error responses into the DOM
+                alert("API Error: " + sanitizeInput(xhr.responseJSON?.detail || "Update failed."));
             }
         });
     });
@@ -227,7 +237,7 @@ $(document).ready(function() {
             $.ajax({
                 url: `/api/assets/${assetPk}/`,
                 type: 'DELETE',
-                // SECURITY: Including CSRF token on delete request prevents forced deletion by attackers
+                // SECURITY: Including CSRF token on delete request prevents forced deletion by attackers via CSRF
                 headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
                 success: function() { window.location.href = '/assets/'; },
                 error: function() { alert("Delete failed."); }
