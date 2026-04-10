@@ -225,7 +225,7 @@ if not DEBUG:
 
 # B. Content Security Policy (CSP)
 CSP_DEFAULT_SRC = ("'self'",)
-CSP_INCLUDE_NONCE_IN = ('script-src', 'style-src')
+CSP_INCLUDE_NONCE_IN = ('script-src',)
 
 # Scripts: Allowing your own files and the Tailwind CDN script
 CSP_SCRIPT_SRC = ("'self'", "https://cdn.tailwindcss.com")
