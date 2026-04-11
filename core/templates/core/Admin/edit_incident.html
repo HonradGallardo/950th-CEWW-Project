@@ -34,7 +34,7 @@
                 </div>
                 <div class="space-y-1">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assign Technician</p>
-                    <select name="assigned_to_id" id="editTechnician" 
+                    <select name="assigned_to" id="editTechnician" 
                             {% if incident.assigned_to and incident.assigned_to.id != request.user.id %}disabled title="Only the assigned admin can modify ownership"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="">Unassigned</option>
@@ -334,6 +334,7 @@
                 </div>
                 
                 <div class="flex flex-wrap md:flex-nowrap gap-3 w-full md:w-auto">
+                    
                     {% if incident %}
                     <button type="button" id="deleteBtn" 
                             {% if incident.assigned_to and incident.assigned_to.id != request.user.id %}disabled title="Only the assigned admin can delete this"{% endif %}
@@ -469,6 +470,13 @@ $(document).ready(function() {
             if (typeof value === 'string' && key !== 'actions_taken' && key !== 'attachment') {
                 formData.set(key, SecurityUtils.escapeHTML(value));
             }
+        }
+
+        // FIX: Ensure unchecked checkboxes are tracked as 'false' for DRF PUT requests
+        if (!$('#false_pos').is(':checked')) {
+            formData.append('is_false_positive', 'false');
+        } else {
+            formData.set('is_false_positive', 'true');
         }
 
         $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> SYNCING...');
