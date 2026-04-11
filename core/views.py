@@ -10,6 +10,7 @@ from .models import Asset, Maintenance, Incident, Notification, Profile
 from .forms import AssetForm, MaintenanceForm, UserForm
 from django.utils import timezone
 from datetime import timedelta
+import bleach
 from django.core.paginator import Paginator
 
 # --- NAVIGATION & DASHBOARD ---
@@ -169,7 +170,16 @@ def incident_list(request):
 @login_required
 def add_incident(request):
     if request.method == 'POST':
-        Incident.objects.create(title=request.POST.get('title'), severity=request.POST.get('severity'), affected_area=request.POST.get('affected_area'), reported_by=request.user)
+        # SECURITY PATCH: Sanitize the inputs before saving to the database
+        safe_title = bleach.clean(request.POST.get('title', ''), tags=[], strip=True)
+        safe_area = bleach.clean(request.POST.get('affected_area', ''), tags=[], strip=True)
+        
+        Incident.objects.create(
+            title=safe_title, 
+            severity=request.POST.get('severity'), 
+            affected_area=safe_area, 
+            reported_by=request.user
+        )
         return redirect('incident_list')
     return render(request, 'core/Admin/add_incident.html')
 

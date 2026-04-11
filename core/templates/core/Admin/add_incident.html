@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; connect-src 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://code.jquery.com; connect-src 'self'; object-src 'none'; base-uri 'self';">
 
 <div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
@@ -178,9 +178,21 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" nonce="{{ request.csp_nonce }}"></script>
-
 <script nonce="{{ request.csp_nonce }}">
+    // 3. Strict XSS Data Encoding Framework
+    const SecurityUtils = {
+        escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        }
+    };
+
     $(document).ready(function() {
         $('#incidentForm').on('submit', function(e) {
             e.preventDefault(); 
@@ -188,10 +200,10 @@
             const originalText = $btn.html();
             const formData = new FormData(this);
 
-            // FRONTEND SECURITY: Sanitize all form inputs before sending them to the API
+            // Replaced DOMPurify with strict HTML Entity Encoding
             for (let [key, value] of formData.entries()) {
                 if (typeof value === 'string') {
-                    formData.set(key, DOMPurify.sanitize(value));
+                    formData.set(key, SecurityUtils.escapeHTML(value));
                 }
             }
 
@@ -215,13 +227,13 @@
                 error: function(xhr) {
                     $btn.prop('disabled', false).html(originalText);
                     
-                    // FRONTEND SECURITY: XSS Prevention on API Error Messages
                     let errorMsg = "System Error: Failed to submit incident. Please check required fields.";
                     try {
                         if(xhr.responseJSON) {
                             const errors = Object.values(xhr.responseJSON).flat();
                             if(errors.length > 0) {
-                                const safeError = $("<div>").text(errors[0]).html();
+                                // Double-escape error outputs from API
+                                const safeError = SecurityUtils.escapeHTML(errors[0]);
                                 errorMsg = "API Error: " + safeError;
                             }
                         }
@@ -230,7 +242,6 @@
                     }
                     
                     alert(errorMsg);
-                    console.error("API Rejection:", xhr.responseText);
                 }
             });
         });
