@@ -560,7 +560,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # INTERCEPT UPDATE: Consolidated Logic
+    # 🚨 INTERCEPT UPDATE: Bulletproof Logic
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -576,46 +576,50 @@ class IncidentViewSet(viewsets.ModelViewSet):
         raw_assigned_to = data.get('assigned_to', current_owner_id)
         new_owner_id = str(raw_assigned_to) if raw_assigned_to not in ['', 'null', 'None', None] else ""
 
-        # --- 1. STRICT AUTHORIZATION ---
+        # --- 1. STRICT AUTHORIZATION (Synced with your HTML Superuser bypass) ---
         is_owner = (current_owner_id == str(user.id))
         is_unassigned = (current_owner_id == "")
+        is_superuser = user.is_superuser
         
         if is_unassigned:
-            # Unassigned: Can only take over to themselves
-            if new_owner_id != str(user.id):
+            # Unassigned: Can only take over to themselves or be a superuser
+            if new_owner_id != str(user.id) and not is_superuser:
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("Access Denied: You must take over this incident to your account first.")
         else:
-            # Assigned: Only the CURRENT technician can edit or re-assign
-            if not is_owner:
+            # Assigned: Only the CURRENT technician or superuser can edit
+            if not is_owner and not is_superuser:
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
-        # --- 2. PREVIOUS TECH TRACKER ---
-        last_tech_to_save = None
+        # --- 2. PREVIOUS TECH TRACKER & CRASH PREVENTION ---
+        save_kwargs = {}
         
         if current_owner_id != new_owner_id:
             # Ownership is changing!
             if current_owner:
                 # Log the person who gave it up
-                last_tech_to_save = current_owner.username
+                save_kwargs['last_technician'] = current_owner.username
             
             if new_owner_id == "":
-                # Unassigning: Fix DRF crash by forcing None
-                data['assigned_to'] = None 
+                # UNASSIGNING: Force DB update via kwargs and delete from data to prevent 500 Crash
+                save_kwargs['assigned_to'] = None
+                if 'assigned_to' in data:
+                    del data['assigned_to']
             else:
-                # Re-assigning: Force the new ID
+                # RE-ASSIGNING: Force the new ID
+                save_kwargs['assigned_to_id'] = new_owner_id
                 data['assigned_to'] = new_owner_id
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         
-        # Save the standard form fields through DRF
-        serializer.save()
+        # Save the standard form fields PLUS our forced overrides
+        serializer.save(**save_kwargs)
 
-        # THE FIX: Forcefully update the DB bypassing the serializer's field restrictions
-        if last_tech_to_save is not None:
-            instance.last_technician = last_tech_to_save
+        # 🔥 FORCE DB SYNC: Bypass the serializer entirely for the tracking field
+        if 'last_technician' in save_kwargs:
+            instance.last_technician = save_kwargs['last_technician']
             instance.save(update_fields=['last_technician'])
 
         if getattr(instance, '_prefetched_objects_cache', None):
@@ -626,8 +630,11 @@ class IncidentViewSet(viewsets.ModelViewSet):
     # 🚨 STRICT DELETION SECURITY
     def perform_destroy(self, instance):
         current_owner = instance.assigned_to
-        # Only the current technician can delete
+        
+        # Only the current technician or superuser can delete
         if current_owner and current_owner.id == self.request.user.id:
+            instance.delete()
+        elif self.request.user.is_superuser:
             instance.delete()
         else:
             from rest_framework.exceptions import PermissionDenied
