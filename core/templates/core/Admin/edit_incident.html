@@ -24,6 +24,8 @@
         <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-8 space-y-6" id="incidentForm">
             {% csrf_token %}
             <input type="hidden" name="take_over" id="take_over_flag" value="false">
+            <input type="hidden" name="last_technician" id="hidden_last_technician" value="{{ incident.last_technician|default:'' }}">
+            <input type="hidden" id="current_owner_name" value="{{ incident.assigned_to.username|default:'' }}">
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="space-y-1">
@@ -55,7 +57,7 @@
                     <div class="mt-1 inline-flex items-center gap-2 px-2 py-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/50 text-[10px]">
                         <i class="fas fa-history text-slate-400"></i>
                         <span class="text-slate-500 font-black uppercase">Previous:</span>
-                        <span class="font-bold text-slate-700 dark:text-slate-300">{{ incident.last_technician|default:"Unlogged" }}</span>
+                        <span id="display_last_technician" class="font-bold text-slate-700 dark:text-slate-300">{{ incident.last_technician|default:"Unlogged" }}</span>
                     </div>
                 </div>
                 <div class="space-y-1">
@@ -376,9 +378,29 @@ const SecurityUtils = {
 document.addEventListener("DOMContentLoaded", function() {
     const techDropdown = document.getElementById('editTechnician');
     const statusDropdown = document.getElementById('editStatus');
+    const currentOwnerName = document.getElementById('current_owner_name').value;
+    const hiddenLastTech = document.getElementById('hidden_last_technician');
+    const displayLastTech = document.getElementById('display_last_technician');
+    const takeOverFlag = document.getElementById('take_over_flag');
     
+    // Original assigned user ID to check if it changed
+    const originalAssignedId = techDropdown ? techDropdown.value : "";
+
     if (techDropdown && statusDropdown) {
         techDropdown.addEventListener('change', function() {
+            // Hand-off logic: Track who the previous owner was
+            if (this.value !== originalAssignedId) {
+                if (currentOwnerName) {
+                    hiddenLastTech.value = currentOwnerName;
+                    displayLastTech.textContent = currentOwnerName;
+                }
+                takeOverFlag.value = "true";
+            } else {
+                // If they change it back to the original owner
+                takeOverFlag.value = "false";
+            }
+
+            // Auto-Status Logic
             if (this.value !== "") {
                 if (statusDropdown.value === "Open") {
                     statusDropdown.value = "Investigating";
@@ -497,7 +519,6 @@ $(document).ready(function() {
                 let errorMsg = "Submission failed. Ensure all technical fields are valid.";
                 if(xhr.responseJSON) {
                     if (xhr.responseJSON.detail) {
-                        // Double escape API responses to prevent reflection XSS
                         errorMsg = SecurityUtils.escapeHTML(xhr.responseJSON.detail);
                     } else {
                         const errors = Object.values(xhr.responseJSON).flat();
