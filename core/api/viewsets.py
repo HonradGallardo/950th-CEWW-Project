@@ -560,7 +560,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 BULLETPROOF UPDATE: Using Direct SQL DB Writes
+    # 🚨 BULLETPROOF UPDATE: Replaces 'perform_update' to prevent 500 errors
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -570,13 +570,14 @@ class IncidentViewSet(viewsets.ModelViewSet):
         current_owner = instance.assigned_to
         current_owner_id = str(current_owner.id) if current_owner else ""
         
+        # Safely clone data
         data = request.data.copy()
         
-        # 2. Extract requested owner safely
+        # 2. Extract proposed new owner safely
         raw_assigned = data.get('assigned_to', current_owner_id)
         new_owner_id = str(raw_assigned) if raw_assigned not in ['', 'null', 'None', None] else ""
 
-        # 3. Strict Authorization
+        # 3. Security Checks (Includes Superuser logic)
         is_owner = (current_owner_id == str(user.id))
         is_unassigned = (current_owner_id == "")
         is_superuser = user.is_superuser
@@ -590,45 +591,42 @@ class IncidentViewSet(viewsets.ModelViewSet):
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
-        # 4. Strip out assigned_to so DRF completely ignores ownership validation
-        if 'assigned_to' in data:
-            del data['assigned_to']
+        # 4. Prevent DRF crashes on 'Unassigned'
+        if 'assigned_to' in data and data['assigned_to'] in ['', 'null', 'None']:
+            data['assigned_to'] = None
 
-        # 5. Save standard text fields through normal DRF lifecycle
+        # 5. Standard DRF Validation & Save
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        updated_instance = serializer.save()
 
-        # 6. 🔥 DIRECT SQL OVERRIDE FOR OWNERSHIP & HISTORY 🔥
+        # 6. Apply Ownership & Previous Tech History safely
+        db_changed = False
         if current_owner_id != new_owner_id:
-            sql_update_payload = {}
-            
-            # Assign the new owner
+            # Re-assign to the new tech
             if new_owner_id == "":
-                sql_update_payload['assigned_to'] = None
+                updated_instance.assigned_to = None
             else:
-                sql_update_payload['assigned_to_id'] = new_owner_id
+                updated_instance.assigned_to_id = new_owner_id
                 
-            # Log the previous owner securely
+            # Stamp the previous tech securely
             if current_owner:
-                sql_update_payload['last_technician'] = current_owner.username
-                
-            # Execute physical DB write bypassing all Django safety filters
-            Incident.objects.filter(pk=instance.pk).update(**sql_update_payload)
+                updated_instance.last_technician = current_owner.username
             
-            # Refresh memory object from database to return to frontend
-            instance.refresh_from_db()
+            db_changed = True
+
+        # Safe save without update_fields restrictions to prevent ValueError crashes
+        if db_changed:
+            updated_instance.save() 
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
-        return Response(self.get_serializer(instance).data)
+        return Response(self.get_serializer(updated_instance).data)
 
     # 🚨 STRICT DELETION SECURITY
     def perform_destroy(self, instance):
         current_owner = instance.assigned_to
-        
-        # Only the current technician or superuser can delete
         if current_owner and current_owner.id == self.request.user.id:
             instance.delete()
         elif self.request.user.is_superuser:
