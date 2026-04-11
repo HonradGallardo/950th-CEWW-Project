@@ -24,6 +24,7 @@ from webauthn import generate_authentication_options, verify_authentication_resp
 from rest_framework.authentication import SessionAuthentication
 from webauthn.helpers.options_to_json import options_to_json
 from core.models import UserPasskey
+from rest_framework.exceptions import PermissionDenied
 from webauthn.helpers.structs import PublicKeyCredentialDescriptor
 from webauthn.helpers.base64url_to_bytes import base64url_to_bytes
 from core.api.serializers import (
@@ -561,17 +562,31 @@ class IncidentViewSet(viewsets.ModelViewSet):
         # Automatically set the reporter to whoever created the ticket
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 ADD THIS: Handles the "Take Over" functionality from edit_incident.html
+    # 🚨 BACKEND SECURITY: Prevent IDOR and unauthorized edits/takeovers
     def perform_update(self, serializer):
-        # Check if the frontend sent the hidden 'take_over=true' flag
+        instance = self.get_object()
         take_over = self.request.data.get('take_over') == 'true'
         
         if take_over:
-            # Reassign the ticket to the current user clicking the button
-            serializer.save(assigned_to=self.request.user)
+            # Only allow take over if the incident is currently unassigned
+            if not instance.assigned_to:
+                serializer.save(assigned_to=self.request.user)
+            else:
+                raise PermissionDenied("This incident is already assigned to someone else.")
         else:
-            # Normal save without changing ownership
-            serializer.save()
+            # Only allow standard edits if unassigned, owned by the current user, or user is superuser
+            if not instance.assigned_to or instance.assigned_to == self.request.user or self.request.user.is_superuser:
+                serializer.save()
+            else:
+                raise PermissionDenied("You do not have permission to modify this incident. It is assigned to another technician.")
+
+    # 🚨 BACKEND SECURITY: Prevent unauthorized deletions via the API
+    def perform_destroy(self, instance):
+        # Only allow deletion if unassigned, owned by the current user, or user is superuser
+        if not instance.assigned_to or instance.assigned_to == self.request.user or self.request.user.is_superuser:
+            instance.delete()
+        else:
+            raise PermissionDenied("You do not have permission to delete this incident. It is assigned to another technician.")
 
 class IncidentCommentViewSet(viewsets.ModelViewSet):
     serializer_class = IncidentCommentSerializer

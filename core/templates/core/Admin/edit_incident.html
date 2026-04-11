@@ -23,7 +23,7 @@
 
         <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-8 space-y-6" id="incidentForm">
             {% csrf_token %}
-            <input type="hidden" name="take_over" value="false">
+            <input type="hidden" name="take_over" id="take_over_flag" value="false">
             
             <input type="hidden" name="last_technician" id="hidden_last_technician" value="{{ incident.last_technician|default:'' }}">
             <input type="hidden" id="current_owner_name" value="{{ incident.assigned_to.username|default:'' }}">
@@ -362,19 +362,6 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
-// 1. XSS PROTECTION: Strict HTML Entity Encoder Framework
-const SecurityUtils = {
-    escapeHTML(str) {
-        if (typeof str !== 'string') return str;
-        return str.replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
-        }[tag] || tag));
-    }
-};
 
 document.addEventListener("DOMContentLoaded", function() {
     const techDropdown = document.getElementById('editTechnician');
@@ -382,8 +369,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const currentOwnerName = document.getElementById('current_owner_name').value;
     const hiddenLastTech = document.getElementById('hidden_last_technician');
     const displayLastTech = document.getElementById('display_last_technician');
+    const takeOverFlag = document.getElementById('take_over_flag');
     
-    // Store exactly what was loaded from the database
     const originalAssignedId = techDropdown ? techDropdown.value : "";
     const originalLastTech = hiddenLastTech ? hiddenLastTech.value : "";
 
@@ -401,8 +388,18 @@ document.addEventListener("DOMContentLoaded", function() {
                     if(hiddenLastTech) hiddenLastTech.value = originalLastTech;
                     if(displayLastTech) displayLastTech.textContent = originalLastTech || "Unlogged";
                 }
+                
+                // FIX: Only trigger "take_over" if the ticket was unassigned AND the current user is taking it.
+                // If the current owner is assigning it to a colleague, take_over MUST be false!
+                if (originalAssignedId === "") {
+                    takeOverFlag.value = "true";
+                } else {
+                    takeOverFlag.value = "false";
+                }
+
             } else {
                 // Reverted dropdown back to its original state
+                takeOverFlag.value = "false";
                 if(hiddenLastTech) hiddenLastTech.value = originalLastTech;
                 if(displayLastTech) displayLastTech.textContent = originalLastTech || "Unlogged";
             }
@@ -430,7 +427,7 @@ $(document).ready(function() {
     const apiUrl = isEdit ? `/api/incidents/${incidentId}/` : '/api/incidents/';
     const apiMethod = isEdit ? 'PUT' : 'POST';
 
-    // 2. DELETE BUTTON LOGIC + CSRF
+    // DELETE BUTTON LOGIC + CSRF
     $('#deleteBtn').on('click', function() {
         if(!confirm("SECURITY WARNING: Are you sure you want to permanently delete this incident? This action cannot be undone.")) {
             return;
@@ -470,10 +467,10 @@ $(document).ready(function() {
         const formData = new FormData(this);
         const originalBtnText = $btn.html();
         
-        // 3. FRONTEND SECURITY: Escape the manually constructed log fields
-        const issue = SecurityUtils.escapeHTML($('#log_issue').val().trim());
-        const action = SecurityUtils.escapeHTML($('#log_action').val().trim());
-        const result = SecurityUtils.escapeHTML($('#log_result').val().trim());
+        // 3. LOG CONSTRUCTION (NO ESCAPING HERE to prevent the infinite loop)
+        const issue = $('#log_issue').val().trim();
+        const action = $('#log_action').val().trim();
+        const result = $('#log_result').val().trim();
         const oldActions = $('#hidden_actions_taken').val(); 
         
         if (issue || action || result) {
@@ -493,15 +490,7 @@ $(document).ready(function() {
             formData.set('actions_taken', oldActions);
         }
 
-        // 4. FRONTEND SECURITY: Convert ALL other HTML tags into harmless strings
-        for (let [key, value] of formData.entries()) {
-            // We skip file attachments and actions_taken (since we already escaped its parts)
-            if (typeof value === 'string' && key !== 'actions_taken' && key !== 'attachment') {
-                formData.set(key, SecurityUtils.escapeHTML(value));
-            }
-        }
-
-        // FIX: Ensure unchecked checkboxes are tracked as 'false' for DRF PUT requests
+        // Ensure unchecked checkboxes are tracked as 'false' for DRF PUT requests
         if (!$('#false_pos').is(':checked')) {
             formData.append('is_false_positive', 'false');
         } else {
@@ -526,11 +515,10 @@ $(document).ready(function() {
                 let errorMsg = "Submission failed. Ensure all technical fields are valid.";
                 if(xhr.responseJSON) {
                     if (xhr.responseJSON.detail) {
-                        // Double escape API responses to prevent reflection XSS
-                        errorMsg = SecurityUtils.escapeHTML(xhr.responseJSON.detail);
+                        errorMsg = xhr.responseJSON.detail;
                     } else {
                         const errors = Object.values(xhr.responseJSON).flat();
-                        if(errors.length > 0) errorMsg = "API Error: " + SecurityUtils.escapeHTML(errors[0]);
+                        if(errors.length > 0) errorMsg = "API Error: " + errors[0];
                     }
                 }
                 alert(errorMsg);
