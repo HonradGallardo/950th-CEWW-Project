@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; connect-src 'self'; object-src 'none'; base-uri 'self';">
+
 <div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
         
@@ -331,10 +333,19 @@
                     </div>
                 </div>
                 
-                <div class="flex gap-3 w-full md:w-auto">
+                <div class="flex flex-wrap md:flex-nowrap gap-3 w-full md:w-auto">
+                    {% if incident %}
+                    <button type="button" id="deleteBtn" 
+                            {% if incident.assigned_to and incident.assigned_to.id != request.user.id %}disabled title="Only the assigned admin can delete this"{% endif %}
+                            class="flex-1 md:flex-none px-6 py-3 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl text-[10px] font-black uppercase transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-trash-alt mr-2"></i> Delete
+                    </button>
+                    {% endif %}
+
                     <a href="{% url 'incident_list' %}" class="flex-1 md:flex-none px-8 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 text-center dark-mode-text info-badge">
                         Cancel
                     </a>
+                    
                     <button type="submit" id="submitBtn" 
                             {% if incident.assigned_to and incident.assigned_to.id != request.user.id %}disabled title="Only the assigned admin can save changes"{% endif %}
                             class="flex-1 md:flex-none px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase shadow-lg adaptive-btn disabled:opacity-50 disabled:cursor-not-allowed">
@@ -346,8 +357,21 @@
     </div>
 </div>
 
-<script>
-// --- NEW: Auto-toggle Status based on Technician assignment ---
+<script nonce="{{ request.csp_nonce }}">
+// 1. XSS PROTECTION: Strict HTML Entity Encoder Framework
+const SecurityUtils = {
+    escapeHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+};
+
 document.addEventListener("DOMContentLoaded", function() {
     const techDropdown = document.getElementById('editTechnician');
     const statusDropdown = document.getElementById('editStatus');
@@ -355,12 +379,10 @@ document.addEventListener("DOMContentLoaded", function() {
     if (techDropdown && statusDropdown) {
         techDropdown.addEventListener('change', function() {
             if (this.value !== "") {
-                // If an admin takes ownership, auto-set to Investigating
                 if (statusDropdown.value === "Open") {
                     statusDropdown.value = "Investigating";
                 }
             } else {
-                // If they leave it unassigned, auto-revert to Open
                 if (["Investigating"].includes(statusDropdown.value)) {
                     statusDropdown.value = "Open";
                 }
@@ -378,6 +400,31 @@ $(document).ready(function() {
     const apiUrl = isEdit ? `/api/incidents/${incidentId}/` : '/api/incidents/';
     const apiMethod = isEdit ? 'PUT' : 'POST';
 
+    // 2. DELETE BUTTON LOGIC + CSRF
+    $('#deleteBtn').on('click', function() {
+        if(!confirm("SECURITY WARNING: Are you sure you want to permanently delete this incident? This action cannot be undone.")) {
+            return;
+        }
+        
+        const $delBtn = $(this);
+        const originalDelText = $delBtn.html();
+        $delBtn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i>');
+        
+        $.ajax({
+            url: apiUrl,
+            type: 'DELETE',
+            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+            success: function() {
+                window.location.href = "{% url 'incident_list' %}";
+            },
+            error: function(xhr) {
+                $delBtn.prop('disabled', false).html(originalDelText);
+                alert("Deletion failed. Ensure you have proper permissions.");
+                console.error("Delete Rejection:", xhr.responseText);
+            }
+        });
+    });
+
     $fileInput.on('change', function(e) {
         const fileName = e.target.files[0] ? e.target.files[0].name : "No file selected";
         $('#fileNameDisplay').text(fileName);
@@ -393,20 +440,18 @@ $(document).ready(function() {
         const formData = new FormData(this);
         const originalBtnText = $btn.html();
         
-        // Formatter for the structured logging
-        const issue = $('#log_issue').val().trim();
-        const action = $('#log_action').val().trim();
-        const result = $('#log_result').val().trim();
-        const oldActions = $('#hidden_actions_taken').val();
+        // 3. FRONTEND SECURITY: Escape the manually constructed log fields
+        const issue = SecurityUtils.escapeHTML($('#log_issue').val().trim());
+        const action = SecurityUtils.escapeHTML($('#log_action').val().trim());
+        const result = SecurityUtils.escapeHTML($('#log_result').val().trim());
+        const oldActions = $('#hidden_actions_taken').val(); 
         
-        // Only append if at least one field has data
         if (issue || action || result) {
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const username = "{{ request.user.username }}";
             
-            // Format the entry neatly
             let logEntry = `[ ${dateStr} | ${timeStr} | ${username} ]\n`;
             if (issue) logEntry += `  >> Issue: ${issue}\n`;
             if (action) logEntry += `  >> Action: ${action}\n`;
@@ -416,6 +461,14 @@ $(document).ready(function() {
             formData.set('actions_taken', finalActions);
         } else {
             formData.set('actions_taken', oldActions);
+        }
+
+        // 4. FRONTEND SECURITY: Convert ALL other HTML tags into harmless strings
+        for (let [key, value] of formData.entries()) {
+            // We skip file attachments and actions_taken (since we already escaped its parts)
+            if (typeof value === 'string' && key !== 'actions_taken' && key !== 'attachment') {
+                formData.set(key, SecurityUtils.escapeHTML(value));
+            }
         }
 
         $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> SYNCING...');
@@ -435,12 +488,12 @@ $(document).ready(function() {
                 $btn.prop('disabled', false).html(originalBtnText);
                 let errorMsg = "Submission failed. Ensure all technical fields are valid.";
                 if(xhr.responseJSON) {
-                    // Check if it's our custom PermissionDenied backend detail
                     if (xhr.responseJSON.detail) {
-                        errorMsg = xhr.responseJSON.detail;
+                        // Double escape API responses to prevent reflection XSS
+                        errorMsg = SecurityUtils.escapeHTML(xhr.responseJSON.detail);
                     } else {
                         const errors = Object.values(xhr.responseJSON).flat();
-                        if(errors.length > 0) errorMsg = "API Error: " + errors[0];
+                        if(errors.length > 0) errorMsg = "API Error: " + SecurityUtils.escapeHTML(errors[0]);
                     }
                 }
                 alert(errorMsg);
