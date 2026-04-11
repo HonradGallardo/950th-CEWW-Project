@@ -560,36 +560,15 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 INTERCEPT UPDATE: Fix empty strings and enforce strict security BEFORE validation
+    # 🚨 INTERCEPT UPDATE: Fix empty strings before validation
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        user = request.user
-        
-        current_owner_id = str(instance.assigned_to.id) if instance.assigned_to else ""
-        req_assigned_to = request.data.get('assigned_to', current_owner_id)
-        new_owner_id = str(req_assigned_to) if req_assigned_to else ""
-        
-        is_owner = (current_owner_id == str(user.id))
-        is_unassigned = (current_owner_id == "")
-        is_superuser = user.is_superuser
-        
-        # 1. STRICT AUTHORIZATION CHECK
-        if is_unassigned:
-            # Unassigned tickets MUST be taken over to be edited
-            if new_owner_id != str(user.id) and not is_superuser:
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("You must take over this incident before editing it.")
-        else:
-            # Assigned tickets can ONLY be edited by the owner or superuser
-            if not is_owner and not is_superuser:
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
-        # 2. Fix DRF validation crash for empty ForeignKeys (Unassigning)
+        # Fix DRF validation crash: If unassigning, remove from data so validation passes
         data = request.data.copy()
         if 'assigned_to' in data and data['assigned_to'] in ['', 'null', 'None']:
-            data['assigned_to'] = None
+            data.pop('assigned_to')
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
@@ -600,27 +579,47 @@ class IncidentViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    # 🚨 PREVIOUS TECH TRACKER
+    # 🚨 STRICT SECURITY & PREVIOUS TECH TRACKER
     def perform_update(self, serializer):
         instance = self.get_object()
+        user = self.request.user
+        
         current_owner = instance.assigned_to
         current_owner_id = str(current_owner.id) if current_owner else ""
         
-        # Get the successfully validated owner
-        new_owner = serializer.validated_data.get('assigned_to', current_owner)
-        new_owner_id = str(new_owner.id) if new_owner else ""
+        # Grab the requested owner directly from request.data to bypass serializer drops
+        req_assigned_to = self.request.data.get('assigned_to', current_owner_id)
+        new_owner_id = str(req_assigned_to) if req_assigned_to else ""
+
+        is_owner = (current_owner_id == str(user.id))
+        is_unassigned = (current_owner_id == "")
+        
+        # 1. STRICT AUTHORIZATION CHECK (Removed superuser bypass)
+        if is_unassigned:
+            if new_owner_id != str(user.id):
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Access Denied: You must take over this incident to your account first.")
+        else:
+            if not is_owner:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
         kwargs = {}
         
+        # 2. OWNERSHIP & HISTORY TRACKING
         if current_owner_id != new_owner_id:
-            # Ownership changed (handoff to someone else OR unassigned)
+            # They are changing ownership! Force the ID update bypassing DRF
+            if new_owner_id == "":
+                kwargs['assigned_to'] = None
+            else:
+                kwargs['assigned_to_id'] = new_owner_id
+
+            # Save the previous technician's name
             if current_owner:
-                # The person who just gave it up / unassigned it becomes the last technician
                 kwargs['last_technician'] = current_owner.username
             else:
                 kwargs['last_technician'] = instance.last_technician
         else:
-            # Keep history intact if owner didn't change
             kwargs['last_technician'] = instance.last_technician
 
         serializer.save(**kwargs)
@@ -628,11 +627,8 @@ class IncidentViewSet(viewsets.ModelViewSet):
     # 🚨 STRICT DELETION SECURITY
     def perform_destroy(self, instance):
         current_owner = instance.assigned_to
-        
-        # Only the current technician (or superuser) can delete
+        # STRICT RULE: ONLY the current assigned technician can delete.
         if current_owner and current_owner.id == self.request.user.id:
-            instance.delete()
-        elif self.request.user.is_superuser:
             instance.delete()
         else:
             from rest_framework.exceptions import PermissionDenied
