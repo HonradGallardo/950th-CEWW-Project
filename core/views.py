@@ -192,19 +192,19 @@ def edit_incident(request, incident_id):
         Q(groups__name__in=['Admin', 'Personnel']) | Q(is_superuser=True)
     ).distinct().order_by('username')
     
-    # 🚨 SECURITY FIX: Calculate edit permissions safely in Python, not in HTML
-    can_edit = False
-    if not incident.assigned_to:
-        can_edit = True  # Unassigned, anyone can claim it
-    elif incident.assigned_to.id == request.user.id:
-        can_edit = True  # The assigned tech can edit
-    elif request.user.is_superuser:
-        can_edit = True  # Superusers can override
+    # 🚨 STRICT UI SECURITY LOCK
+    is_owner = (incident.assigned_to == request.user)
+    is_superuser = request.user.is_superuser
+    is_unassigned = (incident.assigned_to is None)
+    
+    can_edit = is_owner or is_superuser
+    can_take_over = is_unassigned or is_superuser
     
     return render(request, 'core/Admin/edit_incident.html', {
         'incident': incident,
         'all_admins': all_admins,
-        'can_edit': can_edit  # Pass the safe boolean to the template
+        'can_edit': can_edit,
+        'can_take_over': can_take_over
     })
 
 @login_required
