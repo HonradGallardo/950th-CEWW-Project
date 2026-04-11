@@ -1,9 +1,10 @@
+import pyotp
 from django.http import JsonResponse
 from rest_framework import viewsets
 from webauthn import generate_authentication_options, generate_registration_options, verify_registration_response
 from ..models import Asset, IncidentComment, Maintenance, Incident, Notification
 from .serializers import AssetSerializer, ChangePasswordSerializer, IncidentCommentSerializer, MaintenanceSerializer, IncidentSerializer, NotificationSerializer, UserSerializer
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework.views import APIView, settings
@@ -19,6 +20,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.views import LoginView
 import requests
 import json, base64
+from django.db.models.functions import TruncDate
 from django.http import HttpResponse
 from webauthn import generate_authentication_options, verify_authentication_response
 from rest_framework.authentication import SessionAuthentication
@@ -99,6 +101,7 @@ class PasskeyRegisterVerifyAPI(APIView):
             return Response({"status": "success"})
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
 
 # ==========================================
 # PASSKEY LOGIN (For Login Page)
@@ -190,9 +193,11 @@ class PasskeyLoginVerifyAPI(APIView):
 
         except Exception as e:
             return Response({"error": "Biometric verification failed: " + str(e)}, status=400)
-        
-        
-        
+
+
+# ==========================================
+# STANDARD LOGIN + HYBRID MFA (TOTP or EMAIL)
+# ==========================================
 class APILoginView(LoginView):
     template_name = 'registration/login.html'
 
@@ -201,41 +206,53 @@ class APILoginView(LoginView):
             user = form.get_user()
             
             # --- MFA LOGIC CHECK ---
-            mfa_enabled = True # In a real app, this would check a user profile setting or global config
+            mfa_enabled = True # Toggle to turn MFA entirely on/off
 
             if mfa_enabled:
+                # 1. Check if user has an active TOTP Authenticator App setup
+                user_totp = getattr(user, 'totp', None)
                 
-                if not user.email or user.email.strip() == "":
+                if user_totp and user_totp.is_active:
+                    # ROUTE A: Use Authenticator App (Google Auth/Authy)
+                    self.request.session['mfa_user_id'] = user.id
+                    self.request.session['mfa_method'] = 'authenticator'
+                    
                     return JsonResponse({
-                        'status': 'error',
-                        'message': 'MFA is required, but no email is registered to this account. Please contact your system administrator.'
-                    }, status=400)
-                # 1. Generate a 6-digit OTP
-                generated_otp = str(random.randint(100000, 999999))
+                        'status': 'success',
+                        'mfa_required': True 
+                    })
                 
-                # 2. Store pre-auth info in the session securely
-                self.request.session['mfa_user_id'] = user.id
-                self.request.session['mfa_expected_otp'] = generated_otp
+                else:
+                    # ROUTE B: Fallback to Email OTP
+                    if not user.email or user.email.strip() == "":
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': 'MFA is required, but no email or Authenticator app is registered.'
+                        }, status=400)
+                    
+                    generated_otp = str(random.randint(100000, 999999))
+                    
+                    self.request.session['mfa_user_id'] = user.id
+                    self.request.session['mfa_method'] = 'email'
+                    self.request.session['mfa_expected_otp'] = generated_otp
 
-                # 3. Send the OTP via Email
-                subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
-                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
-                try:
-                    send_mail(
-                        subject, message,
-                        getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
-                        [user.email], fail_silently=True,
-                    )
-                except Exception as e:
-                    print(f"Failed to send MFA email: {e}")
+                    subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
+                    message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
+                    try:
+                        send_mail(
+                            subject, message,
+                            getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
+                            [user.email], fail_silently=True,
+                        )
+                    except Exception as e:
+                        print(f"Failed to send MFA email: {e}")
 
-                # 4. Tell the frontend to show the MFA form!
-                return JsonResponse({
-                    'status': 'success',
-                    'mfa_required': True 
-                })
+                    return JsonResponse({
+                        'status': 'success',
+                        'mfa_required': True 
+                    })
             else:
-                # Standard Login (No MFA)
+                # Standard Login (No MFA Active globally)
                 login(self.request, user)
                 return JsonResponse({
                     'status': 'success',
@@ -252,35 +269,93 @@ class APILoginView(LoginView):
 
 
 class VerifyMFAAPI(APIView):
-    """Endpoint to verify the OTP entered during login."""
+    """Endpoint to verify the OTP (Email or Authenticator App) entered during login."""
     permission_classes = [AllowAny]
 
     def post(self, request):
-        otp_code = request.data.get('otp_code')
+        otp_code = str(request.data.get('otp_code', '')).strip()
         user_id = request.session.get('mfa_user_id')
-        expected_otp = request.session.get('mfa_expected_otp')
+        mfa_method = request.session.get('mfa_method')
 
-        # 1. Check if the session expired
-        if not user_id or not expected_otp:
+        # Fallback for old active sessions that didn't have 'mfa_method' saved
+        if user_id and not mfa_method and 'mfa_expected_otp' in request.session:
+            mfa_method = 'email'
+
+        if not user_id or not mfa_method:
             return Response({"message": "Session expired. Please log in again."}, status=400)
 
-        # 2. Verify the Code
-        if str(otp_code) == str(expected_otp):
-            user = User.objects.filter(id=user_id).first()
-            if user:
-                # Success! Log them in officially.
-                login(request, user)
-                
-                # Clean up session data
-                del request.session['mfa_user_id']
-                del request.session['mfa_expected_otp']
-                
-                return Response({"status": "success", "redirect_url": "/role-redirect/"})
-            else:
-                return Response({"message": "User account error."}, status=400)
+        from django.contrib.auth.models import User
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"message": "User account error."}, status=400)
 
-        return Response({"message": "Invalid verification code."}, status=400)
+        is_valid = False
 
+        # Verify Google Authenticator Code
+        if mfa_method == 'authenticator':
+            user_totp = getattr(user, 'totp', None)
+            if user_totp and user_totp.is_active:
+                totp = pyotp.TOTP(user_totp.secret)
+                is_valid = totp.verify(otp_code)
+                
+        # Verify Email Code
+        elif mfa_method == 'email':
+            expected_otp = request.session.get('mfa_expected_otp')
+            is_valid = (otp_code == str(expected_otp))
+
+        if is_valid:
+            # Success! Log them in officially.
+            login(request, user)
+            
+            # Clean up session data
+            request.session.pop('mfa_user_id', None)
+            request.session.pop('mfa_method', None)
+            request.session.pop('mfa_expected_otp', None)
+            
+            return Response({"status": "success", "redirect_url": "/role-redirect/"})
+        else:
+            return Response({"message": "Invalid verification code."}, status=400)
+
+# ==========================================
+# SETUP TOTP API (QR CODE GENERATION)
+# ==========================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def generate_authenticator_qr(request):
+    from core.models import UserTOTP
+    totp_record, created = UserTOTP.objects.get_or_create(user=request.user)
+    
+    provisioning_uri = pyotp.totp.TOTP(totp_record.secret).provisioning_uri(
+        name=request.user.email or request.user.username,
+        issuer_name="950th_CEWW" 
+    )
+    
+    return Response({"qr_uri": provisioning_uri, "secret": totp_record.secret})
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_totp_setup(request):
+    """Verifies the first code to officially link the app to the account."""
+    code = str(request.data.get('code', '')).strip()
+    from core.models import UserTOTP
+    totp_record = UserTOTP.objects.filter(user=request.user).first()
+
+    if not totp_record:
+        return Response({"message": "Setup not initiated."}, status=400)
+
+    # Check if the code they typed matches their new secret
+    totp = pyotp.TOTP(totp_record.secret)
+    if totp.verify(code):
+        totp_record.is_active = True # Officially activate it!
+        totp_record.save()
+        return Response({"status": "success"})
+    else:
+        return Response({"message": "Invalid code. Try again."}, status=400)
+
+
+# ==========================================
+# GENERAL DASHBOARD APIS
+# ==========================================
 class DashboardStatsAPI(APIView):
     """Provides live data for dashboard counters, charts, and tables."""
     authentication_classes = [SessionAuthentication]
@@ -294,12 +369,12 @@ class DashboardStatsAPI(APIView):
             maintenance_count = Maintenance.objects.filter(status='In Progress').count()
             open_incidents_count = Incident.objects.filter(status='Open').count()
 
-            # 2. Asset Distribution (Bar Chart)
+            # 2. Asset Distribution
             asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
             asset_labels = [item['assets_type'] for item in asset_qs]
             asset_totals = [item['total'] for item in asset_qs]
 
-            # 3. Incident Severity (Doughnut Chart)
+            # 3. Incident Severity
             severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
             severity_labels = [item['severity'] for item in severity_qs]
             severity_totals = [item['total'] for item in severity_qs]
@@ -308,7 +383,6 @@ class DashboardStatsAPI(APIView):
             recent_maint = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
             maint_list = [{
                 'id': m.id,
-                # Safe Check: Prevents crash if the DB relationship is missing
                 'asset_name': m.asset.assets_name if m.asset else 'Unknown Asset',
                 'technician_name': m.technician.username if m.technician else 'System',
                 'status': m.status
@@ -326,15 +400,20 @@ class DashboardStatsAPI(APIView):
             today = timezone.now().date()
             date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
             trend_labels = [d.strftime('%a') for d in date_list]  
-            date_to_idx = {d: i for i, d in enumerate(date_list)}
+            
+            # FIX: Format the Python dictionary keys as strings so SQLite can safely match them
+            date_to_idx = {d.strftime('%Y-%m-%d'): i for i, d in enumerate(date_list)}
 
             trend_values = [0] * 7
             inc_trend_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
                 .values('date__date').annotate(count=Count('id'))
             for item in inc_trend_qs:
-                idx = date_to_idx.get(item['date__date'])
+                # Safely convert the database date to a matching string
+                db_date_str = str(item['date__date'])[:10]
+                idx = date_to_idx.get(db_date_str)
                 if idx is not None:
-                    trend_values[idx] = item['count']
+                    # FIX: Use += instead of =
+                    trend_values[idx] += item['count']
 
             # 7. Maintenance Metrics Data
             m_completed = [0] * 7
@@ -342,12 +421,14 @@ class DashboardStatsAPI(APIView):
             maint_trend_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
                 .values('date__date', 'status').annotate(count=Count('id'))
             for item in maint_trend_qs:
-                idx = date_to_idx.get(item['date__date'])
+                db_date_str = str(item['date__date'])[:10]
+                idx = date_to_idx.get(db_date_str)
                 if idx is not None:
+                    # FIX: Use += instead of =
                     if item['status'] == 'Completed':
-                        m_completed[idx] = item['count']
+                        m_completed[idx] += item['count']
                     else:
-                        m_pending[idx] = item['count']
+                        m_pending[idx] += item['count']
 
             return Response({
                 'total_assets': total_assets,
@@ -380,7 +461,6 @@ class PersonnelStatsAPI(APIView):
     def get(self, request):
         total_assets = Asset.objects.count()
         
-        # Format recent maintenance tasks (ADDED: asset_name and maintenance_type)
         recent_maint = Maintenance.objects.select_related('asset', 'technician').order_by('-date')[:20]
         maint_list = [{
             'id': m.id,
@@ -390,7 +470,6 @@ class PersonnelStatsAPI(APIView):
             'maintenance_type': m.maintenance_type
         } for m in recent_maint]
 
-        # Format assigned assets (NEW: For the bottom left table)
         assigned = Asset.objects.filter(assigned_to=request.user).order_by('-date_added')[:20]
         asset_list = [{
             'id': a.id,
@@ -399,7 +478,6 @@ class PersonnelStatsAPI(APIView):
             'date_added': a.date_added.strftime('%d-%m-%Y')
         } for a in assigned]
 
-        # Format recent incidents
         recent_inc = Incident.objects.all().order_by('-date')[:20]
         inc_list = [{
             'id': i.id,
@@ -415,7 +493,7 @@ class PersonnelStatsAPI(APIView):
             'user_info': {'username': request.user.username},
             'recent_maintenance': maint_list,
             'recent_incidents': inc_list,
-            'assigned_assets': asset_list  # Added to the payload
+            'assigned_assets': asset_list  
         })
         
 class UserViewSet(viewsets.ModelViewSet):
@@ -444,7 +522,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 has_profile = hasattr(u, 'profile')
                 img_url = None
                 
-                # Safe image retrieval
                 if has_profile and u.profile.image:
                     try:
                         img_url = u.profile.image.url
@@ -473,7 +550,6 @@ class AssetViewSet(viewsets.ModelViewSet):
         asset = serializer.save(assigned_to=self.request.user)
         self.handle_maintenance_logic(asset)
     
-    # 🚨 UPDATED FILTER LOGIC: Matches Type OR Status
     def get_queryset(self):
         queryset = super().get_queryset()
         category = self.request.query_params.get('category')
@@ -491,7 +567,6 @@ class AssetViewSet(viewsets.ModelViewSet):
         if asset.status == 'Maintenance':
             maint_type = self.request.data.get('maintenance_reason', 'Auto-Generated Repair')
 
-            # ✅ Always update asset field
             asset.maintenance_reason = maint_type
             asset.save(update_fields=['maintenance_reason'])
 
@@ -510,7 +585,6 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
     queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer
 
-    # 🚨 ADDED FILTER LOGIC: Matches Type OR Status
     def get_queryset(self):
         queryset = super().get_queryset()
         category = self.request.query_params.get('category')
@@ -521,14 +595,10 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        # Automatically set the technician to the currently logged-in user
         serializer.save(technician=self.request.user)
 
     def perform_update(self, serializer):
-        # 1. Save the updated maintenance log first
         instance = serializer.save()
-        
-        # 2. SMART LOGIC: If maintenance is completed, automatically activate the asset
         if instance.status == 'Completed':
             asset = instance.asset
             if asset.status != 'Active':
@@ -536,7 +606,6 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
                 asset.save()
 
     def perform_destroy(self, instance):
-        # Clean up the destroy method to avoid save errors on deleted objects
         asset = instance.asset
         asset.status = 'Active'
         asset.save()
@@ -547,7 +616,6 @@ class IncidentViewSet(viewsets.ModelViewSet):
     queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
 
-    # Matches Severity OR Status
     def get_queryset(self):
         queryset = super().get_queryset()
         category = self.request.query_params.get('category')
@@ -558,19 +626,14 @@ class IncidentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        # Automatically set the reporter to whoever created the ticket
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 ADD THIS: Handles the "Take Over" functionality from edit_incident.html
     def perform_update(self, serializer):
-        # Check if the frontend sent the hidden 'take_over=true' flag
         take_over = self.request.data.get('take_over') == 'true'
         
         if take_over:
-            # Reassign the ticket to the current user clicking the button
             serializer.save(assigned_to=self.request.user)
         else:
-            # Normal save without changing ownership
             serializer.save()
 
 class IncidentCommentViewSet(viewsets.ModelViewSet):
@@ -588,36 +651,53 @@ class IncidentCommentViewSet(viewsets.ModelViewSet):
 
 class MonitoringDataAPI(APIView):
     def get(self, request):
-        today = timezone.now().date()
+        now_local = timezone.localtime(timezone.now())
+        today = now_local.date()
+        
         date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
         labels = [d.strftime('%a') for d in date_list]
-        date_to_idx = {d: i for i, d in enumerate(date_list)}
+        
+        # Format keys as YYYY-MM-DD
+        date_to_idx = {d.strftime('%Y-%m-%d'): i for i, d in enumerate(date_list)}
 
         fixed_assets, pending_assets = [0]*7, [0]*7
         new_incidents, resolved_incidents = [0]*7, [0]*7
 
-        # 1. Maintenance Trends
+        # 1. Maintenance Trends (Using TruncDate)
         maint_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
-            .values('date__date', 'status').annotate(count=Count('id'))
+            .annotate(day=TruncDate('date')) \
+            .values('day', 'status').annotate(count=Count('id'))
+            
         for item in maint_qs:
-            idx = date_to_idx.get(item['date__date'])
-            if idx is not None:
-                if item['status'] == 'Completed': fixed_assets[idx] = item['count']
-                else: pending_assets[idx] = item['count']
+            if item['day']:
+                db_date_str = item['day'].strftime('%Y-%m-%d')
+                idx = date_to_idx.get(db_date_str)
+                if idx is not None:
+                    if item['status'] == 'Completed': 
+                        fixed_assets[idx] += item['count']
+                    else: 
+                        pending_assets[idx] += item['count']
 
-        # 2. Incident Trends
+        # 2. Incident Trends (Using TruncDate)
         inc_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
-            .values('date__date', 'status').annotate(count=Count('id'))
+            .annotate(day=TruncDate('date')) \
+            .values('day', 'status').annotate(count=Count('id'))
+            
         for item in inc_qs:
-            idx = date_to_idx.get(item['date__date'])
-            if idx is not None:
-                if item['status'] == 'Resolved': resolved_incidents[idx] = item['count']
-                else: new_incidents[idx] = item['count']
+            if item['day']:
+                # Safely format the TruncDate object into a string
+                db_date_str = item['day'].strftime('%Y-%m-%d')
+                idx = date_to_idx.get(db_date_str)
+                
+                if idx is not None:
+                    if item['status'] in ['Open', 'Investigating']: 
+                        new_incidents[idx] += item['count']
+                    elif item['status'] == 'Resolved': 
+                        resolved_incidents[idx] += item['count']
 
-        # 3. Basic AI Prediction (Linear Growth)
-        # We check if incidents today are higher than the 7-day average
-        avg_incidents = sum(new_incidents) / 7
-        predicted = int(avg_incidents * 30) + 2 # Projection for next 30 days
+        # 3. Basic AI Prediction
+        avg_incidents = sum(new_incidents) / 7 if sum(new_incidents) > 0 else 0
+        predicted = int(avg_incidents * 30) + 2
         is_rising = new_incidents[-1] > avg_incidents
 
         return Response({
@@ -633,7 +713,6 @@ class MonitoringDataAPI(APIView):
         })
         
 class NotificationViewSet(viewsets.ModelViewSet):
-    """API for dynamic notification bell updates."""
     serializer_class = NotificationSerializer 
     permission_classes = [IsAuthenticated]
 
@@ -644,42 +723,32 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Notification.objects.filter(recipient=self.request.user).order_by('-created_at')
     
 class ChangePasswordAPI(APIView):
-    """Endpoint for users to securely update their passwords."""
     def post(self, request, *args, **kwargs):
         serializer = ChangePasswordSerializer(data=request.data)
         
         if serializer.is_valid():
             user = request.user
-            # Verify the old password
             if not user.check_password(serializer.data.get("old_password")):
                 return Response(
                     {"errors": {"old_password": ["Incorrect current password."]}}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Save the new password
             user.set_password(serializer.data.get("new_password"))
             user.save()
-            
-            # Keep the user logged in
             update_session_auth_hash(request, user)
             
             return Response({"status": "success"}, status=status.HTTP_200_OK)
             
-        # If DRF validation fails (e.g., password too short/common), return the errors
         return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ForgotPasswordAPI(APIView):
-    """Handles OTP generation and password resetting for unauthenticated users."""
     permission_classes = [AllowAny]
 
     def post(self, request):
         action = request.data.get('action')
 
-        # ==========================================
-        # STEP 1: VERIFY EMAIL & SEND OTP
-        # ==========================================
         if action == 'send_otp':
             email = request.data.get('email')
             recaptcha_response = request.data.get('g-recaptcha-response')
@@ -689,7 +758,6 @@ class ForgotPasswordAPI(APIView):
             if not recaptcha_response:
                 return Response({'status': 'error', 'message': 'Security check required.'})
 
-            # 1. Verify Google reCAPTCHA
             recaptcha_secret = getattr(settings, 'RECAPTCHA_SECRET_KEY', None)
             if recaptcha_secret:
                 verify_req = requests.post(
@@ -699,15 +767,12 @@ class ForgotPasswordAPI(APIView):
                 if not verify_req.json().get('success'):
                     return Response({'status': 'error', 'message': 'reCAPTCHA verification failed.'})
 
-            # 2. Verify User Exists
             user = User.objects.filter(email=email).first()
             if not user:
                 return Response({'status': 'error', 'message': 'No active personnel account found with that email.'})
 
-            # 3. Generate a 6-digit OTP
             generated_otp = str(random.randint(100000, 999999))
             
-            # 4. Send the Email
             subject = 'SYSTEM ALERT: Password Reset OTP - 950th CEWW'
             message = (
                 f"Attention {user.username},\n\n"
@@ -719,55 +784,39 @@ class ForgotPasswordAPI(APIView):
             
             try:
                 send_mail(
-                    subject,
-                    message,
-                    getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
-                    [email],
-                    fail_silently=False,
+                    subject, message, getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
+                    [email], fail_silently=False,
                 )
             except Exception as e:
                 print(f"Email Error: {e}")
                 return Response({'status': 'error', 'message': 'Failed to transmit OTP email. Check terminal logs.'})
 
-            # 5. Generate the Math Captcha for Step 2
             num3 = random.randint(1, 10)
             num4 = random.randint(1, 10)
             
-            # 6. Store verification data temporarily in the session
             request.session['reset_email'] = email
             request.session['reset_captcha'] = num3 + num4
             request.session['expected_otp'] = generated_otp
 
-            return Response({
-                'status': 'success', 
-                'num3': num3, 
-                'num4': num4
-            })
+            return Response({'status': 'success', 'num3': num3, 'num4': num4})
 
-        # ==========================================
-        # STEP 2: VERIFY OTP & RESET PASSWORD
-        # ==========================================
         elif action == 'reset_password':
             otp = request.data.get('otp')
             new_password = request.data.get('new_password')
             confirm_password = request.data.get('confirm_password')
             captcha_ans = request.data.get('step2_captcha_ans')
 
-            # 1. Validate Form Inputs
             if new_password != confirm_password:
                 return Response({'status': 'error', 'message': 'Passwords do not match.'})
 
-            # 2. Validate Math Captcha
             expected_captcha = request.session.get('reset_captcha')
             if str(captcha_ans) != str(expected_captcha):
                 return Response({'status': 'error', 'message': 'Incorrect math security answer.'})
             
-            # 3. Validate OTP
             expected_otp = request.session.get('expected_otp')
             if str(otp) != str(expected_otp):
                 return Response({'status': 'error', 'message': 'Invalid or expired OTP.'})
 
-            # 4. Update the Password
             email = request.session.get('reset_email')
             if email:
                 user = User.objects.filter(email=email).first()
@@ -775,7 +824,6 @@ class ForgotPasswordAPI(APIView):
                     user.set_password(new_password)
                     user.save()
                     
-                    # Clean up the session data for security
                     request.session.pop('reset_email', None)
                     request.session.pop('reset_captcha', None)
                     request.session.pop('expected_otp', None)

@@ -1,6 +1,8 @@
 {% extends "base.html" %} {% block content %}
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <div class="flex flex-col min-h-screen space-y-6 p-4 md:p-8 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
   <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
@@ -148,6 +150,20 @@
           <h3 class="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Security & Privacy</h3>
         </div>
         <div class="p-6 flex flex-wrap gap-4">
+          
+          <a href="#" id="setup-totp-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 hover:border-indigo-500 transition-all group cursor-pointer">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600">
+                <i class="fas fa-qrcode"></i>
+              </div>
+              <div>
+                <p class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase">Authenticator</p>
+                <p class="text-[10px] font-bold text-indigo-600/70 dark:text-indigo-500/70">Google Auth / Authy</p>
+              </div>
+            </div>
+            <i class="fas fa-plus text-indigo-300 group-hover:text-indigo-500 transition-colors"></i>
+          </a>
+
           <a href="#" id="register-passkey-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-500 transition-all group cursor-pointer">
             <div class="flex items-center gap-4">
               <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
@@ -160,6 +176,7 @@
             </div>
             <i class="fas fa-plus text-emerald-300 group-hover:text-emerald-500 transition-colors"></i>
           </a>
+
           <a href="{% url 'custom_password_change' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-blue-500 transition-all group">
             <div class="flex items-center gap-4">
               <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600">
@@ -185,6 +202,29 @@
             </div>
             <i class="fas fa-chevron-right text-slate-300 group-hover:text-red-500 transition-colors"></i>
           </a>
+
+          <div id="qrCodeContainer" class="hidden w-full mt-2 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center text-center">
+            <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-4">
+              1. Scan this image with Google Authenticator or Authy
+            </p>
+            
+            <div id="qrcode" class="p-3 bg-white border-4 border-slate-100 rounded-xl inline-block shadow-sm"></div>
+            
+            <p class="text-[10px] text-slate-500 mt-4 uppercase tracking-widest">
+              Or enter this secret key manually:
+            </p>
+            <span id="totpSecret" class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm mt-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded"></span>
+            
+            <div class="w-full max-w-xs mt-6 border-t border-slate-200 dark:border-slate-700 pt-4">
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">2. Verify to link account</p>
+                <input type="text" id="totpConfirmCode" maxlength="6" class="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-mono text-xl tracking-[0.5em] focus:ring-2 focus:ring-emerald-500 outline-none mb-3 text-slate-800 dark:text-white" placeholder="••••••">
+                
+                <button id="finishSetupBtn" type="button" class="w-full bg-emerald-600 text-white px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20">
+                  Verify & Link App
+                </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -215,15 +255,12 @@
       }
 
       const formData = new FormData(this);
-      const userId = "{{ user.id }}";
       const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
       $btn.prop("disabled", true).html('<i class="fas fa-sync fa-spin mr-2"></i> SAVING...');
 
       $.ajax({
-        // 1. FIX: Send to the current URL (which triggers your profile_view)
         url: window.location.href, 
-        // 2. FIX: profile_view expects a POST request, not a PATCH
         type: "POST", 
         data: formData,
         processData: false,
@@ -235,7 +272,6 @@
         success: function (response) {
           $btn.removeClass("bg-blue-600").addClass("bg-emerald-600").html('<i class="fas fa-check mr-2"></i> UPDATED');
 
-          // Update UI Text elements
           $("#display-full-name").text(`${$("#first_name_input").val()} ${$("#last_name_input").val()}`);
           $("#display-email").text($("#email_input").val());
           $("#rank-text-display").text($("#rank_select").val());
@@ -246,23 +282,82 @@
         },
         error: function (xhr) {
           $btn.prop("disabled", false).html(originalText);
-          
-          // 3. FIX: Log the actual error to the console so you can see why it failed if it happens again
           console.error("Server Validation Error:", xhr.responseText); 
           alert("Protocol Error: Identity update rejected by server. Check console for details.");
         },
       });
     });
 
-    // --- 2. PASSKEY REGISTRATION LOGIC ---
+    // --- 2. TOTP AUTHENTICATOR SETUP LOGIC (FIXED) ---
+    $('#setup-totp-btn').on('click', function(e) {
+      e.preventDefault();
+      const $btn = $(this);
+      $btn.find('.fa-plus').removeClass('fa-plus').addClass('fa-spinner fa-spin text-indigo-500');
+      
+      $.ajax({
+          url: '/api/totp/generate/',
+          type: 'GET',
+          success: function(response) {
+              $btn.slideUp();
+              $('#qrCodeContainer').removeClass('hidden').hide().slideDown();
+              $('#totpSecret').text(response.secret);
+              $('#qrcode').empty();
+              
+              // FIX: Less dense, pure black, slightly larger
+              new QRCode(document.getElementById("qrcode"), {
+                  text: response.qr_uri,
+                  width: 220,
+                  height: 220,
+                  colorDark : "#000000", 
+                  colorLight : "#ffffff",
+                  correctLevel : QRCode.CorrectLevel.M 
+              });
+          },
+          error: function(xhr) {
+              alert("Failed to generate QR Code. Ensure your session is active.");
+              $btn.find('.fa-spinner').removeClass('fa-spinner fa-spin text-indigo-500').addClass('fa-plus');
+          }
+      });
+    });
+
+    $('#finishSetupBtn').on('click', function() {
+        const code = $('#totpConfirmCode').val().trim();
+        const $btn = $(this);
+        const originalText = $btn.text();
+        const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+
+        if (code.length !== 6) {
+            alert("Please enter the 6-digit code from your app.");
+            return;
+        }
+
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+        $.ajax({
+            url: '/api/totp/verify-setup/',
+            type: 'POST',
+            data: JSON.stringify({ code: code }),
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': csrfToken },
+            success: function(response) {
+                alert("Authenticator successfully linked! You will use it next time you log in.");
+                $('#qrCodeContainer').slideUp();
+                $('#setup-totp-btn').slideDown().find('.fa-spinner').removeClass('fa-spinner fa-spin text-indigo-500').addClass('fa-check text-emerald-500');
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON?.message || "Invalid code. Try again.");
+                $btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+
+    // --- 3. PASSKEY REGISTRATION LOGIC ---
     $('#register-passkey-btn').on('click', async function(e) {
         e.preventDefault();
         
-        // Grab the CSRF token from the existing profile form
         const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
         try {
-            // 1. Get configuration options from Django
             const optionsResponse = await fetch('/api/webauthn/register-options/', {
                 method: 'POST',
                 headers: { 'X-CSRFToken': csrfToken }
@@ -274,10 +369,8 @@
                 return;
             }
 
-            // 2. Trigger the browser's fingerprint/FaceID scanner
             const attestationResponse = await SimpleWebAuthnBrowser.startRegistration(options);
 
-            // 3. Send the cryptographic proof back to Django to save
             const verifyResponse = await fetch('/api/webauthn/register-verify/', {
                 method: 'POST',
                 headers: { 
@@ -295,7 +388,6 @@
                 alert("Verification failed: " + verification.error);
             }
         } catch (error) {
-            // Handle user cancellation gracefully
             if (error.name === 'NotAllowedError') {
                 console.log("User cancelled passkey setup.");
             } else {

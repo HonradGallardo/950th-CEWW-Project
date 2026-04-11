@@ -2,8 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models import JSONField
+import pyotp
 
 
+class UserTOTP(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='totp')
+    # Automatically generates a secure 32-character base32 secret key when created
+    secret = models.CharField(max_length=32, default=pyotp.random_base32)
+    is_active = models.BooleanField(default=False) # Only true AFTER they scan the QR code
+    
 class UserPasskey(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='passkeys')
     name = models.CharField(max_length=100, default="My Authenticator") # e.g. "iPhone 15 Pro"
