@@ -23,7 +23,8 @@
 
         <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-8 space-y-6" id="incidentForm">
             {% csrf_token %}
-            <input type="hidden" name="take_over" id="take_over_flag" value="false">
+            <input type="hidden" name="take_over" value="false">
+            
             <input type="hidden" name="last_technician" id="hidden_last_technician" value="{{ incident.last_technician|default:'' }}">
             <input type="hidden" id="current_owner_name" value="{{ incident.assigned_to.username|default:'' }}">
 
@@ -381,26 +382,32 @@ document.addEventListener("DOMContentLoaded", function() {
     const currentOwnerName = document.getElementById('current_owner_name').value;
     const hiddenLastTech = document.getElementById('hidden_last_technician');
     const displayLastTech = document.getElementById('display_last_technician');
-    const takeOverFlag = document.getElementById('take_over_flag');
     
-    // Original assigned user ID to check if it changed
+    // Store exactly what was loaded from the database
     const originalAssignedId = techDropdown ? techDropdown.value : "";
+    const originalLastTech = hiddenLastTech ? hiddenLastTech.value : "";
 
     if (techDropdown && statusDropdown) {
         techDropdown.addEventListener('change', function() {
-            // Hand-off logic: Track who the previous owner was
+            
+            // PREVIOUS TECH HAND-OFF LOGIC
             if (this.value !== originalAssignedId) {
-                if (currentOwnerName) {
-                    hiddenLastTech.value = currentOwnerName;
-                    displayLastTech.textContent = currentOwnerName;
+                if (currentOwnerName && currentOwnerName !== "") {
+                    // Changing from an existing owner -> The existing owner becomes the "previous"
+                    if(hiddenLastTech) hiddenLastTech.value = currentOwnerName;
+                    if(displayLastTech) displayLastTech.textContent = currentOwnerName;
+                } else {
+                    // Changing from Unassigned -> DO NOT overwrite the DB's previous tech history
+                    if(hiddenLastTech) hiddenLastTech.value = originalLastTech;
+                    if(displayLastTech) displayLastTech.textContent = originalLastTech || "Unlogged";
                 }
-                takeOverFlag.value = "true";
             } else {
-                // If they change it back to the original owner
-                takeOverFlag.value = "false";
+                // Reverted dropdown back to its original state
+                if(hiddenLastTech) hiddenLastTech.value = originalLastTech;
+                if(displayLastTech) displayLastTech.textContent = originalLastTech || "Unlogged";
             }
 
-            // Auto-Status Logic
+            // AUTO STATUS LOGIC
             if (this.value !== "") {
                 if (statusDropdown.value === "Open") {
                     statusDropdown.value = "Investigating";
@@ -519,6 +526,7 @@ $(document).ready(function() {
                 let errorMsg = "Submission failed. Ensure all technical fields are valid.";
                 if(xhr.responseJSON) {
                     if (xhr.responseJSON.detail) {
+                        // Double escape API responses to prevent reflection XSS
                         errorMsg = SecurityUtils.escapeHTML(xhr.responseJSON.detail);
                     } else {
                         const errors = Object.values(xhr.responseJSON).flat();
