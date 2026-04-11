@@ -187,14 +187,24 @@ def add_incident(request):
 def edit_incident(request, incident_id):
     incident = get_object_or_404(Incident, id=incident_id)
 
-    # --- UPDATED: Fetch Admins, Personnel, AND Superusers for the dropdown ---
+    # Fetch Admins, Personnel, AND Superusers for the dropdown
     all_admins = User.objects.filter(
         Q(groups__name__in=['Admin', 'Personnel']) | Q(is_superuser=True)
     ).distinct().order_by('username')
     
+    # 🚨 SECURITY FIX: Calculate edit permissions safely in Python, not in HTML
+    can_edit = False
+    if not incident.assigned_to:
+        can_edit = True  # Unassigned, anyone can claim it
+    elif incident.assigned_to.id == request.user.id:
+        can_edit = True  # The assigned tech can edit
+    elif request.user.is_superuser:
+        can_edit = True  # Superusers can override
+    
     return render(request, 'core/Admin/edit_incident.html', {
         'incident': incident,
-        'all_admins': all_admins  # Pass the list to the template
+        'all_admins': all_admins,
+        'can_edit': can_edit  # Pass the safe boolean to the template
     })
 
 @login_required
