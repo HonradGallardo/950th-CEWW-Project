@@ -544,6 +544,8 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
         instance.delete()
         
         
+import PermissionDenied
+
 class IncidentViewSet(viewsets.ModelViewSet):
     queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
@@ -560,7 +562,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 BACKEND SECURITY: Prevent unauthorized edits and permanently track Previous Technician
+    # 🚨 BACKEND SECURITY: Prevent unauthorized edits & permanently track Previous Tech
     def perform_update(self, serializer):
         instance = self.get_object()
         take_over = self.request.data.get('take_over') == 'true'
@@ -570,10 +572,13 @@ class IncidentViewSet(viewsets.ModelViewSet):
         current_owner_id = str(instance.assigned_to.id) if instance.assigned_to else ""
         new_owner_id = str(new_assigned_to_id) if new_assigned_to_id else ""
         
-        # LOGIC FIX: If there is a current owner, and the ownership is changing, freeze them as the last technician
+        # LOGIC FIX: If there is a current owner, and the ownership is changing, freeze them as the last technician.
+        # If it was unassigned, keep whatever the historical last_technician was.
         if current_owner_id and current_owner_id != new_owner_id:
             kwargs['last_technician'] = instance.assigned_to.username
-        
+        else:
+            kwargs['last_technician'] = instance.last_technician
+            
         is_superuser = self.request.user.is_superuser
 
         if take_over:
@@ -582,23 +587,23 @@ class IncidentViewSet(viewsets.ModelViewSet):
                 kwargs['assigned_to'] = self.request.user
                 serializer.save(**kwargs)
             else:
-                from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("This incident is already assigned to someone else.")
         else:
-            # Strict check: User must be unassigned, the owner, or a superuser to edit
+            # Edit Security: Unassigned, Owned by User, or Superuser
             if not instance.assigned_to or instance.assigned_to == self.request.user or is_superuser:
                 serializer.save(**kwargs)
             else:
-                from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("You do not have permission to modify this incident.")
 
     # 🚨 BACKEND SECURITY: Prevent unauthorized deletions via API
     def perform_destroy(self, instance):
-        if not instance.assigned_to or instance.assigned_to == self.request.user or self.request.user.is_superuser:
+        # Only the explicitly assigned owner or a superuser can delete!
+        # Normal users CANNOT delete unassigned tickets anymore.
+        if instance.assigned_to == self.request.user or self.request.user.is_superuser:
             instance.delete()
         else:
-            from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You do not have permission to delete this incident.")
+        
 class IncidentCommentViewSet(viewsets.ModelViewSet):
     serializer_class = IncidentCommentSerializer
 
