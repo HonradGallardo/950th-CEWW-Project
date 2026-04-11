@@ -566,10 +566,11 @@ class IncidentViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         user = request.user
 
-        # Get existing DB state
+        # Get existing DB state BEFORE DRF processes anything
         current_owner = instance.assigned_to
         current_owner_id = str(current_owner.id) if current_owner else ""
         
+        # We must use a mutable copy of the data
         data = request.data.copy()
         
         # Safely extract the requested owner, accounting for 'null' strings from AJAX
@@ -592,40 +593,41 @@ class IncidentViewSet(viewsets.ModelViewSet):
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
-        # --- 2. PREVIOUS TECH TRACKER & CRASH PREVENTION ---
-        save_kwargs = {}
-        
-        if current_owner_id != new_owner_id:
-            # Ownership is changing!
-            if current_owner:
-                # Log the person who gave it up
-                save_kwargs['last_technician'] = current_owner.username
-            
-            if new_owner_id == "":
-                # UNASSIGNING: Force DB update via kwargs and delete from data to prevent 500 Crash
-                save_kwargs['assigned_to'] = None
-                if 'assigned_to' in data:
-                    del data['assigned_to']
-            else:
-                # RE-ASSIGNING: Force the new ID
-                save_kwargs['assigned_to_id'] = new_owner_id
-                data['assigned_to'] = new_owner_id
+        # 🔥 PREVENT THE CRASH: Hide 'assigned_to' so DRF doesn't choke on validation
+        if 'assigned_to' in data:
+            del data['assigned_to']
 
+        # Let DRF save the normal fields safely (Title, Threat Actor, etc.)
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        
-        # Save the standard form fields PLUS our forced overrides
-        serializer.save(**save_kwargs)
+        serializer.save()
 
-        # 🔥 FORCE DB SYNC: Bypass the serializer entirely for the tracking field
-        if 'last_technician' in save_kwargs:
-            instance.last_technician = save_kwargs['last_technician']
-            instance.save(update_fields=['last_technician'])
+        # --- 2. MANUALLY APPLY OWNERSHIP & HISTORY ---
+        # This completely bypasses DRF to guarantee DB updates without 500 errors
+        db_changed = False
+        
+        if current_owner_id != new_owner_id:
+            # Transferring ownership!
+            if current_owner:
+                # Log the person who gave it up
+                instance.last_technician = current_owner.username
+            
+            if new_owner_id == "":
+                instance.assigned_to = None
+            else:
+                instance.assigned_to_id = new_owner_id
+                
+            db_changed = True
+
+        if db_changed:
+            # Save using a standard clean save (no update_fields restrictions)
+            instance.save()
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
-        return Response(serializer.data)
+        # Re-serialize to return the absolute latest DB state to the frontend
+        return Response(self.get_serializer(instance).data)
 
     # 🚨 STRICT DELETION SECURITY
     def perform_destroy(self, instance):
