@@ -560,7 +560,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 INTERCEPT UPDATE: Bulletproof Logic
+    # BULLETPROOF UPDATE: Replaces 'perform_update' entirely
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -593,7 +593,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
-        # 🔥 PREVENT THE CRASH: Hide 'assigned_to' so DRF doesn't choke on validation
+        # PREVENT THE CRASH: Hide 'assigned_to' so DRF doesn't choke on validation
         if 'assigned_to' in data:
             del data['assigned_to']
 
@@ -629,7 +629,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
         # Re-serialize to return the absolute latest DB state to the frontend
         return Response(self.get_serializer(instance).data)
 
-    # 🚨 STRICT DELETION SECURITY
+    # STRICT DELETION SECURITY
     def perform_destroy(self, instance):
         current_owner = instance.assigned_to
         
