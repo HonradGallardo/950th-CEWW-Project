@@ -542,9 +542,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
         asset.status = 'Active'
         asset.save()
         instance.delete()
-        
-        
-import PermissionDenied
+
 
 class IncidentViewSet(viewsets.ModelViewSet):
     queryset = Incident.objects.all().order_by('-date')
