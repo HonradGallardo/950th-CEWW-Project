@@ -178,6 +178,8 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" nonce="{{ request.csp_nonce }}"></script>
+
 <script nonce="{{ request.csp_nonce }}">
     $(document).ready(function() {
         $('#incidentForm').on('submit', function(e) {
@@ -185,6 +187,14 @@
             const $btn = $('#submitBtn');
             const originalText = $btn.html();
             const formData = new FormData(this);
+
+            // FRONTEND SECURITY: Sanitize all form inputs before sending them to the API
+            for (let [key, value] of formData.entries()) {
+                if (typeof value === 'string') {
+                    formData.set(key, DOMPurify.sanitize(value));
+                }
+            }
+
             $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> PROCESSING...');
 
             $.ajax({
