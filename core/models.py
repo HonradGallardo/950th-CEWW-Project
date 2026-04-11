@@ -95,6 +95,7 @@ class Incident(models.Model):
     
     # --- NEW: ASSIGNED TECHNICIAN & THREAT ACTOR ---
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_incidents')
+    last_technician = models.CharField(max_length=255, blank=True, null=True)
     threat_actor = models.CharField(max_length=100, blank=True, null=True)
     
     # --- THREAT INTEL FIELDS ---
