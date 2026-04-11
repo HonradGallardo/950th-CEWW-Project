@@ -560,8 +560,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 INTERCEPT UPDATE: Consolidated Logic
-    # We bypass perform_update entirely to guarantee strict tracking and security
+    # INTERCEPT UPDATE: Consolidated Logic
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
@@ -593,27 +592,31 @@ class IncidentViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
         # --- 2. PREVIOUS TECH TRACKER ---
-        save_kwargs = {}
+        last_tech_to_save = None
+        
         if current_owner_id != new_owner_id:
             # Ownership is changing!
             if current_owner:
                 # Log the person who gave it up
-                save_kwargs['last_technician'] = current_owner.username
+                last_tech_to_save = current_owner.username
             
             if new_owner_id == "":
                 # Unassigning: Fix DRF crash by forcing None
                 data['assigned_to'] = None 
-                save_kwargs['assigned_to'] = None
             else:
                 # Re-assigning: Force the new ID
                 data['assigned_to'] = new_owner_id
-                save_kwargs['assigned_to_id'] = new_owner_id
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         
-        # Apply the explicitly tracked kwargs to override DRF defaults
-        serializer.save(**save_kwargs)
+        # Save the standard form fields through DRF
+        serializer.save()
+
+        # THE FIX: Forcefully update the DB bypassing the serializer's field restrictions
+        if last_tech_to_save is not None:
+            instance.last_technician = last_tech_to_save
+            instance.save(update_fields=['last_technician'])
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
