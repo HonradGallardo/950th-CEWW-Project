@@ -1,3 +1,4 @@
+import bleach
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from ..models import Asset, IncidentComment, Maintenance, Incident, Notification, Profile
@@ -87,6 +88,30 @@ class IncidentSerializer(serializers.ModelSerializer):
         ]
     extra_kwargs = {'reported_by': {'required': False, 'allow_null': True}}
 
+    # ==========================================
+    # SECURITY PATCH: Backend Data Sanitization
+    # ==========================================
+    def validate(self, data):
+        """
+        Intercepts the incoming data and strips out malicious HTML tags
+        like <script> and <img> to prevent Stored XSS attacks.
+        """
+        # List of fields that accept text input from the user
+        fields_to_sanitize = [
+            'title', 'affected_area', 'description', 'category', 
+            'detection_source', 'linked_asset', 'iocs', 'cve_id', 
+            'root_cause', 'problems_encountered', 'solutions_applied', 
+            'threat_actor', 'actions_taken'
+        ]
+        
+        for field in fields_to_sanitize:
+            if field in data and isinstance(data[field], str):
+                # bleach.clean removes tags and script attributes, keeping only the raw string.
+                data[field] = bleach.clean(data[field], tags=[], strip=True)
+                
+        return super().validate(data)
+
+
 class IncidentCommentSerializer(serializers.ModelSerializer):
     author_name = serializers.ReadOnlyField(source='author.username')
     formatted_time = serializers.DateTimeField(source='created_at', format='%b %d, %H:%M', read_only=True)
@@ -102,6 +127,10 @@ class IncidentCommentSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user'):
             return obj.author == request.user
         return False
+
+    # SECURITY PATCH: Sanitize comments as well
+    def validate_message(self, value):
+        return bleach.clean(value, tags=[], strip=True)
         
 class NotificationSerializer(serializers.ModelSerializer):
     """Formats timestamps for the notification bell UI."""
