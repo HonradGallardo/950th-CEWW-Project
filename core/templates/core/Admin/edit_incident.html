@@ -25,7 +25,7 @@
             {% csrf_token %}
             <input type="hidden" name="take_over" id="take_over_flag" value="false">
             
-            <input type="hidden" name="last_technician" id="hidden_last_technician" value="{{ incident.last_technician|default:'' }}">
+            <input type="hidden" id="hidden_last_technician" value="{{ incident.last_technician|default:'' }}">
             <input type="hidden" id="current_owner_name" value="{{ incident.assigned_to.username|default:'' }}">
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -362,7 +362,6 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
-// 1. XSS PROTECTION: Strict HTML Entity Encoder Framework
 const SecurityUtils = {
     escapeHTML(str) {
         if (typeof str !== 'string') return str;
@@ -391,29 +390,14 @@ document.addEventListener("DOMContentLoaded", function() {
     if (techDropdown && statusDropdown) {
         techDropdown.addEventListener('change', function() {
             
-            // PREVIOUS TECH HAND-OFF LOGIC
+            // VISUAL ONLY: Previous Tech Hand-off
             if (this.value !== originalAssignedId) {
                 if (currentOwnerName && currentOwnerName !== "") {
                     // Changing from an existing owner -> The existing owner becomes the "previous"
-                    if(hiddenLastTech) hiddenLastTech.value = currentOwnerName;
                     if(displayLastTech) displayLastTech.textContent = currentOwnerName;
-                } else {
-                    // Changing from Unassigned -> DO NOT overwrite the DB's previous tech history
-                    if(hiddenLastTech) hiddenLastTech.value = historicalLastTech;
-                    if(displayLastTech) displayLastTech.textContent = historicalLastTech || "Unlogged";
                 }
-                
-                // LOGIC FIX: Only trigger "take_over" if the ticket was unassigned AND the current user is taking it.
-                if (originalAssignedId === "") {
-                    takeOverFlag.value = "true";
-                } else {
-                    takeOverFlag.value = "false";
-                }
-
             } else {
                 // Reverted dropdown back to its original state
-                takeOverFlag.value = "false";
-                if(hiddenLastTech) hiddenLastTech.value = historicalLastTech;
                 if(displayLastTech) displayLastTech.textContent = historicalLastTech || "Unlogged";
             }
 
@@ -503,7 +487,7 @@ $(document).ready(function() {
             formData.set('actions_taken', oldActions);
         }
 
-        // Ensure unchecked checkboxes are tracked as 'false' for DRF PUT requests
+        // Ensure unchecked checkboxes are tracked as 'false' for DRF PATCH requests
         if (!$('#false_pos').is(':checked')) {
             formData.append('is_false_positive', 'false');
         } else {
@@ -528,7 +512,6 @@ $(document).ready(function() {
                 let errorMsg = "Submission failed. Ensure all technical fields are valid.";
                 if(xhr.responseJSON) {
                     if (xhr.responseJSON.detail) {
-                        // Double escape API responses to prevent reflection XSS
                         errorMsg = SecurityUtils.escapeHTML(xhr.responseJSON.detail);
                     } else {
                         const errors = Object.values(xhr.responseJSON).flat();
