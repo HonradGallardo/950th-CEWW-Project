@@ -560,23 +560,21 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 STRICT BACKEND SECURITY & PREVIOUS TECH TRACKER
-    def perform_update(self, serializer):
+    # 🚨 INTERCEPT UPDATE: Fix empty strings and enforce strict security BEFORE validation
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        user = self.request.user
+        user = request.user
         
-        current_owner = instance.assigned_to
-        current_owner_id = str(current_owner.id) if current_owner else ""
-        
-        # Get assigned_to from the request, default to current if not provided
-        req_assigned_to = self.request.data.get('assigned_to', current_owner_id)
+        current_owner_id = str(instance.assigned_to.id) if instance.assigned_to else ""
+        req_assigned_to = request.data.get('assigned_to', current_owner_id)
         new_owner_id = str(req_assigned_to) if req_assigned_to else ""
-
+        
         is_owner = (current_owner_id == str(user.id))
         is_unassigned = (current_owner_id == "")
         is_superuser = user.is_superuser
         
-        # 1. AUTHORIZATION CHECK
+        # 1. STRICT AUTHORIZATION CHECK
         if is_unassigned:
             # Unassigned tickets MUST be taken over to be edited
             if new_owner_id != str(user.id) and not is_superuser:
@@ -588,19 +586,41 @@ class IncidentViewSet(viewsets.ModelViewSet):
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
 
+        # 2. Fix DRF validation crash for empty ForeignKeys (Unassigning)
+        data = request.data.copy()
+        if 'assigned_to' in data and data['assigned_to'] in ['', 'null', 'None']:
+            data['assigned_to'] = None
+
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    # 🚨 PREVIOUS TECH TRACKER
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        current_owner = instance.assigned_to
+        current_owner_id = str(current_owner.id) if current_owner else ""
+        
+        # Get the successfully validated owner
+        new_owner = serializer.validated_data.get('assigned_to', current_owner)
+        new_owner_id = str(new_owner.id) if new_owner else ""
+
         kwargs = {}
         
-        # 2. PREVIOUS TECH TRACKER
         if current_owner_id != new_owner_id:
-            # Ownership is changing (handoff or explicit unassign)
-            if new_owner_id == "":
-                kwargs['assigned_to'] = None
-                
+            # Ownership changed (handoff to someone else OR unassigned)
             if current_owner:
-                # Freeze the old owner into history
+                # The person who just gave it up / unassigned it becomes the last technician
                 kwargs['last_technician'] = current_owner.username
+            else:
+                kwargs['last_technician'] = instance.last_technician
         else:
-            # Keep history intact
+            # Keep history intact if owner didn't change
             kwargs['last_technician'] = instance.last_technician
 
         serializer.save(**kwargs)
@@ -608,7 +628,8 @@ class IncidentViewSet(viewsets.ModelViewSet):
     # 🚨 STRICT DELETION SECURITY
     def perform_destroy(self, instance):
         current_owner = instance.assigned_to
-        # Only the assigned owner or a superuser can delete
+        
+        # Only the current technician (or superuser) can delete
         if current_owner and current_owner.id == self.request.user.id:
             instance.delete()
         elif self.request.user.is_superuser:
