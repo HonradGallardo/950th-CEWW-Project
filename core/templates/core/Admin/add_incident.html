@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://code.jquery.com; connect-src 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; connect-src 'self';">
 
 <div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
@@ -178,7 +178,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
     $(document).ready(function() {
         $('#incidentForm').on('submit', function(e) {
             e.preventDefault(); 
