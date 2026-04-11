@@ -560,58 +560,79 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 BULLETPROOF UPDATE: Fixes Serializer Validation & Forces DB Write
+    # 🚨 BULLETPROOF DIAGNOSTIC UPDATE
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        user = request.user
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            user = request.user
 
-        # 1. Capture exact DB state BEFORE validation
-        current_owner = instance.assigned_to
-        current_owner_id = str(current_owner.id) if current_owner else ""
-        
-        data = request.data.copy()
-        
-        # 2. Extract proposed new owner safely
-        raw_assigned = data.get('assigned_to', current_owner_id)
-        new_owner_id = str(raw_assigned) if raw_assigned not in ['', 'null', 'None', None] else ""
+            current_owner = instance.assigned_to
+            current_owner_id = str(current_owner.id) if current_owner else ""
+            
+            data = request.data.copy()
+            
+            raw_assigned = data.get('assigned_to', current_owner_id)
+            new_owner_id = str(raw_assigned) if raw_assigned not in ['', 'null', 'None', None] else ""
 
-        # 3. Security Checks (Includes Superuser bypass syncing)
-        is_owner = (current_owner_id == str(user.id))
-        is_unassigned = (current_owner_id == "")
-        is_superuser = user.is_superuser
-        
-        if is_unassigned:
-            if new_owner_id != str(user.id) and not is_superuser:
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("Access Denied: You must take over this incident to your account first.")
-        else:
-            if not is_owner and not is_superuser:
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
+            # --- STRICT AUTHORIZATION ---
+            is_owner = (current_owner_id == str(user.id))
+            is_unassigned = (current_owner_id == "")
+            is_superuser = user.is_superuser
+            
+            if is_unassigned:
+                if new_owner_id != str(user.id) and not is_superuser:
+                    return Response({"detail": "Access Denied: You must take over this incident to your account first."}, status=403)
+            else:
+                if not is_owner and not is_superuser:
+                    return Response({"detail": "Access Denied: Only the current technician can modify this incident."}, status=403)
 
-        # 4. 🔥 FIX THE DRF CRASH: Properly format empty assignments as Python None
-        if 'assigned_to' in data and data['assigned_to'] in ['', 'null', 'None']:
-            data['assigned_to'] = None
+            # --- PREVENT DRF VALIDATION CRASHES ---
+            # We hide the assignment from DRF entirely so it stops choking on empty strings
+            if 'assigned_to' in data:
+                del data['assigned_to']
 
-        # 5. Standard DRF Validation & Save
-        serializer = self.get_serializer(instance, data=data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        updated_instance = serializer.save()
+            serializer = self.get_serializer(instance, data=data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            updated_instance = serializer.save()
 
-        # 6. 🔥 DIRECT SQL OVERRIDE: Physically force the previous tech into the database
-        if current_owner_id != new_owner_id:
-            if current_owner:
-                # This bypasses all serializers and writes directly to the hard drive
-                Incident.objects.filter(id=updated_instance.id).update(
-                    last_technician=current_owner.username
-                )
+            # --- MANUALLY APPLY HISTORY SAFELY ---
+            db_changed = False
+            if current_owner_id != new_owner_id:
+                if new_owner_id == "":
+                    updated_instance.assigned_to = None
+                else:
+                    updated_instance.assigned_to_id = new_owner_id
+                    
+                if current_owner:
+                    # 🚨 CRITICAL CHECK: Does your model actually have this field?
+                    if hasattr(updated_instance, 'last_technician'):
+                        updated_instance.last_technician = current_owner.username
+                    else:
+                        # Pushes the error directly to your frontend screen!
+                        return Response({"detail": "DATABASE ERROR: The field 'last_technician' does not exist in your models.py! Please add it."}, status=500)
+                
+                db_changed = True
 
-        # Clear cache to ensure frontend gets fresh data
-        if getattr(instance, '_prefetched_objects_cache', None):
-            instance._prefetched_objects_cache = {}
+            # Save the manual overrides
+            if db_changed:
+                updated_instance.save()
 
-        return Response(serializer.data)
+            if getattr(instance, '_prefetched_objects_cache', None):
+                instance._prefetched_objects_cache = {}
+
+            return Response(self.get_serializer(updated_instance).data)
+
+        except Exception as e:
+            # Let normal form validation errors pass through normally
+            from rest_framework.exceptions import ValidationError
+            if isinstance(e, ValidationError):
+                raise e 
+                
+            # If it's a 500 crash, show the exact Python stack trace in the browser alert!
+            import traceback
+            print(traceback.format_exc())
+            return Response({"detail": f"PYTHON FATAL CRASH: {str(e)}"}, status=500)
 
     # 🚨 STRICT DELETION SECURITY
     def perform_destroy(self, instance):
