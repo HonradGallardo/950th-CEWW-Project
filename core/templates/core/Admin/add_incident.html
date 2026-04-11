@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://code.jquery.com; connect-src 'self';">
+
 <div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
         
@@ -40,13 +42,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Threat / Incident Title <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" id="id_title" required placeholder="e.g. Unauthorized Access Attempt"
+                    <input type="text" name="title" id="id_title" required maxlength="150" placeholder="e.g. Unauthorized Access Attempt"
                         class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
                 
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Threat Actor (Optional)</label>
-                    <input type="text" name="threat_actor" id="id_threat_actor" placeholder="e.g. Unknown, Insider, APT"
+                    <input type="text" name="threat_actor" id="id_threat_actor" maxlength="100" placeholder="e.g. Unknown, Insider, APT"
                         class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
                 
@@ -82,22 +84,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5 p-5 rounded-2xl border border-blue-100 dark:border-blue-900/30 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-900/10 dark:to-indigo-900/5 shadow-sm registration-card">
                     <div class="space-y-2">
                         <label class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Affected Area</label>
-                        <input type="text" name="affected_area" id="id_affected_area" placeholder="e.g. Server Room / HR Dept"
+                        <input type="text" name="affected_area" id="id_affected_area" maxlength="100" placeholder="e.g. Server Room / HR Dept"
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Linked Asset</label>
-                        <input type="text" name="linked_asset" id="id_linked_asset" placeholder="e.g. Workstation-HR-02"
+                        <input type="text" name="linked_asset" id="id_linked_asset" maxlength="100" placeholder="e.g. Workstation-HR-02"
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">Exploited CVE</label>
-                        <input type="text" name="cve_id" id="id_cve_id" placeholder="e.g. CVE-2023-XXXX"
+                        <input type="text" name="cve_id" id="id_cve_id" pattern="^CVE-\d{4}-\d{4,7}$" title="Must be in format CVE-YYYY-NNNN" placeholder="e.g. CVE-2023-XXXX"
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="col-span-1 md:col-span-3 space-y-2">
                         <label class="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-widest">IoCs Found</label>
-                        <input type="text" name="iocs" id="id_iocs" placeholder="e.g. Malicious IPs, URLs, File Hashes"
+                        <input type="text" name="iocs" id="id_iocs" maxlength="500" placeholder="e.g. Malicious IPs, URLs, File Hashes"
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
@@ -155,7 +157,7 @@
                 <label class="font-rajdhani text-[10px] font-black uppercase text-slate-400 tracking-widest flex items-center mt-4">
                     <i class="fas fa-file-lines mr-2 text-slate-400"></i> Detailed Description <span class="text-red-500 ml-1">*</span>
                 </label>
-                <textarea name="description" id="id_description" rows="4" required placeholder="Provide full details of the incident, initial findings, and any immediate actions taken..."
+                <textarea name="description" id="id_description" rows="4" required maxlength="2000" placeholder="Provide full details of the incident, initial findings, and any immediate actions taken..."
                     class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm font-medium text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none custom-input"></textarea>
             </div>
 
@@ -202,11 +204,21 @@
                 },
                 error: function(xhr) {
                     $btn.prop('disabled', false).html(originalText);
+                    
+                    // FRONTEND SECURITY: XSS Prevention on API Error Messages
                     let errorMsg = "System Error: Failed to submit incident. Please check required fields.";
-                    if(xhr.responseJSON) {
-                        const errors = Object.values(xhr.responseJSON).flat();
-                        if(errors.length > 0) errorMsg = "API Error: " + errors[0];
+                    try {
+                        if(xhr.responseJSON) {
+                            const errors = Object.values(xhr.responseJSON).flat();
+                            if(errors.length > 0) {
+                                const safeError = $("<div>").text(errors[0]).html();
+                                errorMsg = "API Error: " + safeError;
+                            }
+                        }
+                    } catch(e) {
+                        console.error("Failed to parse error response.");
                     }
+                    
                     alert(errorMsg);
                     console.error("API Rejection:", xhr.responseText);
                 }

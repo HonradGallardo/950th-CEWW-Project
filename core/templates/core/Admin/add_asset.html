@@ -184,11 +184,18 @@ $(document).ready(function() {
     // SECURITY HELPER: Basic client-side string sanitizer (Defense in Depth against XSS)
     // Note: The backend MUST still validate and sanitize this data.
     function sanitizeInput(input) {
-        if (typeof input !== 'string') return input;
-        return input.replace(/[<>]/g, function(c) {
-            return c === '<' ? '&lt;' : '&gt;';
-        });
-    }
+    if (typeof input !== 'string') return input;
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;',
+        "/": '&#x2F;',
+    };
+    const reg = /[&<>"'/]/ig;
+    return input.replace(reg, (match)=>(map[match]));
+}
 
     // 3. API Save/Update Logic
     $('#assetForm').on('submit', function(e) {
