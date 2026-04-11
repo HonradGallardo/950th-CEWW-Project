@@ -179,7 +179,7 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
-    // 3. Strict XSS Data Encoding Framework
+    // 3. XSS PROTECTION: Strict HTML Entity Encoder Framework
     const SecurityUtils = {
         escapeHTML(str) {
             if (typeof str !== 'string') return str;
@@ -200,7 +200,7 @@
             const originalText = $btn.html();
             const formData = new FormData(this);
 
-            // Replaced DOMPurify with strict HTML Entity Encoding
+            // FRONTEND SECURITY: Convert all HTML tags into harmless strings
             for (let [key, value] of formData.entries()) {
                 if (typeof value === 'string') {
                     formData.set(key, SecurityUtils.escapeHTML(value));
@@ -216,6 +216,7 @@
                 processData: false, 
                 contentType: false, 
                 headers: {
+                    // 4. CSRF PROTECTION: Attaching the Django token to AJAX headers
                     'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                 },
                 success: function(response) {
@@ -232,7 +233,7 @@
                         if(xhr.responseJSON) {
                             const errors = Object.values(xhr.responseJSON).flat();
                             if(errors.length > 0) {
-                                // Double-escape error outputs from API
+                                // Double-escape any error strings returned from the API just in case
                                 const safeError = SecurityUtils.escapeHTML(errors[0]);
                                 errorMsg = "API Error: " + safeError;
                             }
@@ -242,6 +243,7 @@
                     }
                     
                     alert(errorMsg);
+                    console.error("API Rejection:", xhr.responseText);
                 }
             });
         });
