@@ -560,74 +560,70 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 INTERCEPT UPDATE: Fix empty strings before validation
+    # 🚨 INTERCEPT UPDATE: Consolidated Logic
+    # We bypass perform_update entirely to guarantee strict tracking and security
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
+        user = request.user
 
-        # Fix DRF validation crash: If unassigning, remove from data so validation passes
+        # Get existing DB state
+        current_owner = instance.assigned_to
+        current_owner_id = str(current_owner.id) if current_owner else ""
+        
         data = request.data.copy()
-        if 'assigned_to' in data and data['assigned_to'] in ['', 'null', 'None']:
-            data.pop('assigned_to')
+        
+        # Safely extract the requested owner, accounting for 'null' strings from AJAX
+        raw_assigned_to = data.get('assigned_to', current_owner_id)
+        new_owner_id = str(raw_assigned_to) if raw_assigned_to not in ['', 'null', 'None', None] else ""
+
+        # --- 1. STRICT AUTHORIZATION ---
+        is_owner = (current_owner_id == str(user.id))
+        is_unassigned = (current_owner_id == "")
+        
+        if is_unassigned:
+            # Unassigned: Can only take over to themselves
+            if new_owner_id != str(user.id):
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Access Denied: You must take over this incident to your account first.")
+        else:
+            # Assigned: Only the CURRENT technician can edit or re-assign
+            if not is_owner:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
+
+        # --- 2. PREVIOUS TECH TRACKER ---
+        save_kwargs = {}
+        if current_owner_id != new_owner_id:
+            # Ownership is changing!
+            if current_owner:
+                # Log the person who gave it up
+                save_kwargs['last_technician'] = current_owner.username
+            
+            if new_owner_id == "":
+                # Unassigning: Fix DRF crash by forcing None
+                data['assigned_to'] = None 
+                save_kwargs['assigned_to'] = None
+            else:
+                # Re-assigning: Force the new ID
+                data['assigned_to'] = new_owner_id
+                save_kwargs['assigned_to_id'] = new_owner_id
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        
+        # Apply the explicitly tracked kwargs to override DRF defaults
+        serializer.save(**save_kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
 
-    # 🚨 STRICT SECURITY & PREVIOUS TECH TRACKER
-    def perform_update(self, serializer):
-        instance = self.get_object()
-        user = self.request.user
-        
-        current_owner = instance.assigned_to
-        current_owner_id = str(current_owner.id) if current_owner else ""
-        
-        # Grab the requested owner directly from request.data to bypass serializer drops
-        req_assigned_to = self.request.data.get('assigned_to', current_owner_id)
-        new_owner_id = str(req_assigned_to) if req_assigned_to else ""
-
-        is_owner = (current_owner_id == str(user.id))
-        is_unassigned = (current_owner_id == "")
-        
-        # 1. STRICT AUTHORIZATION CHECK (Removed superuser bypass)
-        if is_unassigned:
-            if new_owner_id != str(user.id):
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("Access Denied: You must take over this incident to your account first.")
-        else:
-            if not is_owner:
-                from rest_framework.exceptions import PermissionDenied
-                raise PermissionDenied("Access Denied: Only the current technician can modify this incident.")
-
-        kwargs = {}
-        
-        # 2. OWNERSHIP & HISTORY TRACKING
-        if current_owner_id != new_owner_id:
-            # They are changing ownership! Force the ID update bypassing DRF
-            if new_owner_id == "":
-                kwargs['assigned_to'] = None
-            else:
-                kwargs['assigned_to_id'] = new_owner_id
-
-            # Save the previous technician's name
-            if current_owner:
-                kwargs['last_technician'] = current_owner.username
-            else:
-                kwargs['last_technician'] = instance.last_technician
-        else:
-            kwargs['last_technician'] = instance.last_technician
-
-        serializer.save(**kwargs)
-
     # 🚨 STRICT DELETION SECURITY
     def perform_destroy(self, instance):
         current_owner = instance.assigned_to
-        # STRICT RULE: ONLY the current assigned technician can delete.
+        # Only the current technician can delete
         if current_owner and current_owner.id == self.request.user.id:
             instance.delete()
         else:
