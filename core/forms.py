@@ -1,4 +1,5 @@
 from django import forms
+import bleach
 from django.contrib.auth.models import User, Group
 from .models import Asset, Maintenance, Incident
 
@@ -78,7 +79,6 @@ class AssetForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     email = forms.EmailField(required=True)
     
-    # 🚨 FIX: We remove `required=True` here so the backend logic from views.py controls the group
     role = forms.ModelChoiceField(
         queryset=Group.objects.all(),
         required=False, 
@@ -92,14 +92,27 @@ class UserForm(forms.ModelForm):
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password']
 
+    # 🚨 SECURITY: Strict Backend Input Sanitization
+    # This strips all HTML tags (like <script> or <img>) before saving to the DB
+    def clean_first_name(self):
+        data = self.cleaned_data.get('first_name', '')
+        return bleach.clean(data, tags=[], strip=True)
+
+    def clean_last_name(self):
+        data = self.cleaned_data.get('last_name', '')
+        return bleach.clean(data, tags=[], strip=True)
+
+    def clean_username(self):
+        data = self.cleaned_data.get('username', '')
+        # Additionally strip any weird whitespace that could cause SQLi anomalies
+        return bleach.clean(data, tags=[], strip=True).strip()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # 🚨 FIX: If we are creating a NEW user, make password required
         if not self.instance.pk:
             self.fields['password'].required = True
             
-        # If editing an existing user, pre-select their current group
         if self.instance.pk and self.instance.groups.exists():
             self.fields['role'].initial = self.instance.groups.first()
         

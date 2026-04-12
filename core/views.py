@@ -11,6 +11,7 @@ from .forms import AssetForm, MaintenanceForm, UserForm
 from django.utils import timezone
 from datetime import timedelta
 import bleach
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 
 # --- NAVIGATION & DASHBOARD ---
@@ -232,6 +233,12 @@ def user_list(request):
 
 @login_required
 def add_user(request):
+    # 🚨 SECURITY: RBAC Authorization Check
+    if not (request.user.is_superuser or request.user.groups.filter(name='Admin').exists()):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Unauthorized: Administrator privileges required.'}, status=403)
+        raise PermissionDenied("You do not have permission to manage personnel.")
+
     form = UserForm(request.POST or None, request.FILES or None)
     
     if request.method == 'POST' and form.is_valid():
@@ -244,19 +251,21 @@ def add_user(request):
         user.save() 
         form.save_m2m() 
 
-        # 🚨 ROLE (GROUP) SAVING LOGIC 🚨
-        # Check for either the Django 'role' or the custom 'role_name'
+        # ROLE (GROUP) SAVING LOGIC
         submitted_role = request.POST.get('role') or request.POST.get('role_name') 
         if submitted_role:
-            user.groups.clear() # Clear existing to avoid duplicates
+            user.groups.clear() 
             group = Group.objects.filter(name=submitted_role).first()
             if group:
                 user.groups.add(group)
 
-        # Handle Profile and extra fields
+        # Handle Profile and extra fields (Sanitized)
         profile, created = Profile.objects.get_or_create(user=user)
-        profile.rank = request.POST.get('rank', profile.rank)
-        profile.phone = request.POST.get('phone', profile.phone)
+        safe_rank = bleach.clean(request.POST.get('rank', profile.rank), tags=[], strip=True)
+        safe_phone = bleach.clean(request.POST.get('phone', profile.phone), tags=[], strip=True)
+        
+        profile.rank = safe_rank
+        profile.phone = safe_phone
         
         if 'profile_picture' in request.FILES:
             profile.image = request.FILES['profile_picture']
@@ -270,22 +279,26 @@ def add_user(request):
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({'errors': form.errors}, status=400)
     
-    # Calculate the next ID for the username generator
     last_user = User.objects.order_by('-id').first()
     next_id = (last_user.id + 1) if last_user else 1
         
     return render(request, 'core/Admin/user_form.html', {
         'form': form, 
         'title': 'Add Personnel',
-        'next_id': next_id  # Passed to template
+        'next_id': next_id  
     })
 
 @login_required
 def edit_user(request, user_id):
+    # 🚨 SECURITY: RBAC Authorization Check
+    if not (request.user.is_superuser or request.user.groups.filter(name='Admin').exists()):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Unauthorized: Administrator privileges required.'}, status=403)
+        raise PermissionDenied("You do not have permission to manage personnel.")
+
     target_user = get_object_or_404(User, id=user_id)
     
     if request.method in ['POST', 'PATCH']:
-        # 🚨 FIX: Capture the original hashed password before the form overwrites it
         original_hashed_password = target_user.password
         
         data = request.POST if request.method == 'POST' else QueryDict(request.body)
@@ -296,28 +309,24 @@ def edit_user(request, user_id):
             
             raw_password = form.cleaned_data.get('password')
             if raw_password:
-                # If a new password is provided, hash and set it
                 user.set_password(raw_password)
             else:
-                # 🚨 FIX: If blank, restore the original password to prevent it from being wiped
                 user.password = original_hashed_password
                 
             user.save()
             form.save_m2m()
 
-            # 🚨 FIX: ROLE (GROUP) SAVING LOGIC 🚨
-            # Check for either the Django 'role' or the custom 'role_name'
             submitted_role = request.POST.get('role') or request.POST.get('role_name') 
             if submitted_role:
-                user.groups.clear() # Clear existing roles to prevent multiple assignments
+                user.groups.clear() 
                 group = Group.objects.filter(name=submitted_role).first()
                 if group:
                     user.groups.add(group)
 
-            # Update Profile with the extra fields
+            # Update Profile with sanitized extra fields
             profile, created = Profile.objects.get_or_create(user=user)
-            profile.rank = request.POST.get('rank', profile.rank)
-            profile.phone = request.POST.get('phone', profile.phone)
+            profile.rank = bleach.clean(request.POST.get('rank', profile.rank), tags=[], strip=True)
+            profile.phone = bleach.clean(request.POST.get('phone', profile.phone), tags=[], strip=True)
             
             if 'profile_picture' in request.FILES:
                 profile.image = request.FILES['profile_picture']
@@ -337,6 +346,10 @@ def edit_user(request, user_id):
 
 @login_required
 def delete_user(request, user_id):
+    # 🚨 SECURITY: RBAC Authorization Check
+    if not (request.user.is_superuser or request.user.groups.filter(name='Admin').exists()):
+        raise PermissionDenied("You do not have permission to delete personnel.")
+        
     get_object_or_404(User, id=user_id).delete()
     return redirect('user_list')
 
@@ -475,24 +488,20 @@ def profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     
     if request.method == 'POST':
-        # 1. Handle the Profile Image (FILES)
-        # Match the 'name' attribute from your HTML input
         if 'image' in request.FILES:
             profile.image = request.FILES['image']
         
-        # 2. Handle Profile Fields
-        profile.rank = request.POST.get('rank', profile.rank)
-        profile.phone = request.POST.get('phone', profile.phone)
+        # 🚨 SECURITY: Sanitize direct POST requests to prevent DB Injection
+        profile.rank = bleach.clean(request.POST.get('rank', profile.rank), tags=[], strip=True)
+        profile.phone = bleach.clean(request.POST.get('phone', profile.phone), tags=[], strip=True)
         profile.save()
 
-        # 3. Handle User Model Fields (Email, First Name, Last Name)
         user = request.user
-        user.email = request.POST.get('email', user.email)
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = bleach.clean(request.POST.get('email', user.email), tags=[], strip=True)
+        user.first_name = bleach.clean(request.POST.get('first_name', user.first_name), tags=[], strip=True)
+        user.last_name = bleach.clean(request.POST.get('last_name', user.last_name), tags=[], strip=True)
         user.save()
 
-        # If AJAX, return success response
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({
                 'status': 'success',
