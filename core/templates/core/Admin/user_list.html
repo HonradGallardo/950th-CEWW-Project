@@ -3,6 +3,8 @@
 {% block content %}
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
 
+<div class="hidden">{% csrf_token %}</div>
+
 <div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div id="deleteModalOverlay" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity cursor-pointer"></div>
@@ -14,9 +16,9 @@
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete User</h3>
                         <div class="mt-2">
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this user account? This action cannot be undone.</p>
                         </div>
                     </div>
                 </div>
@@ -337,6 +339,9 @@ $(document).ready(function() {
         showUserDetails(u.id, u.username, u.fullname, u.email, u.role, u.lastlogin, u.joined, u.image, u.rank, u.phone);
     });
 
+    // Modal Triggers
+    $('#deleteModalOverlay, #cancelDeleteBtn').on('click', closeDeleteModal);
+
     window.refreshUserTable = function() {
         $.ajax({
             url: '/api/dashboard-stats/', 
@@ -404,7 +409,6 @@ function setRoleFilter(role, event) {
     }
                    
     resetSearch();
-                   
     performAjaxSearch();
 }
 
@@ -419,7 +423,7 @@ function performAjaxSearch(query) {
     }
 
     $.ajax({
-        url: `/api/core/users/live_search/?q=${q}&role=${currentRole}`,
+        url: `/api/core/users/live_search/?q=${SecurityUtils.escapeHTML(q)}&role=${SecurityUtils.escapeHTML(currentRole)}`,
         type: 'GET',
         success: function(data) {
             updateUserTable(data);
@@ -501,7 +505,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     const safeFullName = SecurityUtils.escapeHTML(fullName);
     const displayName = (safeFullName && safeFullName.trim() !== "") ? safeFullName : safeUsername;
     
-    // Use innerText which natively defends against XSS
+    // 🚨 SECURITY: Use innerText which natively defends against XSS rendering
     document.getElementById('detail-username-text').innerText = safeUsername;
     document.getElementById('detail-name').innerText = displayName;
     document.getElementById('detail-email').innerText = SecurityUtils.escapeHTML(email) || '—';
@@ -536,6 +540,11 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
             }
         }, 50); 
     }
+}
+
+function closeDeleteModal() { 
+    $('#deleteModal').addClass('hidden'); 
+    $('body').css('overflow', 'auto'); 
 }
 </script>
 
