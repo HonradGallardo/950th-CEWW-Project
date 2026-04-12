@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form method="POST" id="userPersonnelForm" class="font-plex w-full max-w-5xl mx-auto mt-8 px-4 sm:px-0 mb-16 transition-colors duration-300" enctype="multipart/form-data">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
+<form method="POST" id="userPersonnelForm" autocomplete="off" class="font-plex w-full max-w-5xl mx-auto mt-8 px-4 sm:px-0 mb-16 transition-colors duration-300" enctype="multipart/form-data">
     {% csrf_token %}
     
     <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -159,7 +161,6 @@
                         <div class="relative group">
                             <select name="role_name" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
                                 <option value="" disabled {% if not form.instance.pk %}selected{% endif %}>Select Role</option>
-                                
                                 <option value="Admin" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Admin' %}selected{% endif %}{% endfor %}{% endif %}>Admin</option>
                                 <option value="Commander" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Commander' %}selected{% endif %}{% endfor %}{% endif %}>Commander</option>
                                 <option value="Personnel" {% if form.instance.pk %}{% for group in form.instance.groups.all %}{% if group.name == 'Personnel' %}selected{% endif %}{% endfor %}{% endif %}>Personnel</option>
@@ -270,7 +271,21 @@
     </div>
 </form>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
+// 🚨 SECURITY: XSS Sanitization Utility
+const SecurityUtils = {
+    escapeHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+};
+
 $(document).ready(function() {
     const $form = $('#userPersonnelForm');
     const $btn = $('#saveUserBtn');
@@ -278,7 +293,7 @@ $(document).ready(function() {
     const $text = $('#btnText');
     const userId = "{{ form.instance.id }}";
     const isEdit = userId && userId !== "None";
-    const nextId = "{{ next_id|default:'' }}"; // ID passed from view
+    const nextId = "{{ next_id|default:'' }}"; 
 
     // --- 1. JQUERY AJAX: ASYNC USER CREATION ---
     $form.on('submit', function(e) {
@@ -296,7 +311,7 @@ $(document).ready(function() {
                 </p>
             `);
             $emailInput.addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10').focus();
-            return; // STOP the submission
+            return; 
         }
 
         // Clear previous AJAX errors
@@ -319,7 +334,7 @@ $(document).ready(function() {
             contentType: false,         
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': '{{ csrf_token }}' // 🚨 SECURITY: CSRF Protection applied
             },
             success: function(response) {
                 // Success visual confirmation
@@ -341,7 +356,9 @@ $(document).ready(function() {
                 if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.errors) {
                     const errors = xhr.responseJSON.errors;
                     for (let fieldName in errors) {
-                        const errorHtml = errors[fieldName].map(err => `
+                        // 🚨 SECURITY: Escape arbitrary backend error messages to prevent DOM XSS
+                        const safeErrors = errors[fieldName].map(err => SecurityUtils.escapeHTML(err));
+                        const errorHtml = safeErrors.map(err => `
                             <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center mt-2 bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20">
                                 <i class="fas fa-exclamation-circle mr-2"></i> ${err}
                             </p>
@@ -350,7 +367,12 @@ $(document).ready(function() {
                         $(`input[name="${fieldName}"]`).addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20');
                     }
                 } else {
-                    alert("System Error: Failed to commit user record to database.");
+                    let errMsg = "System Error: Failed to commit user record to database.";
+                    // 🚨 SECURITY: Escape error strings if extracting from arbitrary payload
+                    if (xhr.status === 403 && xhr.responseJSON && xhr.responseJSON.error) {
+                        errMsg = SecurityUtils.escapeHTML(xhr.responseJSON.error);
+                    }
+                    alert(errMsg);
                 }
             }
         });
@@ -363,8 +385,9 @@ $(document).ready(function() {
         const $username = $('input[name="username"]');
 
         function generateUsername() {
-            const fName = $firstName.val().trim();
-            const lName = $lastName.val().trim();
+            // 🚨 SECURITY: Strip any non-alphabetical characters to prevent weird injections or malformed inputs
+            const fName = $firstName.val().replace(/[^a-zA-Z]/g, '').trim();
+            const lName = $lastName.val().replace(/[^a-zA-Z]/g, '').trim();
 
             let initials = "";
             if (fName) initials += fName.charAt(0).toUpperCase();
@@ -388,6 +411,9 @@ $(document).ready(function() {
     const $passwordField = $('input[name="password"]');
     
     if ($passwordField.length) {
+        // 🚨 SECURITY: Prevent browsers from saving/autofilling the admin's credentials into the user's password field
+        $passwordField.attr('autocomplete', 'new-password');
+
         // Find the specific container we created for the dynamic password field
         const $container = $passwordField.closest('.password-field-container');
         
@@ -424,12 +450,16 @@ $(document).ready(function() {
         // Generate Password
         $('#generatePasswordBtn').on('click', function(e) {
             e.preventDefault();
-            // Generate random strong password
+            // 🚨 SECURITY: Use Cryptographically Secure Pseudo-Random Number Generator (CSPRNG)
+            const cryptoObj = window.crypto || window.msCrypto;
             const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
             let password = "";
-            for (let i = 0; i < 14; i++) {
-                const randomNumber = Math.floor(Math.random() * chars.length);
-                password += chars.substring(randomNumber, randomNumber + 1);
+            let randomValues = new Uint32Array(16);
+            
+            cryptoObj.getRandomValues(randomValues);
+            
+            for (let i = 0; i < 16; i++) {
+                password += chars[randomValues[i] % chars.length];
             }
             
             // Set password and change type to text so the user can copy/view it
@@ -448,7 +478,7 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
