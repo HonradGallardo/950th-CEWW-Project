@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://code.jquery.com; connect-src 'self'; object-src 'none'; base-uri 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
 
 <div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <form method="POST" class="p-4 sm:p-8 space-y-6" id="incidentForm">
+        <form method="POST" class="p-4 sm:p-8 space-y-6" id="incidentForm" autocomplete="off">
             {% csrf_token %}
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -200,7 +200,7 @@
             const originalText = $btn.html();
             const formData = new FormData(this);
 
-            // FRONTEND SECURITY: Convert all HTML tags into harmless strings
+            // 🚨 FRONTEND SECURITY: Convert all HTML tags into harmless strings
             for (let [key, value] of formData.entries()) {
                 if (typeof value === 'string') {
                     formData.set(key, SecurityUtils.escapeHTML(value));
@@ -233,7 +233,7 @@
                         if(xhr.responseJSON) {
                             const errors = Object.values(xhr.responseJSON).flat();
                             if(errors.length > 0) {
-                                // Double-escape any error strings returned from the API just in case
+                                // 🚨 Double-escape any error strings returned from the API just in case
                                 const safeError = SecurityUtils.escapeHTML(errors[0]);
                                 errorMsg = "API Error: " + safeError;
                             }
@@ -250,7 +250,7 @@
     });
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }

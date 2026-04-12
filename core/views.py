@@ -166,18 +166,25 @@ def delete_maintenance(request, pk):
 # --- INCIDENT MODULE ---
 @login_required
 def incident_list(request):
+    if request.user.groups.filter(name='Regular').exists() and not request.user.is_superuser:
+        raise PermissionDenied("Access Denied: Insufficient clearance.")
     return render(request, 'core/Admin/incident_list.html', {'incidents': Incident.objects.all()})
 
 @login_required
 def add_incident(request):
+    if request.user.groups.filter(name='Regular').exists() and not request.user.is_superuser:
+        raise PermissionDenied("Access Denied: Insufficient clearance.")
+        
     if request.method == 'POST':
-        # SECURITY PATCH: Sanitize the inputs before saving to the database
+        # 🚨 SECURITY PATCH: Aggressive sanitization of all raw POST fields
         safe_title = bleach.clean(request.POST.get('title', ''), tags=[], strip=True)
         safe_area = bleach.clean(request.POST.get('affected_area', ''), tags=[], strip=True)
+        safe_threat = bleach.clean(request.POST.get('threat_actor', ''), tags=[], strip=True)
         
         Incident.objects.create(
             title=safe_title, 
-            severity=request.POST.get('severity'), 
+            threat_actor=safe_threat,
+            severity=bleach.clean(request.POST.get('severity', 'Low'), tags=[], strip=True), 
             affected_area=safe_area, 
             reported_by=request.user
         )
@@ -186,14 +193,15 @@ def add_incident(request):
 
 @login_required
 def edit_incident(request, incident_id):
+    if request.user.groups.filter(name='Regular').exists() and not request.user.is_superuser:
+        raise PermissionDenied("Access Denied: Insufficient clearance.")
+        
     incident = get_object_or_404(Incident, id=incident_id)
 
-    # Fetch Admins, Personnel, AND Superusers for the dropdown
     all_admins = User.objects.filter(
         Q(groups__name__in=['Admin', 'Personnel']) | Q(is_superuser=True)
     ).distinct().order_by('username')
     
-    # 🚨 STRICT UI SECURITY LOCK
     is_owner = (incident.assigned_to == request.user)
     is_superuser = request.user.is_superuser
     is_unassigned = (incident.assigned_to is None)
@@ -210,7 +218,16 @@ def edit_incident(request, incident_id):
 
 @login_required
 def delete_incident(request, incident_id):
-    get_object_or_404(Incident, id=incident_id).delete()
+    # 🚨 SECURITY: Strict Deletion Authorization
+    if not (request.user.is_superuser or request.user.groups.filter(name='Admin').exists()):
+        raise PermissionDenied("Access Denied: Only Administrators can delete incident records.")
+        
+    incident = get_object_or_404(Incident, id=incident_id)
+    
+    # 🚨 SECURITY: Require POST to prevent CSRF URL triggering
+    if request.method == 'POST':
+        incident.delete()
+        
     return redirect('incident_list')
 
 # --- USERS & PERSONNEL ---
