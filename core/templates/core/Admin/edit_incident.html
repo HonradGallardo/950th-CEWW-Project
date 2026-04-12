@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; connect-src 'self'; object-src 'none'; base-uri 'self';">
 
 <div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
@@ -21,7 +21,7 @@
             {% endif %}
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-8 space-y-6" id="incidentForm" autocomplete="off">
+        <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-8 space-y-6" id="incidentForm">
             {% csrf_token %}
             <input type="hidden" name="take_over" id="take_over_flag" value="false">
             
@@ -362,18 +362,24 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
-const SecurityUtils = {
-    escapeHTML(str) {
-        if (typeof str !== 'string') return str;
-        return str.replace(/[&<>'"]/g, tag => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            "'": '&#39;',
-            '"': '&quot;'
-        }[tag] || tag));
-    }
-};
+    // 🚨 SECURITY: Upgraded Utility to completely STRIP HTML rather than just escape it
+    const SecurityUtils = {
+        escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        },
+        stripHTML(str) {
+            if (typeof str !== 'string') return str;
+            // This aggressively destroys any <tags> preventing them from even reaching the DB
+            return str.replace(/(<([^>]+)>)/gi, "").trim();
+        }
+    };
 
 document.addEventListener("DOMContentLoaded", function() {
     const techDropdown = document.getElementById('editTechnician');
@@ -381,6 +387,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const currentOwnerName = document.getElementById('current_owner_name').value;
     const hiddenLastTech = document.getElementById('hidden_last_technician');
     const displayLastTech = document.getElementById('display_last_technician');
+    const takeOverFlag = document.getElementById('take_over_flag');
     
     // Store exactly what was loaded from the database
     const originalAssignedId = techDropdown ? techDropdown.value : "";
@@ -421,6 +428,7 @@ $(document).ready(function() {
     const apiUrl = isEdit ? `/api/incidents/${incidentId}/` : '/api/incidents/';
     const apiMethod = isEdit ? 'PATCH' : 'POST'; 
 
+    // 2. DELETE BUTTON LOGIC + CSRF
     $('#deleteBtn').on('click', function() {
         if(!confirm("SECURITY WARNING: Are you sure you want to permanently delete this incident? This action cannot be undone.")) {
             return;
@@ -488,11 +496,10 @@ $(document).ready(function() {
             formData.set('is_false_positive', 'true');
         }
 
-        // 🚨 FRONTEND SECURITY: Convert all HTML tags into harmless strings across all inputs
-        // This ensures XSS payloads are neutralized before hitting the API
+        // 🚨 FRONTEND SECURITY: Physically strip malicious tags to make them disappear
         for (let [key, value] of formData.entries()) {
             if (typeof value === 'string') {
-                formData.set(key, SecurityUtils.escapeHTML(value));
+                formData.set(key, SecurityUtils.stripHTML(value));
             }
         }
 
@@ -504,10 +511,7 @@ $(document).ready(function() {
             data: formData,
             processData: false, 
             contentType: false, 
-            headers: { 
-                // 🚨 CSRF PROTECTION
-                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() 
-            },
+            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
             success: function(response) {
                 $btn.removeClass('bg-blue-600').addClass('bg-emerald-600').html('<i class="fas fa-check mr-2"></i> LOGGED');
                 setTimeout(() => { window.location.href = "{% url 'incident_list' %}"; }, 1000);
@@ -517,7 +521,6 @@ $(document).ready(function() {
                 let errorMsg = "Submission failed. Ensure all technical fields are valid.";
                 if(xhr.responseJSON) {
                     if (xhr.responseJSON.detail) {
-                        // Double-escape any error strings returned from the API just in case
                         errorMsg = SecurityUtils.escapeHTML(xhr.responseJSON.detail);
                     } else {
                         const errors = Object.values(xhr.responseJSON).flat();
