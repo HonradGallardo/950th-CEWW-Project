@@ -23,17 +23,59 @@
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+    /* 📱 RESPONSIVE DESIGN: Custom Breakpoints & Smooth Transitions */
+    .app-wrapper {
+        max-width: 1440px;
+        margin: 0 auto;
+        border-left: 1px solid rgba(226, 232, 240, 0.5); /* slate-200 */
+        border-right: 1px solid rgba(226, 232, 240, 0.5);
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dark .app-wrapper {
+        border-color: rgba(30, 41, 59, 0.8); /* slate-800 */
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Fluid chat padding and message widths */
+    .dynamic-p-wrapper { transition: padding 0.4s ease-in-out; }
+    .msg-content-wrapper { transition: max-width 0.4s ease-in-out; width: 100%; }
+
+    /* Ultra-Small / Base */
+    @media (max-width: 489px) {
+        .dynamic-p-wrapper { padding: 1rem; }
+        .msg-content-wrapper { max-width: 92%; }
+    }
+    
+    /* Small Breakpoint */
+    @media (min-width: 490px) {
+        .dynamic-p-wrapper { padding: 1.5rem; }
+        .msg-content-wrapper { max-width: 85%; }
+    }
+
+    /* Medium Breakpoint */
+    @media (min-width: 768px) {
+        .dynamic-p-wrapper { padding: 2rem; }
+        .msg-content-wrapper { max-width: 75%; }
+    }
+
+    /* Large Breakpoint */
+    @media (min-width: 1040px) {
+        .dynamic-p-wrapper { padding: 2.5rem; }
+        .msg-content-wrapper { max-width: 65%; }
+    }
 </style>
 
-<div class="font-plex flex flex-col h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
+<div class="app-wrapper font-plex flex flex-col h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 overflow-hidden text-slate-900 dark:text-slate-100 transition-colors duration-300">
     
-    <header class="shrink-0 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between z-10 relative">
+    <header class="shrink-0 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between z-10 relative transition-all duration-300">
         <div class="flex items-center gap-3 md:gap-4">
             <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                 <i class="fas fa-bars"></i>
             </button>
             
-            <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white shadow-sm">
+            <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white shadow-sm transition-all duration-300">
                 <i class="fas fa-ticket-alt text-sm"></i>
             </div>
 
@@ -45,7 +87,7 @@
 
         <div class="flex items-center gap-3">
             <a href="{% url 'tickets:admin_tickets' %}" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition-all">
-                <span>Exit Case</span>
+                <span class="hidden sm:inline">Exit Case</span>
                 <i class="fas fa-times"></i>
             </a>
         </div>
@@ -53,7 +95,7 @@
 
     <div class="flex-1 flex overflow-hidden relative">
         
-        <aside id="leftSidebar" class="absolute inset-y-0 left-0 z-20 w-80 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none">
+        <aside id="leftSidebar" class="absolute inset-y-0 left-0 z-20 w-80 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-400 ease-in-out shadow-2xl lg:shadow-none">
             
             <div class="shrink-0 p-5 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex justify-between items-start mb-3">
@@ -61,14 +103,14 @@
                         <p class="font-rajdhani text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Case Subject</p>
                         <h2 class="font-rajdhani text-base font-bold leading-snug line-clamp-2">{{ ticket.subject }}</h2>
                     </div>
-                    <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md">
+                    <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
                         <i class="fas fa-chevron-left text-sm"></i>
                     </button>
                 </div>
 
                 <div class="flex flex-wrap gap-2 mt-4">
                     <span id="sidebarStatusBadge" 
-                        class="px-2.5 py-1 rounded-md text-xs font-medium border
+                        class="px-2.5 py-1 rounded-md text-xs font-medium border transition-colors duration-300
                         {% if ticket.status == 'In Progress' or ticket.status == 'Under Review' %}
                             bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20
                         {% elif ticket.status == 'Resolved' or ticket.status == 'Completed' %}
@@ -78,7 +120,7 @@
                         {% endif %}">
                         {{ ticket.status }}
                     </span>
-                    <span class="px-2.5 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 {% if ticket.priority == 'High' or ticket.priority == 'Critical' %}text-red-600 dark:text-red-400{% else %}text-slate-600 dark:text-slate-300{% endif %}">
+                    <span class="px-2.5 py-1 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 transition-colors duration-300 {% if ticket.priority == 'High' or ticket.priority == 'Critical' %}text-red-600 dark:text-red-400{% else %}text-slate-600 dark:text-slate-300{% endif %}">
                         <i class="fas fa-bolt mr-1 text-[10px]"></i> {{ ticket.priority|default:"Medium" }}
                     </span>
                 </div>
@@ -93,21 +135,21 @@
                         <button type="button" onclick="filterByTech('GROUP_CHAT'); closeMobileSidebar();" id="tab-GROUP_CHAT" 
                                 data-active-bg="bg-indigo-50 dark:bg-indigo-900/20" data-active-border="border-indigo-200 dark:border-indigo-800"
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
-                            <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 transition-colors duration-300">
                                 <i class="fas fa-users"></i>
                             </div>
                             <div class="text-left overflow-hidden flex-1">
                                 <p class="text-sm font-semibold truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Group Discussion</p>
-                                <p class="text-xs text-slate-500 truncate">All Staff & User</p>
+                                <p class="text-xs text-slate-500 truncate transition-colors duration-300">All Staff & User</p>
                             </div>
                         </button>
 
-                        <div class="h-px bg-slate-200 dark:bg-slate-800 my-3"></div>
+                        <div class="h-px bg-slate-200 dark:bg-slate-800 my-3 transition-colors duration-300"></div>
                         
                         <button type="button" onclick="filterByTech('{{ request.user.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ request.user.username }}" 
                                 data-active-bg="bg-blue-50 dark:bg-blue-900/20" data-active-border="border-blue-200 dark:border-blue-800"
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800 transition-colors duration-300">
                                 {% if request.user.profile.image %}
                                     <img src="{{ request.user.profile.image.url }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" class="w-full h-full object-cover">
                                 {% else %}
@@ -116,7 +158,7 @@
                             </div>
                             <div class="text-left overflow-hidden flex-1">
                                 <p class="text-sm font-semibold truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">My Chat</p>
-                                <p class="text-xs text-slate-500 truncate">{{ request.user.username }}</p>
+                                <p class="text-xs text-slate-500 truncate transition-colors duration-300">{{ request.user.username }}</p>
                             </div>
                         </button>
 
@@ -133,7 +175,7 @@
                             </div>
                             <div class="text-left overflow-hidden flex-1">
                                 <p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{{ admin.get_full_name|default:admin.username }}</p>
-                                <p class="text-xs text-slate-500 truncate">{{ admin.username }}</p>
+                                <p class="text-xs text-slate-500 truncate transition-colors duration-300">{{ admin.username }}</p>
                             </div>
                         </button>
                         {% endfor %}
@@ -146,27 +188,27 @@
                     </h3>
                     
                     <div class="space-y-4">
-                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50">
-                            <div class="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700/50">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
+                            <div class="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
                                 <p class="text-xs text-slate-500 mb-1">Ticket Type</p>
                                 <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">{{ ticket.ticket_type|default:"New Account Provisioning" }}</p>
                             </div>
                             
                             <div class="space-y-2">
                                 <div class="flex flex-col">
-                                    <span class="text-xs text-slate-500">Submitted By</span>
+                                    <span class="text-xs text-slate-500 transition-colors duration-300">Submitted By</span>
                                     <span class="text-sm font-medium">{{ ticket.user.username|default:"SR-000007" }} <span class="text-xs text-slate-400 ml-1">({{ ticket.user.profile.rank|default:"Airman" }})</span></span>
                                 </div>
                                 <div class="flex flex-col">
-                                    <span class="text-xs text-slate-500">Contact</span>
+                                    <span class="text-xs text-slate-500 transition-colors duration-300">Contact</span>
                                     <span class="text-sm font-medium truncate">{{ ticket.user.email|default:"admin@email.com" }}</span>
-                                    <span class="text-sm text-slate-600 dark:text-slate-400">{{ ticket.user.profile.phone|default:"+63 123 4567 890" }}</span>
+                                    <span class="text-sm text-slate-600 dark:text-slate-400 transition-colors duration-300">{{ ticket.user.profile.phone|default:"+63 123 4567 890" }}</span>
                                 </div>
                             </div>
                         </div>
 
                         {% if ticket.ticket_type == 'Account Creation' %}
-                            <div class="space-y-1.5 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/50">
+                            <div class="space-y-1.5 mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
                                 <div class="grid grid-cols-3 gap-2 text-sm">
                                     <span class="text-slate-500">First:</span>
                                     <span class="col-span-2 font-medium">{{ ticket.first_name }}</span>
@@ -183,19 +225,19 @@
                         {% endif %}
 
                         <div id="dynamicInquiryContent" class="mt-4">
-                            <p class="text-sm text-slate-500 italic">Loading conversation details...</p>
+                            <p class="text-sm text-slate-500 italic transition-colors duration-300">Loading conversation details...</p>
                         </div>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 relative z-0">
+        <main class="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 relative z-0 transition-colors duration-300">
             
-            <div class="shrink-0 flex items-center px-4 md:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#1E293B] backdrop-blur-md sticky top-0 z-10 w-full">
+            <div class="shrink-0 flex items-center px-4 md:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#1E293B] backdrop-blur-md sticky top-0 z-10 w-full transition-colors duration-300">
                 <div class="flex gap-6 md:gap-8 flex-1">
-                    <button type="button" onclick="switchTab('feed')" id="feedTabBtn" class="font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest">Feed</button>
-                    <button type="button" onclick="switchTab('details')" id="detailsTabBtn" class="font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest">Ticket Details</button>
+                    <button type="button" onclick="switchTab('feed')" id="feedTabBtn" class="font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-all uppercase tracking-widest">Feed</button>
+                    <button type="button" onclick="switchTab('details')" id="detailsTabBtn" class="font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-all uppercase tracking-widest">Ticket Details</button>
                 </div>
                 
                 <button type="button" onclick="toggleRightSidebar()" id="mainHeaderToggleBtn" title="Expand Sidebar" class="hidden items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
@@ -207,24 +249,24 @@
                 </button>
             </div>
 
-            <div id="feedView" class="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-900/20">
-                <div class="shrink-0 px-6 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center shadow-sm z-0">
-                    <span id="chattingWithLabel" class="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+            <div id="feedView" class="flex-1 flex flex-col overflow-hidden bg-slate-50/50 dark:bg-slate-900/20 transition-colors duration-300">
+                <div class="shrink-0 px-6 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center shadow-sm z-0 transition-colors duration-300">
+                    <span id="chattingWithLabel" class="text-xs font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-2 transition-colors duration-300">
                     </span>
-                    <span id="readOnlyIndicator" class="hidden text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2.5 py-1 rounded-md uppercase tracking-wide border border-red-200 dark:border-red-800/50">Read Only</span>
+                    <span id="readOnlyIndicator" class="hidden text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2.5 py-1 rounded-md uppercase tracking-wide border border-red-200 dark:border-red-800/50 transition-colors duration-300">Read Only</span>
                 </div>
 
                 <div class="flex-1 overflow-y-auto custom-scrollbar min-h-0" id="chatBox">
-                    <div id="dynamicMessages" class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8 space-y-6"></div>
+                    <div id="dynamicMessages" class="max-w-5xl mx-auto dynamic-p-wrapper space-y-6"></div>
                 </div>
 
-                <div id="messageInputContainer" class="shrink-0 p-4 md:p-6 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 z-10">
-                    <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-3 mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700"></div>
+                <div id="messageInputContainer" class="shrink-0 p-4 md:p-6 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 z-10 transition-colors duration-300">
+                    <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-3 mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors duration-300"></div>
                     
                     <form onsubmit="sendMessage(event)" id="chatForm" class="max-w-5xl mx-auto flex items-end gap-3">
                         {% csrf_token %}
                         <div class="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500 transition-all shadow-sm flex flex-col">
-                            <div class="px-3 py-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-800/30">
+                            <div class="px-3 py-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-800/30 transition-colors duration-300">
                                 <div class="flex items-center">
                                     <input type="file" id="chatFileInput" multiple class="hidden" onchange="handleFilePreview(event)">
                                     <button type="button" onclick="document.getElementById('chatFileInput').click()" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50" title="Attach Files">
@@ -242,16 +284,16 @@
                 </div>
             </div>
 
-            <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 p-6 md:p-8 lg:p-12">
-                <form id="editTicketForm" onsubmit="updateTicketAdmin(event)" class="max-w-4xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8">
+            <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 p-6 md:p-8 lg:p-12 transition-colors duration-300">
+                <form id="editTicketForm" onsubmit="updateTicketAdmin(event)" class="max-w-4xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8 transition-colors duration-300">
                     {% csrf_token %}
                     
-                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4 transition-colors duration-300">
                         <div>
                             <h3 class="font-rajdhani text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                                 <i class="fas fa-sliders-h text-blue-500"></i> Technical Details
                             </h3>
-                            <p class="text-sm text-slate-500 mt-1">Manage routing, priority, and internal notes.</p>
+                            <p class="text-sm text-slate-500 mt-1 transition-colors duration-300">Manage routing, priority, and internal notes.</p>
                         </div>
                         <div class="flex items-center gap-3">
                             <button type="button" onclick="deleteTicket()" 
@@ -269,14 +311,14 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2 space-y-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Subject</label>
-                            <input type="text" id="editSubject" value="{{ ticket.subject }}" readonly class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-500 cursor-not-allowed focus:outline-none">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300">Subject</label>
+                            <input type="text" id="editSubject" value="{{ ticket.subject }}" readonly class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-500 cursor-not-allowed focus:outline-none transition-colors duration-300">
                         </div>
 
                         <div class="md:col-span-2 space-y-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Assign Technician</label>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300">Assign Technician</label>
                             <select id="editTechnician" {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify ownership"{% endif %}
-                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800 transition-colors duration-300">
                                 <option value="">Unassigned</option>
                                 {% for admin in all_admins %}
                                     <option value="{{ admin.id }}" {% if ticket.technician.id == admin.id %}selected{% endif %}>
@@ -285,18 +327,18 @@
                                 {% endfor %}
                             </select>
                             
-                            <div class="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/50 text-xs">
+                            <div class="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/50 text-xs transition-colors duration-300">
                                 <i class="fas fa-history text-slate-400"></i>
                                 <span class="text-slate-500">Previous Handler:</span>
-                                <span id="lastTechDisplay" class="font-medium text-slate-700 dark:text-slate-300">{{ ticket.last_technician|default:"Unlogged" }}</span>
+                                <span id="lastTechDisplay" class="font-medium text-slate-700 dark:text-slate-300 transition-colors duration-300">{{ ticket.last_technician|default:"Unlogged" }}</span>
                             </div>
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Ticket Status</label>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300">Ticket Status</label>
                             <select name="status" id="editStatus" 
                                     {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
-                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800 transition-colors duration-300">
                                 <option value="Pending" {% if ticket.status == 'Pending' %}selected{% endif %}>Pending</option>
                                 <option value="In Progress" {% if ticket.status == 'In Progress' %}selected{% endif %}>In Progress</option>
                                 <option value="Under Review" {% if ticket.status == 'Under Review' %}selected{% endif %}>Under Review</option>
@@ -307,10 +349,10 @@
                         </div>
 
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Priority Level</label>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300">Priority Level</label>
                             <select name="priority" id="editPriority" 
                                     {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
-                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">
+                                    class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800 transition-colors duration-300">
                                 <option value="Low" {% if ticket.priority == 'Low' %}selected{% endif %}>Low</option>
                                 <option value="Medium" {% if ticket.priority == 'Medium' %}selected{% endif %}>Medium</option>
                                 <option value="High" {% if ticket.priority == 'High' %}selected{% endif %}>High</option>
@@ -318,45 +360,45 @@
                         </div>
 
                         <div class="md:col-span-2 space-y-2 mt-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Internal Technical Description</label>
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 transition-colors duration-300">Internal Technical Description</label>
                             <textarea name="description" id="editDesc" rows="6" 
                                       {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can modify this"{% endif %}
-                                      class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow custom-scrollbar disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800">{{ ticket.description }}</textarea>
-                            <p class="text-xs text-slate-500">Only visible to internal staff members.</p>
+                                      class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-shadow custom-scrollbar disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:dark:bg-slate-800 transition-colors duration-300">{{ ticket.description }}</textarea>
+                            <p class="text-xs text-slate-500 transition-colors duration-300">Only visible to internal staff members.</p>
                         </div>
                     </div>
                 </form>
             </div>
         </main>
 
-        <aside id="rightSidebar" class="absolute inset-y-0 right-0 z-20 w-80 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 flex flex-col transform translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out shadow-2xl lg:shadow-none lg:static lg:w-80 lg:min-w-[20rem] overflow-hidden">
+        <aside id="rightSidebar" class="absolute inset-y-0 right-0 z-20 w-80 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 flex flex-col transform translate-x-full lg:translate-x-0 transition-transform duration-400 ease-in-out shadow-2xl lg:shadow-none lg:static lg:w-80 lg:min-w-[20rem] overflow-hidden">
             
             <div class="shrink-0 p-5 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-white">Thread Assets</h3>
+                    <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-white transition-colors duration-300">Thread Assets</h3>
                     
                     <div class="flex items-center gap-1">
                         <button type="button" onclick="toggleRightSidebar()" title="Collapse Sidebar" class="hidden lg:flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
                             <i class="fas fa-chevron-right text-base"></i>
                         </button>
                         
-                        <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none">
+                        <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none transition-colors duration-300">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
                 
-                <div class="flex bg-slate-100 dark:bg-[#202B3D] p-1 rounded-lg">
+                <div class="flex bg-slate-100 dark:bg-[#202B3D] p-1 rounded-lg transition-colors duration-300">
                     <button type="button" onclick="switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50">Media</button>
                     <button type="button" onclick="switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Files</button>
                     <button type="button" onclick="switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Links</button>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-5">
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-5 transition-colors duration-300">
                 <div id="mediaGridView" class="grid grid-cols-3 gap-2">
                     {% for media in ticket_media %}
-                    <div class="aspect-square rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 group cursor-pointer relative">
+                    <div class="aspect-square rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 group cursor-pointer relative transition-colors duration-300">
                         <img src="{{ media.file.url }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                     </div>
@@ -371,7 +413,7 @@
     </div>
 </div>
 
-<div id="chatLightbox" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
+<div id="chatLightbox" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12 transition-opacity duration-300">
     <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none">
         <i class="fas fa-times"></i>
     </button>
@@ -384,8 +426,8 @@
         <i class="fas fa-chevron-right"></i>
     </button>
 
-    <div id="lightboxContent" class="w-full h-full flex items-center justify-center"></div>
-    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10"></div>
+    <div id="lightboxContent" class="w-full h-full flex items-center justify-center transition-opacity duration-300"></div>
+    <div id="lightboxCaption" class="absolute bottom-6 md:bottom-10 max-w-lg text-center text-white/90 text-sm font-medium bg-black/60 px-6 py-2.5 rounded-full shadow-lg border border-white/10 transition-all duration-300"></div>
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
@@ -440,7 +482,7 @@
             let gridClass = 'grid-cols-1';
             if (count >= 2) gridClass = 'grid-cols-2';
 
-            let html = `<div class="grid gap-1 mt-2 rounded-xl overflow-hidden ${gridClass} shadow-sm border border-slate-200 dark:border-slate-700/60 w-fit max-w-[280px] sm:max-w-[380px]">`;
+            let html = `<div class="grid gap-1 mt-2 rounded-xl overflow-hidden ${gridClass} shadow-sm border border-slate-200 dark:border-slate-700/60 w-fit max-w-[280px] sm:max-w-[380px] transition-all duration-300">`;
 
             const attachmentsJson = JSON.stringify(attachments).replace(/"/g, '&quot;');
 
@@ -449,7 +491,7 @@
                 const isLast = index === 3;
                 const hasMore = count > 4;
 
-                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
+                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group transition-colors duration-300";
                 let heightClass = "h-40 sm:h-48 w-full object-cover";
 
                 if (count === 1) {
@@ -469,14 +511,14 @@
                     html += `<img src="${SecurityUtils.sanitizeUrl(file.url)}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (type === 'video') {
                     // 🚨 SECURITY: Sanitized video URL
-                    html += `<video src="${SecurityUtils.sanitizeUrl(file.url)}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
-                             <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
+                    html += `<video src="${SecurityUtils.sanitizeUrl(file.url)}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover transition-all duration-300 ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                             <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center transition-transform group-hover:scale-110 duration-300"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
-                    html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
+                    html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2 transition-transform group-hover:-translate-y-1 duration-300"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
                 }
 
                 if (hasMore && isLast) {
-                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-20"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
+                    html += `<div class="absolute inset-0 bg-black/50 flex items-center justify-center z-20 transition-opacity duration-300 group-hover:bg-black/60"><span class="text-white font-black text-2xl">+${count - 4}</span></div>`;
                 }
                 
                 html += `</div>`;
@@ -529,9 +571,9 @@
             // 🚨 SECURITY: Prevent arbitrary execution payloads via Lightbox Injection
             const safeUrl = SecurityUtils.sanitizeUrl(item.url);
             if (type === 'video') {
-                container.innerHTML = `<video src="${safeUrl}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
+                container.innerHTML = `<video src="${safeUrl}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl transition-all duration-300"></video>`;
             } else {
-                container.innerHTML = `<img src="${safeUrl}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
+                container.innerHTML = `<img src="${safeUrl}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl transition-all duration-300">`;
             }
             
             const caption = document.getElementById('lightboxCaption');
@@ -786,7 +828,7 @@
             const isVideo = file.type.startsWith('video/');
 
             const previewItem = document.createElement('div');
-            previewItem.className = "relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800";
+            previewItem.className = "relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800 transition-all duration-300";
             
             if (isImage) {
                 const img = document.createElement('img');
@@ -985,7 +1027,7 @@
             const safeTime = SecurityUtils.escapeHTML(msg.timestamp);
 
             if (isSystemUpdate) {
-                chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center my-4"><span class="text-xs bg-slate-200 dark:bg-slate-800 px-4 py-1.5 rounded-full font-medium text-slate-600 dark:text-slate-400 shadow-sm border border-slate-300 dark:border-slate-700"><i class="fas fa-info-circle mr-1.5 opacity-70"></i> ${safeMsg}</span></div>`);
+                chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center my-4"><span class="text-xs bg-slate-200 dark:bg-slate-800 px-4 py-1.5 rounded-full font-medium text-slate-600 dark:text-slate-400 shadow-sm border border-slate-300 dark:border-slate-700 transition-colors duration-300"><i class="fas fa-info-circle mr-1.5 opacity-70"></i> ${safeMsg}</span></div>`);
                 return;
             }
 
@@ -1015,7 +1057,7 @@
                         : doc.url;
 
                     docsListHtml += `
-                        <a href="${SecurityUtils.sanitizeUrl(downloadUrl)}" download="${safeFileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-sm">
+                        <a href="${SecurityUtils.sanitizeUrl(downloadUrl)}" download="${safeFileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-sm duration-300">
                             <i class="fas ${icon} text-lg"></i>
                             <div class="overflow-hidden">
                                 <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${safeFileName}</p>
@@ -1035,16 +1077,17 @@
                 ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
                 : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-tl-sm shadow-sm';
 
+            // Injected 'msg-content-wrapper' custom class for fluid breakpoint scaling
             let html = `
                 <div class="flex w-full gap-3 md:gap-4 ${alignRight ? 'flex-row-reverse' : 'flex-row'} mb-2">
-                    <div class="shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden ${alignRight ? 'bg-blue-700' : 'bg-slate-300 dark:bg-slate-700'} flex items-center justify-center text-xs text-white shadow-sm mt-1">
+                    <div class="shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden ${alignRight ? 'bg-blue-700' : 'bg-slate-300 dark:bg-slate-700'} flex items-center justify-center text-xs text-white shadow-sm mt-1 transition-colors duration-300">
                         ${avatarContent}
                     </div>
-                    <div class="flex flex-col ${alignRight ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[75%]">
-                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1 px-1">
+                    <div class="flex flex-col ${alignRight ? 'items-end' : 'items-start'} msg-content-wrapper">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mb-1 px-1 transition-colors duration-300">
                             <span class="font-semibold text-slate-700 dark:text-slate-300">${safeSender}</span> • ${safeTime}
                         </div>
-                        ${hasText ? `<div class="px-4 py-2.5 ${bubbleClasses}"><p class="whitespace-pre-wrap break-words text-[15px] leading-relaxed">${safeMsg}</p></div>` : ''}
+                        ${hasText ? `<div class="px-4 py-2.5 ${bubbleClasses} transition-colors duration-300"><p class="whitespace-pre-wrap break-words text-[15px] leading-relaxed">${safeMsg}</p></div>` : ''}
                         ${mediaGridHtml}
                         ${docsListHtml}
                     </div>
@@ -1070,11 +1113,11 @@
         const detailsBtn = document.getElementById('detailsTabBtn');
 
         if (tab === 'feed') {
-            feedBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
-            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
+            feedBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-all uppercase tracking-widest";
+            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-all uppercase tracking-widest";
         } else {
-            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
-            feedBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
+            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-all uppercase tracking-widest";
+            feedBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-all uppercase tracking-widest";
         }
     }
     
@@ -1112,9 +1155,9 @@
             const rawDescription = "{{ ticket.description|escapejs }}";
             // 🚨 SECURITY: Ensure strict DOM escape wrapping in addition to escapejs.
             dynamicInquiry.innerHTML = `
-                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
+                <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
                     <p class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2 tracking-widest">Original User Concern</p>
-                    <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">${SecurityUtils.escapeHTML(rawDescription)}</p>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed transition-colors duration-300">${SecurityUtils.escapeHTML(rawDescription)}</p>
                 </div>
             `;
         }
@@ -1128,9 +1171,9 @@
         if (linksList) linksList.innerHTML = '';
 
         if (!allAttachments || allAttachments.length === 0) {
-            if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
-            if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
-            if (linksList) linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+            if (mediaGrid) mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400 transition-opacity duration-300"><i class="fas fa-image text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+            if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400 transition-opacity duration-300"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+            if (linksList) linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400 transition-opacity duration-300"><i class="fas fa-link text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
             return;
         }
 
@@ -1142,7 +1185,7 @@
         const docItems = visibleAttachments.filter(att => SupportConsole.classifyAttachment(att) === 'document');
 
         if (mediaItemsForLightbox.length === 0 && mediaGrid) {
-            mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
+            mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400 transition-opacity duration-300"><i class="fas fa-image text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
         } else {
             mediaItemsForLightbox.forEach(att => {
                 const type = SupportConsole.classifyAttachment(att);
@@ -1150,12 +1193,12 @@
                 const safeUrl = SecurityUtils.sanitizeUrl(att.url);
                 
                 let contentHtml = type === 'video' 
-                    ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${safeUrl}#t=0.1" class="w-full h-full object-cover"></video>`
+                    ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${safeUrl}#t=0.1" class="w-full h-full object-cover transition-transform duration-300"></video>`
                     : `<img src="${safeUrl}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">`;
 
                 if (mediaGrid) {
                     const itemDiv = document.createElement('div');
-                    itemDiv.className = "aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden cursor-pointer relative group border border-slate-200 dark:border-slate-700";
+                    itemDiv.className = "aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden cursor-pointer relative group border border-slate-200 dark:border-slate-700 transition-colors duration-300";
                     itemDiv.innerHTML = `${contentHtml}<div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20"></div>`;
                     itemDiv.onclick = () => SupportConsole.openLightbox(mediaItemsForLightbox, currentIndex);
                     mediaGrid.appendChild(itemDiv);
@@ -1164,7 +1207,7 @@
         }
 
         if (docItems.length === 0 && filesList) {
-            filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
+            filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400 transition-opacity duration-300"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Documents Found</p></div>`;
         } else {
             docItems.forEach(att => {
                 if (filesList) {
@@ -1176,9 +1219,9 @@
                         : att.url;
 
                     filesList.innerHTML += `
-                        <a href="${SecurityUtils.sanitizeUrl(downloadUrl)}" download="${safeFileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-file-alt"></i></div>
-                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${safeFileName}</p></div>
+                        <a href="${SecurityUtils.sanitizeUrl(downloadUrl)}" download="${safeFileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-300 group">
+                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600 transition-colors"><i class="fas fa-file-alt"></i></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate transition-colors">${safeFileName}</p></div>
                         </a>`;
                 }
             });
@@ -1194,16 +1237,16 @@
                     const safeLink = SecurityUtils.sanitizeUrl(link);
                     const displayLink = SecurityUtils.escapeHTML(link);
                     linksList.innerHTML += `
-                        <a href="${safeLink}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
-                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-link"></i></div>
-                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-blue-600 dark:text-blue-400 truncate">${displayLink}</p></div>
+                        <a href="${safeLink}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-300 group">
+                            <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600 transition-colors"><i class="fas fa-link"></i></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-blue-600 dark:text-blue-400 truncate transition-colors">${displayLink}</p></div>
                         </a>`;
                 });
             }
         });
 
         if (linkCount === 0 && linksList) {
-            linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-link text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
+            linksList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400 transition-opacity duration-300"><i class="fas fa-link text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Links Found</p></div>`;
         }
     }
 
@@ -1246,7 +1289,8 @@
         const sidebar = document.getElementById('rightSidebar') || document.getElementById('rightAssetsSidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const mainHeaderBtn = document.getElementById('mainHeaderToggleBtn');
-        const isDesktop = window.innerWidth >= 1024; 
+        // Adjusted from standard Tailwind lg (1024) to exactly match your requested 1040px custom breakpoint logic
+        const isDesktop = window.innerWidth >= 1040; 
 
         if (!sidebar) return;
 
@@ -1281,7 +1325,8 @@
     }
 
     function closeMobileSidebar() {
-        if (window.innerWidth < 1024) closeAllSidebars();
+        // Adjusted from 1024 to exactly match your custom 1040 breakpoint
+        if (window.innerWidth < 1040) closeAllSidebars();
     }
 </script>
 {% endblock %}
