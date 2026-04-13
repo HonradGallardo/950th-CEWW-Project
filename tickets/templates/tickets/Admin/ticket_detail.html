@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
-
-<div class="hidden">{% csrf_token %}</div>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data: https://res.cloudinary.com blob:; media-src 'self' https://res.cloudinary.com blob: data:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
 
 <style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
@@ -31,7 +29,7 @@
     
     <header class="shrink-0 h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 flex items-center justify-between z-10 relative">
         <div class="flex items-center gap-3 md:gap-4">
-            <button type="button" id="mobileSidebarToggle" class="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+            <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
                 <i class="fas fa-bars"></i>
             </button>
             
@@ -39,7 +37,7 @@
                 <i class="fas fa-ticket-alt text-sm"></i>
             </div>
 
-            <button type="button" id="copyIdBtn" data-clipboard="0000{{ ticket.id }}" class="group flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95">
+            <button type="button" onclick="navigator.clipboard.writeText('0000{{ ticket.id }}')" class="group flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95">
                 <span class="font-rajdhani text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">ID: 0000{{ ticket.id }}</span>
                 <i class="fas fa-copy text-slate-400 group-hover:text-blue-500 transition-colors"></i>
             </button>
@@ -63,7 +61,7 @@
                         <p class="font-rajdhani text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Case Subject</p>
                         <h2 class="font-rajdhani text-base font-bold leading-snug line-clamp-2">{{ ticket.subject }}</h2>
                     </div>
-                    <button type="button" class="btn-close-mobile-sidebar lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md">
+                    <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md">
                         <i class="fas fa-chevron-left text-sm"></i>
                     </button>
                 </div>
@@ -92,7 +90,7 @@
                     <h3 class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Staff Conversations</h3>
                     <div class="space-y-2" id="techTabsContainer">
                         
-                        <button type="button" data-target="GROUP_CHAT" id="tab-GROUP_CHAT" 
+                        <button type="button" onclick="filterByTech('GROUP_CHAT'); closeMobileSidebar();" id="tab-GROUP_CHAT" 
                                 data-active-bg="bg-indigo-50 dark:bg-indigo-900/20" data-active-border="border-indigo-200 dark:border-indigo-800"
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
                             <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
@@ -106,7 +104,7 @@
 
                         <div class="h-px bg-slate-200 dark:bg-slate-800 my-3"></div>
                         
-                        <button type="button" data-target="{{ request.user.username|escapejs }}" id="tab-{{ request.user.username }}" 
+                        <button type="button" onclick="filterByTech('{{ request.user.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ request.user.username }}" 
                                 data-active-bg="bg-blue-50 dark:bg-blue-900/20" data-active-border="border-blue-200 dark:border-blue-800"
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
                             <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 overflow-hidden shrink-0 flex items-center justify-center border border-blue-200 dark:border-blue-800">
@@ -123,7 +121,7 @@
                         </button>
 
                         {% for admin in other_admins %}
-                        <button type="button" data-target="{{ admin.username|escapejs }}" id="tab-{{ admin.username }}" 
+                        <button type="button" onclick="filterByTech('{{ admin.username|escapejs }}'); closeMobileSidebar();" id="tab-{{ admin.username }}" 
                                 data-active-bg="bg-emerald-50 dark:bg-emerald-900/20" data-active-border="border-emerald-200 dark:border-emerald-800"
                                 class="tech-tab-btn w-full flex items-center gap-3 p-2.5 rounded-xl border border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group">
                             <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-200 dark:border-slate-700 group-hover:border-emerald-300 dark:group-hover:border-emerald-600 transition-colors">
@@ -196,15 +194,15 @@
             
             <div class="shrink-0 flex items-center px-4 md:px-8 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#1E293B] backdrop-blur-md sticky top-0 z-10 w-full">
                 <div class="flex gap-6 md:gap-8 flex-1">
-                    <button type="button" data-view="feed" id="feedTabBtn" class="main-tab-switcher font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest">Feed</button>
-                    <button type="button" data-view="details" id="detailsTabBtn" class="main-tab-switcher font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest">Ticket Details</button>
+                    <button type="button" onclick="switchTab('feed')" id="feedTabBtn" class="font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest">Feed</button>
+                    <button type="button" onclick="switchTab('details')" id="detailsTabBtn" class="font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest">Ticket Details</button>
                 </div>
                 
-                <button type="button" id="mainHeaderToggleBtn" title="Expand Sidebar" class="hidden items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
+                <button type="button" onclick="toggleRightSidebar()" id="mainHeaderToggleBtn" title="Expand Sidebar" class="hidden items-center justify-center w-10 h-10 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none ml-auto">
                     <i class="fas fa-chevron-left text-lg"></i>
                 </button>
 
-                <button type="button" class="btn-toggle-right-sidebar lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none">
+                <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none">
                     <i class="fas fa-paperclip"></i>
                 </button>
             </div>
@@ -223,16 +221,17 @@
                 <div id="messageInputContainer" class="shrink-0 p-4 md:p-6 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 z-10">
                     <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-3 mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700"></div>
                     
-                    <form id="chatForm" class="max-w-5xl mx-auto flex items-end gap-3">
+                    <form onsubmit="sendMessage(event)" id="chatForm" class="max-w-5xl mx-auto flex items-end gap-3">
+                        {% csrf_token %}
                         <div class="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500 transition-all shadow-sm flex flex-col">
                             <div class="px-3 py-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-800/30">
                                 <div class="flex items-center">
-                                    <input type="file" id="chatFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" class="hidden">
-                                    <button type="button" id="triggerFileInputBtn" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50" title="Attach Files">
+                                    <input type="file" id="chatFileInput" multiple class="hidden" onchange="handleFilePreview(event)">
+                                    <button type="button" onclick="document.getElementById('chatFileInput').click()" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50" title="Attach Files">
                                         <i class="fas fa-paperclip text-base"></i>
                                     </button>
                                 </div>
-                                <textarea id="messageText" rows="1" placeholder="Type your message..." class="w-full bg-transparent border-none px-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none resize-none custom-scrollbar min-h-[50px] max-h-[200px]"></textarea>
+                                <textarea id="messageText" rows="1" placeholder="Type your message..." class="w-full bg-transparent border-none px-4 py-3.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none resize-none custom-scrollbar min-h-[50px] max-h-[200px]" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="handleEnterKey(event)"></textarea>
                                 <button type="submit" id="shareBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-1 dark:focus:ring-offset-slate-900">
                                     <span>Send</span>
                                     <i class="fas fa-paper-plane text-xs"></i>
@@ -244,7 +243,8 @@
             </div>
 
             <div id="detailsView" class="hidden flex-1 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-slate-900 p-6 md:p-8 lg:p-12">
-                <form id="editTicketForm" class="max-w-4xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8">
+                <form id="editTicketForm" onsubmit="updateTicketAdmin(event)" class="max-w-4xl mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-8">
+                    {% csrf_token %}
                     
                     <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800 gap-4">
                         <div>
@@ -254,7 +254,7 @@
                             <p class="text-sm text-slate-500 mt-1">Manage routing, priority, and internal notes.</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <button type="button" id="triggerDeleteBtn" 
+                            <button type="button" onclick="deleteTicket()" 
                                     {% if ticket.technician and ticket.technician.id != request.user.id %}disabled title="Only the assigned admin can delete this case"{% endif %}
                                     class="px-4 py-2 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:dark:hover:bg-slate-900">
                                 Delete Case
@@ -336,20 +336,20 @@
                     <h3 class="font-rajdhani text-sm font-bold text-slate-800 dark:text-white">Thread Assets</h3>
                     
                     <div class="flex items-center gap-1">
-                        <button type="button" id="collapseSidebarBtn" title="Collapse Sidebar" class="hidden lg:flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
+                        <button type="button" onclick="toggleRightSidebar()" title="Collapse Sidebar" class="hidden lg:flex items-center justify-center w-8 h-8 text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all focus:outline-none">
                             <i class="fas fa-chevron-right text-base"></i>
                         </button>
                         
-                        <button type="button" class="btn-close-mobile-sidebar lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none">
+                        <button type="button" onclick="toggleRightSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md focus:outline-none">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
                 
                 <div class="flex bg-slate-100 dark:bg-[#202B3D] p-1 rounded-lg">
-                    <button type="button" data-tab="media" id="mediaTabBtn" class="sidebar-media-tab flex-1 py-1.5 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50">Media</button>
-                    <button type="button" data-tab="files" id="filesTabBtn" class="sidebar-media-tab flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Files</button>
-                    <button type="button" data-tab="links" id="linksTabBtn" class="sidebar-media-tab flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Links</button>
+                    <button type="button" onclick="switchMediaTab('media')" id="mediaTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50">Media</button>
+                    <button type="button" onclick="switchMediaTab('files')" id="filesTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Files</button>
+                    <button type="button" onclick="switchMediaTab('links')" id="linksTabBtn" class="flex-1 py-1.5 text-xs font-medium rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent">Links</button>
                 </div>
             </div>
 
@@ -367,20 +367,20 @@
             </div>
         </aside>
 
-        <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[15] hidden lg:hidden transition-opacity"></div>
+        <div id="sidebarOverlay" onclick="closeAllSidebars()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[15] hidden lg:hidden transition-opacity"></div>
     </div>
 </div>
 
 <div id="chatLightbox" class="hidden fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 lg:p-12">
-    <button type="button" id="closeLightboxBtn" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none">
+    <button type="button" onclick="SupportConsole.closeLightbox()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-colors focus:outline-none">
         <i class="fas fa-times"></i>
     </button>
     
-    <button type="button" id="prevBtn" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
+    <button type="button" id="prevBtn" onclick="SupportConsole.prevLightbox()" class="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
         <i class="fas fa-chevron-left"></i>
     </button>
     
-    <button type="button" id="nextBtn" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
+    <button type="button" id="nextBtn" onclick="SupportConsole.nextLightbox()" class="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-xl transition-all focus:outline-none">
         <i class="fas fa-chevron-right"></i>
     </button>
 
@@ -389,21 +389,23 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
+
+    // 🚨 SECURITY: Centralized XSS Sanitization Utilities
     const SecurityUtils = {
         escapeHTML(str) {
-            if (typeof str !== 'string') return str;
+            if (str === null || str === undefined) return '';
+            if (typeof str !== 'string') return String(str);
             return str.replace(/[&<>'"]/g, tag => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
             }[tag] || tag));
         },
-        stripHTML(str) {
-            if (typeof str !== 'string') return str;
-            // Removes any HTML tags, ensuring purely safe text rendering
-            return str.replace(/(<([^>]+)>)/gi, "").trim();
+        sanitizeUrl(url) {
+            if (!url || typeof url !== 'string') return '#';
+            const sanitized = url.trim();
+            // Block dangerous protocol injections
+            if (sanitized.toLowerCase().startsWith('javascript:')) return '#';
+            // Return URL safely encoded
+            return this.escapeHTML(sanitized);
         }
     };
 
@@ -446,9 +448,8 @@
                 const type = this.classifyAttachment(file);
                 const isLast = index === 3;
                 const hasMore = count > 4;
-                const safeUrl = SecurityUtils.stripHTML(file.url); // Security cleanup
 
-                let cellClass = "lightbox-trigger relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
+                let cellClass = "relative bg-slate-100 dark:bg-[#020617] flex items-center justify-center overflow-hidden cursor-pointer group";
                 let heightClass = "h-40 sm:h-48 w-full object-cover";
 
                 if (count === 1) {
@@ -460,13 +461,15 @@
                     heightClass = "h-32 sm:h-40 w-full object-cover";
                 }
 
-                // Removed inline onclick, passing parameters via data-attributes instead
-                html += `<div class="${cellClass}" data-json='${attachmentsJson}' data-index="${index}">`;
+                // Safely attaching the stringified JSON payload
+                html += `<div class="${cellClass}" onclick="SupportConsole.openLightbox(${attachmentsJson}, ${index})">`;
 
                 if (type === 'image') {
-                    html += `<img src="${safeUrl}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                    // 🚨 SECURITY: Sanitized file URL prior to injection
+                    html += `<img src="${SecurityUtils.sanitizeUrl(file.url)}" loading="lazy" decoding="async" class="w-full h-full ${count === 1 ? 'object-contain' : 'object-cover'} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                 } else if (type === 'video') {
-                    html += `<video src="${safeUrl}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                    // 🚨 SECURITY: Sanitized video URL
+                    html += `<video src="${SecurityUtils.sanitizeUrl(file.url)}#t=0.1" preload="none" class="absolute inset-0 w-full h-full object-cover ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                              <div class="absolute inset-0 flex items-center justify-center bg-black/30 z-10"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                 } else {
                     html += `<div class="flex flex-col items-center text-slate-500 dark:text-slate-400 w-full h-full justify-center absolute inset-0 ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
@@ -489,16 +492,6 @@
                     if (e.key === 'ArrowRight') this.nextLightbox();
                     if (e.key === 'ArrowLeft') this.prevLightbox();
                     if (e.key === 'Escape') this.closeLightbox();
-                }
-            });
-            
-            // Delegate Lightbox click events dynamically
-            document.addEventListener('click', (e) => {
-                const lbTrigger = e.target.closest('.lightbox-trigger');
-                if (lbTrigger) {
-                    const items = JSON.parse(lbTrigger.getAttribute('data-json'));
-                    const index = parseInt(lbTrigger.getAttribute('data-index'));
-                    this.openLightbox(items, index);
                 }
             });
         },
@@ -532,8 +525,9 @@
             if (!container || !item) return;
 
             const type = this.classifyAttachment(item);
-            const safeUrl = SecurityUtils.stripHTML(item.url); // Security Cleanup
             
+            // 🚨 SECURITY: Prevent arbitrary execution payloads via Lightbox Injection
+            const safeUrl = SecurityUtils.sanitizeUrl(item.url);
             if (type === 'video') {
                 container.innerHTML = `<video src="${safeUrl}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
             } else {
@@ -541,7 +535,7 @@
             }
             
             const caption = document.getElementById('lightboxCaption');
-            if (caption) caption.innerText = item.name ? SecurityUtils.escapeHTML(item.name) : `Attachment ${this.currentLightboxIndex + 1}`;
+            if (caption) caption.innerText = item.name || `Attachment ${this.currentLightboxIndex + 1}`;
         },
 
         nextLightbox() {
@@ -571,6 +565,7 @@
 
             const forceScroll = () => {
                 if (userInterrupted) return; 
+                
                 const currentArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
                 if (currentArea) {
                     currentArea.scrollTop = currentArea.scrollHeight;
@@ -589,59 +584,28 @@
         }
     };
 
-    // --- EVENT DELEGATIONS (CSP COMPLIANT) ---
-    document.addEventListener("DOMContentLoaded", function() {
-        
+    window.onload = () => {
+        filterByTech(MY_USERNAME); 
         SupportConsole.init();
 
-        // UI Tabs & Toggles
-        document.querySelectorAll('.main-tab-switcher').forEach(btn => {
-            btn.addEventListener('click', (e) => switchTab(e.target.dataset.view));
-        });
-        
-        document.querySelectorAll('.tech-tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const target = e.currentTarget.dataset.target;
-                filterByTech(target);
-                closeMobileSidebar();
-            });
-        });
+        setInterval(() => {
+            fetchMessages();
+        }, 3000);
 
-        document.querySelectorAll('.sidebar-media-tab').forEach(btn => {
-            btn.addEventListener('click', (e) => switchMediaTab(e.target.dataset.tab));
-        });
+        const chatScrollArea = document.getElementById('chatBox');
+        if (chatScrollArea) {
+            chatScrollArea.addEventListener('scroll', () => {
+                if (chatScrollArea.scrollTop <= 50) {
+                    const loadBtn = document.querySelector('button[onclick="loadOlderMessages()"]');
+                    if (loadBtn && !loadBtn.disabled) {
+                        loadOlderMessages(); 
+                    }
+                }
+            }, { passive: true });
+        }
+    };
 
-        // Modals & Sidebars
-        document.getElementById('mobileSidebarToggle')?.addEventListener('click', toggleMobileSidebar);
-        document.getElementById('mainHeaderToggleBtn')?.addEventListener('click', toggleRightSidebar);
-        document.querySelectorAll('.btn-toggle-right-sidebar').forEach(b => b.addEventListener('click', toggleRightSidebar));
-        document.querySelectorAll('.btn-close-mobile-sidebar').forEach(b => b.addEventListener('click', closeMobileSidebar));
-        document.getElementById('sidebarOverlay')?.addEventListener('click', closeAllSidebars);
-        
-        document.getElementById('triggerDeleteBtn')?.addEventListener('click', deleteTicket);
-        
-        // Lightbox buttons
-        document.getElementById('closeLightboxBtn')?.addEventListener('click', () => SupportConsole.closeLightbox());
-        document.getElementById('prevBtn')?.addEventListener('click', () => SupportConsole.prevLightbox());
-        document.getElementById('nextBtn')?.addEventListener('click', () => SupportConsole.nextLightbox());
-
-        // File Inputs & Chat Submission
-        document.getElementById('chatFileInput')?.addEventListener('change', handleFilePreview);
-        document.getElementById('triggerFileInputBtn')?.addEventListener('click', () => document.getElementById('chatFileInput').click());
-        document.getElementById('messageText')?.addEventListener('input', function() {
-            this.style.height = ''; 
-            this.style.height = this.scrollHeight + 'px';
-        });
-        document.getElementById('messageText')?.addEventListener('keydown', handleEnterKey);
-        document.getElementById('chatForm')?.addEventListener('submit', sendMessage);
-        document.getElementById('editTicketForm')?.addEventListener('submit', updateTicketAdmin);
-
-        // Copy ID Button
-        document.getElementById('copyIdBtn')?.addEventListener('click', function() {
-            navigator.clipboard.writeText(this.dataset.clipboard);
-        });
-
-        // Auto-toggle Status based on Technician assignment
+    document.addEventListener("DOMContentLoaded", function() {
         const techDropdown = document.getElementById('editTechnician');
         const statusDropdown = document.getElementById('editStatus');
         
@@ -658,27 +622,10 @@
                 }
             });
         }
-
-        // --- NEW: REAL-TIME POLLING ---
-        filterByTech(MY_USERNAME); 
-        setInterval(() => fetchMessages(), 3000);
-
-        // --- NEW: INFINITE SCROLL (MESSENGER STYLE) ---
-        const chatScrollArea = document.getElementById('chatBox');
-        if (chatScrollArea) {
-            chatScrollArea.addEventListener('scroll', () => {
-                if (chatScrollArea.scrollTop <= 50) {
-                    const loadBtn = document.getElementById('loadOlderBtn');
-                    if (loadBtn && !loadBtn.disabled) {
-                        loadOlderMessages(); 
-                    }
-                }
-            }, { passive: true });
-        }
     });
 
     function loadOlderMessages() {
-        const btn = document.getElementById('loadOlderBtn');
+        const btn = document.querySelector('button[onclick="loadOlderMessages()"]');
         if(btn) { btn.innerText = "Decrypting Records..."; btn.disabled = true; }
         fetchMessages(true);
     }
@@ -694,7 +641,7 @@
         
         updateActiveTabStyles(username); 
 
-        // 1. Set base defaults for the selected tab
+        // 🚨 SECURITY: Ensure display names reflect safe rendering, even though label.innerText provides base protection in DOM
         if (username === 'GROUP_CHAT') {
             label.innerHTML = '<i class="fas fa-users text-indigo-500 mr-2"></i> Group Discussion';
             if(readOnly) readOnly.classList.add('hidden');
@@ -704,13 +651,11 @@
             if(readOnly) readOnly.classList.add('hidden');
             if(inputContainer) inputContainer.classList.remove('hidden');
         } else {
-            // SECURITY: Ensure activeChatPartnerId is escaped
-            label.innerText = `Viewing: @${SecurityUtils.escapeHTML(username)}'s Private Thread`;
+            label.innerText = `Viewing: @${username}'s Private Thread`;
             if(readOnly) readOnly.classList.remove('hidden');
             if(inputContainer) inputContainer.classList.add('hidden'); 
         }
 
-        // 2. ENFORCE THE LOCK OVERRIDE
         if (currentTicketStatus === 'Resolved' || currentTicketStatus === 'Completed') {
             if(inputContainer) inputContainer.classList.add('hidden');
             if(readOnly) {
@@ -719,7 +664,6 @@
             }
         }
         
-        // 3. Load the data
         if (tabCache[username]) {
             currentMessageCount = tabCache[username].count;
             renderChat(tabCache[username].messages, tabCache[username].attachments, tabCache[username].hasMore);
@@ -800,6 +744,67 @@
         }
     }
 
+    function handleFilePreview(event) {
+        const container = document.getElementById('chat-attachment-preview');
+        let files = Array.from(event.target.files);
+        
+        // 🚨 SECURITY: Validate file size (Max 25MB per file) and batch size (Max 5 items) early
+        const MAX_FILES = 5;
+        const MAX_SIZE_MB = 25;
+        const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+        if (files.length > MAX_FILES) {
+            alert(`SECURITY ALERT: Maximum of ${MAX_FILES} files allowed per upload to prevent server saturation.`);
+            event.target.value = '';
+            container.innerHTML = '';
+            container.classList.add('hidden');
+            return;
+        }
+
+        for (let file of files) {
+            if (file.size > MAX_SIZE_BYTES) {
+                alert(`SECURITY ALERT: "${file.name}" exceeds the ${MAX_SIZE_MB}MB limit. Please upload a smaller file.`);
+                event.target.value = '';
+                container.innerHTML = '';
+                container.classList.add('hidden');
+                return;
+            }
+        }
+
+        container.innerHTML = '';
+        
+        if (files.length > 0) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+            return;
+        }
+
+        files.forEach((file) => {
+            const reader = new FileReader();
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+
+            const previewItem = document.createElement('div');
+            previewItem.className = "relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800";
+            
+            if (isImage) {
+                const img = document.createElement('img');
+                img.className = "w-full h-full object-cover";
+                reader.onload = (e) => { img.src = e.target.result; };
+                reader.readAsDataURL(file);
+                previewItem.appendChild(img);
+            } else if (isVideo) {
+                previewItem.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500"><i class="fas fa-video mb-1 text-sm"></i></div>`;
+            } else {
+                // 🚨 SECURITY: Ensuring preview filename is sanitized 
+                const safeFileName = SecurityUtils.escapeHTML(file.name);
+                previewItem.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-500"><i class="fas fa-file-alt text-sm"></i><span class="text-[8px] truncate w-full px-1 text-center font-medium mt-1">${safeFileName}</span></div>`;
+            }
+            container.appendChild(previewItem);
+        });
+    }
+
     async function sendMessage(e) {
         if (e) e.preventDefault();
         const input = document.getElementById('messageText');
@@ -807,6 +812,12 @@
         const messageText = input.value.trim();
         const filesToUpload = Array.from(fileInput.files);
         
+        // 🚨 SECURITY: Re-verify limits before transmission intercept
+        const MAX_FILES = 5;
+        const MAX_SIZE_BYTES = 25 * 1024 * 1024; // 25MB
+        if (filesToUpload.length > MAX_FILES) return alert("Upload blocked: Too many files.");
+        if (filesToUpload.some(f => f.size > MAX_SIZE_BYTES)) return alert("Upload blocked: File size limit exceeded.");
+
         if (!messageText && filesToUpload.length === 0) return;
 
         let myAvatarUrl = "";
@@ -864,10 +875,6 @@
                     tabCache[activeChatPartnerId].messages = tabCache[activeChatPartnerId].messages.filter(m => m.id !== tempId);
                 }
                 fetchMessages(); 
-            } else {
-                // Modified to handle rate limiting and size limits gracefully
-                const data = await response.json();
-                alert("Failed to send: " + (data.detail || data.error || "Unknown Error"));
             }
         } catch (err) { console.error("Send error:", err); }
     }
@@ -928,6 +935,7 @@
 
     function updateActiveTabStyles(activeTechName) {
         const allTabs = document.querySelectorAll('.tech-tab-btn');
+
         allTabs.forEach(btn => {
             btn.classList.add('border-transparent');
             btn.classList.remove(
@@ -938,49 +946,15 @@
         });
 
         const activeBtn = document.getElementById('tab-' + activeTechName);
+        
         if (activeBtn) {
             activeBtn.classList.remove('border-transparent');
+
             const bgClasses = activeBtn.getAttribute('data-active-bg').split(' ');
             const borderClasses = activeBtn.getAttribute('data-active-border').split(' ');
+
             activeBtn.classList.add(...bgClasses, ...borderClasses);
         }
-    }
-
-    function handleFilePreview(event) {
-        const container = document.getElementById('chat-attachment-preview');
-        const files = Array.from(event.target.files);
-        container.innerHTML = '';
-        
-        if (files.length > 0) {
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-            return;
-        }
-
-        files.forEach((file) => {
-            const reader = new FileReader();
-            const isImage = file.type.startsWith('image/');
-            const isVideo = file.type.startsWith('video/');
-
-            const previewItem = document.createElement('div');
-            previewItem.className = "relative w-14 h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800";
-            
-            if (isImage) {
-                const img = document.createElement('img');
-                img.className = "w-full h-full object-cover";
-                reader.onload = (e) => { img.src = e.target.result; };
-                reader.readAsDataURL(file);
-                previewItem.appendChild(img);
-            } else if (isVideo) {
-                previewItem.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500"><i class="fas fa-video mb-1 text-sm"></i></div>`;
-            } else {
-                // SECURITY: Escape file name before injecting
-                const safeFileName = SecurityUtils.escapeHTML(file.name);
-                previewItem.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-500"><i class="fas fa-file-alt text-sm"></i><span class="text-[8px] truncate w-full px-1 text-center font-medium mt-1">${safeFileName}</span></div>`;
-            }
-            container.appendChild(previewItem);
-        });
     }
 
     function renderChat(messages, allAttachments = [], hasMore = false, isLoadMore = false) {
@@ -995,12 +969,7 @@
         chatBox.innerHTML = ''; 
 
         if (hasMore) {
-            chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center mb-6 mt-2"><button type="button" id="loadOlderBtn" class="px-5 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">Load Older Messages</button></div>`);
-            // Attach event listener immediately after adding to DOM
-            setTimeout(() => {
-                const newBtn = document.getElementById('loadOlderBtn');
-                if (newBtn) newBtn.addEventListener('click', loadOlderMessages);
-            }, 0);
+            chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center mb-6 mt-2"><button type="button" onclick="loadOlderMessages()" class="px-5 py-2 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">Load Older Messages</button></div>`);
         }
 
         messages.forEach(msg => {
@@ -1010,19 +979,19 @@
             
             if (!isSystemUpdate && !isGroupMessage && !isPrivateMessage) return; 
 
-            // 🚨 SECURITY: Sanitize all message metadata
-            const safeMessage = SecurityUtils.escapeHTML(msg.message);
-            const safeSenderName = SecurityUtils.escapeHTML(msg.sender_name || 'System');
-            const safeTimestamp = SecurityUtils.escapeHTML(msg.timestamp);
+            // 🚨 SECURITY: Isolate all dynamic payload outputs preventing XSS mapping.
+            const safeMsg = SecurityUtils.escapeHTML(msg.message);
+            const safeSender = SecurityUtils.escapeHTML(msg.sender_name);
+            const safeTime = SecurityUtils.escapeHTML(msg.timestamp);
 
             if (isSystemUpdate) {
-                chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center my-4"><span class="text-xs bg-slate-200 dark:bg-slate-800 px-4 py-1.5 rounded-full font-medium text-slate-600 dark:text-slate-400 shadow-sm border border-slate-300 dark:border-slate-700"><i class="fas fa-info-circle mr-1.5 opacity-70"></i> ${safeMessage}</span></div>`);
+                chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center my-4"><span class="text-xs bg-slate-200 dark:bg-slate-800 px-4 py-1.5 rounded-full font-medium text-slate-600 dark:text-slate-400 shadow-sm border border-slate-300 dark:border-slate-700"><i class="fas fa-info-circle mr-1.5 opacity-70"></i> ${safeMsg}</span></div>`);
                 return;
             }
 
             const isMe = msg.sender_name === MY_USERNAME;
             const alignRight = isMe; 
-            const hasText = safeMessage && safeMessage.trim().length > 0;
+            const hasText = safeMsg && safeMsg.trim().length > 0;
             const messageAttachments = allAttachments.filter(a => String(a.message_id) === String(msg.id));
             
             const mediaFiles = messageAttachments.filter(att => SupportConsole.classifyAttachment(att) !== 'document');
@@ -1034,21 +1003,22 @@
             if (docFiles.length > 0) {
                 docsListHtml = `<div class="flex flex-col gap-2 mt-2 w-64 md:w-80">`;
                 docFiles.forEach(doc => {
-                    const fileName = SecurityUtils.escapeHTML(doc.name || 'Document');
+                    const fileName = doc.name || 'Document';
+                    const safeFileName = SecurityUtils.escapeHTML(fileName);
+                    
                     let icon = 'fa-file-alt text-slate-500';
                     if (/\.pdf$/i.test(fileName)) icon = 'fa-file-pdf text-red-500';
                     else if (/\.(xls|xlsx|csv)$/i.test(fileName)) icon = 'fa-file-excel text-green-600';
 
-                    const safeUrl = SecurityUtils.stripHTML(doc.url);
-                    const downloadUrl = (safeUrl && safeUrl.includes('cloudinary.com')) 
-                        ? safeUrl.replace('/upload/', '/upload/fl_attachment/') 
-                        : safeUrl;
+                    const downloadUrl = (doc.url && doc.url.includes('cloudinary.com')) 
+                        ? doc.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : doc.url;
 
                     docsListHtml += `
-                        <a href="${downloadUrl}" download="${fileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-sm">
+                        <a href="${SecurityUtils.sanitizeUrl(downloadUrl)}" download="${safeFileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-sm">
                             <i class="fas ${icon} text-lg"></i>
                             <div class="overflow-hidden">
-                                <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${fileName}</p>
+                                <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${safeFileName}</p>
                                 <p class="text-xs text-slate-500">Download</p>
                             </div>
                         </a>`;
@@ -1056,10 +1026,10 @@
                 docsListHtml += `</div>`;
             }
 
-            const safeAvatarUrl = msg.sender_avatar ? SecurityUtils.stripHTML(msg.sender_avatar) : '';
-            const initialChar = safeSenderName ? safeSenderName.charAt(0).toUpperCase() : 'U';
-            
-            const avatarContent = safeAvatarUrl ? `<img src="${safeAvatarUrl}" onerror="this.onerror=null; this.outerHTML='<span class=\\'uppercase font-bold\\'>${initialChar}</span>';" loading="lazy" decoding="async" class="w-full h-full object-cover">` : `<span class="uppercase font-bold">${initialChar}</span>`;
+            const safeAvatar = SecurityUtils.sanitizeUrl(msg.sender_avatar);
+            const avatarContent = msg.sender_avatar 
+                ? `<img src="${safeAvatar}" onerror="this.onerror=null; this.outerHTML='<span class=\\'uppercase font-bold\\'>${safeSender ? safeSender.charAt(0) : 'U'}</span>';" loading="lazy" decoding="async" class="w-full h-full object-cover">` 
+                : `<span class="uppercase font-bold">${safeSender ? safeSender.charAt(0) : 'U'}</span>`;
             
             let bubbleClasses = alignRight 
                 ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-sm' 
@@ -1072,9 +1042,9 @@
                     </div>
                     <div class="flex flex-col ${alignRight ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[75%]">
                         <div class="text-xs text-slate-500 dark:text-slate-400 mb-1 px-1">
-                            <span class="font-semibold text-slate-700 dark:text-slate-300">${safeSenderName}</span> • ${safeTimestamp}
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">${safeSender}</span> • ${safeTime}
                         </div>
-                        ${hasText ? `<div class="px-4 py-2.5 ${bubbleClasses}"><p class="whitespace-pre-wrap break-words text-[15px] leading-relaxed">${safeMessage}</p></div>` : ''}
+                        ${hasText ? `<div class="px-4 py-2.5 ${bubbleClasses}"><p class="whitespace-pre-wrap break-words text-[15px] leading-relaxed">${safeMsg}</p></div>` : ''}
                         ${mediaGridHtml}
                         ${docsListHtml}
                     </div>
@@ -1100,11 +1070,11 @@
         const detailsBtn = document.getElementById('detailsTabBtn');
 
         if (tab === 'feed') {
-            feedBtn.className = "main-tab-switcher font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
-            detailsBtn.className = "main-tab-switcher font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
+            feedBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
+            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
         } else {
-            detailsBtn.className = "main-tab-switcher font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
-            feedBtn.className = "main-tab-switcher font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
+            detailsBtn.className = "font-rajdhani py-4 border-b-2 border-blue-600 text-sm font-semibold text-blue-600 transition-colors uppercase tracking-widest";
+            feedBtn.className = "font-rajdhani py-4 border-b-2 border-transparent text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest";
         }
     }
     
@@ -1134,11 +1104,13 @@
             alert("A system error occurred.");
         }
     }
+    
 
     function updateAttachmentsSidebar(messages, allAttachments = []) {
         const dynamicInquiry = document.getElementById('dynamicInquiryContent');
         if (dynamicInquiry) {
             const rawDescription = "{{ ticket.description|escapejs }}";
+            // 🚨 SECURITY: Ensure strict DOM escape wrapping in addition to escapejs.
             dynamicInquiry.innerHTML = `
                 <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700/50">
                     <p class="font-rajdhani text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2 tracking-widest">Original User Concern</p>
@@ -1172,13 +1144,10 @@
         if (mediaItemsForLightbox.length === 0 && mediaGrid) {
             mediaGrid.innerHTML = `<div class="col-span-3 text-center py-10 opacity-50 text-slate-400"><i class="fas fa-image text-3xl mb-2"></i><p class="font-rajdhani text-[10px] uppercase font-black tracking-widest mt-2">No Media Found</p></div>`;
         } else {
-            // Encode the entire JSON array for the data attribute securely
-            const encodedItems = JSON.stringify(mediaItemsForLightbox).replace(/"/g, '&quot;');
-            
             mediaItemsForLightbox.forEach(att => {
                 const type = SupportConsole.classifyAttachment(att);
                 const currentIndex = mediaItemsForLightbox.findIndex(item => item.url === att.url);
-                const safeUrl = SecurityUtils.stripHTML(att.url);
+                const safeUrl = SecurityUtils.sanitizeUrl(att.url);
                 
                 let contentHtml = type === 'video' 
                     ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${safeUrl}#t=0.1" class="w-full h-full object-cover"></video>`
@@ -1186,10 +1155,9 @@
 
                 if (mediaGrid) {
                     const itemDiv = document.createElement('div');
-                    itemDiv.className = "lightbox-trigger aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden cursor-pointer relative group border border-slate-200 dark:border-slate-700";
-                    itemDiv.setAttribute('data-json', encodedItems);
-                    itemDiv.setAttribute('data-index', currentIndex);
+                    itemDiv.className = "aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden cursor-pointer relative group border border-slate-200 dark:border-slate-700";
                     itemDiv.innerHTML = `${contentHtml}<div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20"></div>`;
+                    itemDiv.onclick = () => SupportConsole.openLightbox(mediaItemsForLightbox, currentIndex);
                     mediaGrid.appendChild(itemDiv);
                 }
             });
@@ -1200,17 +1168,17 @@
         } else {
             docItems.forEach(att => {
                 if (filesList) {
-                    const fileName = SecurityUtils.escapeHTML(att.name || 'Document');
-                    const safeUrl = SecurityUtils.stripHTML(att.url);
+                    const fileName = att.name || 'Document';
+                    const safeFileName = SecurityUtils.escapeHTML(fileName);
                     
-                    const downloadUrl = (safeUrl && safeUrl.includes('cloudinary.com')) 
-                        ? safeUrl.replace('/upload/', '/upload/fl_attachment/') 
-                        : safeUrl;
+                    const downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
+                        ? att.url.replace('/upload/', '/upload/fl_attachment/') 
+                        : att.url;
 
                     filesList.innerHTML += `
-                        <a href="${downloadUrl}" download="${fileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                        <a href="${SecurityUtils.sanitizeUrl(downloadUrl)}" download="${safeFileName}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
                             <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-file-alt"></i></div>
-                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${fileName}</p></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">${safeFileName}</p></div>
                         </a>`;
                 }
             });
@@ -1223,11 +1191,12 @@
             if (links && linksList) {
                 links.forEach(link => {
                     linkCount++;
-                    const safeLink = SecurityUtils.stripHTML(link);
+                    const safeLink = SecurityUtils.sanitizeUrl(link);
+                    const displayLink = SecurityUtils.escapeHTML(link);
                     linksList.innerHTML += `
-                        <a href="${safeLink}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
+                        <a href="${safeLink}" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group">
                             <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:text-blue-600"><i class="fas fa-link"></i></div>
-                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-blue-600 dark:text-blue-400 truncate">${safeLink}</p></div>
+                            <div class="overflow-hidden flex-1"><p class="text-sm font-medium text-blue-600 dark:text-blue-400 truncate">${displayLink}</p></div>
                         </a>`;
                 });
             }
@@ -1247,14 +1216,23 @@
                 if (cat === tab) {
                     view.classList.remove('hidden');
                     if (cat !== 'media') view.classList.add('flex');
-                    btn.className = "sidebar-media-tab font-rajdhani uppercase tracking-widest flex-1 py-1.5 text-xs font-bold rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50";
+                    btn.className = "font-rajdhani uppercase tracking-widest flex-1 py-1.5 text-xs font-bold rounded-md transition-colors bg-white dark:bg-slate-800 shadow-sm text-blue-600 dark:text-blue-400 border border-slate-200/50 dark:border-slate-700/50";
                 } else {
                     view.classList.add('hidden');
                     if (cat !== 'media') view.classList.remove('flex');
-                    btn.className = "sidebar-media-tab font-rajdhani uppercase tracking-widest flex-1 py-1.5 text-xs font-bold rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent";
+                    btn.className = "font-rajdhani uppercase tracking-widest flex-1 py-1.5 text-xs font-bold rounded-md transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-transparent";
                 }
             }
         });
+    }
+
+    function quickTakeOver() {
+        const techSelect = document.getElementById('editTechnician');
+        const myId = "{{ request.user.id|default:'null' }}"; 
+        if (techSelect && myId) {
+            techSelect.value = myId;
+            updateTicketAdmin();
+        }
     }
 
     function toggleMobileSidebar() {
