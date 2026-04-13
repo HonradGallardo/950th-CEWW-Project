@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
     .font-rajdhani { font-family: 'Rajdhani', sans-serif !important; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif !important; }
@@ -444,7 +444,7 @@ main {
                                 </div>
                                 
                                 <div class="relative group cursor-pointer border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 rounded-xl p-6 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all text-center">
-                                    <input type="file" name="attachments" multiple class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="SupportConsole.updateFileList(this)">
+                                    <input type="file" name="attachments" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="SupportConsole.updateFileList(this)">
                                     <div class="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-blue-500 transition-colors">
                                         <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-800 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-all">
                                             <i class="fas fa-cloud-upload-alt text-lg"></i>
@@ -511,7 +511,7 @@ main {
                         <div id="chat-attachment-preview" class="hidden flex flex-wrap gap-2 mb-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700"></div>
                         <form onsubmit="SupportConsole.sendMessage(event)" id="chatMsgForm" class="relative group flex items-end" enctype="multipart/form-data">
                             {% csrf_token %}
-                            <input type="file" id="chatFileInput" name="attachments" multiple class="hidden" onchange="SupportConsole.handleChatFileSelect(this)">
+                            <input type="file" id="chatFileInput" name="attachments" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar" class="hidden" onchange="SupportConsole.handleChatFileSelect(this)">
                             
                             <div class="flex-1 relative">
                                 <textarea id="chatInput" rows="1" 
@@ -618,7 +618,33 @@ main {
     </main>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
+
+    // 🚨 SECURITY: Core Sanitization Utilities implemented
+    const SecurityUtils = {
+        escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        },
+        sanitizeUrl(url) {
+            if (typeof url !== 'string') return '#';
+            const sanitized = url.trim();
+            // Prevent JavaScript or Data URI execution via links
+            if (sanitized.toLowerCase().startsWith('javascript:') || 
+                sanitized.toLowerCase().startsWith('data:text/html') || 
+                sanitized.toLowerCase().startsWith('vbscript:')) {
+                return '#';
+            }
+            return sanitized;
+        }
+    };
+
     const SupportConsole = {
         activeTicketId: null,
         activeRecipient: null,
@@ -784,14 +810,17 @@ main {
             if (!file || !content || !info) return;
 
             const type = this.classifyAttachment(file);
+            // 🚨 SECURITY: Sanitize the media URL for the lightbox
+            const safeUrl = SecurityUtils.sanitizeUrl(file.url);
             
             if (type === 'video') {
-                content.innerHTML = `<video src="${file.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
+                content.innerHTML = `<video src="${safeUrl}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
             } else {
-                content.innerHTML = `<img src="${file.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
+                content.innerHTML = `<img src="${safeUrl}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
             }
 
-            info.innerText = file.name || `Attachment ${this.currentLightboxIndex + 1}`;
+            // 🚨 SECURITY: Escaping file name for text insertion
+            info.innerText = file.name ? file.name : `Attachment ${this.currentLightboxIndex + 1}`;
         },
 
         // --- LIGHTBOX ENGINE ---
@@ -855,14 +884,17 @@ main {
             if (!container || !item) return;
 
             const type = this.classifyAttachment(item);
+            // 🚨 SECURITY: Sanitize the media URL
+            const safeUrl = SecurityUtils.sanitizeUrl(item.url);
             
             if (type === 'video') {
-                container.innerHTML = `<video src="${item.url}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
+                container.innerHTML = `<video src="${safeUrl}" controls autoplay class="max-w-full max-h-[85vh] rounded-xl shadow-2xl"></video>`;
             } else {
-                container.innerHTML = `<img src="${item.url}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
+                container.innerHTML = `<img src="${safeUrl}" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">`;
             }
             
             const caption = document.getElementById('lightboxCaption');
+            // 🚨 SECURITY: Ensure innerText is used or safely handle filename
             if (caption) caption.innerText = item.name || `Attachment ${this.currentLightboxIndex + 1}`;
         },
 
@@ -996,21 +1028,21 @@ main {
                     ? "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-50 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700"
                     : "text-blue-600 bg-white hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-500/20 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
 
-                let displayHtml = o.label;
+                let displayHtml = SecurityUtils.escapeHTML(o.label);
                 const parts = o.label.split(' ');
                 
                 if (parts.length > 1 && parts[0].codePointAt(0) > 255) {
                     displayHtml = `
-                        <span class="text-[14px] sm:text-base mb-1.5 sm:mb-0 sm:mr-2 block sm:inline-block drop-shadow-sm">${parts[0]}</span>
-                        <span class="leading-[1.3]">${parts.slice(1).join(' ')}</span>
+                        <span class="text-[14px] sm:text-base mb-1.5 sm:mb-0 sm:mr-2 block sm:inline-block drop-shadow-sm">${SecurityUtils.escapeHTML(parts[0])}</span>
+                        <span class="leading-[1.3]">${SecurityUtils.escapeHTML(parts.slice(1).join(' '))}</span>
                     `;
                 } else if (isBack) {
                     displayHtml = `
                         <i class="fas fa-arrow-left text-[10px] sm:text-xs mb-1.5 sm:mb-0 sm:mr-2 block sm:inline-block"></i>
-                        <span class="leading-[1.3]">${o.label}</span>
+                        <span class="leading-[1.3]">${SecurityUtils.escapeHTML(o.label)}</span>
                     `;
                 } else {
-                    displayHtml = `<span class="leading-[1.3]">${o.label}</span>`;
+                    displayHtml = `<span class="leading-[1.3]">${SecurityUtils.escapeHTML(o.label)}</span>`;
                 }
 
                 return `
@@ -1122,14 +1154,18 @@ main {
         },
 
         appendUserMessage(text) {
+            // 🚨 SECURITY: Sanitized User Input
+            const safeText = SecurityUtils.escapeHTML(text);
             const div = document.createElement('div');
             div.className = "flex justify-end mb-4 animate-in slide-in-from-right-4 duration-300";
-            div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3 rounded-2xl rounded-tr-none text-xs font-bold shadow-lg shadow-blue-500/10 max-w-[80%]">${text}</div>`;
+            div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3 rounded-2xl rounded-tr-none text-xs font-bold shadow-lg shadow-blue-500/10 max-w-[80%]">${safeText}</div>`;
             document.getElementById('assistant-chat').appendChild(div);
             this.scrollToAssistantBottom();
         },
 
         appendBotMessage(text) {
+            // 🚨 SECURITY: Sanitized Bot Input
+            const safeText = SecurityUtils.escapeHTML(text);
             const div = document.createElement('div');
             div.className = "flex justify-start mb-4 animate-in slide-in-from-left-4 duration-300";
             div.innerHTML = `
@@ -1137,7 +1173,7 @@ main {
                     <div class="w-8 h-8 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm">
                         <i class="fas fa-robot text-xs text-blue-500"></i>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-2xl rounded-tl-none text-xs font-medium shadow-sm leading-relaxed">${text}</div>
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-2xl rounded-tl-none text-xs font-medium shadow-sm leading-relaxed">${safeText}</div>
                 </div>`;
             document.getElementById('assistant-chat').appendChild(div);
             this.scrollToAssistantBottom();
@@ -1157,6 +1193,7 @@ main {
                 Array.from(input.files).forEach(file => {
                     const span = document.createElement('span');
                     span.className = "px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-[9px] font-bold rounded text-blue-600 truncate max-w-[100px]";
+                    // 🚨 SECURITY: Using innerText intrinsically avoids HTML interpretation
                     span.innerText = file.name;
                     preview.appendChild(span);
                 });
@@ -1174,7 +1211,10 @@ main {
             document.getElementById('newCat').value = category;
             document.getElementById('newSub').value = subject;
             document.getElementById('newDescInput').value = descPrefix;
-            document.getElementById('form-context-msg').innerHTML = `<i class="fas fa-layer-group"></i> <span>Department: ${category} Support</span>`;
+            
+            // 🚨 SECURITY: Sanitize dynamic injection
+            const safeCategory = SecurityUtils.escapeHTML(category);
+            document.getElementById('form-context-msg').innerHTML = `<i class="fas fa-layer-group"></i> <span>Department: ${safeCategory} Support</span>`;
         },
 
         async finalizeTicketSubmission() {
@@ -1297,7 +1337,9 @@ main {
                     } else {
                         const icon = document.createElement('div');
                         icon.className = "flex flex-col items-center justify-center h-full";
-                        icon.innerHTML = `<i class="${isVideo ? 'fas fa-video text-purple-500' : 'fas fa-file-alt text-blue-500'} text-lg"></i><span class="text-[8px] mt-1 font-bold text-slate-500 truncate w-12 text-center px-1">${file.name}</span>`;
+                        // 🚨 SECURITY: Prevent HTML injection from file names
+                        const safeFileName = SecurityUtils.escapeHTML(file.name);
+                        icon.innerHTML = `<i class="${isVideo ? 'fas fa-video text-purple-500' : 'fas fa-file-alt text-blue-500'} text-lg"></i><span class="text-[8px] mt-1 font-bold text-slate-500 truncate w-12 text-center px-1">${safeFileName}</span>`;
                         item.appendChild(icon);
                     }
                     
@@ -1334,6 +1376,7 @@ main {
             document.getElementById('contact-details-inner').classList.remove('hidden');
             document.getElementById('contact-details-inner').classList.add('flex');
             
+            // 🚨 SECURITY: Ensure innerText is used instead of innerHTML
             document.getElementById('detailCategory').innerText = subject.split(' - ')[0] || "Identity"; 
             document.getElementById('contactName').innerText = user;
             document.getElementById('contactRank').innerText = "Airman"; 
@@ -1443,8 +1486,10 @@ main {
                 selectedElement.classList.add('active', 'bg-blue-600', 'text-white');
             }
 
+            // 🚨 SECURITY: Sanitizing technician name before injecting into DOM
+            const safeTechName = SecurityUtils.escapeHTML(techName);
             document.getElementById('feed-header-label').innerHTML = `
-                <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Chatting with: ${techName}</span>
+                <span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Chatting with: ${safeTechName}</span>
                 <div class="flex-1 h-px bg-slate-200 dark:bg-slate-800 ml-4"></div>`;
 
             // FIX: Explicitly fetch the private thread if we are switching tabs
@@ -1491,7 +1536,7 @@ main {
             } else {
                 document.getElementById('dynamicMessages').innerHTML = `
                     <div class="py-10 text-center">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Beginning of conversation with ${techName}</p>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Beginning of conversation with ${safeTechName}</p>
                     </div>`;
             }
         },
@@ -1593,15 +1638,17 @@ main {
             const generateAdminItem = (name) => {
                 const userMsg = this.fullMessageCache.find(m => m.sender_name === name && m.sender_avatar);
                 const avatarSrc = userMsg ? userMsg.sender_avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
+                // 🚨 SECURITY: Sanitizing admin name injection
+                const safeName = SecurityUtils.escapeHTML(name);
 
                 return `
-                <div onclick="SupportConsole.loadTechnicianConversation('${name}')" id="staff-item-${name}"
+                <div onclick="SupportConsole.loadTechnicianConversation('${safeName}')" id="staff-item-${safeName}"
                     class="staff-thread-item flex items-center gap-2 px-4 py-2 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all w-full overflow-hidden border-b border-slate-100 dark:border-slate-800 last:border-0">
                     <div class="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
-                        <img src="${avatarSrc}" onerror="this.onerror=null; this.outerHTML='<i class=\\'fas fa-user text-[10px]\\'></i>';" class="w-full h-full object-cover">
+                        <img src="${SecurityUtils.sanitizeUrl(avatarSrc)}" onerror="this.onerror=null; this.outerHTML='<i class=\\'fas fa-user text-[10px]\\'></i>';" class="w-full h-full object-cover">
                     </div>
                     <div class="flex flex-col justify-center min-w-0 flex-1">
-                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight truncate block">${name}</span>
+                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-200 leading-tight truncate block">${safeName}</span>
                     </div>
                 </div>
                 `;
@@ -1730,7 +1777,8 @@ main {
 
             const headerLabel = document.getElementById('feed-header-label');
             if (headerLabel) {
-                headerLabel.innerHTML = `<span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Thread with: ${adminName}</span>`;
+                // 🚨 SECURITY: Sanitizing admin name injection
+                headerLabel.innerHTML = `<span class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] truncate">Thread with: ${SecurityUtils.escapeHTML(adminName)}</span>`;
             }
         },
 
@@ -1795,7 +1843,9 @@ main {
             }
 
             htmlContent += messages.map(msg => {
-                const senderName = msg.sender_name;
+                // 🚨 SECURITY: Sanitizing DOM Injections
+                const safeSenderName = SecurityUtils.escapeHTML(msg.sender_name);
+                const safeMessage = SecurityUtils.escapeHTML(msg.message);
                 const isMe = msg.is_me;
                 const attachments = msg.attachments || [];
 
@@ -1803,14 +1853,14 @@ main {
                 const isStatus = msg.message && msg.message.toUpperCase().includes('STATUS UPDATE');
 
                 const avatar = msg.sender_avatar
-                    ? msg.sender_avatar
-                    : `https://ui-avatars.com/api/?name=${senderName}&background=3b82f6&color=fff`;
+                    ? SecurityUtils.sanitizeUrl(msg.sender_avatar)
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(safeSenderName)}&background=3b82f6&color=fff`;
 
                 if (isStatus) {
                     return `
                     <div class="flex justify-center py-2 animate-in fade-in duration-500 w-full">
                         <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm">
-                            ${msg.message}
+                            ${safeMessage}
                         </span>
                     </div>`;
                 }
@@ -1831,6 +1881,8 @@ main {
                         mediaList.slice(0, 4).forEach((att, index) => {
                             const globalIndex = SupportConsole.galleryMedia.findIndex(m => m.url === att.url);
                             const type = SupportConsole.classifyAttachment(att);
+                            // 🚨 SECURITY: Validate URLs for media elements
+                            const safeMediaUrl = SecurityUtils.sanitizeUrl(att.url);
 
                             let itemSpan = (count === 3 && index === 0) ? 'col-span-2' : 'col-span-1';
                             let heightClass = count === 1 ? 'max-h-[350px] w-full object-contain bg-slate-100 dark:bg-[#020617]' : (count === 3 && index === 0) ? 'h-44 sm:h-52 w-full object-cover' : 'h-32 sm:h-40 w-full object-cover';
@@ -1842,9 +1894,9 @@ main {
                             <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-[#020617] flex items-center justify-center ${itemSpan}" onclick="SupportConsole.openLightbox(${globalIndex})">`;
 
                             if (type === 'image') {
-                                mediaHtml += `<img src="${att.url}" loading="lazy" decoding="async" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
+                                mediaHtml += `<img src="${safeMediaUrl}" loading="lazy" decoding="async" class="${heightClass} transition-transform duration-500 ${hasMore && isLast ? 'blur-[2px]' : 'group-hover:scale-105'}">`;
                             } else if (type === 'video') {
-                                mediaHtml += `<video src="${att.url}#t=0.1" preload="none" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
+                                mediaHtml += `<video src="${safeMediaUrl}#t=0.1" preload="none" class="${heightClass} ${hasMore && isLast ? 'blur-[2px]' : ''}" muted playsinline></video>
                                          <div class="absolute inset-0 flex items-center justify-center bg-black/30"><div class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"><i class="fas fa-play text-white text-xs ml-0.5"></i></div></div>`;
                             } else {
                                 mediaHtml += `<div class="flex flex-col items-center p-6 text-slate-500 dark:text-slate-400 w-full h-full justify-center ${hasMore && isLast ? 'blur-[2px]' : ''}"><i class="fas fa-file-image text-2xl mb-2"></i><span class="text-[10px] truncate w-full px-2 text-center font-medium">Media</span></div>`;
@@ -1861,10 +1913,12 @@ main {
                     if (otherDocs.length > 0) {
                         fileHtml = `<div class="mt-2 flex flex-col gap-1 ${isMe ? 'items-end' : 'items-start'} w-full">`;
                         otherDocs.forEach(att => {
-                            const fileName = att.name || 'Document';
-                            const downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
+                            // 🚨 SECURITY: Sanitizing file name and URL
+                            const fileName = SecurityUtils.escapeHTML(att.name || 'Document');
+                            let downloadUrl = (att.url && att.url.includes('cloudinary.com')) 
                                 ? att.url.replace('/upload/', '/upload/fl_attachment/') 
                                 : att.url;
+                            downloadUrl = SecurityUtils.sanitizeUrl(downloadUrl);
 
                             fileHtml += `
                             <a href="${downloadUrl}" download="${fileName}" class="inline-flex items-center gap-3 p-3 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 rounded-xl text-[11px] font-bold border border-slate-200 dark:border-slate-700 shadow-sm transition-all max-w-[260px] sm:max-w-xs">
@@ -1883,14 +1937,14 @@ main {
                     ${!isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
                     
                     <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                        <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${senderName}</div>
+                        <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${safeSenderName}</div>
                         ${hasText ? `
                         <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
-                            ${msg.message}
+                            ${safeMessage}
                         </div>` : ''}
                         ${mediaHtml}
                         ${fileHtml}
-                        <div class="text-[9px] opacity-60 mt-1 ${isMe ? 'text-right' : ''}">${msg.timestamp}</div>
+                        <div class="text-[9px] opacity-60 mt-1 ${isMe ? 'text-right' : ''}">${SecurityUtils.escapeHTML(msg.timestamp)}</div>
                     </div>
                     
                     ${isMe ? `<img src="${avatar}" loading="lazy" decoding="async" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm">` : ''}
@@ -2032,14 +2086,16 @@ main {
                     const s = (file.name || '').toLowerCase();
                     const u = (file.url || '').toLowerCase();
                     const isVid = /\.(mp4|mov|webm)/i.test(s) || /\.(mp4|mov|webm)/i.test(u) || u.includes('/video/upload/');
+                    // 🚨 SECURITY: Sanitizing Sidebar media URLs
+                    const safeMediaUrl = SecurityUtils.sanitizeUrl(file.url);
                     
                     const item = document.createElement('div');
                     item.className = "group relative aspect-square rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-[#020617] cursor-pointer hover:ring-2 ring-blue-500 transition-all shadow-sm";
                     
                     item.onclick = () => this.openLightbox(this.galleryMedia, index);
                     let contentHtml = isVid 
-                        ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${file.url}#t=0.1" preload="none" class="w-full h-full object-cover"></video>`
-                        : `<img src="${file.url}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
+                        ? `<div class="absolute inset-0 flex items-center justify-center bg-slate-900/40 z-10"><i class="fas fa-play text-white text-sm"></i></div><video src="${safeMediaUrl}#t=0.1" preload="none" class="w-full h-full object-cover"></video>`
+                        : `<img src="${safeMediaUrl}" loading="lazy" decoding="async" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">`;
                     item.innerHTML = `
                         ${contentHtml}
                         <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-20"></div>`;
@@ -2052,12 +2108,13 @@ main {
                 if (filesList) filesList.innerHTML = `<div class="text-center py-10 opacity-50 text-slate-400"><i class="fas fa-file-alt text-3xl mb-2"></i><p class="text-[9px] uppercase font-black tracking-widest">No Documents Found</p></div>`;
             } else {
                 docs.forEach(file => {
-                    const fileName = file.name || 'Document';
+                    // 🚨 SECURITY: Sanitize file names and download URLs
+                    const fileName = SecurityUtils.escapeHTML(file.name || 'Document');
                     
-                    // FIX: Inject Cloudinary's forced-download flag into the URL
-                    const downloadUrl = (file.url && file.url.includes('cloudinary.com')) 
+                    let downloadUrl = (file.url && file.url.includes('cloudinary.com')) 
                         ? file.url.replace('/upload/', '/upload/fl_attachment/') 
                         : file.url;
+                    downloadUrl = SecurityUtils.sanitizeUrl(downloadUrl);
 
                     const item = document.createElement('div');
                     item.className = "flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 mb-2 hover:border-blue-500/50 transition-colors shadow-sm";
