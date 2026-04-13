@@ -16,7 +16,7 @@
         </div>
         
         <div class="hidden sm:block">
-            <button type="button" onclick="document.getElementById('saveUserBtn').click()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20 px-5 py-2.5 rounded-xl font-semibold transition-colors flex items-center text-sm">
+            <button type="button" id="quickSaveBtn" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20 px-5 py-2.5 rounded-xl font-semibold transition-colors flex items-center text-sm">
                 Quick Save
             </button>
         </div>
@@ -112,7 +112,7 @@
                             Phone Number
                         </label>
                         <div class="relative group">
-                            <input type="tel" name="phone" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);" placeholder="09XXXXXXXXX" value="{% if form.instance.pk %}{{ form.instance.profile.phone|default:'' }}{% endif %}" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
+                            <input type="tel" name="phone" id="phoneInput" maxlength="11" placeholder="09XXXXXXXXX" value="{% if form.instance.pk %}{{ form.instance.profile.phone|default:'' }}{% endif %}" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500">
                         </div>
                     </div>
 
@@ -121,7 +121,7 @@
                             Rank Code
                         </label>
                         <div class="relative group">
-                            <select name="rank" id="acc_rank" onchange="if(typeof updateRankBadge === 'function') updateRankBadge(this)" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
+                            <select name="rank" id="acc_rank" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
                                 <option value="" disabled {% if not form.instance.pk or not form.instance.profile.rank %}selected{% endif %}>Select Rank</option>
                                 <optgroup label="Enlisted">
                                     <option value="Airman" {% if form.instance.pk and form.instance.profile.rank == 'Airman' %}selected{% endif %}>Airman</option>
@@ -304,6 +304,19 @@ $(document).ready(function() {
     const userId = "{{ form.instance.id }}";
     const isEdit = userId && userId !== "None";
     const nextId = "{{ next_id|default:'' }}"; 
+
+    // 🚨 SECURITY: CSP Compliant Delegated Event Handlers
+    $('#quickSaveBtn').on('click', function() {
+        $('#saveUserBtn').click();
+    });
+
+    $('#phoneInput').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+    });
+
+    $('#acc_rank').on('change', function() {
+        if(typeof updateRankBadge === 'function') updateRankBadge(this);
+    });
 
     // --- 1. JQUERY AJAX: ASYNC USER CREATION ---
     $form.on('submit', function(e) {

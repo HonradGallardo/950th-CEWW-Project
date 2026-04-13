@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
+<div class="hidden">{% csrf_token %}</div>
+
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
@@ -151,7 +155,7 @@
 
 <div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+        <div id="deleteModalOverlay" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity cursor-pointer"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
             <div class="px-6 pt-6 pb-4">
@@ -160,18 +164,18 @@
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Ticket</h3>
                         <div class="mt-2">
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this ticket? This action cannot be undone.</p>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
-                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
+                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider transition-all active:scale-95">
                     Confirm Delete
                 </button>
-                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
+                <button type="button" id="cancelDeleteBtn" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider transition-all active:scale-95">
                     Cancel
                 </button>
             </div>
@@ -229,20 +233,20 @@
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i class="fas fa-search text-slate-400"></i>
                 </span>
-                <input type="text" id="ticketSearch" placeholder="Search by ID, Subject, Client, or Date..." 
+                <input type="text" id="ticketSearch" autocomplete="off" placeholder="Search by ID, Subject, Client, or Date..." 
                     class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
             </div>
             
             <div class="flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1 w-full lg:w-auto">
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all" data-filter="all" onclick="filterTable('all', this)">All</button>
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="pending" onclick="filterTable('Pending', this)">Pending</button>
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="mine" onclick="filterTable('mine', this)">Assigned</button>
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="completed" onclick="filterTable('completed', this)">Resolved</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all" data-filter="all">All</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="pending">Pending</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="mine">Assigned</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="completed">Resolved</button>
             </div>
         </div>
 
         <div class="grid grid-cols-2 lg:flex lg:flex-row items-stretch lg:items-center gap-2 lg:gap-3">
-            <select id="categoryFilter" class="col-span-2 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
+            <select id="categoryFilter" autocomplete="off" class="col-span-2 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
                 <option value="all">All Categories</option>
                 <option value="New Account Provisioning">New Account Provisioning</option>
                 <option value="OTP Removal Request">OTP Removal Request</option>
@@ -255,14 +259,14 @@
                 <option value="Custom Support Request">Custom Support Request</option>
             </select>
 
-            <select id="priorityFilter" class="col-span-1 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
+            <select id="priorityFilter" autocomplete="off" class="col-span-1 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
                 <option value="all">All Priorities</option>
                 <option value="high">High Priority</option>
                 <option value="medium">Medium Priority</option>
                 <option value="low">Low Priority</option>
             </select>
 
-            <select id="sortOrder" class="col-span-1 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
+            <select id="sortOrder" autocomplete="off" class="col-span-1 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
                 <option value="newest">Sort: Newest First</option>
                 <option value="oldest">Sort: Oldest First</option>
                 <option value="priority_desc">Sort: Priority (High-Low)</option>
@@ -272,11 +276,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 col-span-2 lg:w-auto lg:flex-1">
                 <div class="relative w-full">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">From</span>
-                    <input type="date" id="dateFrom" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-12 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                    <input type="date" id="dateFrom" autocomplete="off" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-12 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
                 </div>
                 <div class="relative w-full">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">To</span>
-                    <input type="date" id="dateTo" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-8 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                    <input type="date" id="dateTo" autocomplete="off" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-8 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
                 </div>
             </div>
         </div>
@@ -303,20 +307,39 @@
         <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-xl md:rounded-b-2xl">
             <span id="pageIndicator" class="text-xs font-bold text-slate-500 uppercase tracking-wider"></span>
             <div class="flex items-center gap-2">
-                <button id="prevPage" onclick="changePage(-1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
+                <button id="prevPage" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
                 <div id="pageNumbers" class="flex gap-1.5"></div>
-                <button id="nextPage" onclick="changePage(1)" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
+                <button id="nextPage" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
             </div>
         </div>
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
+    // 🚨 SECURITY: Strict HTML escape and strip engines to kill DOM XSS 
+    const SecurityUtils = {
+        escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        },
+        stripHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/(<([^>]+)>)/gi, "").trim();
+        }
+    };
+
     let allTickets = [];
     let currentPage = 1;
     const itemsPerPage = 10;
     const currentAdminUser = "{{ request.user.username|default:'' }}";
     const currentUserId = "{{ request.user.id|default:'null' }}";
+    let ticketToDelete = null;
 
     function scrollToTop() {
         const headElement = document.getElementById('head');
@@ -328,34 +351,27 @@
     }
 
     // --- DOM Event Listeners for Filters & Search ---
-    document.getElementById('ticketSearch').addEventListener('input', () => { 
-        currentPage = 1; 
-        updateUI(); 
-    });
+    document.getElementById('ticketSearch').addEventListener('input', () => { currentPage = 1; updateUI(); });
+    document.getElementById('categoryFilter').addEventListener('change', () => { currentPage = 1; updateUI(); });
+    document.getElementById('priorityFilter').addEventListener('change', () => { currentPage = 1; updateUI(); });
+    document.getElementById('sortOrder').addEventListener('change', () => { currentPage = 1; updateUI(); });
+    document.getElementById('dateFrom').addEventListener('change', () => { currentPage = 1; updateUI(); });
+    document.getElementById('dateTo').addEventListener('change', () => { currentPage = 1; updateUI(); });
 
-    document.getElementById('categoryFilter').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
+    document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+    document.getElementById('nextPage').addEventListener('click', () => changePage(1));
 
-    document.getElementById('priorityFilter').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    document.getElementById('sortOrder').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    document.getElementById('dateFrom').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
-    });
-
-    document.getElementById('dateTo').addEventListener('change', () => {
-        currentPage = 1;
-        updateUI();
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+                b.classList.add('text-slate-600', 'dark:text-slate-400');
+            });
+            this.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
+            this.classList.remove('text-slate-600', 'dark:text-slate-400');
+            currentPage = 1;
+            updateUI();
+        });
     });
 
     async function initAdminSync() {
@@ -418,8 +434,7 @@
         });
     }
 
-    function toggleActionMenu(event, specificMenuId) {
-        event.stopPropagation();
+    function toggleActionMenu(specificMenuId) {
         document.querySelectorAll('.action-menu').forEach(menu => {
             if (menu.id !== specificMenuId) menu.style.display = 'none';
         });
@@ -429,16 +444,18 @@
         }
     }
 
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.action-menu').forEach(menu => {
-            menu.style.display = 'none';
-        });
+    document.addEventListener('click', (e) => {
+        // Prevent menu from closing if clicking inside the menu or its trigger
+        if(!e.target.closest('.action-menu') && !e.target.closest('.btn-toggle-menu')) {
+            document.querySelectorAll('.action-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+        }
     });
 
     function updateUI() {
         const body = document.getElementById('ticketTableBody');
         
-        // Retrieve inputs
         const searchTerm = document.getElementById('ticketSearch').value.toLowerCase();
         const activeBtn = document.querySelector('.filter-btn.bg-white, .filter-btn.dark\\:bg-blue-600');
         const filterType = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
@@ -448,7 +465,6 @@
         const dateFromVal = document.getElementById('dateFrom').value;
         const dateToVal = document.getElementById('dateTo').value;
 
-        // Apply Filters & Search
         let filtered = allTickets.filter(t => {
             const paddedId = String(t.id).padStart(6, '0');
             const searchableContent = [
@@ -496,7 +512,6 @@
             return matchesSearch && matchesStatusFilter && matchesCategoryFilter && matchesPriorityFilter && matchesDate;
         });
 
-        // Apply Sorting
         filtered.sort((a, b) => {
             if (sortOrder === 'newest') {
                 return new Date(b.created_at) - new Date(a.created_at);
@@ -530,12 +545,26 @@
         if (paginatedItems.length === 0) {
             body.innerHTML = `<tr><td colspan="8" class="p-24 text-center text-sm font-bold text-slate-400 dark:text-slate-600 flex flex-col items-center gap-3"><i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i> No dispatch records found</td></tr>`;
         } else {
-            body.innerHTML = paginatedItems.map(t => `
-                <tr class="ticket-row group" onclick="goToDetail(${t.id})">
+            body.innerHTML = paginatedItems.map(t => {
+                // 🚨 SECURITY: Strict escape of all API payload strings before DOM injection
+                const safeId = SecurityUtils.escapeHTML(String(t.id));
+                const safeStatus = SecurityUtils.escapeHTML(t.status || 'Open');
+                const safePriority = SecurityUtils.escapeHTML(t.priority || 'Low');
+                const safeFirstName = SecurityUtils.escapeHTML(t.first_name || '');
+                const safeLastName = SecurityUtils.escapeHTML(t.last_name || '');
+                const safeUsername = SecurityUtils.escapeHTML(t.user_name || 'unknown');
+                const safeSubject = SecurityUtils.escapeHTML(t.subject || 'No Subject');
+                const safeDesc = SecurityUtils.escapeHTML(t.description || 'No additional details provided');
+                const safeTech = SecurityUtils.escapeHTML(t.technician_name || 'Unassigned');
+                const safePrevTech = SecurityUtils.escapeHTML(t.previous_technician || 'None');
+                const safeCreatedAt = SecurityUtils.escapeHTML(formatTimestamp(t.created_at));
+
+                return `
+                <tr class="ticket-row group" data-id="${safeId}">
                     <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none">
                         <div class="hidden lg:flex justify-between items-center w-full">
                             <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
-                                #${String(t.id).padStart(6, '0')}
+                                #${safeId.padStart(6, '0')}
                             </span>
                         </div>
                         
@@ -543,26 +572,26 @@
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-circle text-[8px] text-blue-500"></i>
                                 <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
-                                    #${String(t.id).padStart(6, '0')}
+                                    #${safeId.padStart(6, '0')}
                                 </span>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
-                                    ${t.status || 'Open'}
+                                <span class="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getStatusStyles(safeStatus)} inline-block">
+                                    ${safeStatus}
                                 </span>
                                 <div class="relative">
-                                    <button onclick="toggleActionMenu(event, 'menu-mobile-${t.id}')" class="action-btn-trigger h-8 w-8 rounded-md flex items-center justify-center text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <button data-target="menu-mobile-${safeId}" class="btn-toggle-menu action-btn-trigger h-8 w-8 rounded-md flex items-center justify-center text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
                                         <i class="fas fa-ellipsis-v text-xs"></i>
                                     </button>
-                                    <div id="menu-mobile-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2 origin-top-right">
-                                         <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                    <div id="menu-mobile-${safeId}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2 origin-top-right">
+                                         <button data-id="${safeId}" data-action="assign" class="btn-quick-action w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
                                             <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
                                         </button>
-                                        <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                                        <button data-id="${safeId}" data-action="resolve" class="btn-quick-action w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
                                             <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
                                         </button>
                                         <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
-                                        <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
+                                        <button data-id="${safeId}" class="btn-delete-ticket w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
                                             <i class="fas fa-trash-alt w-4"></i> Delete Record
                                         </button>
                                     </div>
@@ -572,63 +601,63 @@
                     </td>
                     <td data-label="Priority" class="p-4 align-middle border-b lg:border-none">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(t.priority)}">
-                                <i class="fas fa-circle text-[6px]"></i> ${t.priority || 'Low'}
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(safePriority)}">
+                                <i class="fas fa-circle text-[6px]"></i> ${safePriority}
                             </span>
                         </div>
                     </td>
                     <td data-label="Client" class="p-4 align-middle border-b lg:border-none">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full">${t.first_name || ''} ${t.last_name || ''}</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full">@${t.user_name || 'unknown'}</span>
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full">${safeFirstName} ${safeLastName}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full">@${safeUsername}</span>
                         </div>
                     </td>
                     <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center overflow-hidden">
-                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">${t.subject || 'No Subject'}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words">${t.description || 'No additional details provided'}</p>
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">${safeSubject}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words">${safeDesc}</p>
                         </div>
                     </td>
                     <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center gap-1">
                             <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full">
-                                <i class="fas fa-user-shield text-slate-400"></i> <span class="truncate">${t.technician_name || 'Unassigned'}</span>
+                                <i class="fas fa-user-shield text-slate-400"></i> <span class="truncate">${safeTech}</span>
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full">Prev: ${t.previous_technician || 'None'}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full">Prev: ${safePrevTech}</span>
                         </div>
                     </td>
                     <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell">
                         <div class="w-full flex justify-center">
-                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(t.status)} inline-block">
-                                ${t.status || 'Open'}
+                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(safeStatus)} inline-block">
+                                ${safeStatus}
                             </span>
                         </div>
                     </td>
                     <td data-label="Created At" class="p-4 align-middle border-b lg:border-none">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words">${formatTimestamp(t.created_at)}</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words">${safeCreatedAt}</span>
                             <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full">Logged</span>
                         </div>
                     </td>
                     <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
-                        <button onclick="toggleActionMenu(event, 'menu-desktop-${t.id}')" class="action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
-                            <i class="fas fa-ellipsis-v"></i>
+                        <button data-target="menu-desktop-${safeId}" class="btn-toggle-menu action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                            <i class="fas fa-ellipsis-v pointer-events-none"></i>
                         </button>
-                        <div id="menu-desktop-${t.id}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mt-2">
-                            <button onclick="quickAction(event, ${t.id}, 'assign')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                        <div id="menu-desktop-${safeId}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mt-2">
+                            <button data-id="${safeId}" data-action="assign" class="btn-quick-action w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
                                 <i class="fas fa-user-plus text-blue-500 w-4"></i> Assign To Me
                             </button>
-                            <button onclick="quickAction(event, ${t.id}, 'resolve')" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
+                            <button data-id="${safeId}" data-action="resolve" class="btn-quick-action w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-3 text-slate-700 dark:text-slate-300 transition-colors duration-200">
                                 <i class="fas fa-check-circle text-emerald-500 w-4"></i> Mark Resolved
                             </button>
                             <div class="border-t border-slate-100 dark:border-slate-700 w-full"></div>
-                            <button onclick="deleteTicket(event, ${t.id})" class="w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
+                            <button data-id="${safeId}" class="btn-delete-ticket w-full px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors duration-200">
                                 <i class="fas fa-trash-alt w-4"></i> Delete Record
                             </button>
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         const showingStart = filtered.length > 0 ? start + 1 : 0;
@@ -652,24 +681,15 @@
             btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-sm ${
                 isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`;
-            btn.onclick = () => { 
+            
+            // 🚨 SECURITY: Safe event listener binding
+            btn.addEventListener('click', () => { 
                 currentPage = i; 
                 updateUI(); 
                 scrollToTop(); 
-            };
+            });
             pageNumbersContainer.appendChild(btn);
         }
-    }
-
-    function filterTable(type, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
-            b.classList.add('text-slate-600', 'dark:text-slate-400');
-        });
-        btn.classList.add('bg-white', 'dark:bg-blue-600', 'text-blue-700', 'dark:text-white', 'shadow');
-        btn.classList.remove('text-slate-600', 'dark:text-slate-400');
-        currentPage = 1;
-        updateUI();
     }
 
     function changePage(dir) { 
@@ -678,28 +698,21 @@
         scrollToTop(); 
     }
 
-    function goToDetail(id) { window.location.href = `/tickets/detail/${id}/`; }
+    function goToDetail(id) { 
+        window.location.href = `/tickets/detail/${id}/`; 
+    }
 
-    async function quickAction(event, id, type) {
-        event.stopPropagation();
-        
+    async function quickAction(id, type) {
         const payload = type === 'assign' 
-            ? { 
-                technician_id: currentUserId, 
-                status: 'In Progress', 
-                priority: 'Medium' 
-              } 
-            : { 
-                technician_id: currentUserId,
-                status: 'Resolved' 
-              };
+            ? { technician_id: currentUserId, status: 'In Progress', priority: 'Medium' } 
+            : { technician_id: currentUserId, status: 'Resolved' };
         
         try {
             const res = await fetch(`/tickets/api/support-api/${id}/update_technical_details/`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 
-                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify(payload)
@@ -717,20 +730,85 @@
         }
     }
 
-    async function deleteTicket(event, id) {
-        event.stopPropagation();
-        if (!confirm("Are you sure you want to permanently delete this dispatch record?")) return;
+    // 🚨 SECURITY: Replaced native confirm() with custom modal for safety & better UX
+    function openDeleteModal(id) {
+        ticketToDelete = id;
+        document.getElementById('deleteModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+        ticketToDelete = null;
+        document.getElementById('deleteModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('deleteModalOverlay').addEventListener('click', closeDeleteModal);
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+        if (!ticketToDelete) return;
+        
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Deleting...';
+        btn.disabled = true;
+
         try {
-            const res = await fetch(`/tickets/api/support-api/${id}/`, {
+            const res = await fetch(`/tickets/api/support-api/${ticketToDelete}/`, {
                 method: 'DELETE',
                 headers: { 
-                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
-            if (res.ok) initAdminSync();
-        } catch (err) { console.error(err); }
-    }
+            if (res.ok) {
+                closeDeleteModal();
+                initAdminSync();
+            } else {
+                alert("Deletion failed. Ensure you have proper permissions.");
+            }
+        } catch (err) { 
+            console.error(err); 
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+
+    // 🚨 SECURITY: Centralized Event Delegation for table rows and buttons
+    document.getElementById('ticketTableBody').addEventListener('click', function(e) {
+        
+        // 1. Check if clicking toggle menu
+        const toggleBtn = e.target.closest('.btn-toggle-menu');
+        if (toggleBtn) {
+            e.stopPropagation();
+            toggleActionMenu(toggleBtn.dataset.target);
+            return;
+        }
+
+        // 2. Check if clicking quick action inside menu
+        const actionBtn = e.target.closest('.btn-quick-action');
+        if (actionBtn) {
+            e.stopPropagation();
+            quickAction(actionBtn.dataset.id, actionBtn.dataset.action);
+            return;
+        }
+
+        // 3. Check if clicking delete button inside menu
+        const deleteBtn = e.target.closest('.btn-delete-ticket');
+        if (deleteBtn) {
+            e.stopPropagation();
+            openDeleteModal(deleteBtn.dataset.id);
+            return;
+        }
+
+        // 4. Otherwise, it's a general row click
+        const row = e.target.closest('.ticket-row');
+        if (row) {
+            goToDetail(row.dataset.id);
+        }
+    });
 
     window.addEventListener('DOMContentLoaded', () => { 
         initAdminSync(); 
