@@ -1446,8 +1446,8 @@ main {
                 this.updateMediaAndFilesSidebar(this.allAttachments);
                 
                 const staffNames = [...new Set(this.fullMessageCache
-                    .filter(msg => !msg.is_me && !msg.message.toUpperCase().includes('STATUS UPDATE'))
-                    .map(msg => msg.sender_name))];
+                .filter(msg => !msg.is_me && !(msg.message?.toUpperCase().includes('STATUS UPDATE')))
+                .map(msg => msg.sender_name))];
                 this.renderStaffSidebar(staffNames);
 
                 document.getElementById('contact-details-container').classList.remove('opacity-0');
@@ -1456,7 +1456,7 @@ main {
                 if (this.fullMessageCache.length > 0) {
                     const lastMsg = this.fullMessageCache[this.fullMessageCache.length - 1];
                     
-                    if (lastMsg.recipient_name === "Everyone" || lastMsg.message.toUpperCase().includes('STATUS UPDATE')) {
+                    if (lastMsg.recipient_name === "Everyone" || lastMsg.message?.toUpperCase().includes('STATUS UPDATE')) {
                         this.loadGroupChat();
                     } else {
                         const techName = lastMsg.is_me ? lastMsg.recipient_name : lastMsg.sender_name;
@@ -1508,7 +1508,7 @@ main {
             }
 
             const techMessages = this.fullMessageCache.filter(msg => {
-                const isStatusUpdate = msg.message.toUpperCase().includes('STATUS UPDATE');
+                const isStatusUpdate = msg.message?.toUpperCase().includes('STATUS UPDATE');
                 if (isStatusUpdate) return true;
                 
                 return (msg.sender_name === techName && msg.recipient_name !== "Everyone") || 
@@ -1591,11 +1591,11 @@ main {
 
                         if (this.activeRecipient === "GROUP_CHAT") {
                             messagesToRender = this.fullMessageCache.filter(msg => 
-                                msg.recipient_name === "Everyone" || msg.message.toUpperCase().includes('STATUS UPDATE')
+                                msg.recipient_name === "Everyone" || msg.message?.toUpperCase().includes('STATUS UPDATE')
                             );
                         } else if (this.activeRecipient) {
                             messagesToRender = this.fullMessageCache.filter(msg => {
-                                if (msg.message.toUpperCase().includes('STATUS UPDATE')) return true;
+                                if (msg.message?.toUpperCase().includes('STATUS UPDATE')) return true;
                                 return (msg.sender_name === this.activeRecipient && msg.recipient_name !== "Everyone") || 
                                        (msg.is_me && msg.recipient_name === this.activeRecipient);
                             });
@@ -1710,7 +1710,7 @@ main {
             }
 
             const groupMessages = this.fullMessageCache.filter(msg => {
-                return msg.recipient_name === "Everyone" || msg.message.toUpperCase().includes('STATUS UPDATE');
+                return msg.recipient_name === "Everyone" || msg.message?.toUpperCase().includes('STATUS UPDATE');
             });
 
             const filteredAttachments = this.allAttachments.filter(att => {
@@ -1764,7 +1764,7 @@ main {
             }
 
             const filteredMessages = this.fullMessageCache.filter(m => {
-                const isStatusUpdate = m.message.toUpperCase().includes('STATUS UPDATE');
+                const isStatusUpdate = m.message?.toUpperCase().includes('STATUS UPDATE');
                 if (isStatusUpdate) return true;
                 const isAdminToUser = (m.sender_name === adminName && (m.recipient_name === ticketOwner || m.recipient_name === "Everyone"));
                 const isUserToAdmin = (m.sender_name === ticketOwner && m.recipient_name === adminName);
@@ -1792,7 +1792,7 @@ main {
             let filtered = this.fullMessageCache;
 
             if (type === 'text') {
-                filtered = filtered.filter(m => !m.message.toUpperCase().includes('STATUS UPDATE'));
+                filtered = filtered.filter(m => !(m.message?.toUpperCase().includes('STATUS UPDATE')));
             } else if (type === 'status') {
                 filtered = filtered.filter(m => m.message.toUpperCase().includes('STATUS UPDATE'));
             }
