@@ -52,7 +52,7 @@
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    .ticket-row { transition: all 0.3s ease; cursor: pointer; }
+    .ticket-row { transition: background-color 0.2s ease, border-color 0.2s ease; cursor: pointer; }
     .ticket-row:hover { 
         background-color: var(--row-hover) !important; 
     }
@@ -110,7 +110,6 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            transition: all 0.3s ease-in-out;
         }
 
         .dark .ticket-row { 
@@ -126,7 +125,6 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 0.5rem;
-            transition: all 0.3s ease-in-out;
         }
 
         .dark .ticket-row td { border-bottom-color: #1f2937 !important; }
@@ -565,7 +563,7 @@
 
                 return `
                 <tr class="ticket-row group" data-id="${safeId}">
-                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none transition-all duration-300">
+                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none">
                         <div class="hidden lg:flex justify-between items-center w-full">
                             <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
                                 #${safeId.padStart(6, '0')}
