@@ -90,7 +90,7 @@
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i class="fas fa-search text-slate-400"></i>
             </div>
-            <input type="text" id="searchInput" autocomplete="off" class="block w-full pl-9 pr-3 py-1.5 border border-slate-200 dark:border-slate-600 rounded-xl leading-5 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition-colors" placeholder="Search ID, Target, Snippet...">
+            <input type="text" id="searchInput" autocomplete="off" class="block w-full pl-9 pr-3 py-1.5 border border-slate-200 dark:border-slate-600 rounded-xl leading-5 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition-colors" placeholder="Search ID, Title, Target...">
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 w-full 2xl:w-auto justify-start 2xl:justify-end">
@@ -133,32 +133,23 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-12 gap-4 xl:h-[68vh] min-h-[500px] w-full mb-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-[75vh] min-h-[600px] w-full mb-6">
         
-        <div class="col-span-12 xl:col-span-7 flex flex-col h-[500px] xl:h-full min-w-0">
+        <div class="col-span-1 lg:col-span-5 xl:col-span-4 flex flex-col h-[500px] lg:h-full min-w-0">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300">
+                
                 <div class="px-4 py-3 sm:px-5 border-b border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
-                    <span class="font-rajdhani text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
+                    <span class="font-rajdhani text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fas fa-inbox text-blue-500"></i> Incident Feed
+                    </span>
                 </div>
 
-                <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar relative bg-slate-50/30 dark:bg-slate-900/20 xl:bg-transparent xl:dark:bg-transparent">
-                    <table class="w-full text-left border-collapse block xl:table xl:min-w-[850px]">
-                        <thead class="hidden xl:table-header-group sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-sm z-10">
-                            <tr class="font-rajdhani text-[11px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/80">
-                                <th class="px-4 sm:px-5 py-3 xl:whitespace-nowrap">Incident</th>
-                                <th class="px-3 py-3 w-24 text-center xl:whitespace-nowrap">Severity</th>
-                                <th class="px-4 sm:px-5 py-3 w-24 sm:w-32 text-center xl:whitespace-nowrap">Time</th>
-                                <th class="px-3 py-3 w-24 sm:w-28 text-center xl:whitespace-nowrap">Status</th>
-                                <th class="px-3 py-3 w-28 text-center xl:whitespace-nowrap">Category</th>
-                                <th class="px-3 py-3 text-left w-full min-w-[150px]">Target / Asset</th>
-                                <th class="px-3 py-3 w-32 text-left xl:whitespace-nowrap">Detection</th>
-                                <th class="px-3 py-3 w-28 text-center xl:whitespace-nowrap">Tech</th>
-                            </tr>
-                        </thead>
-                        <tbody id="incidentTableBody" class="block xl:table-row-group p-2 sm:p-3 xl:p-0 space-y-3 xl:space-y-0 xl:divide-y divide-slate-100 dark:divide-slate-700/50">
-                            <tr><td colspan="8" class="p-10 text-center text-slate-400 italic block xl:table-cell"><i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...</td></tr>
-                        </tbody>
-                    </table>
+                <div class="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative bg-slate-50/50 dark:bg-slate-900/30 p-2 sm:p-3">
+                    <div id="incidentList" class="space-y-3">
+                        <div class="p-10 text-center text-slate-400 italic">
+                            <i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...
+                        </div>
+                    </div>
                 </div>
 
                 <div class="px-4 py-3 sm:px-5 border-t border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0 relative z-20">
@@ -168,7 +159,7 @@
             </div>
         </div>
 
-        <div id="detailPanelWrapper" class="col-span-12 xl:col-span-5 flex flex-col h-[800px] xl:h-full min-w-0">
+        <div id="detailPanelWrapper" class="col-span-1 lg:col-span-7 xl:col-span-8 flex flex-col h-[800px] lg:h-full min-w-0">
             <div id="incidentDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300 relative group">
                 
                 <div id="emptyState" class="absolute inset-0 z-20 bg-white dark:bg-slate-800 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-300">
@@ -184,16 +175,16 @@
                 </div>
 
                 <div id="detailContent" class="hidden flex flex-col h-full overflow-hidden w-full absolute inset-0 bg-white dark:bg-slate-800 z-10 animate-fade-in-up">
-                    <div class="px-5 pt-5 pb-3.5 flex items-start justify-between border-b border-slate-100 dark:border-slate-700/80 shrink-0 bg-white dark:bg-slate-800">
-                        <div class="space-y-1 min-w-0 pr-3">
+                    <div class="px-5 pt-5 pb-3.5 flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-700/80 shrink-0 bg-white dark:bg-slate-800 gap-4">
+                        <div class="space-y-2 min-w-0 flex-1">
                             <span id="view_id" class="inline-block text-[10px] font-black text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 rounded-md uppercase tracking-widest border border-blue-100 dark:border-blue-800"></span>
-                            <h3 id="view_title" class="font-rajdhani font-black text-lg sm:text-xl text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight truncate"></h3>
+                            <h3 id="view_title" class="font-rajdhani font-black text-xl sm:text-2xl text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight break-words"></h3>
                         </div>
-                        <div class="flex items-center gap-2.5 shrink-0">
+                        <div class="flex items-center gap-2.5 shrink-0 self-start">
                             <div id="view_severity_badge"></div>
                             
                             {% if not is_commander %}
-                            <button type="button" id="deleteIncidentIconBtn" class="w-8 h-8 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 transition-all shadow-sm border border-red-100 dark:border-transparent hover:scale-105 active:scale-95">
+                            <button type="button" id="deleteIncidentIconBtn" class="w-8 h-8 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 transition-all shadow-sm border border-red-100 dark:border-transparent hover:scale-105 active:scale-95" title="Delete Incident">
                                 <i class="fas fa-trash-alt text-xs"></i>
                             </button>
                             {% endif %}
@@ -228,41 +219,41 @@
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-3">
                                 <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Category</label>
-                                    <p id="view_category" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                    <p id="view_category" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
                                 </div>
                                 <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Threat Actor</label>
-                                    <p id="view_threat_actor" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">Unknown</p>
+                                    <p id="view_threat_actor" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
                                 </div>
                                 <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Detection Source</label>
-                                    <p id="view_detection" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                    <p id="view_detection" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
                                 </div>
                                 
                                 <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Affected Area</label>
-                                    <p id="view_affected_area" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                    <p id="view_affected_area" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
                                 </div>
                                 <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Linked Asset</label>
-                                    <p id="view_asset" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                    <p id="view_asset" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
                                 </div>
                                 <div>
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Impact (CIA)</label>
-                                    <p id="view_impact" class="text-[9px] font-black text-slate-800 dark:text-slate-200 truncate">N/A</p>
+                                    <p id="view_impact" class="text-[9px] font-black text-slate-800 dark:text-slate-200 break-words"></p>
                                 </div>
 
-                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors">
+                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors mt-2">
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Known IoCs</label>
-                                    <p id="view_iocs" class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 truncate">None recorded</p>
+                                    <p id="view_iocs" class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 break-all"></p>
                                 </div>
-                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors">
+                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors mt-2">
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Exploited CVE</label>
-                                    <p id="view_cve" class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 truncate">None</p>
+                                    <p id="view_cve" class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 break-all"></p>
                                 </div>
-                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors">
+                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors mt-2">
                                     <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Root Cause</label>
-                                    <p id="view_root_cause" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate">Pending RCA</p>
+                                    <p id="view_root_cause" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 break-words"></p>
                                 </div>
                             </div>
                         </div>
@@ -271,14 +262,14 @@
                             <label class="font-rajdhani flex items-center gap-2 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                 <i class="fas fa-file-lines"></i> Report Summary
                             </label>
-                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed min-h-[60px] shadow-inner" id="view_description"></div>
+                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3.5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed min-h-[60px] shadow-inner whitespace-pre-wrap break-words" id="view_description"></div>
                         </div>
 
                         <div class="space-y-2 hidden" id="actions_taken_container">
                             <label class="font-rajdhani flex items-center gap-2 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                                 <i class="fas fa-history"></i> Progress & Actions Log
                             </label>
-                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3.5 text-xs text-slate-700 dark:text-slate-300 font-mono leading-6 shadow-inner overflow-x-auto" id="view_actions"></div>
+                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3.5 text-xs text-slate-700 dark:text-slate-300 font-mono leading-6 shadow-inner overflow-x-auto whitespace-pre-wrap break-words" id="view_actions"></div>
                         </div>
                     </div>
 
@@ -336,7 +327,7 @@ function loadIncidents() {
         },
         error: function(err) {
             console.error("Failed to fetch incidents:", err);
-            $('#incidentTableBody').html('<tr><td colspan="8" class="p-10 text-center text-red-400 italic block xl:table-cell">Error connecting to telemetry server.</td></tr>');
+            $('#incidentList').html('<div class="p-10 text-center text-red-400 italic">Error connecting to telemetry server.</div>');
         }
     });
 }
@@ -499,12 +490,13 @@ function renderPagination(totalPages) {
     container.appendChild(createBtn('<i class="fas fa-chevron-right pointer-events-none"></i>', currentPage + 1, currentPage === totalPages));
 }
 
+// CHANGED: Re-engineered to build Card Elements instead of Table Rows
 function renderTableRows(incidents) {
-    const $tbody = $('#incidentTableBody');
+    const $container = $('#incidentList');
     let html = '';
 
     if (incidents.length === 0) {
-        $tbody.html('<tr><td colspan="8" class="p-12 text-center text-slate-400 italic block xl:table-cell">No active incidents found in database.</td></tr>');
+        $container.html('<div class="p-12 text-center text-slate-400 italic">No active incidents found in database.</div>');
         return;
     }
 
@@ -547,102 +539,58 @@ function renderTableRows(incidents) {
             }
         }
 
-        const safeTitle = SecurityUtils.escapeHTML(inc.title);
+        const safeIdPad = String(inc.id).padStart(3, '0');
+        // FIX: The title is now correctly utilized and displayed on the card!
+        const safeTitle = SecurityUtils.escapeHTML(inc.title) || "No Title Provided";
         const safeCategory = SecurityUtils.escapeHTML(inc.category || "Uncategorized");
         const safeAsset = SecurityUtils.escapeHTML(inc.linked_asset || "N/A");
-        const safeDetection = SecurityUtils.escapeHTML(inc.detection_source || "Unknown");
         const safeAssigned = SecurityUtils.escapeHTML(inc.assigned_to_name || "Unassigned");
         const safeAffectedArea = SecurityUtils.escapeHTML(inc.affected_area || "N/A");
         
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
         const activeClass = currentOpenIncidentId == inc.id 
-            ? 'border-blue-500 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 xl:border-transparent xl:border-l-blue-500 xl:border-l-4' 
-            : 'border-slate-200 dark:border-slate-700 xl:border-transparent xl:border-0';
+            ? 'border-blue-500 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 ring-1 ring-blue-500/50' 
+            : 'border-slate-200 dark:border-slate-700/80';
 
         html += `
-        <tr data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-row block xl:table-row bg-white dark:bg-slate-800 xl:bg-transparent xl:dark:bg-transparent rounded-2xl xl:rounded-none shadow-md shadow-slate-200/50 dark:shadow-none xl:shadow-none border xl:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass} mb-4 xl:mb-0 relative overflow-hidden">
+        <div data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-row flex flex-col bg-white dark:bg-slate-800 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-blue-400 dark:hover:border-blue-500 border ${activeClass} group">
             
-            <td class="block xl:table-cell p-0 xl:p-4 xl:w-36 align-middle border-b xl:border-none">
-                <div class="hidden xl:flex justify-between items-center w-full">
-                    <div class="flex items-center gap-2.5">
-                        <div class="flex-shrink-0 w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-900 xl:dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-sm">
-                            <i class="fas ${sevIcon} ${sevColor} text-[9px]"></i>
-                        </div>
-                        <span class="inline-block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">INC-${String(inc.id).padStart(3, '0')}</span>
-                    </div>
-                </div>
-                
-                <div class="flex xl:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl transition-colors duration-300">
-                    <div class="flex items-center gap-2.5">
-                        <div class="flex-shrink-0 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
-                            <i class="fas ${sevIcon} ${sevColor} text-[9px]"></i>
-                        </div>
-                        <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
-                            INC-${String(inc.id).padStart(3, '0')}
-                        </span>
-                    </div>
-                    <div>
-                        <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusBadge}">
-                            ${safeStatus}
-                        </span>
-                    </div>
-                </div>
-            </td>
-
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Severity</span>
-                <div class="flex-1 text-right xl:text-center">
-                    <span class="inline-block px-2.5 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider ${sevBadge}">
-                        ${safeSeverity}
+            <div class="flex justify-between items-start mb-2.5">
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${sevBadge}">
+                        <i class="fas ${sevIcon} mr-1.5 opacity-80"></i> ${safeSeverity}
                     </span>
+                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center"><i class="far fa-clock mr-1 opacity-70"></i> ${formattedDate}</span>
                 </div>
-            </td>
-
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 xl:px-4 text-[9px] text-slate-400 dark:text-slate-500 font-bold text-center xl:whitespace-nowrap border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Time</span>
-                <span class="flex-1 text-right xl:text-center">${formattedDate}</span>
-            </td>
-
-            <td class="hidden xl:table-cell px-3 py-3.5 text-center">
-                <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusBadge}">
+                <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${statusBadge}">
                     ${safeStatus}
                 </span>
-            </td>
+            </div>
             
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Category</span>
-                <div class="flex-1 min-w-0 text-right xl:text-center flex justify-end xl:justify-center">
-                    <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 break-words whitespace-normal bg-slate-100 dark:bg-slate-900 xl:dark:bg-slate-800 px-2 py-1 rounded-md xl:bg-transparent xl:dark:bg-transparent xl:px-0">
-                        ${safeCategory}
+            <h4 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-2.5 line-clamp-2 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">
+                <span class="font-mono text-[11px] text-blue-600 dark:text-blue-400 mr-1.5 opacity-80">INC-${safeIdPad}</span> 
+                ${safeTitle}
+            </h4>
+            
+            <div class="flex items-center justify-between mt-auto pt-2.5 border-t border-slate-50 dark:border-slate-700/50">
+                <div class="flex items-center gap-3 min-w-0 pr-2">
+                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate max-w-[140px]" title="${displayAsset}">
+                        <i class="fas fa-bullseye opacity-70 text-slate-400"></i> <span class="truncate">${displayAsset}</span>
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 items-center gap-1.5 hidden sm:flex truncate max-w-[120px]">
+                        <i class="fas fa-folder-open opacity-70 text-slate-400"></i> <span class="truncate">${safeCategory}</span>
                     </span>
                 </div>
-            </td>
+                <span class="text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-md shrink-0">
+                    <i class="fas fa-user-astronaut opacity-70"></i> <span class="truncate max-w-[80px]">${safeAssigned}</span>
+                </span>
+            </div>
 
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Target/Asset</span>
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-left block xl:w-full xl:max-w-[130px]">
-                    ${displayAsset}
-                </span>
-            </td>
-
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Detection</span>
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-left">
-                    ${safeDetection}
-                </span>
-            </td>
-            
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Tech</span>
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-center">
-                    ${safeAssigned}
-                </span>
-            </td>
-        </tr>`;
+        </div>`;
     });
 
-    $tbody.html(html);
+    $container.html(html);
 }
 
 function previewIncident(data) {
@@ -652,7 +600,8 @@ function previewIncident(data) {
     $('#emptyState').addClass('opacity-0 pointer-events-none');
     $('#detailContent').removeClass('hidden');
     
-    if (window.innerWidth < 1280) {
+    // Automatically scroll to the detail panel when viewed on smaller screens
+    if (window.innerWidth < 1024) {
         $('#detailPanelWrapper')[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -663,7 +612,8 @@ function previewIncident(data) {
     }
 
     $('#view_id').text("ID: INC-" + String(data.id).padStart(3, '0'));
-    $('#view_title').text(data.title);
+    // FIX: Using text() natively escapes any XSS input from the title string.
+    $('#view_title').text(data.title || "No Title Provided");
     $('#view_status').text(data.status);
     $('#view_reporter').text(data.reported_by_name || "System");
     $('#view_assigned').text(data.assigned_to_name || "Unassigned");
@@ -772,7 +722,9 @@ function closeDeleteModal() {
 }
 
 $(document).ready(function() {
-    $('#incidentTableBody').on('click', '.incident-row', function() {
+    
+    // Bind to the new card class
+    $('#incidentList').on('click', '.incident-row', function() {
         const incId = $(this).data('id');
         const incident = allIncidents.find(i => i.id == incId);
         if (incident) previewIncident(incident);
@@ -842,44 +794,5 @@ $(document).ready(function() {
         50% { opacity: 0.15; transform: scale(0.96); }
     }
     .animate-blink { animation: blinkWarning 0.8s ease-in-out infinite; }
-
-    /* CARD LAYOUT CSS FOR INCIDents */
-    @media (max-width: 1280px) {
-        .admin-table-container { height: auto; overflow: visible; }
-        table, thead, tbody, th, td, tr { display: block; }
-        thead tr { position: absolute; top: -9999px; left: -9999px; }
-        
-        #incidentTableBody {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            padding: 0.5rem;
-        }
-
-        .incident-row {
-            background: #ffffff !important;
-            border: 1px solid var(--head-border) !important;
-            border-radius: 0.75rem;
-            padding: 0;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-
-        .dark .incident-row { 
-            background: #111827 !important; 
-            border-color: #1f2937 !important; 
-        }
-        
-        .incident-row td:not(:first-child) { 
-            padding: 0.75rem 1.25rem !important;
-            border-bottom: 1px solid var(--head-border);
-            width: 100% !important;
-        }
-
-        .dark .incident-row td:not(:first-child) { border-bottom-color: #1f2937; }
-        .incident-row td:last-child { border-bottom: none !important; }
-    }
 </style>
 {% endblock %}
