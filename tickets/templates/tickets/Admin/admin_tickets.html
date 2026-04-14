@@ -34,7 +34,7 @@
         -webkit-backdrop-filter: blur(12px);
         color: var(--head-text) !important;
         border-color: var(--head-border) !important;
-        transition: all 0.3s ease;
+        transition: all 0.4s ease-in-out;
         top: 0; 
         position: sticky;
         z-index: 30;
@@ -43,6 +43,7 @@
     .admin-table-container {
         height: auto; 
         overflow: visible;
+        transition: all 0.3s ease;
     }
     
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -51,7 +52,7 @@
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    .ticket-row { transition: all 0.2s ease; cursor: pointer; }
+    .ticket-row { transition: all 0.3s ease; cursor: pointer; }
     .ticket-row:hover { 
         background-color: var(--row-hover) !important; 
     }
@@ -87,6 +88,7 @@
     }
     .dark .action-btn-trigger:hover { color: #60a5fa; }
 
+    /* TABLE TO CARD RESPONSIVE BREAKPOINT */
     @media (max-width: 1024px) {
         .admin-table-container { height: auto; overflow: visible; }
         table, thead, tbody, th, td, tr { display: block; }
@@ -108,6 +110,7 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            transition: all 0.3s ease-in-out;
         }
 
         .dark .ticket-row { 
@@ -123,6 +126,7 @@
             align-items: flex-start;
             justify-content: space-between;
             gap: 0.5rem;
+            transition: all 0.3s ease-in-out;
         }
 
         .dark .ticket-row td { border-bottom-color: #1f2937 !important; }
@@ -153,14 +157,14 @@
     }
 </style>
 
-<div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto transition-opacity duration-300" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div id="deleteModalOverlay" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity cursor-pointer"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
             <div class="px-6 pt-6 pb-4">
                 <div class="sm:flex sm:items-start">
-                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
+                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10 transition-all duration-300">
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
@@ -171,11 +175,11 @@
                     </div>
                 </div>
             </div>
-            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
-                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider transition-all active:scale-95">
+            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3 transition-colors duration-300">
+                <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider transition-all active:scale-95 duration-200">
                     Confirm Delete
                 </button>
-                <button type="button" id="cancelDeleteBtn" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider transition-all active:scale-95">
+                <button type="button" id="cancelDeleteBtn" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider transition-all active:scale-95 duration-200">
                     Cancel
                 </button>
             </div>
@@ -183,70 +187,70 @@
     </div>
 </div>
 
-<div class="font-plex min-h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#0F172A] p-3 md:p-6 text-slate-900 dark:text-slate-300 transition-colors duration-300">
+<div class="font-plex min-h-[calc(100vh-73px)] bg-slate-50 dark:bg-[#0F172A] p-3 sm:p-4 md:p-6 text-slate-900 dark:text-slate-300 transition-colors duration-300">
     
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center transition-all hover:shadow-md">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6 transition-all duration-300 ease-in-out">
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-center transition-all duration-300 hover:shadow-md hover:-translate-y-1">
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1"><i class="fas fa-ticket-alt mr-1"></i> Total Tickets</span>
             <span class="text-3xl font-black text-slate-800 dark:text-slate-100" id="metric-total">0</span>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 w-16 h-16 bg-amber-500/10 rounded-bl-full"></div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-amber-200 dark:border-amber-800/50 shadow-sm flex flex-col justify-center transition-all duration-300 hover:shadow-md hover:-translate-y-1 relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-amber-500/10 rounded-bl-full transition-all duration-300"></div>
             <span class="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1"><i class="fas fa-clock mr-1"></i> Pending</span>
             <span class="text-3xl font-black text-amber-600 dark:text-amber-400" id="metric-pending">0</span>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-blue-200 dark:border-blue-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 w-16 h-16 bg-blue-500/10 rounded-bl-full"></div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-blue-200 dark:border-blue-800/50 shadow-sm flex flex-col justify-center transition-all duration-300 hover:shadow-md hover:-translate-y-1 relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-blue-500/10 rounded-bl-full transition-all duration-300"></div>
             <span class="text-xs font-bold text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1"><i class="fas fa-spinner mr-1"></i> In Progress</span>
             <span class="text-3xl font-black text-blue-600 dark:text-blue-400" id="metric-progress">0</span>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm flex flex-col justify-center transition-all hover:shadow-md relative overflow-hidden">
-            <div class="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full"></div>
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800/50 shadow-sm flex flex-col justify-center transition-all duration-300 hover:shadow-md hover:-translate-y-1 relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full transition-all duration-300"></div>
             <span class="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1"><i class="fas fa-check-circle mr-1"></i> Completed</span>
             <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400" id="metric-completed">0</span>
         </div>
     </div>
 
-    <header id="head" class="flex flex-col gap-4 p-5 md:p-6 mb-6 rounded-2xl border shadow-sm">
+    <header id="head" class="flex flex-col gap-4 p-4 sm:p-5 md:p-6 mb-4 md:mb-6 rounded-2xl border shadow-sm transition-all duration-300">
         <div class="flex items-center justify-between">
             <div class="flex flex-col gap-1">
-                <h1 class="font-rajdhani text-base md:text-xl font-black tracking-tight flex items-center gap-3">
+                <h1 class="font-rajdhani text-base md:text-xl font-black tracking-tight flex items-center gap-2 sm:gap-3 transition-all duration-300">
                     <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                         <i class="fas fa-shield-alt text-blue-600 dark:text-blue-400"></i>
                     </div>
-                    <span class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">
-                        Support Command Center
+                    <span class="font-rajdhani text-xl sm:text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm transition-all duration-300">
+                        Support Command
                     </span>
                 </h1>
-                <p class="text-xs font-semibold opacity-70 text-blue-600 dark:text-blue-400 uppercase tracking-widest pl-11">
-                    Administrative Dispatch Overview
+                <p class="text-[10px] sm:text-xs font-semibold opacity-70 text-blue-600 dark:text-blue-400 uppercase tracking-widest pl-[44px] sm:pl-11 transition-all duration-300">
+                    Administrative Dispatch
                 </p>
             </div>
-            <div class="lg:hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2">
+            <div class="lg:hidden bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-300">
                 <i class="fas fa-ticket-alt text-blue-500 text-xs"></i>
                 <span id="mobileCount" class="text-sm font-black text-blue-700 dark:text-blue-400">00</span>
             </div>
         </div>
         
-        <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 mt-2">
-            <div class="relative w-full lg:flex-grow lg:max-w-2xl">
+        <div class="flex flex-col xl:flex-row items-stretch xl:items-center gap-3 mt-2 transition-all duration-300">
+            <div class="relative w-full xl:flex-grow xl:max-w-2xl transition-all duration-300">
                 <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-slate-400"></i>
+                    <i class="fas fa-search text-slate-400 transition-colors duration-300"></i>
                 </span>
-                <input type="text" id="ticketSearch" autocomplete="off" placeholder="Search by ID, Subject, Client, or Date..." 
-                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all shadow-inner dark:text-slate-200">
+                <input type="text" id="ticketSearch" autocomplete="off" placeholder="Search by ID, Subject, Client..." 
+                    class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl py-2.5 pl-11 pr-4 text-sm font-medium outline-none transition-all duration-300 shadow-inner dark:text-slate-200">
             </div>
             
-            <div class="flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1 w-full lg:w-auto">
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all" data-filter="all">All</button>
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="pending">Pending</button>
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="mine">Assigned</button>
-                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all" data-filter="completed">Resolved</button>
+            <div class="flex bg-slate-100/80 dark:bg-slate-800/80 p-1.5 rounded-xl border border-slate-200/50 dark:border-slate-700/50 gap-1 w-full xl:w-auto transition-all duration-300">
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 bg-white dark:bg-blue-600 shadow text-blue-700 dark:text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-200" data-filter="all">All</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all duration-200" data-filter="pending">Pending</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all duration-200" data-filter="mine">Assigned</button>
+                <button class="filter-btn flex-1 whitespace-nowrap px-1 sm:px-4 py-2 text-slate-600 dark:text-slate-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-white/60 dark:hover:bg-slate-700 transition-all duration-200" data-filter="completed">Resolved</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 lg:flex lg:flex-row items-stretch lg:items-center gap-2 lg:gap-3">
-            <select id="categoryFilter" autocomplete="off" class="col-span-2 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:flex xl:flex-row items-stretch xl:items-center gap-2 lg:gap-3 transition-all duration-300">
+            <select id="categoryFilter" autocomplete="off" class="w-full xl:w-auto xl:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate transition-all duration-300">
                 <option value="all">All Categories</option>
                 <option value="New Account Provisioning">New Account Provisioning</option>
                 <option value="OTP Removal Request">OTP Removal Request</option>
@@ -259,38 +263,38 @@
                 <option value="Custom Support Request">Custom Support Request</option>
             </select>
 
-            <select id="priorityFilter" autocomplete="off" class="col-span-1 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
+            <select id="priorityFilter" autocomplete="off" class="w-full xl:w-auto xl:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate transition-all duration-300">
                 <option value="all">All Priorities</option>
                 <option value="high">High Priority</option>
                 <option value="medium">Medium Priority</option>
                 <option value="low">Low Priority</option>
             </select>
 
-            <select id="sortOrder" autocomplete="off" class="col-span-1 lg:w-auto lg:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate">
+            <select id="sortOrder" autocomplete="off" class="w-full xl:w-auto xl:flex-1 bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 px-2 sm:px-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer truncate transition-all duration-300">
                 <option value="newest">Sort: Newest First</option>
                 <option value="oldest">Sort: Oldest First</option>
                 <option value="priority_desc">Sort: Priority (High-Low)</option>
                 <option value="priority_asc">Sort: Priority (Low-High)</option>
             </select>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 col-span-2 lg:w-auto lg:flex-1">
-                <div class="relative w-full">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">From</span>
-                    <input type="date" id="dateFrom" autocomplete="off" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-12 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+            <div class="grid grid-cols-2 gap-2 w-full xl:w-auto xl:flex-1 transition-all duration-300">
+                <div class="relative w-full transition-all duration-300">
+                    <span class="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[9px] sm:text-[10px] uppercase">From</span>
+                    <input type="date" id="dateFrom" autocomplete="off" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-10 sm:pl-12 pr-1 sm:pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer transition-all duration-300">
                 </div>
-                <div class="relative w-full">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[10px] uppercase">To</span>
-                    <input type="date" id="dateTo" autocomplete="off" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-8 pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer">
+                <div class="relative w-full transition-all duration-300">
+                    <span class="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-[9px] sm:text-[10px] uppercase">To</span>
+                    <input type="date" id="dateTo" autocomplete="off" class="w-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-xl py-2.5 pl-8 sm:pl-9 pr-1 sm:pr-3 outline-none focus:border-blue-500 shadow-sm cursor-pointer transition-all duration-300">
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col">
+    <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col transition-all duration-300">
         <div class="admin-table-container overflow-auto custom-scrollbar">
-            <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px]">
-                <thead class="font-rajdhani hidden lg:table-header-group">
-                    <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm">
+            <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px] transition-all duration-300">
+                <thead class="font-rajdhani hidden lg:table-header-group transition-all duration-300">
+                    <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm transition-colors duration-300">
                         <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl">Ref ID</th>
                         <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Priority</th>
                         <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Client</th>
@@ -301,15 +305,15 @@
                         <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80"></tbody>
+                <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80 transition-all duration-300"></tbody>
             </table>
         </div>
-        <div class="p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-xl md:rounded-b-2xl">
-            <span id="pageIndicator" class="text-xs font-bold text-slate-500 uppercase tracking-wider"></span>
-            <div class="flex items-center gap-2">
-                <button id="prevPage" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
-                <div id="pageNumbers" class="flex gap-1.5"></div>
-                <button id="nextPage" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-colors shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
+        <div class="p-4 sm:p-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-xl md:rounded-b-2xl transition-all duration-300">
+            <span id="pageIndicator" class="text-xs font-bold text-slate-500 uppercase tracking-wider text-center md:text-left transition-all duration-300"></span>
+            <div class="flex items-center gap-2 transition-all duration-300">
+                <button id="prevPage" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-all duration-200 shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
+                <div id="pageNumbers" class="flex gap-1.5 transition-all duration-300"></div>
+                <button id="nextPage" class="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition-all duration-200 shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
             </div>
         </div>
     </div>
@@ -561,14 +565,14 @@
 
                 return `
                 <tr class="ticket-row group" data-id="${safeId}">
-                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none">
+                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none transition-all duration-300">
                         <div class="hidden lg:flex justify-between items-center w-full">
-                            <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
                                 #${safeId.padStart(6, '0')}
                             </span>
                         </div>
                         
-                        <div class="flex lg:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl">
+                        <div class="flex lg:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl transition-colors duration-300">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-circle text-[8px] text-blue-500"></i>
                                 <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
@@ -576,11 +580,11 @@
                                 </span>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getStatusStyles(safeStatus)} inline-block">
+                                <span class="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${getStatusStyles(safeStatus)} inline-block transition-colors duration-300">
                                     ${safeStatus}
                                 </span>
                                 <div class="relative">
-                                    <button data-target="menu-mobile-${safeId}" class="btn-toggle-menu action-btn-trigger h-8 w-8 rounded-md flex items-center justify-center text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <button data-target="menu-mobile-${safeId}" class="btn-toggle-menu action-btn-trigger h-8 w-8 rounded-md flex items-center justify-center text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-200">
                                         <i class="fas fa-ellipsis-v text-xs"></i>
                                     </button>
                                     <div id="menu-mobile-${safeId}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden right-0 mt-2 origin-top-right">
@@ -599,48 +603,48 @@
                             </div>
                         </div>
                     </td>
-                    <td data-label="Priority" class="p-4 align-middle border-b lg:border-none">
+                    <td data-label="Priority" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(safePriority)}">
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(safePriority)} transition-colors duration-300">
                                 <i class="fas fa-circle text-[6px]"></i> ${safePriority}
                             </span>
                         </div>
                     </td>
-                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none">
+                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full">${safeFirstName} ${safeLastName}</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full">@${safeUsername}</span>
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full transition-colors duration-300">${safeFirstName} ${safeLastName}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full transition-colors duration-300">@${safeUsername}</span>
                         </div>
                     </td>
-                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none">
+                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center overflow-hidden">
-                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">${safeSubject}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words">${safeDesc}</p>
+                            <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 break-words">${safeSubject}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words transition-colors duration-300">${safeDesc}</p>
                         </div>
                     </td>
-                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none">
+                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center gap-1">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full transition-colors duration-300">
                                 <i class="fas fa-user-shield text-slate-400"></i> <span class="truncate">${safeTech}</span>
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full">Prev: ${safePrevTech}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full transition-colors duration-300">Prev: ${safePrevTech}</span>
                         </div>
                     </td>
-                    <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell">
+                    <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell transition-all duration-300">
                         <div class="w-full flex justify-center">
-                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(safeStatus)} inline-block">
+                            <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(safeStatus)} inline-block transition-colors duration-300">
                                 ${safeStatus}
                             </span>
                         </div>
                     </td>
-                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none">
+                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words">${safeCreatedAt}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full">Logged</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words transition-colors duration-300">${safeCreatedAt}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full transition-colors duration-300">Logged</span>
                         </div>
                     </td>
-                    <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell">
-                        <button data-target="menu-desktop-${safeId}" class="btn-toggle-menu action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                    <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell transition-all duration-300">
+                        <button data-target="menu-desktop-${safeId}" class="btn-toggle-menu action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200">
                             <i class="fas fa-ellipsis-v pointer-events-none"></i>
                         </button>
                         <div id="menu-desktop-${safeId}" class="action-menu bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden mt-2">
@@ -678,8 +682,8 @@
             const isCurrent = i === currentPage;
             const btn = document.createElement('button');
             btn.innerText = i;
-            btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-sm ${
-                isCurrent ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+            btn.className = `px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 border shadow-sm ${
+                isCurrent ? 'bg-blue-600 text-white border-blue-600 scale-105' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`;
             
             // 🚨 SECURITY: Safe event listener binding
