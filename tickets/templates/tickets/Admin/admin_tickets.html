@@ -88,8 +88,8 @@
     }
     .dark .action-btn-trigger:hover { color: #60a5fa; }
 
-    /* TABLE TO CARD RESPONSIVE BREAKPOINT */
-    @media (max-width: 1024px) {
+    /* CHANGED: Bumped breakpoint to 1280px so cards trigger before table squishes */
+    @media (max-width: 1280px) {
         .admin-table-container { height: auto; overflow: visible; }
         table, thead, tbody, th, td, tr { display: block; }
         thead tr { position: absolute; top: -9999px; left: -9999px; }
@@ -291,16 +291,16 @@
     <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col transition-all duration-300">
         <div class="admin-table-container overflow-auto custom-scrollbar">
             <table class="w-full text-left border-separate border-spacing-0 transition-all duration-300">
-                <thead class="font-rajdhani hidden lg:table-header-group transition-all duration-300">
+                <thead class="font-rajdhani hidden xl:table-header-group transition-all duration-300">
                     <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm transition-colors duration-300">
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl lg:whitespace-nowrap w-24">Ref ID</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Priority</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Client</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl xl:whitespace-nowrap w-24">Ref ID</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 xl:whitespace-nowrap">Priority</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 xl:whitespace-nowrap">Client</th>
                         <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 w-full min-w-[200px]">Issue & Snippet</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Agent Details</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-center lg:whitespace-nowrap">Status</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Created At</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl lg:whitespace-nowrap">Actions</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 xl:whitespace-nowrap">Agent Details</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-center xl:whitespace-nowrap">Status</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 xl:whitespace-nowrap">Created At</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl xl:whitespace-nowrap">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80 transition-all duration-300"></tbody>
@@ -447,7 +447,6 @@
     }
 
     document.addEventListener('click', (e) => {
-        // Prevent menu from closing if clicking inside the menu or its trigger
         if(!e.target.closest('.action-menu') && !e.target.closest('.btn-toggle-menu')) {
             document.querySelectorAll('.action-menu').forEach(menu => {
                 menu.style.display = 'none';
@@ -548,7 +547,6 @@
             body.innerHTML = `<tr><td colspan="8" class="p-24 text-center text-sm font-bold text-slate-400 dark:text-slate-600 flex flex-col items-center gap-3"><i class="fas fa-folder-open text-4xl mb-2 opacity-50"></i> No dispatch records found</td></tr>`;
         } else {
             body.innerHTML = paginatedItems.map(t => {
-                // 🚨 SECURITY: Strict escape of all API payload strings before DOM injection
                 const safeId = SecurityUtils.escapeHTML(String(t.id));
                 const safeStatus = SecurityUtils.escapeHTML(t.status || 'Open');
                 const safePriority = SecurityUtils.escapeHTML(t.priority || 'Low');
@@ -561,16 +559,17 @@
                 const safePrevTech = SecurityUtils.escapeHTML(t.previous_technician || 'None');
                 const safeCreatedAt = SecurityUtils.escapeHTML(formatTimestamp(t.created_at));
 
+                // CHANGED: lg -> xl in all table cell templates below
                 return `
                 <tr class="ticket-row group" data-id="${safeId}">
-                    <td data-label="Ref ID" class="p-0 lg:p-4 lg:w-36 align-middle border-b lg:border-none">
-                        <div class="hidden lg:flex justify-between items-center w-full">
+                    <td data-label="Ref ID" class="p-0 xl:p-4 xl:w-36 align-middle border-b xl:border-none">
+                        <div class="hidden xl:flex justify-between items-center w-full">
                             <span class="id-badge font-bold text-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
                                 #${safeId.padStart(6, '0')}
                             </span>
                         </div>
                         
-                        <div class="flex lg:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl transition-colors duration-300">
+                        <div class="flex xl:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl transition-colors duration-300">
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-circle text-[8px] text-blue-500"></i>
                                 <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
@@ -601,47 +600,47 @@
                             </div>
                         </div>
                     </td>
-                    <td data-label="Priority" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
+                    <td data-label="Priority" class="p-4 align-middle border-b xl:border-none transition-all duration-300">
+                        <div class="w-[65%] xl:w-full flex flex-col items-end xl:items-start text-right xl:text-left justify-center">
                             <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center w-fit gap-1.5 ${getPriorityStyles(safePriority)} transition-colors duration-300">
                                 <i class="fas fa-circle text-[6px]"></i> ${safePriority}
                             </span>
                         </div>
                     </td>
-                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none lg:whitespace-nowrap transition-all duration-300">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full lg:whitespace-nowrap transition-colors duration-300">${safeFirstName} ${safeLastName}</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full lg:whitespace-nowrap transition-colors duration-300">@${safeUsername}</span>
+                    <td data-label="Client" class="p-4 align-middle border-b xl:border-none xl:whitespace-nowrap transition-all duration-300">
+                        <div class="w-[65%] xl:w-full flex flex-col items-end xl:items-start text-right xl:text-left justify-center">
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full xl:whitespace-nowrap transition-colors duration-300">${safeFirstName} ${safeLastName}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full xl:whitespace-nowrap transition-colors duration-300">@${safeUsername}</span>
                         </div>
                     </td>
-                    <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none transition-all duration-300">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center overflow-hidden">
+                    <td data-label="Issue & Snippet" class="p-4 align-middle xl:max-w-[320px] border-b xl:border-none transition-all duration-300">
+                        <div class="w-[65%] xl:w-full flex flex-col items-end xl:items-start text-right xl:text-left justify-center overflow-hidden">
                             <p class="font-bold text-sm text-slate-800 dark:text-slate-200 line-clamp-2 w-full group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 break-words">${safeSubject}</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words transition-colors duration-300">${safeDesc}</p>
                         </div>
                     </td>
-                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none lg:whitespace-nowrap transition-all duration-300">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center gap-1">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full lg:whitespace-nowrap transition-colors duration-300">
+                    <td data-label="Agent Details" class="p-4 align-middle border-b xl:border-none xl:whitespace-nowrap transition-all duration-300">
+                        <div class="w-[65%] xl:w-full flex flex-col items-end xl:items-start text-right xl:text-left justify-center gap-1">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end xl:justify-start w-full xl:whitespace-nowrap transition-colors duration-300">
                                 <i class="fas fa-user-shield text-slate-400 flex-shrink-0"></i> <span class="truncate">${safeTech}</span>
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full lg:whitespace-nowrap transition-colors duration-300">Prev: ${safePrevTech}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full xl:whitespace-nowrap transition-colors duration-300">Prev: ${safePrevTech}</span>
                         </div>
                     </td>
-                    <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell transition-all duration-300">
+                    <td data-label="Status" class="p-4 align-middle text-center hidden xl:table-cell transition-all duration-300">
                         <div class="w-full flex justify-center">
                             <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${getStatusStyles(safeStatus)} inline-block transition-colors duration-300">
                                 ${safeStatus}
                             </span>
                         </div>
                     </td>
-                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none lg:whitespace-nowrap transition-all duration-300">
-                        <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words lg:whitespace-nowrap transition-colors duration-300">${safeCreatedAt}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full lg:whitespace-nowrap transition-colors duration-300">Logged</span>
+                    <td data-label="Created At" class="p-4 align-middle border-b xl:border-none xl:whitespace-nowrap transition-all duration-300">
+                        <div class="w-[65%] xl:w-full flex flex-col items-end xl:items-start text-right xl:text-left justify-center">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words xl:whitespace-nowrap transition-colors duration-300">${safeCreatedAt}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full xl:whitespace-nowrap transition-colors duration-300">Logged</span>
                         </div>
                     </td>
-                    <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell transition-all duration-300">
+                    <td data-label="Actions" class="p-4 align-middle text-right relative hidden xl:table-cell transition-all duration-300">
                         <button data-target="menu-desktop-${safeId}" class="btn-toggle-menu action-btn-trigger h-9 w-9 rounded-full inline-flex items-center justify-center text-slate-400 hover:text-blue-600 bg-transparent hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200">
                             <i class="fas fa-ellipsis-v pointer-events-none"></i>
                         </button>
@@ -684,7 +683,6 @@
                 isCurrent ? 'bg-blue-600 text-white border-blue-600 scale-105' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
             }`;
             
-            // 🚨 SECURITY: Safe event listener binding
             btn.addEventListener('click', () => { 
                 currentPage = i; 
                 updateUI(); 
@@ -732,7 +730,6 @@
         }
     }
 
-    // 🚨 SECURITY: Replaced native confirm() with custom modal for safety & better UX
     function openDeleteModal(id) {
         ticketToDelete = id;
         document.getElementById('deleteModal').classList.remove('hidden');
@@ -778,10 +775,7 @@
         }
     });
 
-    // 🚨 SECURITY: Centralized Event Delegation for table rows and buttons
     document.getElementById('ticketTableBody').addEventListener('click', function(e) {
-        
-        // 1. Check if clicking toggle menu
         const toggleBtn = e.target.closest('.btn-toggle-menu');
         if (toggleBtn) {
             e.stopPropagation();
@@ -789,7 +783,6 @@
             return;
         }
 
-        // 2. Check if clicking quick action inside menu
         const actionBtn = e.target.closest('.btn-quick-action');
         if (actionBtn) {
             e.stopPropagation();
@@ -797,7 +790,6 @@
             return;
         }
 
-        // 3. Check if clicking delete button inside menu
         const deleteBtn = e.target.closest('.btn-delete-ticket');
         if (deleteBtn) {
             e.stopPropagation();
@@ -805,7 +797,6 @@
             return;
         }
 
-        // 4. Otherwise, it's a general row click
         const row = e.target.closest('.ticket-row');
         if (row) {
             goToDetail(row.dataset.id);
