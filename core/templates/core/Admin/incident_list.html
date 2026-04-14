@@ -284,7 +284,6 @@ const IS_COMMANDER = {{ is_commander|yesno:"true,false" }};
 let allIncidents = [];
 let filteredIncidents = [];
 let currentPage = 1;
-// 🚨 CHANGED TO 8: 4 columns x 2 rows
 const itemsPerPage = 8; 
 let currentOpenIncidentId = null;
 
@@ -473,33 +472,31 @@ function renderCards(incidents) {
     }
 
     incidents.forEach(inc => {
-        let sevIcon, sevColor, sevBadge, statusBadge;
+        let sevColor, sevBadge, statusBadge, topBorderColor;
         
         const safeStatus = SecurityUtils.escapeHTML(inc.status);
         const safeSeverity = SecurityUtils.escapeHTML(inc.severity);
         
-        let isBlinkTable = safeStatus === 'Open' ? ' animate-blink' : '';
-        
         if (safeSeverity === 'Critical') {
-            sevIcon = 'fa-biohazard'; sevColor = 'text-red-500'; 
-            sevBadge = `bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/50 shadow-sm${isBlinkTable}`;
+            sevColor = 'text-red-500'; topBorderColor = 'bg-red-500';
+            sevBadge = 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30';
         } else if (safeSeverity === 'High') {
-            sevIcon = 'fa-exclamation-triangle'; sevColor = 'text-orange-500'; 
-            sevBadge = `bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-500/50 shadow-sm${isBlinkTable}`;
+            sevColor = 'text-orange-500'; topBorderColor = 'bg-orange-500';
+            sevBadge = 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30';
         } else if (safeSeverity === 'Medium') {
-            sevIcon = 'fa-exclamation-circle'; sevColor = 'text-amber-500'; 
-            sevBadge = 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 shadow-sm';
+            sevColor = 'text-amber-500'; topBorderColor = 'bg-amber-500';
+            sevBadge = 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30';
         } else {
-            sevIcon = 'fa-shield-halved'; sevColor = 'text-emerald-500'; 
-            sevBadge = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 shadow-sm';
+            sevColor = 'text-emerald-500'; topBorderColor = 'bg-emerald-500';
+            sevBadge = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
         }
 
         if (safeStatus === 'Open') {
-            statusBadge = 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50';
+            statusBadge = 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30';
         } else if (safeStatus === 'Investigating') {
-            statusBadge = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-900/50';
+            statusBadge = 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30';
         } else {
-            statusBadge = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
+            statusBadge = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
         }
 
         let formattedDate = 'N/A';
@@ -515,50 +512,60 @@ function renderCards(incidents) {
         const safeTitle = SecurityUtils.escapeHTML(inc.title) || "No Title Provided";
         const safeDetection = SecurityUtils.escapeHTML(inc.detection_source || "Unknown");
         const safeAssigned = SecurityUtils.escapeHTML(inc.assigned_to_name || "Unassigned");
+        const safeCategory = SecurityUtils.escapeHTML(inc.category || "Uncategorized");
         const safeAsset = SecurityUtils.escapeHTML(inc.linked_asset || "N/A");
         const safeAffectedArea = SecurityUtils.escapeHTML(inc.affected_area || "N/A");
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
         let snippet = SecurityUtils.stripHTML(inc.description || "No details provided.");
-        if (snippet.length > 85) snippet = snippet.substring(0, 85) + '...';
+        if (snippet.length > 95) snippet = snippet.substring(0, 95) + '...';
 
         html += `
-        <div data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-card flex flex-col bg-white dark:bg-slate-800 rounded-2xl p-5 cursor-pointer transition-all duration-200 border border-slate-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 shadow-sm hover:shadow-lg hover:-translate-y-1 group gap-3 h-[200px]">
+        <div data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="relative incident-card flex flex-col bg-white dark:bg-slate-800/90 rounded-xl p-4 cursor-pointer transition-all duration-200 border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-500 hover:-translate-y-1 group h-[210px] overflow-hidden">
             
-            <div class="flex justify-between items-start">
-                <div class="flex flex-wrap items-center gap-1.5">
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${sevBadge}">
-                        <i class="fas ${sevIcon} mr-1.5 opacity-80"></i> ${safeSeverity}
+            <div class="absolute top-0 left-0 w-full h-1 ${topBorderColor} opacity-80 group-hover:opacity-100 transition-opacity"></div>
+
+            <div class="flex justify-between items-start mb-3 pt-1">
+                <div class="flex gap-1.5">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${sevBadge}">
+                        ${safeSeverity}
                     </span>
-                    <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${statusBadge}">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${statusBadge}">
                         ${safeStatus}
                     </span>
                 </div>
-                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center shrink-0 ml-2 bg-slate-50 dark:bg-slate-900/50 px-2 py-0.5 rounded-md border border-slate-100 dark:border-slate-700/50">
-                    <i class="far fa-clock mr-1.5 opacity-70"></i> ${formattedDate}
+                <span class="text-[10px] font-bold text-slate-400 flex items-center shrink-0">
+                    ${formattedDate}
                 </span>
             </div>
             
-            <div class="mt-1 flex-1 min-h-0 overflow-hidden">
-                <h4 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-1.5 line-clamp-2 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">
-                    <span class="font-mono text-[11px] text-blue-600 dark:text-blue-400 mr-1 opacity-80">INC-${safeIdPad}</span> 
+            <div class="flex-1 min-h-0 flex flex-col">
+                <span class="font-mono text-[9px] text-blue-500 dark:text-blue-400 mb-1 opacity-80">INC-${safeIdPad}</span>
+                <h4 class="text-[14px] font-bold text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                     ${safeTitle}
                 </h4>
-                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-3 mt-1.5 leading-relaxed font-medium">
                     ${snippet}
                 </p>
             </div>
             
-            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100 dark:border-slate-700/50 shrink-0">
-                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 px-2 py-1 rounded border border-slate-100 dark:border-slate-700/50">
-                    <i class="fas fa-bullseye text-slate-400"></i> <span class="truncate max-w-[100px]" title="${displayAsset}">${displayAsset}</span>
-                </span>
-                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 px-2 py-1 rounded border border-slate-100 dark:border-slate-700/50">
-                    <i class="fas fa-radar text-slate-400"></i> <span class="truncate max-w-[100px]" title="${safeDetection}">${safeDetection}</span>
-                </span>
-                <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded border border-blue-100 dark:border-blue-800/50 ml-auto">
-                    <i class="fas fa-user-astronaut opacity-80"></i> <span class="truncate max-w-[80px]" title="${safeAssigned}">${safeAssigned}</span>
-                </span>
+            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/50 flex flex-col gap-1.5 shrink-0">
+                <div class="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                    <span class="flex items-center gap-1.5 truncate max-w-[50%]">
+                        <i class="fas fa-bullseye opacity-70 w-3 text-center"></i> <span class="truncate" title="${displayAsset}">${displayAsset}</span>
+                    </span>
+                    <span class="flex items-center gap-1.5 truncate max-w-[50%]">
+                        <i class="fas fa-radar opacity-70 w-3 text-center"></i> <span class="truncate" title="${safeDetection}">${safeDetection}</span>
+                    </span>
+                </div>
+                <div class="flex justify-between items-center text-[10px] font-medium mt-0.5">
+                    <span class="text-blue-600 dark:text-blue-400 flex items-center gap-1.5 truncate max-w-[50%]">
+                        <i class="fas fa-user-astronaut opacity-70 w-3 text-center"></i> <span class="truncate" title="${safeAssigned}">${safeAssigned}</span>
+                    </span>
+                    <span class="text-slate-400 flex items-center gap-1.5 truncate max-w-[50%]">
+                        <i class="fas fa-tag opacity-70 w-3 text-center"></i> <span class="truncate" title="${safeCategory}">${safeCategory}</span>
+                    </span>
+                </div>
             </div>
 
         </div>`;
@@ -569,7 +576,6 @@ function renderCards(incidents) {
 
 function openDrawer() {
     $('#slideOverBackdrop').removeClass('hidden');
-    // slight delay to allow display:block to apply before opacity transition
     setTimeout(() => {
         $('#slideOverBackdrop').removeClass('opacity-0').addClass('opacity-100');
         $('#slideOverPanel').removeClass('translate-x-full').addClass('translate-x-0');
@@ -584,7 +590,7 @@ function closeDrawer() {
         $('#slideOverBackdrop').addClass('hidden');
         $('body').css('overflow', 'auto');
         currentOpenIncidentId = null;
-    }, 300); // match duration-300
+    }, 300);
 }
 
 function previewIncident(data) {
@@ -692,7 +698,6 @@ function previewIncident(data) {
 
 function openDeleteModal() { 
     $('#deleteModal').removeClass('hidden'); 
-    // z-index logic ensures delete modal sits above the drawer
 }
 
 function closeDeleteModal() { 
@@ -701,17 +706,14 @@ function closeDeleteModal() {
 
 $(document).ready(function() {
     
-    // Bind to grid cards
     $('#incidentGrid').on('click', '.incident-card', function() {
         const incId = $(this).data('id');
         const incident = allIncidents.find(i => i.id == incId);
         if (incident) previewIncident(incident);
     });
 
-    // Drawer closing
     $('#closeDrawerBtn, #slideOverBackdrop').on('click', closeDrawer);
 
-    // Delete flow
     $('#deleteIncidentIconBtn').on('click', openDeleteModal);
     $('#deleteModalOverlay, #cancelDeleteBtn').on('click', closeDeleteModal);
 
