@@ -133,9 +133,9 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-12 gap-4 lg:h-[68vh] min-h-[500px] w-full mb-6">
+    <div class="grid grid-cols-12 gap-4 xl:h-[68vh] min-h-[500px] w-full mb-6">
         
-        <div class="col-span-12 lg:col-span-7 flex flex-col h-[500px] lg:h-full min-w-0">
+        <div class="col-span-12 xl:col-span-7 flex flex-col h-[500px] xl:h-full min-w-0">
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300">
                 <div class="px-4 py-3 sm:px-5 border-b border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
                     <span class="font-rajdhani text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
@@ -168,7 +168,7 @@
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-5 flex flex-col h-[700px] lg:h-full min-w-0">
+        <div id="detailPanelWrapper" class="col-span-12 xl:col-span-5 flex flex-col h-[800px] xl:h-full min-w-0">
             <div id="incidentDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300 relative group">
                 
                 <div id="emptyState" class="absolute inset-0 z-20 bg-white dark:bg-slate-800 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-300">
@@ -563,9 +563,9 @@ function renderTableRows(incidents) {
             ? 'border-blue-500 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 xl:border-transparent xl:border-l-blue-500 xl:border-l-4' 
             : 'border-slate-200 dark:border-slate-700 xl:border-transparent xl:border-0';
 
-        // CHANGED: Replaced all md: breakpoints with xl: for table cells
+        // CHANGED: Completely re-worked the td flex structures to prevent card text overlapping
         html += `
-        <tr data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-row block xl:table-row bg-white dark:bg-slate-800 xl:bg-transparent xl:dark:bg-transparent rounded-2xl xl:rounded-none shadow-md shadow-slate-200/50 dark:shadow-none xl:shadow-none border xl:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass} mb-3 xl:mb-0 relative overflow-hidden">
+        <tr data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-row block xl:table-row bg-white dark:bg-slate-800 xl:bg-transparent xl:dark:bg-transparent rounded-2xl xl:rounded-none shadow-md shadow-slate-200/50 dark:shadow-none xl:shadow-none border xl:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass} mb-4 xl:mb-0 relative overflow-hidden">
             
             <td class="block xl:table-cell px-3 pt-3 pb-2.5 xl:py-3.5 xl:px-4 sm:px-5 border-b border-slate-100 dark:border-slate-700/50 xl:border-0 xl:border-b-0">
                 <div class="flex items-start justify-between xl:items-center xl:justify-start gap-2.5">
@@ -585,16 +585,18 @@ function renderTableRows(incidents) {
                 </div>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2 xl:py-3.5 text-center xl:text-center border-b border-slate-50 dark:border-slate-700/30 xl:border-0">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Severity</span>
-                <span class="inline-block px-2.5 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider ${sevBadge}">
-                    ${safeSeverity}
-                </span>
+            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Severity</span>
+                <div class="flex-1 text-right xl:text-center">
+                    <span class="inline-block px-2.5 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider ${sevBadge}">
+                        ${safeSeverity}
+                    </span>
+                </div>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 xl:px-4 sm:px-5 text-[9px] text-slate-400 dark:text-slate-500 font-bold text-center xl:whitespace-nowrap bg-slate-50/50 dark:bg-slate-900/20 xl:bg-transparent xl:dark:bg-transparent mt-1 xl:mt-0 border-t border-slate-100 dark:border-slate-700/50 xl:border-0">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Time Logged</span>
-                <span>${formattedDate}</span>
+            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 xl:px-4 sm:px-5 text-[9px] text-slate-400 dark:text-slate-500 font-bold text-center xl:whitespace-nowrap bg-slate-50/50 dark:bg-slate-900/20 xl:bg-transparent xl:dark:bg-transparent mt-1 xl:mt-0 border-t border-slate-100 dark:border-slate-700/50 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Time Logged</span>
+                <span class="flex-1 text-right xl:text-center">${formattedDate}</span>
             </td>
 
             <td class="hidden xl:table-cell px-3 py-3.5 text-center">
@@ -603,30 +605,32 @@ function renderTableRows(incidents) {
                 </span>
             </td>
             
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Category</span>
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate bg-slate-100 dark:bg-slate-900 xl:dark:bg-slate-800 px-2 py-1 rounded-md text-right xl:text-center xl:bg-transparent xl:dark:bg-transparent xl:px-0">
-                    ${safeCategory}
-                </span>
+            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Category</span>
+                <div class="flex-1 min-w-0 text-right xl:text-center flex justify-end xl:justify-center">
+                    <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 break-words whitespace-normal bg-slate-100 dark:bg-slate-900 xl:dark:bg-slate-800 px-2 py-1 rounded-md xl:bg-transparent xl:dark:bg-transparent xl:px-0">
+                        ${safeCategory}
+                    </span>
+                </div>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Target/Asset</span>
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate block xl:w-full xl:max-w-[130px] text-right xl:text-left">
+            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Target/Asset</span>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-left block xl:w-full xl:max-w-[130px]">
                     ${displayAsset}
                 </span>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Detection</span>
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 truncate text-right xl:text-left">
+            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Detection</span>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-left">
                     ${safeDetection}
                 </span>
             </td>
             
-            <td class="flex xl:table-cell justify-between items-center px-3 py-2 xl:py-3.5 text-center xl:text-center xl:border-0">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest">Tech</span>
-                <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 truncate">
+            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Tech</span>
+                <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-center">
                     ${safeAssigned}
                 </span>
             </td>
@@ -643,8 +647,9 @@ function previewIncident(data) {
     $('#emptyState').addClass('opacity-0 pointer-events-none');
     $('#detailContent').removeClass('hidden');
     
-    if (window.innerWidth < 1024) {
-        $('#incidentDetailPanel')[0].scrollIntoView({ behavior: 'smooth' });
+    // CHANGED: Update scroll check to match new xl breakpoint (1280px)
+    if (window.innerWidth < 1280) {
+        $('#detailPanelWrapper')[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // 🚨 SECURITY: All inputs sent to the DOM are strictly sanitized using .text() which defeats XSS natively
