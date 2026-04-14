@@ -141,8 +141,8 @@
                     <span class="font-rajdhani text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
                 </div>
 
-                <div class="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative bg-slate-50/30 dark:bg-slate-900/20 xl:bg-transparent xl:dark:bg-transparent">
-                    <table class="w-full text-left border-collapse block xl:table table-fixed">
+                <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar relative bg-slate-50/30 dark:bg-slate-900/20 xl:bg-transparent xl:dark:bg-transparent">
+                    <table class="w-full text-left border-collapse block xl:table xl:min-w-[850px]">
                         <thead class="hidden xl:table-header-group sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm shadow-sm z-10">
                             <tr class="font-rajdhani text-[11px] sm:text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/80">
                                 <th class="px-4 sm:px-5 py-3 xl:whitespace-nowrap">Incident</th>
@@ -455,7 +455,6 @@ function renderPagination(totalPages) {
         } else {
             baseClass += 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer shadow-sm hover:shadow active:scale-95';
             
-            // 🚨 SECURITY: Safe event listener assignment
             btn.addEventListener('click', function() { 
                 currentPage = page; 
                 initTable(); 
@@ -512,7 +511,6 @@ function renderTableRows(incidents) {
     incidents.forEach(inc => {
         let sevIcon, sevColor, sevBadge, statusBadge;
         
-        // 🚨 SECURITY: Escape string variables early
         const safeStatus = SecurityUtils.escapeHTML(inc.status);
         const safeSeverity = SecurityUtils.escapeHTML(inc.severity);
         
@@ -549,7 +547,6 @@ function renderTableRows(incidents) {
             }
         }
 
-        // 🚨 SECURITY: Strict escape of all database variables before DOM injection
         const safeTitle = SecurityUtils.escapeHTML(inc.title);
         const safeCategory = SecurityUtils.escapeHTML(inc.category || "Uncategorized");
         const safeAsset = SecurityUtils.escapeHTML(inc.linked_asset || "N/A");
@@ -563,21 +560,29 @@ function renderTableRows(incidents) {
             ? 'border-blue-500 dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 xl:border-transparent xl:border-l-blue-500 xl:border-l-4' 
             : 'border-slate-200 dark:border-slate-700 xl:border-transparent xl:border-0';
 
-        // CHANGED: Completely re-worked the td flex structures to prevent card text overlapping
         html += `
         <tr data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-row block xl:table-row bg-white dark:bg-slate-800 xl:bg-transparent xl:dark:bg-transparent rounded-2xl xl:rounded-none shadow-md shadow-slate-200/50 dark:shadow-none xl:shadow-none border xl:border-0 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-all duration-200 cursor-pointer group active:bg-slate-100 dark:active:bg-slate-700 ${activeClass} mb-4 xl:mb-0 relative overflow-hidden">
             
-            <td class="block xl:table-cell px-3 pt-3 pb-2.5 xl:py-3.5 xl:px-4 sm:px-5 border-b border-slate-100 dark:border-slate-700/50 xl:border-0 xl:border-b-0">
-                <div class="flex items-start justify-between xl:items-center xl:justify-start gap-2.5">
+            <td class="block xl:table-cell p-0 xl:p-4 xl:w-36 align-middle border-b xl:border-none">
+                <div class="hidden xl:flex justify-between items-center w-full">
                     <div class="flex items-center gap-2.5">
                         <div class="flex-shrink-0 w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-900 xl:dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center shadow-sm">
                             <i class="fas ${sevIcon} ${sevColor} text-[9px]"></i>
                         </div>
-                        <div class="flex flex-col min-w-0">
-                            <span class="inline-block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">INC-${String(inc.id).padStart(3, '0')}</span>
-                        </div>
+                        <span class="inline-block text-[10px] sm:text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">INC-${String(inc.id).padStart(3, '0')}</span>
                     </div>
-                    <div class="xl:hidden">
+                </div>
+                
+                <div class="flex xl:hidden justify-between items-center w-full p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-[#111827] rounded-t-xl transition-colors duration-300">
+                    <div class="flex items-center gap-2.5">
+                        <div class="flex-shrink-0 w-7 h-7 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
+                            <i class="fas ${sevIcon} ${sevColor} text-[9px]"></i>
+                        </div>
+                        <span class="font-rajdhani font-bold text-base text-slate-800 dark:text-slate-200 tracking-wider">
+                            INC-${String(inc.id).padStart(3, '0')}
+                        </span>
+                    </div>
+                    <div>
                         <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusBadge}">
                             ${safeStatus}
                         </span>
@@ -585,8 +590,8 @@ function renderTableRows(incidents) {
                 </div>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Severity</span>
+            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Severity</span>
                 <div class="flex-1 text-right xl:text-center">
                     <span class="inline-block px-2.5 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider ${sevBadge}">
                         ${safeSeverity}
@@ -594,8 +599,8 @@ function renderTableRows(incidents) {
                 </div>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 xl:px-4 sm:px-5 text-[9px] text-slate-400 dark:text-slate-500 font-bold text-center xl:whitespace-nowrap bg-slate-50/50 dark:bg-slate-900/20 xl:bg-transparent xl:dark:bg-transparent mt-1 xl:mt-0 border-t border-slate-100 dark:border-slate-700/50 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Time Logged</span>
+            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 xl:px-4 text-[9px] text-slate-400 dark:text-slate-500 font-bold text-center xl:whitespace-nowrap border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Time</span>
                 <span class="flex-1 text-right xl:text-center">${formattedDate}</span>
             </td>
 
@@ -605,8 +610,8 @@ function renderTableRows(incidents) {
                 </span>
             </td>
             
-            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Category</span>
+            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Category</span>
                 <div class="flex-1 min-w-0 text-right xl:text-center flex justify-end xl:justify-center">
                     <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 break-words whitespace-normal bg-slate-100 dark:bg-slate-900 xl:dark:bg-slate-800 px-2 py-1 rounded-md xl:bg-transparent xl:dark:bg-transparent xl:px-0">
                         ${safeCategory}
@@ -614,22 +619,22 @@ function renderTableRows(incidents) {
                 </div>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Target/Asset</span>
+            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Target/Asset</span>
                 <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-left block xl:w-full xl:max-w-[130px]">
                     ${displayAsset}
                 </span>
             </td>
 
-            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Detection</span>
+            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-left border-b border-slate-50 dark:border-slate-700/30 xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Detection</span>
                 <span class="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-left">
                     ${safeDetection}
                 </span>
             </td>
             
-            <td class="flex xl:table-cell justify-between items-start xl:items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center xl:border-0 gap-4">
-                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left mt-0.5">Tech</span>
+            <td class="flex xl:table-cell justify-between items-center px-3 py-2.5 xl:py-3.5 text-center xl:text-center xl:border-0 gap-4">
+                <span class="xl:hidden text-[9px] font-black text-slate-400 uppercase tracking-widest w-1/3 shrink-0 text-left">Tech</span>
                 <span class="text-[9px] sm:text-[10px] font-bold text-slate-600 dark:text-slate-300 break-words whitespace-normal flex-1 min-w-0 text-right xl:text-center">
                     ${safeAssigned}
                 </span>
@@ -647,12 +652,10 @@ function previewIncident(data) {
     $('#emptyState').addClass('opacity-0 pointer-events-none');
     $('#detailContent').removeClass('hidden');
     
-    // CHANGED: Update scroll check to match new xl breakpoint (1280px)
     if (window.innerWidth < 1280) {
         $('#detailPanelWrapper')[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // 🚨 SECURITY: All inputs sent to the DOM are strictly sanitized using .text() which defeats XSS natively
     let formattedDate = 'N/A';
     if (data.date || data.created_at) {
         const d = new Date(data.date || data.created_at);
@@ -670,7 +673,6 @@ function previewIncident(data) {
     if(data.actions_taken) {
         $('#actions_taken_container').removeClass('hidden');
         
-        // 🚨 SECURITY: Ensure actions_taken is escaped BEFORE applying custom formatting HTML to prevent XSS breakout
         let safeActions = SecurityUtils.escapeHTML(data.actions_taken);
         let formattedActions = '';
         let lines = safeActions.split('\n');
@@ -684,7 +686,6 @@ function previewIncident(data) {
                 return;
             }
             
-            // Re-apply standard formatting using the safe, escaped strings
             if (trimmed.startsWith('[')) {
                 if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
                 if (index > 0) formattedActions += '<hr class="my-4 border-slate-300 dark:border-slate-600 border-dashed">';
@@ -741,7 +742,6 @@ function previewIncident(data) {
     else if (data.severity === 'Medium') colorClass = 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 shadow-sm';
     else colorClass = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 shadow-sm';
     
-    // 🚨 SECURITY: Ensure severity text is escaped
     $badge.html(`<span class="px-2.5 py-0.5 rounded-md border text-[10px] font-black uppercase tracking-wider ${colorClass}">${SecurityUtils.escapeHTML(data.severity)}</span>`);
     
     const $statusBadge = $('#view_status_badge');
@@ -750,7 +750,6 @@ function previewIncident(data) {
     else if (data.status === 'Investigating') statusClass = 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-900/50';
     else statusClass = 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50';
     
-    // 🚨 SECURITY: Ensure status text is escaped
     $statusBadge.html(`<span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider mt-0.5 ${statusClass}">${SecurityUtils.escapeHTML(data.status)}</span>`);
 
     if (!IS_COMMANDER) {
@@ -773,8 +772,6 @@ function closeDeleteModal() {
 }
 
 $(document).ready(function() {
-    
-    // 🚨 SECURITY: Bind event delegations to remove inline onclicks (CSP compliance)
     $('#incidentTableBody').on('click', '.incident-row', function() {
         const incId = $(this).data('id');
         const incident = allIncidents.find(i => i.id == incId);
@@ -789,7 +786,6 @@ $(document).ready(function() {
         $.ajax({
             url: `/api/incidents/${currentOpenIncidentId}/`,
             type: 'DELETE',
-            // 🚨 SECURITY: Django CSRF token attached directly to headers
             headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
             success: function() {
                 closeDeleteModal();
@@ -828,7 +824,7 @@ $(document).ready(function() {
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
@@ -846,5 +842,44 @@ $(document).ready(function() {
         50% { opacity: 0.15; transform: scale(0.96); }
     }
     .animate-blink { animation: blinkWarning 0.8s ease-in-out infinite; }
+
+    /* CARD LAYOUT CSS FOR INCIDents */
+    @media (max-width: 1280px) {
+        .admin-table-container { height: auto; overflow: visible; }
+        table, thead, tbody, th, td, tr { display: block; }
+        thead tr { position: absolute; top: -9999px; left: -9999px; }
+        
+        #incidentTableBody {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 0.5rem;
+        }
+
+        .incident-row {
+            background: #ffffff !important;
+            border: 1px solid var(--head-border) !important;
+            border-radius: 0.75rem;
+            padding: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .dark .incident-row { 
+            background: #111827 !important; 
+            border-color: #1f2937 !important; 
+        }
+        
+        .incident-row td:not(:first-child) { 
+            padding: 0.75rem 1.25rem !important;
+            border-bottom: 1px solid var(--head-border);
+            width: 100% !important;
+        }
+
+        .dark .incident-row td:not(:first-child) { border-bottom-color: #1f2937; }
+        .incident-row td:last-child { border-bottom: none !important; }
+    }
 </style>
 {% endblock %}
