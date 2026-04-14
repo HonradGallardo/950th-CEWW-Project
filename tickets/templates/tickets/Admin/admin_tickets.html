@@ -290,17 +290,17 @@
 
     <div class="bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 rounded-xl md:rounded-2xl shadow-xl overflow-visible flex flex-col transition-all duration-300">
         <div class="admin-table-container overflow-auto custom-scrollbar">
-            <table class="w-full text-left border-separate border-spacing-0 lg:min-w-[1000px] transition-all duration-300">
+            <table class="w-full text-left border-separate border-spacing-0 transition-all duration-300">
                 <thead class="font-rajdhani hidden lg:table-header-group transition-all duration-300">
                     <tr class="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800/80 backdrop-blur-md shadow-sm transition-colors duration-300">
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl">Ref ID</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Priority</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Client</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Issue & Snippet</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Agent Details</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-center">Status</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">Created At</th>
-                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl">Actions</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 rounded-tl-xl lg:whitespace-nowrap w-24">Ref ID</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Priority</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Client</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 w-full min-w-[200px]">Issue & Snippet</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Agent Details</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-center lg:whitespace-nowrap">Status</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 lg:whitespace-nowrap">Created At</th>
+                        <th class="p-4 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-right rounded-tr-xl lg:whitespace-nowrap">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="ticketTableBody" class="divide-y divide-slate-100 dark:divide-slate-800/80 transition-all duration-300"></tbody>
@@ -608,10 +608,10 @@
                             </span>
                         </div>
                     </td>
-                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
+                    <td data-label="Client" class="p-4 align-middle border-b lg:border-none lg:whitespace-nowrap transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full transition-colors duration-300">${safeFirstName} ${safeLastName}</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full transition-colors duration-300">@${safeUsername}</span>
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-200 w-full lg:whitespace-nowrap transition-colors duration-300">${safeFirstName} ${safeLastName}</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 w-full lg:whitespace-nowrap transition-colors duration-300">@${safeUsername}</span>
                         </div>
                     </td>
                     <td data-label="Issue & Snippet" class="p-4 align-middle lg:max-w-[320px] border-b lg:border-none transition-all duration-300">
@@ -620,12 +620,12 @@
                             <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 w-full mt-1 break-words transition-colors duration-300">${safeDesc}</p>
                         </div>
                     </td>
-                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
+                    <td data-label="Agent Details" class="p-4 align-middle border-b lg:border-none lg:whitespace-nowrap transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center gap-1">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full transition-colors duration-300">
-                                <i class="fas fa-user-shield text-slate-400"></i> <span class="truncate">${safeTech}</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 justify-end lg:justify-start w-full lg:whitespace-nowrap transition-colors duration-300">
+                                <i class="fas fa-user-shield text-slate-400 flex-shrink-0"></i> <span class="truncate">${safeTech}</span>
                             </span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full transition-colors duration-300">Prev: ${safePrevTech}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full lg:whitespace-nowrap transition-colors duration-300">Prev: ${safePrevTech}</span>
                         </div>
                     </td>
                     <td data-label="Status" class="p-4 align-middle text-center hidden lg:table-cell transition-all duration-300">
@@ -635,10 +635,10 @@
                             </span>
                         </div>
                     </td>
-                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none transition-all duration-300">
+                    <td data-label="Created At" class="p-4 align-middle border-b lg:border-none lg:whitespace-nowrap transition-all duration-300">
                         <div class="w-[65%] lg:w-full flex flex-col items-end lg:items-start text-right lg:text-left justify-center">
-                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words transition-colors duration-300">${safeCreatedAt}</span>
-                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full transition-colors duration-300">Logged</span>
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 w-full break-words lg:whitespace-nowrap transition-colors duration-300">${safeCreatedAt}</span>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5 w-full lg:whitespace-nowrap transition-colors duration-300">Logged</span>
                         </div>
                     </td>
                     <td data-label="Actions" class="p-4 align-middle text-right relative hidden lg:table-cell transition-all duration-300">
