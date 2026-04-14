@@ -31,7 +31,119 @@
     </div>
 </div>
 
-<div class="font-plex flex flex-col space-y-4 p-3 sm:p-4 md:p-6 transition-colors duration-300 bg-slate-50/50 dark:bg-slate-900 w-full h-full">
+<div id="slideOverBackdrop" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/60 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
+
+<div id="slideOverPanel" class="fixed inset-y-0 right-0 z-[70] w-full max-w-2xl bg-white dark:bg-slate-800 shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200 dark:border-slate-700">
+    <div class="px-5 pt-5 pb-3.5 flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-700/80 shrink-0 bg-slate-50 dark:bg-slate-800 gap-4">
+        <div class="space-y-2 min-w-0 flex-1">
+            <div class="flex items-center gap-3">
+                <button type="button" id="closeDrawerBtn" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+                <span id="view_id" class="inline-block text-[10px] font-black text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 rounded-md uppercase tracking-widest border border-blue-100 dark:border-blue-800"></span>
+            </div>
+            <h3 id="view_title" class="font-rajdhani font-black text-xl sm:text-2xl text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight break-words pl-11"></h3>
+        </div>
+        <div class="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+            <div id="view_severity_badge"></div>
+            {% if not is_commander %}
+            <button type="button" id="deleteIncidentIconBtn" class="w-8 h-8 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 transition-all shadow-sm border border-red-100 dark:border-transparent hover:scale-105 active:scale-95" title="Delete Incident">
+                <i class="fas fa-trash-alt text-xs"></i>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="space-y-5 flex-1 overflow-y-auto p-5 custom-scrollbar font-plex">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
+                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Status</label>
+                <div id="view_status_badge"></div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
+                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Assigned Tech</label>
+                <p id="view_assigned" class="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase truncate"></p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
+                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Reporter</label>
+                <p id="view_reporter" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase truncate"></p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm">
+                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Incident Date</label>
+                <p id="view_date" class="text-[9px] font-bold text-slate-700 dark:text-slate-300"></p>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 p-5 rounded-2xl border border-blue-100/80 dark:border-blue-800/50 shadow-sm">
+            <h4 class="font-rajdhani text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <i class="fas fa-radar text-blue-500"></i> Threat Intelligence
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-4">
+                <div>
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Category</label>
+                    <p id="view_category" class="text-[12px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Threat Actor</label>
+                    <p id="view_threat_actor" class="text-[12px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Detection Source</label>
+                    <p id="view_detection" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
+                </div>
+                
+                <div>
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Affected Area</label>
+                    <p id="view_affected_area" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Linked Asset</label>
+                    <p id="view_asset" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
+                </div>
+                <div>
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Impact (CIA)</label>
+                    <p id="view_impact" class="text-[11px] font-black text-slate-800 dark:text-slate-200 break-words"></p>
+                </div>
+
+                <div class="col-span-2 sm:col-span-1 bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-lg border border-white dark:border-slate-700/50 mt-2">
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Known IoCs</label>
+                    <p id="view_iocs" class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 break-all"></p>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-lg border border-white dark:border-slate-700/50 mt-2">
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Exploited CVE</label>
+                    <p id="view_cve" class="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400 break-all"></p>
+                </div>
+                <div class="col-span-2 sm:col-span-1 bg-white/60 dark:bg-slate-900/40 p-2.5 rounded-lg border border-white dark:border-slate-700/50 mt-2">
+                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Root Cause</label>
+                    <p id="view_root_cause" class="text-[11px] font-bold text-slate-700 dark:text-slate-300 break-words"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-2.5">
+            <label class="font-rajdhani flex items-center gap-2 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                <i class="fas fa-file-lines"></i> Report Summary
+            </label>
+            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-sm text-slate-700 dark:text-slate-300 leading-relaxed min-h-[80px] shadow-inner whitespace-pre-wrap break-words" id="view_description"></div>
+        </div>
+
+        <div class="space-y-2.5 hidden" id="actions_taken_container">
+            <label class="font-rajdhani flex items-center gap-2 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                <i class="fas fa-history"></i> Progress & Actions Log
+            </label>
+            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-4 text-xs text-slate-700 dark:text-slate-300 font-mono leading-6 shadow-inner overflow-x-auto whitespace-pre-wrap break-words" id="view_actions"></div>
+        </div>
+    </div>
+
+    {% if not is_commander %}
+    <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-700/80 shrink-0 bg-slate-50 dark:bg-slate-800">
+        <a id="editLink" href="#" class="w-full py-3.5 bg-slate-800 dark:bg-slate-700 hover:bg-blue-600 text-white rounded-xl text-[12px] font-black uppercase tracking-wider transition-all shadow-md flex items-center justify-center active:scale-[0.98] group">
+            Modify Incident Report <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+<div class="font-plex flex flex-col space-y-4 p-3 sm:p-4 md:p-6 transition-colors duration-300 bg-slate-50/50 dark:bg-slate-900 w-full min-h-screen">
     
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-3 px-1">
         <div>
@@ -133,164 +245,24 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-[75vh] min-h-[600px] w-full mb-6">
-        
-        <div class="col-span-1 lg:col-span-5 xl:col-span-4 flex flex-col h-[600px] lg:h-full min-w-0">
-            <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300">
-                
-                <div class="px-4 py-3 sm:px-5 border-b border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0">
-                    <span class="font-rajdhani text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <i class="fas fa-inbox text-blue-500"></i> Incident Feed
-                    </span>
-                </div>
-
-                <div class="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative bg-slate-50/50 dark:bg-slate-900/30 p-2.5 sm:p-3">
-                    <div id="incidentList" class="space-y-2.5">
-                        <div class="p-10 text-center text-slate-400 italic">
-                            <i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...
-                        </div>
-                    </div>
-                </div>
-
-                <div class="px-4 py-3 sm:px-5 border-t border-slate-100 dark:border-slate-700/80 bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-between shrink-0 relative z-20">
-                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">Showing 0-0 of 0</span>
-                    <div class="flex items-center gap-1.5" id="paginationControls"></div>
-                </div>
-            </div>
+    <div class="flex flex-col flex-1 w-full mt-2">
+        <div class="flex items-center justify-between mb-4 px-2">
+            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest" id="pageInfo">Showing 0-0 of 0</span>
+            <div class="flex items-center gap-1.5" id="paginationControls"></div>
         </div>
 
-        <div id="detailPanelWrapper" class="col-span-1 lg:col-span-7 xl:col-span-8 flex flex-col h-[800px] lg:h-full min-w-0">
-            <div id="incidentDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300 relative group">
-                
-                <div id="emptyState" class="absolute inset-0 z-20 bg-white dark:bg-slate-800 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-300">
-                    <div class="relative w-20 h-20 flex items-center justify-center mb-5">
-                        <div class="absolute inset-0 rounded-full border-4 border-slate-100 dark:border-slate-700 animate-[ping_3s_ease-in-out_infinite]"></div>
-                        <div class="absolute inset-2 rounded-full border-4 border-slate-100 dark:border-slate-700 animate-[ping_3s_ease-in-out_infinite_0.5s]"></div>
-                        <div class="w-14 h-14 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center z-10 shadow-inner">
-                            <i class="fas fa-shield-virus text-slate-400 dark:text-slate-500 text-2xl"></i>
-                        </div>
-                    </div>
-                    <p class="font-rajdhani text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Awaiting Telemetry Selection</p>
-                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-600 mt-2">Select an incident from the feed to analyze payload data.</p>
-                </div>
-
-                <div id="detailContent" class="hidden flex flex-col h-full overflow-hidden w-full absolute inset-0 bg-white dark:bg-slate-800 z-10 animate-fade-in-up">
-                    <div class="px-5 pt-5 pb-3.5 flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-700/80 shrink-0 bg-white dark:bg-slate-800 gap-4">
-                        <div class="space-y-2 min-w-0 flex-1">
-                            <span id="view_id" class="inline-block text-[10px] font-black text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-0.5 rounded-md uppercase tracking-widest border border-blue-100 dark:border-blue-800"></span>
-                            <h3 id="view_title" class="font-rajdhani font-black text-xl sm:text-2xl text-slate-800 dark:text-slate-100 uppercase tracking-tight leading-tight break-words"></h3>
-                        </div>
-                        <div class="flex items-center gap-2.5 shrink-0 self-start">
-                            <div id="view_severity_badge"></div>
-                            
-                            {% if not is_commander %}
-                            <button type="button" id="deleteIncidentIconBtn" class="w-8 h-8 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 transition-all shadow-sm border border-red-100 dark:border-transparent hover:scale-105 active:scale-95" title="Delete Incident">
-                                <i class="fas fa-trash-alt text-xs"></i>
-                            </button>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="space-y-5 flex-1 overflow-y-auto p-4 md:p-5 custom-scrollbar">
-                        
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm hover:-translate-y-0.5 transition-transform">
-                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Status</label>
-                                <div id="view_status_badge"></div>
-                            </div>
-                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm hover:-translate-y-0.5 transition-transform">
-                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Assigned Tech</label>
-                                <p id="view_assigned" class="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase truncate"></p>
-                            </div>
-                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm hover:-translate-y-0.5 transition-transform">
-                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Reporter</label>
-                                <p id="view_reporter" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase truncate"></p>
-                            </div>
-                            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/80 shadow-sm hover:-translate-y-0.5 transition-transform">
-                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Incident Date</label>
-                                <p id="view_date" class="text-[9px] font-bold text-slate-700 dark:text-slate-300"></p>
-                            </div>
-                        </div>
-
-                        <div class="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 p-4 rounded-2xl border border-blue-100/80 dark:border-blue-800/50 shadow-sm">
-                            <h4 class="font-rajdhani text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <i class="fas fa-radar text-blue-500"></i> Threat Intelligence
-                            </h4>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-3">
-                                <div>
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Category</label>
-                                    <p id="view_category" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Threat Actor</label>
-                                    <p id="view_threat_actor" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Detection Source</label>
-                                    <p id="view_detection" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Affected Area</label>
-                                    <p id="view_affected_area" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Linked Asset</label>
-                                    <p id="view_asset" class="text-[10px] font-bold text-slate-800 dark:text-slate-200 break-words"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Impact (CIA)</label>
-                                    <p id="view_impact" class="text-[9px] font-black text-slate-800 dark:text-slate-200 break-words"></p>
-                                </div>
-
-                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors mt-2">
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Known IoCs</label>
-                                    <p id="view_iocs" class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 break-all"></p>
-                                </div>
-                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors mt-2">
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Exploited CVE</label>
-                                    <p id="view_cve" class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 break-all"></p>
-                                </div>
-                                <div class="col-span-2 sm:col-span-1 bg-white/50 dark:bg-slate-900/30 p-2 rounded-lg border border-white dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-900/60 transition-colors mt-2">
-                                    <label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-0.5 tracking-wider">Root Cause</label>
-                                    <p id="view_root_cause" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 break-words"></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="font-rajdhani flex items-center gap-2 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                <i class="fas fa-file-lines"></i> Report Summary
-                            </label>
-                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3.5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed min-h-[60px] shadow-inner whitespace-pre-wrap break-words" id="view_description"></div>
-                        </div>
-
-                        <div class="space-y-2 hidden" id="actions_taken_container">
-                            <label class="font-rajdhani flex items-center gap-2 text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                <i class="fas fa-history"></i> Progress & Actions Log
-                            </label>
-                            <div class="bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-3.5 text-xs text-slate-700 dark:text-slate-300 font-mono leading-6 shadow-inner overflow-x-auto whitespace-pre-wrap break-words" id="view_actions"></div>
-                        </div>
-                    </div>
-
-                    {% if not is_commander %}
-                    <div class="px-5 py-3 border-t border-slate-100 dark:border-slate-700/80 shrink-0 bg-slate-50 dark:bg-slate-800/80">
-                        <a id="editLink" href="#" class="w-full py-3 bg-slate-800 dark:bg-slate-700 hover:bg-blue-600 text-white rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shadow-md flex items-center justify-center active:scale-[0.98] group">
-                            Modify Incident Report <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
+        <div id="incidentGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 w-full">
+            <div class="col-span-full p-10 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                <i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...
             </div>
         </div>
     </div>
     
-    <div class="h-24 w-full shrink-0 border-none bg-transparent"></div>
+    <div class="h-12 w-full shrink-0 border-none bg-transparent"></div>
 
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
-// 🚨 SECURITY: Strict HTML escape and strip engines to kill DOM XSS 
 const SecurityUtils = {
     escapeHTML(str) {
         if (typeof str !== 'string') return str;
@@ -312,7 +284,8 @@ const IS_COMMANDER = {{ is_commander|yesno:"true,false" }};
 let allIncidents = [];
 let filteredIncidents = [];
 let currentPage = 1;
-const rowsPerPage = 10;
+// 🚨 CHANGED TO 8: 4 columns x 2 rows
+const itemsPerPage = 8; 
 let currentOpenIncidentId = null;
 
 function loadIncidents() {
@@ -327,7 +300,7 @@ function loadIncidents() {
         },
         error: function(err) {
             console.error("Failed to fetch incidents:", err);
-            $('#incidentList').html('<div class="p-10 text-center text-red-400 italic">Error connecting to telemetry server.</div>');
+            $('#incidentGrid').html('<div class="col-span-full p-10 text-center text-red-400 italic bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">Error connecting to telemetry server.</div>');
         }
     });
 }
@@ -409,19 +382,19 @@ function applyFilters() {
     });
 
     currentPage = 1;
-    initTable();
+    initGrid();
 }
 
-function initTable() {
+function initGrid() {
     const totalEntries = filteredIncidents.length;
-    const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
+    const totalPages = Math.ceil(totalEntries / itemsPerPage) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
 
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = Math.min(start + rowsPerPage, totalEntries);
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = Math.min(start + itemsPerPage, totalEntries);
     const pageData = filteredIncidents.slice(start, end);
 
-    renderTableRows(pageData);
+    renderCards(pageData);
     renderPagination(totalPages);
     
     $('#pageInfo').text(`Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries}`);
@@ -437,7 +410,7 @@ function renderPagination(totalPages) {
         btn.innerHTML = text;
         btn.type = 'button'; 
         
-        let baseClass = 'w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ';
+        let baseClass = 'w-8 h-8 flex items-center justify-center rounded-lg text-xs font-black transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ';
         
         if (isCurrent) {
             baseClass += 'bg-blue-600 text-white shadow-md pointer-events-none cursor-default';
@@ -448,7 +421,7 @@ function renderPagination(totalPages) {
             
             btn.addEventListener('click', function() { 
                 currentPage = page; 
-                initTable(); 
+                initGrid(); 
             });
         }
         btn.className = baseClass;
@@ -467,7 +440,7 @@ function renderPagination(totalPages) {
         container.appendChild(createBtn('1', 1));
         if (startP > 2) {
             const span = document.createElement('span');
-            span.className = 'text-slate-400 text-[10px] mx-1';
+            span.className = 'text-slate-400 text-xs mx-1';
             span.innerText = '...';
             container.appendChild(span);
         }
@@ -480,7 +453,7 @@ function renderPagination(totalPages) {
     if (endP < totalPages) {
         if (endP < totalPages - 1) {
             const span = document.createElement('span');
-            span.className = 'text-slate-400 text-[10px] mx-1';
+            span.className = 'text-slate-400 text-xs mx-1';
             span.innerText = '...';
             container.appendChild(span);
         }
@@ -490,12 +463,12 @@ function renderPagination(totalPages) {
     container.appendChild(createBtn('<i class="fas fa-chevron-right pointer-events-none"></i>', currentPage + 1, currentPage === totalPages));
 }
 
-function renderTableRows(incidents) {
-    const $container = $('#incidentList');
+function renderCards(incidents) {
+    const $container = $('#incidentGrid');
     let html = '';
 
     if (incidents.length === 0) {
-        $container.html('<div class="p-12 text-center text-slate-400 italic">No active incidents found in database.</div>');
+        $container.html('<div class="col-span-full p-12 text-center text-slate-500 font-bold bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm"><i class="fas fa-check-circle text-3xl mb-3 text-slate-300 dark:text-slate-600 block"></i> No active incidents match your criteria.</div>');
         return;
     }
 
@@ -546,50 +519,44 @@ function renderTableRows(incidents) {
         const safeAffectedArea = SecurityUtils.escapeHTML(inc.affected_area || "N/A");
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
-        // ADDED: Create a clean, text-only snippet of the description to fill the card
         let snippet = SecurityUtils.stripHTML(inc.description || "No details provided.");
         if (snippet.length > 85) snippet = snippet.substring(0, 85) + '...';
 
-        const activeClass = currentOpenIncidentId == inc.id 
-            ? 'border-blue-500 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 ring-1 ring-blue-500/50 shadow-md' 
-            : 'border-slate-200 dark:border-slate-700/80 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm hover:shadow-md';
-
-        // NEW CARD LAYOUT: Dense, info-rich, and clean
         html += `
-        <div data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-card flex flex-col bg-white dark:bg-slate-800 rounded-xl p-3.5 cursor-pointer transition-all duration-200 border ${activeClass} group gap-2">
+        <div data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-card flex flex-col bg-white dark:bg-slate-800 rounded-2xl p-5 cursor-pointer transition-all duration-200 border border-slate-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500 shadow-sm hover:shadow-lg hover:-translate-y-1 group gap-3 h-[200px]">
             
             <div class="flex justify-between items-start">
                 <div class="flex flex-wrap items-center gap-1.5">
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${sevBadge}">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${sevBadge}">
                         <i class="fas ${sevIcon} mr-1.5 opacity-80"></i> ${safeSeverity}
                     </span>
-                    <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border ${statusBadge}">
+                    <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${statusBadge}">
                         ${safeStatus}
                     </span>
                 </div>
-                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center shrink-0 ml-2">
-                    <i class="far fa-clock mr-1 opacity-70"></i> ${formattedDate}
+                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 flex items-center shrink-0 ml-2 bg-slate-50 dark:bg-slate-900/50 px-2 py-0.5 rounded-md border border-slate-100 dark:border-slate-700/50">
+                    <i class="far fa-clock mr-1.5 opacity-70"></i> ${formattedDate}
                 </span>
             </div>
             
-            <div class="mt-0.5">
-                <h4 class="text-[13px] font-black text-slate-800 dark:text-slate-100 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">
-                    <span class="font-mono text-[10px] text-blue-600 dark:text-blue-400 mr-1 opacity-80">INC-${safeIdPad}</span> 
+            <div class="mt-1 flex-1 min-h-0 overflow-hidden">
+                <h4 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-1.5 line-clamp-2 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors break-words">
+                    <span class="font-mono text-[11px] text-blue-600 dark:text-blue-400 mr-1 opacity-80">INC-${safeIdPad}</span> 
                     ${safeTitle}
                 </h4>
-                <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 line-clamp-2 mt-1 leading-snug">
+                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                     ${snippet}
                 </p>
             </div>
             
-            <div class="flex flex-wrap items-center gap-1.5 mt-1 pt-2.5 border-t border-slate-100 dark:border-slate-700/50">
-                <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 px-1.5 py-0.5 rounded-md border border-slate-100 dark:border-slate-700/50">
-                    <i class="fas fa-bullseye text-slate-400"></i> <span class="truncate max-w-[90px]" title="${displayAsset}">${displayAsset}</span>
+            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100 dark:border-slate-700/50 shrink-0">
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 px-2 py-1 rounded border border-slate-100 dark:border-slate-700/50">
+                    <i class="fas fa-bullseye text-slate-400"></i> <span class="truncate max-w-[100px]" title="${displayAsset}">${displayAsset}</span>
                 </span>
-                <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 px-1.5 py-0.5 rounded-md border border-slate-100 dark:border-slate-700/50">
-                    <i class="fas fa-radar text-slate-400"></i> <span class="truncate max-w-[90px]" title="${safeDetection}">${safeDetection}</span>
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 px-2 py-1 rounded border border-slate-100 dark:border-slate-700/50">
+                    <i class="fas fa-radar text-slate-400"></i> <span class="truncate max-w-[100px]" title="${safeDetection}">${safeDetection}</span>
                 </span>
-                <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded-md border border-blue-100 dark:border-blue-800/50 ml-auto">
+                <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded border border-blue-100 dark:border-blue-800/50 ml-auto">
                     <i class="fas fa-user-astronaut opacity-80"></i> <span class="truncate max-w-[80px]" title="${safeAssigned}">${safeAssigned}</span>
                 </span>
             </div>
@@ -600,16 +567,28 @@ function renderTableRows(incidents) {
     $container.html(html);
 }
 
+function openDrawer() {
+    $('#slideOverBackdrop').removeClass('hidden');
+    // slight delay to allow display:block to apply before opacity transition
+    setTimeout(() => {
+        $('#slideOverBackdrop').removeClass('opacity-0').addClass('opacity-100');
+        $('#slideOverPanel').removeClass('translate-x-full').addClass('translate-x-0');
+    }, 10);
+    $('body').css('overflow', 'hidden');
+}
+
+function closeDrawer() {
+    $('#slideOverPanel').removeClass('translate-x-0').addClass('translate-x-full');
+    $('#slideOverBackdrop').removeClass('opacity-100').addClass('opacity-0');
+    setTimeout(() => {
+        $('#slideOverBackdrop').addClass('hidden');
+        $('body').css('overflow', 'auto');
+        currentOpenIncidentId = null;
+    }, 300); // match duration-300
+}
+
 function previewIncident(data) {
     currentOpenIncidentId = data.id;
-    initTable();
-
-    $('#emptyState').addClass('opacity-0 pointer-events-none');
-    $('#detailContent').removeClass('hidden');
-    
-    if (window.innerWidth < 1024) {
-        $('#detailPanelWrapper')[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
 
     let formattedDate = 'N/A';
     if (data.date || data.created_at) {
@@ -627,7 +606,6 @@ function previewIncident(data) {
     
     if(data.actions_taken) {
         $('#actions_taken_container').removeClass('hidden');
-        
         let safeActions = SecurityUtils.escapeHTML(data.actions_taken);
         let formattedActions = '';
         let lines = safeActions.split('\n');
@@ -635,20 +613,16 @@ function previewIncident(data) {
 
         lines.forEach((line, index) => {
             let trimmed = line.trim();
-            
             if (!trimmed) {
                 if (inDetailBlock) formattedActions += '<br>';
                 return;
             }
-            
             if (trimmed.startsWith('[')) {
                 if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
                 if (index > 0) formattedActions += '<hr class="my-4 border-slate-300 dark:border-slate-600 border-dashed">';
                 formattedActions += `<div class="mb-1.5 opacity-80">${line}</div>`;
-            } 
-            else if (trimmed.startsWith('&gt;&gt;')) {
+            } else if (trimmed.startsWith('&gt;&gt;')) {
                 if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
-                
                 let parts = line.split(/(&gt;&gt; (?:Issue|Action|Result):)/);
                 if (parts.length > 1) {
                     formattedActions += `<div class="font-bold mt-2.5 mb-1 text-slate-800 dark:text-slate-200">${parts[1]}</div>`;
@@ -660,8 +634,7 @@ function previewIncident(data) {
                     formattedActions += `<div class="pl-4 sm:pl-6 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-1.5 opacity-90">`;
                     inDetailBlock = true;
                 }
-            } 
-            else {
+            } else {
                 if (!inDetailBlock) {
                     formattedActions += `<div class="pl-4 sm:pl-6 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-1.5 opacity-90">`;
                     inDetailBlock = true;
@@ -669,7 +642,6 @@ function previewIncident(data) {
                 formattedActions += `${line}<br>`;
             }
         });
-        
         if (inDetailBlock) formattedActions += '</div>';
         $('#view_actions').html(formattedActions);
     } else {
@@ -714,27 +686,32 @@ function previewIncident(data) {
             $('#deleteIncidentIconBtn').addClass('hidden'); 
         }
     }
+
+    openDrawer();
 }
 
 function openDeleteModal() { 
     $('#deleteModal').removeClass('hidden'); 
-    $('body').css('overflow', 'hidden'); 
+    // z-index logic ensures delete modal sits above the drawer
 }
 
 function closeDeleteModal() { 
     $('#deleteModal').addClass('hidden'); 
-    $('body').css('overflow', 'auto'); 
 }
 
 $(document).ready(function() {
     
-    // Bind to the new card class
-    $('#incidentList').on('click', '.incident-card', function() {
+    // Bind to grid cards
+    $('#incidentGrid').on('click', '.incident-card', function() {
         const incId = $(this).data('id');
         const incident = allIncidents.find(i => i.id == incId);
         if (incident) previewIncident(incident);
     });
 
+    // Drawer closing
+    $('#closeDrawerBtn, #slideOverBackdrop').on('click', closeDrawer);
+
+    // Delete flow
     $('#deleteIncidentIconBtn').on('click', openDeleteModal);
     $('#deleteModalOverlay, #cancelDeleteBtn').on('click', closeDeleteModal);
 
@@ -746,10 +723,8 @@ $(document).ready(function() {
             headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
             success: function() {
                 closeDeleteModal();
+                closeDrawer();
                 loadIncidents();
-                $('#detailContent').addClass('hidden');
-                $('#emptyState').removeClass('opacity-0 pointer-events-none');
-                currentOpenIncidentId = null;
             },
             error: function(err) {
                 console.error("Failed to delete incident", err);
