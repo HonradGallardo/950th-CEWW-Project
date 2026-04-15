@@ -89,13 +89,30 @@
                     <select name="category" 
                         {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
                         class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
-                        <option value="Malware" {% if incident.category == 'Malware' %}selected{% endif %}>Malware / Ransomware</option>
-                        <option value="Phishing" {% if incident.category == 'Phishing' %}selected{% endif %}>Phishing / Social Engineering</option>
-                        <option value="Unauthorized Access" {% if incident.category == 'Unauthorized Access' %}selected{% endif %}>Unauthorized Access</option>
-                        <option value="DDoS" {% if incident.category == 'DDoS' %}selected{% endif %}>Denial of Service (DDoS)</option>
-                        <option value="Insider Threat" {% if incident.category == 'Insider Threat' %}selected{% endif %}>Insider Threat</option>
-                        <option value="Hardware Loss" {% if incident.category == 'Hardware Loss' %}selected{% endif %}>Hardware Loss / Physical Breach</option>
-                        <option value="Other" {% if incident.category == 'Other' %}selected{% endif %}>Other</option>
+                        <optgroup label="Malicious Software">
+                            <option value="Virus / Worm" {% if incident.category == 'Virus / Worm' %}selected{% endif %}>Virus / Worm</option>
+                            <option value="Ransomware" {% if incident.category == 'Ransomware' %}selected{% endif %}>Ransomware</option>
+                            <option value="Spyware / Trojan" {% if incident.category == 'Spyware / Trojan' %}selected{% endif %}>Spyware / Trojan</option>
+                            <option value="Rootkit / Bootkit" {% if incident.category == 'Rootkit / Bootkit' %}selected{% endif %}>Rootkit / Bootkit</option>
+                        </optgroup>
+                        <optgroup label="Network & Web Attacks">
+                            <option value="Phishing / Social Engineering" {% if incident.category == 'Phishing / Social Engineering' %}selected{% endif %}>Phishing / Social Engineering</option>
+                            <option value="Man-in-the-Middle (MitM)" {% if incident.category == 'Man-in-the-Middle (MitM)' %}selected{% endif %}>Man-in-the-Middle (MitM)</option>
+                            <option value="Cross-Site Scripting (XSS)" {% if incident.category == 'Cross-Site Scripting (XSS)' %}selected{% endif %}>Cross-Site Scripting (XSS)</option>
+                            <option value="SQL Injection (SQLi)" {% if incident.category == 'SQL Injection (SQLi)' %}selected{% endif %}>SQL Injection (SQLi)</option>
+                            <option value="Denial of Service (DDoS)" {% if incident.category == 'Denial of Service (DDoS)' %}selected{% endif %}>Denial of Service (DDoS)</option>
+                            <option value="Zero-Day Exploit" {% if incident.category == 'Zero-Day Exploit' %}selected{% endif %}>Zero-Day Exploit</option>
+                        </optgroup>
+                        <optgroup label="Access & Infrastructure">
+                            <option value="Unauthorized Access" {% if incident.category == 'Unauthorized Access' %}selected{% endif %}>Unauthorized Access</option>
+                            <option value="Credential Compromise" {% if incident.category == 'Credential Compromise' %}selected{% endif %}>Credential Compromise</option>
+                            <option value="Insider Threat" {% if incident.category == 'Insider Threat' %}selected{% endif %}>Insider Threat / Data Exfiltration</option>
+                            <option value="Misconfiguration" {% if incident.category == 'Misconfiguration' %}selected{% endif %}>System Misconfiguration</option>
+                            <option value="Hardware Loss" {% if incident.category == 'Hardware Loss' %}selected{% endif %}>Hardware Loss / Physical Breach</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                            <option value="Other" {% if incident.category == 'Other' %}selected{% endif %}>Other / Unclassified</option>
+                        </optgroup>
                     </select>
                 </div>
 
@@ -620,6 +637,29 @@ $(document).ready(function() {
     html.dark .custom-input, body.dark-mode .custom-input { background-color: #1f2937 !important; border-color: #374151 !important; color: #f1f5f9 !important; }
     html.dark .custom-input::placeholder, body.dark-mode .custom-input::placeholder { color: #6b7280 !important; }
     
+    /* Optgroup and option dropdown styling for standard/dark mode compatibility */
+    optgroup {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 800;
+        font-style: normal;
+        color: #94a3b8;
+        background-color: #f8fafc;
+    }
+    body.dark-mode optgroup, html.dark optgroup {
+        color: #64748b;
+        background-color: #0f172a;
+    }
+    option {
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-weight: 600;
+        color: #334155;
+        background-color: #ffffff;
+    }
+    body.dark-mode option, html.dark option {
+        color: #f1f5f9;
+        background-color: #1f2937;
+    }
+
     .adaptive-btn { box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
     html.dark .adaptive-btn, body.dark-mode .adaptive-btn { box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.5) !important; }
     
