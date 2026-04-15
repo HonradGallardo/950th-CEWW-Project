@@ -3,6 +3,8 @@
 {% block content %}
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://code.jquery.com; connect-src 'self'; object-src 'none'; base-uri 'self';">
 
+<div class="hidden">{% csrf_token %}</div>
+
 <div class="font-plex flex items-center justify-center min-h-screen p-2 sm:p-4 md:p-6 bg-slate-50/50 dark-mode:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden transition-all registration-card">
         
@@ -55,13 +57,30 @@
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Category</label>
                     <select name="category" id="id_category" class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 transition-all">
-                        <option value="Malware">Malware / Ransomware</option>
-                        <option value="Phishing">Phishing / Social Engineering</option>
-                        <option value="Unauthorized Access">Unauthorized Access</option>
-                        <option value="DDoS">Denial of Service (DDoS)</option>
-                        <option value="Insider Threat">Insider Threat</option>
-                        <option value="Hardware Loss">Hardware Loss / Physical Breach</option>
-                        <option value="Other">Other</option>
+                        <optgroup label="Malicious Software">
+                            <option value="Virus / Worm">Virus / Worm</option>
+                            <option value="Ransomware">Ransomware</option>
+                            <option value="Spyware / Trojan">Spyware / Trojan</option>
+                            <option value="Rootkit / Bootkit">Rootkit / Bootkit</option>
+                        </optgroup>
+                        <optgroup label="Network & Web Attacks">
+                            <option value="Phishing / Social Engineering">Phishing / Social Engineering</option>
+                            <option value="Man-in-the-Middle (MitM)">Man-in-the-Middle (MitM)</option>
+                            <option value="Cross-Site Scripting (XSS)">Cross-Site Scripting (XSS)</option>
+                            <option value="SQL Injection (SQLi)">SQL Injection (SQLi)</option>
+                            <option value="Denial of Service (DDoS)">Denial of Service (DDoS)</option>
+                            <option value="Zero-Day Exploit">Zero-Day Exploit</option>
+                        </optgroup>
+                        <optgroup label="Access & Infrastructure">
+                            <option value="Unauthorized Access">Unauthorized Access</option>
+                            <option value="Credential Compromise">Credential Compromise</option>
+                            <option value="Insider Threat">Insider Threat / Data Exfiltration</option>
+                            <option value="Misconfiguration">System Misconfiguration</option>
+                            <option value="Hardware Loss">Hardware Loss / Physical Breach</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                            <option value="Other">Other / Unclassified</option>
+                        </optgroup>
                     </select>
                 </div>
 
@@ -266,6 +285,30 @@
     body.dark-mode .info-badge { background-color: #1f2937 !important; border-color: #374151 !important; color: #f3f4f6 !important; }
     body.dark-mode .custom-input { background-color: #1f2937 !important; border-color: #374151 !important; color: #f1f5f9 !important; }
     body.dark-mode .custom-input::placeholder { color: #6b7280 !important; }
+    
+    /* Enhance optgroup styling for better UI dropdown */
+    optgroup {
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 800;
+        font-style: normal;
+        color: #94a3b8;
+        background-color: #f8fafc;
+    }
+    body.dark-mode optgroup {
+        color: #64748b;
+        background-color: #0f172a;
+    }
+    option {
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-weight: 600;
+        color: #334155;
+        background-color: #ffffff;
+    }
+    body.dark-mode option {
+        color: #f1f5f9;
+        background-color: #1f2937;
+    }
+
     .adaptive-btn { box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
     body.dark-mode .adaptive-btn { box-shadow: 0 10px 20px -2px rgba(0, 0, 0, 0.5) !important; }
 </style>
