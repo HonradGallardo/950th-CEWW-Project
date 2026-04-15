@@ -106,9 +106,9 @@
                         <optgroup label="Access & Infrastructure">
                             <option value="Unauthorized Access" {% if incident.category == 'Unauthorized Access' %}selected{% endif %}>Unauthorized Access</option>
                             <option value="Credential Compromise" {% if incident.category == 'Credential Compromise' %}selected{% endif %}>Credential Compromise</option>
-                            <option value="Insider Threat" {% if incident.category == 'Insider Threat' %}selected{% endif %}>Insider Threat / Data Exfiltration</option>
-                            <option value="Misconfiguration" {% if incident.category == 'Misconfiguration' %}selected{% endif %}>System Misconfiguration</option>
-                            <option value="Hardware Loss" {% if incident.category == 'Hardware Loss' %}selected{% endif %}>Hardware Loss / Physical Breach</option>
+                            <option value="Insider Threat / Data Exfiltration" {% if incident.category == 'Insider Threat / Data Exfiltration' %}selected{% endif %}>Insider Threat / Data Exfiltration</option>
+                            <option value="System Misconfiguration" {% if incident.category == 'System Misconfiguration' %}selected{% endif %}>System Misconfiguration</option>
+                            <option value="Hardware Loss / Physical Breach" {% if incident.category == 'Hardware Loss / Physical Breach' %}selected{% endif %}>Hardware Loss / Physical Breach</option>
                         </optgroup>
                         <optgroup label="Other">
                             <option value="Other" {% if incident.category == 'Other' %}selected{% endif %}>Other / Unclassified</option>

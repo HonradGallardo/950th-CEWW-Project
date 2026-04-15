@@ -543,28 +543,33 @@ function renderCards(incidents) {
         
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
-        // 🚨 ICON LOGIC: Matches strictly with the updated models.py categories
+        // 🚨 ICON LOGIC: Dynamically assign an icon based on category
         let catIcon = 'fa-shield-virus'; // Default fallback
-        const catExact = safeCategory;
+        const catLower = safeCategory.toLowerCase();
 
-        if (catExact === 'Virus / Worm') catIcon = 'fa-virus';
-        else if (catExact === 'Ransomware') catIcon = 'fa-user-lock';
-        else if (catExact === 'Spyware / Trojan') catIcon = 'fa-user-secret';
-        else if (catExact === 'Rootkit / Bootkit') catIcon = 'fa-mask';
-        else if (catExact === 'Malware') catIcon = 'fa-bug';
-        else if (catExact === 'Phishing / Social Engineering') catIcon = 'fa-envelope-open-text';
-        else if (catExact === 'Man-in-the-Middle (MitM)') catIcon = 'fa-people-arrows';
-        else if (catExact === 'Cross-Site Scripting (XSS)') catIcon = 'fa-code';
-        else if (catExact === 'SQL Injection (SQLi)') catIcon = 'fa-database';
-        else if (catExact === 'Denial of Service (DDoS)') catIcon = 'fa-server';
-        else if (catExact === 'Zero-Day Exploit') catIcon = 'fa-biohazard';
-        else if (catExact === 'Unauthorized Access') catIcon = 'fa-door-open';
-        else if (catExact === 'Credential Compromise') catIcon = 'fa-key';
-        else if (catExact === 'Insider Threat / Data Exfiltration') catIcon = 'fa-user-tie';
-        else if (catExact === 'System Misconfiguration') catIcon = 'fa-sliders-h';
-        else if (catExact === 'Hardware Loss / Physical Breach') catIcon = 'fa-laptop';
-        else if (catExact === 'Other / Unclassified') catIcon = 'fa-question-circle';
+        // Malicious Software
+        if (catLower.includes('virus') || catLower.includes('worm')) catIcon = 'fa-virus';
+        else if (catLower.includes('ransomware')) catIcon = 'fa-user-lock';
+        else if (catLower.includes('spyware') || catLower.includes('trojan')) catIcon = 'fa-user-secret';
+        else if (catLower.includes('rootkit') || catLower.includes('bootkit')) catIcon = 'fa-mask';
+        else if (catLower.includes('malware')) catIcon = 'fa-bug';
 
+        // Network & Web Attacks
+        else if (catLower.includes('phishing')) catIcon = 'fa-envelope-open-text';
+        else if (catLower.includes('middle') || catLower.includes('mitm')) catIcon = 'fa-people-arrows';
+        else if (catLower.includes('xss') || catLower.includes('scripting')) catIcon = 'fa-code';
+        else if (catLower.includes('sql') || catLower.includes('injection')) catIcon = 'fa-database';
+        else if (catLower.includes('ddos') || catLower.includes('denial')) catIcon = 'fa-server';
+        else if (catLower.includes('zero-day') || catLower.includes('exploit')) catIcon = 'fa-biohazard';
+
+        // Access & Infrastructure
+        else if (catLower.includes('unauthorized')) catIcon = 'fa-door-open';
+        else if (catLower.includes('credential')) catIcon = 'fa-key';
+        else if (catLower.includes('insider')) catIcon = 'fa-user-tie';
+        else if (catLower.includes('misconfiguration')) catIcon = 'fa-sliders-h';
+        else if (catLower.includes('hardware') || catLower.includes('physical')) catIcon = 'fa-laptop';
+        
+        else if (catLower.includes('other')) catIcon = 'fa-question-circle';
 
         const activeClass = currentOpenIncidentId == inc.id 
             ? 'border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/50 dark:bg-blue-900/20' 
