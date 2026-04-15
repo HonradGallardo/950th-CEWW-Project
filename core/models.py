@@ -82,12 +82,36 @@ class Maintenance(models.Model):
 class Incident(models.Model):
     SEVERITY_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High'), ('Critical', 'Critical')]
     STATUS_CHOICES = [('Open', 'Open'), ('Investigating', 'Investigating'), ('Resolved', 'Resolved')]
+    
+    # 🚨 UPDATED: Granular Incident Categories
     CATEGORY_CHOICES = [
-        ('Malware', 'Malware / Ransomware'), ('Phishing', 'Phishing / Social Engineering'),
-        ('Unauthorized Access', 'Unauthorized Access'), ('DDoS', 'Denial of Service (DDoS)'),
-        ('Insider Threat', 'Insider Threat'), ('Hardware Loss', 'Hardware Loss / Physical Breach'),
-        ('Other', 'Other')
+        # Malicious Software
+        ('Virus', 'Virus'),
+        ('Worm', 'Worm'),
+        ('Ransomware', 'Ransomware'),
+        ('Spyware / Trojan', 'Spyware / Trojan'),
+        ('Rootkit / Bootkit', 'Rootkit / Bootkit'),
+        ('Malware', 'Other Malware'),
+
+        # Network & Web Attacks
+        ('Phishing', 'Phishing / Social Engineering'),
+        ('Man-in-the-Middle', 'Man-in-the-Middle (MitM)'),
+        ('XSS', 'Cross-Site Scripting (XSS)'),
+        ('SQL Injection', 'SQL Injection (SQLi)'),
+        ('DDoS', 'Denial of Service (DDoS)'),
+        ('Zero-Day Exploit', 'Zero-Day Exploit'),
+
+        # Access & Infrastructure
+        ('Unauthorized Access', 'Unauthorized Access'),
+        ('Credential Compromise', 'Credential Compromise'),
+        ('Insider Threat', 'Insider Threat / Data Exfiltration'),
+        ('Misconfiguration', 'System Misconfiguration'),
+        ('Hardware Loss', 'Hardware Loss / Physical Breach'),
+
+        # Other
+        ('Other', 'Other / Unclassified'),
     ]
+    
     IMPACT_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')]
 
     title = models.CharField(max_length=100)
