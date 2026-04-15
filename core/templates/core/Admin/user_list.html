@@ -1,9 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
+<div class="hidden">{% csrf_token %}</div>
+
 <div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+        <div id="deleteModalOverlay" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity cursor-pointer"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
             <div class="px-6 pt-6 pb-4">
@@ -12,9 +16,9 @@
                         <i class="fas fa-exclamation-triangle text-red-600"></i>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete User</h3>
                         <div class="mt-2">
-                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this user account? This action cannot be undone.</p>
                         </div>
                     </div>
                 </div>
@@ -23,7 +27,7 @@
                 <button type="button" id="confirmDeleteBtn" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
                     Confirm Delete
                 </button>
-                <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
+                <button type="button" id="cancelDeleteBtn" class="mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
                     Cancel
                 </button>
             </div>
@@ -39,7 +43,7 @@
                 <i class="fas fa-users-cog text-lg"></i>
             </div>
             <div>
-                <h1 class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-smt">User Access Control & RBAC</h1>
+                <h1 class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">User Access Control & RBAC</h1>
                 <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Manage system personnel, roles, and security permissions</p>
             </div>
         </div>
@@ -67,21 +71,21 @@
                     
                     <div class="w-full lg:w-auto min-w-0">
                         <div class="grid grid-cols-3 lg:flex justify-center items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-inner gap-1.5 w-full lg:w-max">
-                            <button onclick="setRoleFilter('ALL')" class="role-filter-btn active bg-blue-600 text-white shadow-sm text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">All</button>
-                            <button onclick="setRoleFilter('ADMIN')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Admins</button>
-                            <button onclick="setRoleFilter('COMMANDER')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Commanders</button>
-                            <button onclick="setRoleFilter('PERSONNEL')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Personnel</button>
-                            <button onclick="setRoleFilter('REGULAR')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Regular</button>
-                            <button onclick="setRoleFilter('UNASSIGNED')" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Others</button>
+                            <button data-role="ALL" class="role-filter-btn active bg-blue-600 text-white shadow-sm text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">All</button>
+                            <button data-role="ADMIN" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Admins</button>
+                            <button data-role="COMMANDER" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Commanders</button>
+                            <button data-role="PERSONNEL" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Personnel</button>
+                            <button data-role="REGULAR" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Regular</button>
+                            <button data-role="UNASSIGNED" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-1 sm:px-4 py-2 rounded-lg transition-all w-full lg:w-auto text-center truncate">Others</button>
                         </div>
                     </div>
 
                     <div class="relative w-full lg:w-auto lg:min-w-[250px] shrink-0 group">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm group-focus-within:text-blue-500 transition-colors"></i>
-                        <input type="text" id="userSearch" onkeyup="handleLiveSearch()" placeholder="Search directory..."
+                        <input type="text" id="userSearch" autocomplete="off" placeholder="Search directory..."
                                class="text-sm pl-10 pr-9 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full outline-none transition-all placeholder-slate-400 dark:placeholder-slate-500 shadow-sm">
                         
-                        <button id="clearSearch" onclick="resetSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors bg-slate-50 dark:bg-slate-800 rounded p-1">
+                        <button id="clearSearch" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors bg-slate-50 dark:bg-slate-800 rounded p-1">
                             <i class="fas fa-times text-xs"></i>
                         </button>
                     </div>
@@ -102,7 +106,17 @@
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-transparent block lg:table-row-group lg:whitespace-nowrap w-full" id="userTableBody">
                             {% for person in users %}
                             <tr class="user-row block lg:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 lg:p-0 w-full" 
-                                onclick="showUserDetails('{{ person.id }}', '{{ person.username|escapejs }}', '{{ person.get_full_name|default:person.username|escapejs }}', '{{ person.email|escapejs }}', '{{ person.groups.all.0.name|default:'Unassigned' }}', '{{ person.last_login|date:'d-m-Y'|default:'Never' }}', '{{ person.date_joined|date:'M Y' }}', '{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}', '{{ person.profile.rank|default:'Airman' }}', '{{ person.profile.phone|default:''|escapejs }}')">
+                                data-id="{{ person.id }}"
+                                data-username="{{ person.username|escapejs }}"
+                                data-fullname="{{ person.get_full_name|default:person.username|escapejs }}"
+                                data-email="{{ person.email|escapejs }}"
+                                data-role="{{ person.groups.all.0.name|default:'Unassigned' }}"
+                                data-lastlogin="{{ person.last_login|date:'d-m-Y'|default:'Never' }}"
+                                data-joined="{{ person.date_joined|date:'M Y' }}"
+                                data-image="{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}"
+                                data-rank="{{ person.profile.rank|default:'Airman' }}"
+                                data-phone="{{ person.profile.phone|default:''|escapejs }}">
+                                
                                 <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors w-full lg:w-auto">#{{ person.id }}</td>
                                 <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                                     <div class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 p-1.5 mx-auto border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-200 dark:group-hover:border-slate-600 transition-colors shadow-sm">
@@ -286,12 +300,48 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
+// 🚨 SECURITY: Strict HTML escape and strip engines to kill DOM XSS 
+const SecurityUtils = {
+    escapeHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    },
+    stripHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/(<([^>]+)>)/gi, "").trim();
+    }
+};
+
 let currentRole = 'ALL';
 let activeUserId = null;
 let searchTimeout;
 
 $(document).ready(function() {
+    
+    // 🚨 SECURITY: Replaced inline onclick with safe event delegations
+    $('#userSearch').on('keyup', handleLiveSearch);
+    $('#clearSearch').on('click', resetSearch);
+    
+    $('.role-filter-btn').on('click', function(e) {
+        setRoleFilter($(this).data('role'), e);
+    });
+
+    // 🚨 SECURITY: Bound table rows directly to JS to remove inline onclicks
+    $('#userTableBody').on('click', '.user-row', function() {
+        const u = $(this).data();
+        showUserDetails(u.id, u.username, u.fullname, u.email, u.role, u.lastlogin, u.joined, u.image, u.rank, u.phone);
+    });
+
+    // Modal Triggers
+    $('#deleteModalOverlay, #cancelDeleteBtn').on('click', closeDeleteModal);
+
     window.refreshUserTable = function() {
         $.ajax({
             url: '/api/dashboard-stats/', 
@@ -347,17 +397,18 @@ function resetSearch() {
     handleLiveSearch(); 
 }
 
-function setRoleFilter(role) {
+function setRoleFilter(role, event) {
     currentRole = role;
     
     $('.role-filter-btn').removeClass('active bg-blue-600 text-white shadow-sm')
                          .addClass('bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800');
     
-    $(event.target).removeClass('bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800')
-                   .addClass('active bg-blue-600 text-white shadow-sm');
+    if(event) {
+        $(event.target).removeClass('bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800')
+                       .addClass('active bg-blue-600 text-white shadow-sm');
+    }
                    
     resetSearch();
-                   
     performAjaxSearch();
 }
 
@@ -372,7 +423,7 @@ function performAjaxSearch(query) {
     }
 
     $.ajax({
-        url: `/api/core/users/live_search/?q=${q}&role=${currentRole}`,
+        url: `/api/core/users/live_search/?q=${SecurityUtils.escapeHTML(q)}&role=${SecurityUtils.escapeHTML(currentRole)}`,
         type: 'GET',
         success: function(data) {
             updateUserTable(data);
@@ -400,24 +451,45 @@ function updateUserTable(users) {
     }
 
     users.forEach(u => {
+        // 🚨 SECURITY: Strict escape of all API payload strings to prevent JSON/DOM XSS
+        const safeId = SecurityUtils.escapeHTML(String(u.id));
+        const safeRank = SecurityUtils.escapeHTML(u.rank || 'Airman');
+        const safeName = SecurityUtils.escapeHTML(u.full_name || u.username);
+        const safeUsername = SecurityUtils.escapeHTML(u.username);
+        const safeEmail = SecurityUtils.escapeHTML(u.email || '—');
+        const safePhone = SecurityUtils.escapeHTML(u.phone || '—');
+        const safeRole = SecurityUtils.escapeHTML(u.role || 'Unassigned');
+        const safeLastLogin = SecurityUtils.escapeHTML(u.last_login || 'Never');
+        const safeDateJoined = SecurityUtils.escapeHTML(u.date_joined || '');
+        const safeImage = u.image_url ? SecurityUtils.escapeHTML(u.image_url) : '';
+
         const row = `
             <tr class="user-row block lg:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 lg:p-0 w-full" 
-                onclick="showUserDetails('${u.id}', '${u.username}', '${u.full_name}', '${u.email}', '${u.role}', '${u.last_login}', '${u.date_joined}', '${u.image_url || ''}', '${u.rank}', '${u.phone || ''}')">
-                <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors w-full lg:w-auto">#${u.id}</td>
+                data-id="${safeId}"
+                data-username="${safeUsername}"
+                data-fullname="${safeName}"
+                data-email="${safeEmail}"
+                data-role="${safeRole}"
+                data-lastlogin="${safeLastLogin}"
+                data-joined="${safeDateJoined}"
+                data-image="${safeImage}"
+                data-rank="${safeRank}"
+                data-phone="${safePhone}">
+                <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors w-full lg:w-auto">#${safeId}</td>
                 <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                     <div class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 p-1.5 mx-auto border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-200 dark:group-hover:border-slate-600 transition-colors shadow-sm">
-                        <img src="/static/core/images/badge/${u.rank}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';">
+                        <img src="/static/core/images/badge/${safeRank}.png" class="w-full h-full object-contain" onerror="this.src='/static/core/images/badge/Airman.png';">
                     </div>
                 </td>
                 <td data-label="Personnel" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                     <div class="flex flex-col justify-end items-end lg:items-start w-full min-w-0">
-                        <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${u.full_name || u.username}</div>
-                        <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 lg:hidden">${u.rank}</div>
+                        <div class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${safeName}</div>
+                        <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5 lg:hidden">${safeRank}</div>
                     </div>
                 </td>
-                <td data-label="Username" class="block lg:table-cell py-3 px-4 lg:px-6 font-medium text-slate-600 dark:text-slate-300 w-full lg:w-auto">@${u.username}</td>
-                <td data-label="Email" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">${u.email || '—'}</td>
-                <td data-label="Phone" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">${u.phone || '—'}</td>
+                <td data-label="Username" class="block lg:table-cell py-3 px-4 lg:px-6 font-medium text-slate-600 dark:text-slate-300 w-full lg:w-auto">@${safeUsername}</td>
+                <td data-label="Email" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">${safeEmail}</td>
+                <td data-label="Phone" class="block lg:table-cell py-3 px-4 lg:px-6 text-slate-500 dark:text-slate-400 w-full lg:w-auto">${safePhone}</td>
             </tr>`;
         container.insertAdjacentHTML('beforeend', row);
     });
@@ -427,26 +499,31 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     activeUserId = id;
     document.getElementById('empty-message').classList.add('hidden');
     document.getElementById('user-details').classList.remove('hidden');
-    document.getElementById('detail-username-text').innerText = username;
     
-    const displayName = (fullName && fullName.trim() !== "") ? fullName : username;
+    // 🚨 SECURITY: Re-escaping data before text injection
+    const safeUsername = SecurityUtils.escapeHTML(username);
+    const safeFullName = SecurityUtils.escapeHTML(fullName);
+    const displayName = (safeFullName && safeFullName.trim() !== "") ? safeFullName : safeUsername;
+    
+    // 🚨 SECURITY: Use innerText which natively defends against XSS rendering
+    document.getElementById('detail-username-text').innerText = safeUsername;
     document.getElementById('detail-name').innerText = displayName;
+    document.getElementById('detail-email').innerText = SecurityUtils.escapeHTML(email) || '—';
+    document.getElementById('detail-phone').innerText = SecurityUtils.escapeHTML(phone) || '—';
+    document.getElementById('detail-role').innerText = SecurityUtils.escapeHTML(role);
+    document.getElementById('detail-last-login').innerText = SecurityUtils.escapeHTML(lastLogin);
+    document.getElementById('detail-joined').innerText = SecurityUtils.escapeHTML(dateJoined);
+    document.getElementById('detail-rank').innerText = SecurityUtils.escapeHTML(rank);
     
-    document.getElementById('detail-email').innerText = email || '—';
-    document.getElementById('detail-phone').innerText = phone || '—';
-    document.getElementById('detail-role').innerText = role;
-    document.getElementById('detail-last-login').innerText = lastLogin;
-    document.getElementById('detail-joined').innerText = dateJoined;
-    document.getElementById('detail-rank').innerText = rank;
-    
-    document.getElementById('detail-rank-icon').src = `/static/core/images/badge/${rank}.png`;
-    document.getElementById('edit-link').href = "/users/edit/" + id + "/"; 
+    document.getElementById('detail-rank-icon').src = `/static/core/images/badge/${SecurityUtils.escapeHTML(rank)}.png`;
+    document.getElementById('edit-link').href = "/users/edit/" + SecurityUtils.escapeHTML(id) + "/"; 
 
     const imgElement = document.getElementById('detail-profile-pic');
     const initialsElement = document.getElementById('initials');
 
     if (imageUrl && imageUrl.trim() !== "") {
-        imgElement.src = imageUrl;
+        // Ensure image URL is clean
+        imgElement.src = SecurityUtils.stripHTML(imageUrl);
         imgElement.classList.remove('hidden');
         initialsElement.classList.add('hidden');
     } else {
@@ -455,8 +532,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
         initialsElement.innerText = displayName.substring(0, 2).toUpperCase();
     }
 
-    // Scroll to the detail panel seamlessly if the user is on a mobile device
-    if (window.innerWidth <= 1024) {
+    if (window.innerWidth < 1024) { 
         setTimeout(() => {
             const detailPanel = document.getElementById('detail-panel');
             if (detailPanel) {
@@ -465,9 +541,14 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
         }, 50); 
     }
 }
+
+function closeDeleteModal() { 
+    $('#deleteModal').addClass('hidden'); 
+    $('body').css('overflow', 'auto'); 
+}
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
@@ -488,7 +569,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
     /* --- MOBILE RESPONSIVE TABLE (GRID CARD LAYOUT) --- */
-    @media (max-width: 1024px) {
+    @media (max-width: 1023px) {
         .responsive-table, .responsive-table thead, .responsive-table tbody, .responsive-table th, .responsive-table td, .responsive-table tr {
             display: block;
             width: 100%;
@@ -572,7 +653,7 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
             display: flex;
             justify-content: flex-end;
             text-align: right;
-            word-break: break-word; /* Prevents long emails from blowing out the card width */
+            word-break: break-word; 
             overflow-wrap: break-word;
         }
         
