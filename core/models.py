@@ -86,30 +86,29 @@ class Incident(models.Model):
     # 🚨 UPDATED: Granular Incident Categories
     CATEGORY_CHOICES = [
         # Malicious Software
-        ('Virus', 'Virus'),
-        ('Worm', 'Worm'),
+        ('Virus / Worm', 'Virus / Worm'),
         ('Ransomware', 'Ransomware'),
         ('Spyware / Trojan', 'Spyware / Trojan'),
         ('Rootkit / Bootkit', 'Rootkit / Bootkit'),
         ('Malware', 'Other Malware'),
 
         # Network & Web Attacks
-        ('Phishing', 'Phishing / Social Engineering'),
-        ('Man-in-the-Middle', 'Man-in-the-Middle (MitM)'),
-        ('XSS', 'Cross-Site Scripting (XSS)'),
-        ('SQL Injection', 'SQL Injection (SQLi)'),
-        ('DDoS', 'Denial of Service (DDoS)'),
+        ('Phishing / Social Engineering', 'Phishing / Social Engineering'),
+        ('Man-in-the-Middle (MitM)', 'Man-in-the-Middle (MitM)'),
+        ('Cross-Site Scripting (XSS)', 'Cross-Site Scripting (XSS)'),
+        ('SQL Injection (SQLi)', 'SQL Injection (SQLi)'),
+        ('Denial of Service (DDoS)', 'Denial of Service (DDoS)'),
         ('Zero-Day Exploit', 'Zero-Day Exploit'),
 
         # Access & Infrastructure
         ('Unauthorized Access', 'Unauthorized Access'),
         ('Credential Compromise', 'Credential Compromise'),
-        ('Insider Threat', 'Insider Threat / Data Exfiltration'),
-        ('Misconfiguration', 'System Misconfiguration'),
-        ('Hardware Loss', 'Hardware Loss / Physical Breach'),
+        ('Insider Threat / Data Exfiltration', 'Insider Threat / Data Exfiltration'),
+        ('System Misconfiguration', 'System Misconfiguration'),
+        ('Hardware Loss / Physical Breach', 'Hardware Loss / Physical Breach'),
 
         # Other
-        ('Other', 'Other / Unclassified'),
+        ('Other / Unclassified', 'Other / Unclassified'),
     ]
     
     IMPACT_CHOICES = [('Low', 'Low'), ('Medium', 'Medium'), ('High', 'High')]
