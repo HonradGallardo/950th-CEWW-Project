@@ -530,7 +530,6 @@ function renderCards(incidents) {
         if (rawDate) {
             const d = new Date(rawDate);
             if (!isNaN(d)) {
-                // Formatting to match the layout request closely
                 formattedDate = d.toISOString().replace('T', ' ').substring(0, 19) + '+00:00';
             }
         }
@@ -545,17 +544,32 @@ function renderCards(incidents) {
         const displayAsset = safeAsset !== 'N/A' ? safeAsset : safeAffectedArea !== 'N/A' ? safeAffectedArea : 'Unknown';
 
         // 🚨 ICON LOGIC: Dynamically assign an icon based on category
-        let catIcon = 'fa-microchip'; // Default fallback
+        let catIcon = 'fa-shield-virus'; // Default fallback
         const catLower = safeCategory.toLowerCase();
-        if (catLower.includes('laptop')) catIcon = 'fa-laptop';
-        else if (catLower.includes('pc') || catLower.includes('desktop')) catIcon = 'fa-desktop';
-        else if (catLower.includes('server')) catIcon = 'fa-server';
-        else if (catLower.includes('router') || catLower.includes('network')) catIcon = 'fa-network-wired';
-        else if (catLower.includes('software') || catLower.includes('app')) catIcon = 'fa-window-maximize';
-        else if (catLower.includes('malware') || catLower.includes('virus') || catLower.includes('incident')) catIcon = 'fa-bug';
-        else if (catLower.includes('phishing') || catLower.includes('email')) catIcon = 'fa-envelope-open-text';
-        else if (catLower.includes('database') || catLower.includes('data')) catIcon = 'fa-database';
-        else if (catLower.includes('phone') || catLower.includes('mobile')) catIcon = 'fa-mobile-alt';
+
+        // Malicious Software
+        if (catLower.includes('virus') || catLower.includes('worm')) catIcon = 'fa-virus';
+        else if (catLower.includes('ransomware')) catIcon = 'fa-user-lock';
+        else if (catLower.includes('spyware') || catLower.includes('trojan')) catIcon = 'fa-user-secret';
+        else if (catLower.includes('rootkit') || catLower.includes('bootkit')) catIcon = 'fa-mask';
+        else if (catLower.includes('malware')) catIcon = 'fa-bug';
+
+        // Network & Web Attacks
+        else if (catLower.includes('phishing')) catIcon = 'fa-envelope-open-text';
+        else if (catLower.includes('middle') || catLower.includes('mitm')) catIcon = 'fa-people-arrows';
+        else if (catLower.includes('xss') || catLower.includes('scripting')) catIcon = 'fa-code';
+        else if (catLower.includes('sql') || catLower.includes('injection')) catIcon = 'fa-database';
+        else if (catLower.includes('ddos') || catLower.includes('denial')) catIcon = 'fa-server';
+        else if (catLower.includes('zero-day') || catLower.includes('exploit')) catIcon = 'fa-biohazard';
+
+        // Access & Infrastructure
+        else if (catLower.includes('unauthorized')) catIcon = 'fa-door-open';
+        else if (catLower.includes('credential')) catIcon = 'fa-key';
+        else if (catLower.includes('insider')) catIcon = 'fa-user-tie';
+        else if (catLower.includes('misconfiguration')) catIcon = 'fa-sliders-h';
+        else if (catLower.includes('hardware') || catLower.includes('physical')) catIcon = 'fa-laptop';
+        
+        else if (catLower.includes('other')) catIcon = 'fa-question-circle';
 
         const activeClass = currentOpenIncidentId == inc.id 
             ? 'border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/50 dark:bg-blue-900/20' 
@@ -583,7 +597,7 @@ function renderCards(incidents) {
             <div class="grid grid-cols-2 gap-3 mb-4 border-t border-slate-100 dark:border-slate-700/50 pt-3.5">
                 <div>
                     <p class="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-0.5">Asset ID</p>
-                    <p class="text-[11px] text-slate-700 dark:text-slate-300 font-bold truncate">#AST-${String(inc.id).padStart(4, '0')}</p>
+                    <p class="text-[11px] text-slate-700 dark:text-slate-300 font-bold truncate">#INC-${String(inc.id).padStart(4, '0')}</p>
                 </div>
                 <div>
                     <p class="text-[8px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mb-0.5">Target / Location</p>
@@ -634,76 +648,76 @@ function previewIncident(data) {
     $('#view_description').text(data.description || "No description provided.");
     
     if(data.actions_taken) {
-                $('#actions_taken_container').removeClass('hidden');
-                
-                // 🚨 SECURITY: Ensure actions_taken is escaped BEFORE applying custom formatting HTML
-                let safeActions = SecurityUtils.escapeHTML(data.actions_taken);
-                let formattedActions = '';
-                let lines = safeActions.split('\n');
-                let inDetailBlock = false;
+        $('#actions_taken_container').removeClass('hidden');
+        
+        // 🚨 SECURITY: Ensure actions_taken is escaped BEFORE applying custom formatting HTML
+        let safeActions = SecurityUtils.escapeHTML(data.actions_taken);
+        let formattedActions = '';
+        let lines = safeActions.split('\n');
+        let inDetailBlock = false;
 
-                lines.forEach((line, index) => {
-                    let trimmed = line.trim();
-                    
-                    if (!trimmed) {
-                        if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
-                        formattedActions += '<br>';
-                        return;
-                    }
-                    
-                    // Format the Date/Time Header
-                    if (trimmed.startsWith('[')) {
-                        if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
-                        if (index > 0) formattedActions += '<hr class="my-4 border-slate-300 dark:border-slate-600 border-dashed">';
-                        let headerText = trimmed.replace(/\[|\]/g, '').trim();
-                        formattedActions += `<div class="mb-2 inline-flex items-center text-[10px] font-black text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg uppercase tracking-widest"><i class="fas fa-clock mr-1.5"></i> ${headerText}</div>`;
-                    } 
-                    // Resilient regex to catch ">>", "&gt;&gt;", or double escaped variants
-                    else if (trimmed.match(/(?:&gt;|&amp;gt;|>)+(?:\s+)?(?:Issue|Action|Result):/)) {
-                        if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
-                        
-                        let match = line.match(/(?:&gt;|&amp;gt;|>)+(?:\s+)?(Issue|Action|Result):\s*(.*)/);
-                        if (match && match.length >= 3) {
-                            let label = match[1];
-                            let content = match[2];
-                            
-                            let labelStyle = "";
-                            let icon = "";
-                            
-                            // Apply specific colors and icons based on the label type
-                            if (label === 'Issue') {
-                                labelStyle = "text-red-600 dark:text-red-400";
-                                icon = '<i class="fas fa-exclamation-circle mr-1.5"></i>';
-                            } else if (label === 'Action') {
-                                labelStyle = "text-blue-600 dark:text-blue-400";
-                                icon = '<i class="fas fa-tools mr-1.5"></i>';
-                            } else if (label === 'Result') {
-                                labelStyle = "text-emerald-600 dark:text-emerald-400";
-                                icon = '<i class="fas fa-check-circle mr-1.5"></i>';
-                            }
-                            
-                            // Removed padding, background, border, and shadow classes from the span
-                            formattedActions += `<div class="mt-3 mb-1.5"><span class="inline-flex items-center text-[10px] font-black uppercase tracking-widest ${labelStyle}">${icon}${label}</span></div>`;
-                            formattedActions += `<div class="pl-4 sm:pl-5 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-2 mb-2 text-slate-700 dark:text-slate-300 leading-relaxed">`;
-                            inDetailBlock = true;
-                            if (content) formattedActions += `${content}<br>`;
-                        }
-                    } 
-                    // Standard text flow
-                    else {
-                        if (!inDetailBlock) {
-                            formattedActions += `<div class="pl-4 sm:pl-5 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-2 text-slate-700 dark:text-slate-300 leading-relaxed">`;
-                            inDetailBlock = true;
-                        }
-                        formattedActions += `${trimmed}<br>`;
-                    }
-                });
-                
-                if (inDetailBlock) formattedActions += '</div>';
-                $('#view_actions').html(formattedActions);
-            } else {
-                $('#actions_taken_container').addClass('hidden');
+        lines.forEach((line, index) => {
+            let trimmed = line.trim();
+            
+            if (!trimmed) {
+                if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
+                formattedActions += '<br>';
+                return;
             }
+            
+            // Format the Date/Time Header
+            if (trimmed.startsWith('[')) {
+                if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
+                if (index > 0) formattedActions += '<hr class="my-4 border-slate-300 dark:border-slate-600 border-dashed">';
+                let headerText = trimmed.replace(/\[|\]/g, '').trim();
+                formattedActions += `<div class="mb-2 inline-flex items-center text-[10px] font-black text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg uppercase tracking-widest"><i class="fas fa-clock mr-1.5"></i> ${headerText}</div>`;
+            } 
+            // Resilient regex to catch ">>", "&gt;&gt;", or double escaped variants
+            else if (trimmed.match(/(?:&gt;|&amp;gt;|>)+(?:\s+)?(?:Issue|Action|Result):/)) {
+                if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
+                
+                let match = line.match(/(?:&gt;|&amp;gt;|>)+(?:\s+)?(Issue|Action|Result):\s*(.*)/);
+                if (match && match.length >= 3) {
+                    let label = match[1];
+                    let content = match[2];
+                    
+                    let labelStyle = "";
+                    let icon = "";
+                    
+                    // Apply specific colors and icons based on the label type
+                    if (label === 'Issue') {
+                        labelStyle = "text-red-600 dark:text-red-400";
+                        icon = '<i class="fas fa-exclamation-circle mr-1.5"></i>';
+                    } else if (label === 'Action') {
+                        labelStyle = "text-blue-600 dark:text-blue-400";
+                        icon = '<i class="fas fa-tools mr-1.5"></i>';
+                    } else if (label === 'Result') {
+                        labelStyle = "text-emerald-600 dark:text-emerald-400";
+                        icon = '<i class="fas fa-check-circle mr-1.5"></i>';
+                    }
+                    
+                    // Removed padding, background, border, and shadow classes from the span
+                    formattedActions += `<div class="mt-3 mb-1.5"><span class="inline-flex items-center text-[10px] font-black uppercase tracking-widest ${labelStyle}">${icon}${label}</span></div>`;
+                    formattedActions += `<div class="pl-4 sm:pl-5 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-2 mb-2 text-slate-700 dark:text-slate-300 leading-relaxed">`;
+                    inDetailBlock = true;
+                    if (content) formattedActions += `${content}<br>`;
+                }
+            } 
+            // Standard text flow
+            else {
+                if (!inDetailBlock) {
+                    formattedActions += `<div class="pl-4 sm:pl-5 border-l-2 border-slate-200/60 dark:border-slate-700/60 ml-2 text-slate-700 dark:text-slate-300 leading-relaxed">`;
+                    inDetailBlock = true;
+                }
+                formattedActions += `${trimmed}<br>`;
+            }
+        });
+        
+        if (inDetailBlock) formattedActions += '</div>';
+        $('#view_actions').html(formattedActions);
+    } else {
+        $('#actions_taken_container').addClass('hidden');
+    }
     
     $('#view_category').text(data.category || "Uncategorized");
     $('#view_asset').text(data.linked_asset || "N/A");
