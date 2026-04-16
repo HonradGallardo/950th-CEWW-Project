@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from . import views
 from django.contrib.auth import views as auth_views
 # Import modular viewsets
-from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI, PersonnelStatsAPI
+from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI, PersonnelStatsAPI, generate_authenticator_qr, verify_totp_setup
 
 router = DefaultRouter()
 router.register(r'assets', AssetViewSet)
@@ -29,7 +29,8 @@ urlpatterns = [
     path('api/monitoring-data/', MonitoringDataAPI.as_view(), name='monitoring_data_api'),
     path('api/forgot-password/', ForgotPasswordAPI.as_view(), name='api_forgot_password'),
     path('api/change-password/', ChangePasswordAPI.as_view(), name='api_change_password'),
-
+    path('api/totp/generate/', generate_authenticator_qr, name='api_generate_totp'),
+    path('api/totp/verify-setup/', verify_totp_setup, name='api_verify_totp_setup'),
     # --- 2. API DATA HUB ---
     # Because of this line below, the router automatically adds "/api/" 
     # to "report/it-asset", making it exactly what your Javascript wants!

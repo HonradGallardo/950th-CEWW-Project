@@ -12,7 +12,8 @@ class AssetSerializer(serializers.ModelSerializer):
     ram_gb = serializers.IntegerField(required=False, allow_null=True)
     storage_capacity = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     os_version = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    
+    attachment = serializers.FileField(required=False, allow_null=True)
+    maintenance_attachment = serializers.FileField(required=False, allow_null=True)
     # Networking & Infrastructure
     ip_address = serializers.IPAddressField(required=False, allow_null=True)
     mac_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -62,7 +63,6 @@ class MaintenanceSerializer(serializers.ModelSerializer):
     asset_type = serializers.CharField(source='asset.assets_type', read_only=True)
     asset_string_id = serializers.ReadOnlyField(source='asset.assets_id')
 
-    # Hardware specs pulled from the related Asset for the Inspector UI
     processor = serializers.ReadOnlyField(source='asset.processor')
     ram_gb = serializers.ReadOnlyField(source='asset.ram_gb')
     ip_address = serializers.ReadOnlyField(source='asset.ip_address')
@@ -71,8 +71,6 @@ class MaintenanceSerializer(serializers.ModelSerializer):
     mac_address = serializers.ReadOnlyField(source='asset.mac_address')   
     asset_category = serializers.ReadOnlyField(source='asset.assets_type') 
 
-    # NEW: Specific Maintenance Diagnostics
-    # These map directly to the Maintenance model fields
     faulty_hardware_part = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     software_issue_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
@@ -87,7 +85,8 @@ class MaintenanceSerializer(serializers.ModelSerializer):
             'last_modified', 'status', 'notes',
             'processor', 'ram_gb', 'storage', 'ip_address', 
             'firmware_os', 'mac_address', 'asset_category',
-            'faulty_hardware_part', 'software_issue_type' # ADDED THESE
+            'faulty_hardware_part', 'software_issue_type',
+            'attachment', 'maintenance_attachment'
         ]
 
     def get_formatted_maintenance_date(self, obj):

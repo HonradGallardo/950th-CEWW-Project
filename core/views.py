@@ -310,39 +310,35 @@ def delete_user(request, user_id):
 # --- SYSTEM UTILITIES ---
 @login_required
 def analytics_list(request):
-    # 1. Setup Time Window (Last 7 Days)
     today = timezone.now().date()
+    # Create the date list as before
     date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    
+    # FIX 1: Convert date objects to strings for 100% matching reliability
     labels = [d.strftime('%a') for d in date_list]
-    date_to_idx = {d: i for i, d in enumerate(date_list)}
-    incident_data = Incident.objects.values('severity').annotate(count=Count('id'))
+    date_to_idx = {d.strftime('%Y-%m-%d'): i for i, d in enumerate(date_list)}
 
-    # Initialize data arrays for Chart.js
     fixed_assets, pending_assets = [0]*7, [0]*7
     new_incidents, resolved_incidents = [0]*7, [0]*7
 
-    # 2. Fetch Maintenance Trends
-    maint_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
-        .values('date__date', 'status') \
-        .annotate(count=Count('id'))
-    
-    for item in maint_qs:
-        idx = date_to_idx.get(item['date__date'])
-        if idx is not None:
-            if item['status'] == 'Completed': fixed_assets[idx] = item['count']
-            else: pending_assets[idx] = item['count']
-
-    # 3. Fetch Incident Trends
+    # Fetch Incidents
     inc_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
         .values('date__date', 'status') \
         .annotate(count=Count('id'))
 
     for item in inc_qs:
-        idx = date_to_idx.get(item['date__date'])
+        # FIX 2: Convert DB date to string and slice to ensure YYYY-MM-DD format
+        db_date_str = str(item['date__date'])[:10]
+        idx = date_to_idx.get(db_date_str)
+        
         if idx is not None:
-            if item['status'] == 'Resolved': resolved_incidents[idx] = item['count']
-            else: new_incidents[idx] = item['count']
-
+            # FIX 3: Use += so we don't overwrite multiple statuses on the same day
+            if item['status'] == 'Resolved': 
+                resolved_incidents[idx] += item['count']
+            else: 
+                # This catches 'Open', 'Investigating', etc.
+                new_incidents[idx] += item['count']
+    incident_data_qs = Incident.objects.values('severity').annotate(count=Count('id'))
     # 4. Final Context for Template
     context = {
         'labels': labels,
@@ -354,7 +350,7 @@ def analytics_list(request):
         'predicted_incidents': 5, # Placeholder for AI logic
         'current_month_total': 3,
         'confidence_level': 'High',
-        'incident_summary': list(incident_data), # Ready for Chart.js
+        'incident_summary': list(incident_data_qs), # Ready for Chart.js
     }
     return render(request, 'core/Admin/analytics_list.html', context)
 

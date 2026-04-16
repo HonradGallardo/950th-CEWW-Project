@@ -8,42 +8,30 @@ from .models import Maintenance, Asset
 class MaintenanceForm(forms.ModelForm):
     class Meta:
         model = Maintenance
-        # ADDED: maintenance_date, faulty_hardware_part, software_issue_type
+        # ADDED 'attachment' to the end of the list
         fields = [
             'asset', 'maintenance_type', 'status', 'notes', 
-            'maintenance_date', 'faulty_hardware_part', 'software_issue_type'
+            'maintenance_date', 'faulty_hardware_part', 'software_issue_type',
+            'attachment' 
         ]
         widgets = {
-            'asset': forms.Select(attrs={
-                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
-            }),
-            'maintenance_type': forms.TextInput(attrs={
-                'placeholder': 'e.g., OS Reinstallation',
-                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
-            }),
-            'status': forms.Select(attrs={
-                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
-            }),
-            'notes': forms.Textarea(attrs={
-                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 h-32'
-            }),
+            'asset': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
+            'maintenance_type': forms.TextInput(attrs={'placeholder': 'e.g., OS Reinstallation', 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
+            'status': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
+            'notes': forms.Textarea(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 h-32'}),
             
-            # --- NEW DIAGNOSTIC WIDGETS ---
-            'maintenance_date': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
-            }),
-            'faulty_hardware_part': forms.Select(attrs={
-                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 appearance-none'
-            }),
-            'software_issue_type': forms.Select(attrs={
-                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 appearance-none'
+            # --- DIAGNOSTIC WIDGETS ---
+            'maintenance_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
+            'faulty_hardware_part': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 appearance-none'}),
+            'software_issue_type': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 appearance-none'}),
+            
+            # --- NEW: ATTACHMENT WIDGET ---
+            'attachment': forms.ClearableFileInput(attrs={
+                'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
             }),
         }
         
     def clean_asset(self):
-        # If the field is disabled, 'cleaned_data' might be empty.
-        # This ensures the asset stays the same.
         instance = getattr(self, 'instance', None)
         if instance and instance.pk:
             return instance.asset
@@ -53,13 +41,10 @@ class MaintenanceForm(forms.ModelForm):
         edit_mode = kwargs.pop('edit_mode', False)
         super().__init__(*args, **kwargs)
         
-        # 1. 🔍 FILTER: Only show assets waiting for maintenance (Queued or Maintenance)
-        # Note: Replace 'Maintenance' with whatever your "Queued" status string is in Asset model
         if not edit_mode:
             self.fields['asset'].queryset = Asset.objects.filter(status='Maintenance')
             self.fields['asset'].label_from_instance = lambda obj: f"{obj.assets_id} - {obj.assets_name}"
 
-        # 2. 🔒 EDIT MODE: lock the Asset choice, but leave notes/status open for the tech
         if edit_mode:
             self.fields['asset'].disabled = True
             self.fields['status'].disabled = True

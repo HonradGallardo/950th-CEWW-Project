@@ -84,3 +84,4 @@ def dashboard_stats_api(request):
         'm_completed': m_completed,
         'm_pending': m_pending,
     })
+    

@@ -1,187 +1,314 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
-    <style>
-        #id_faulty_hardware_part, #id_software_issue_type, #id_maintenance_type, #id_notes, select, input[type="date"] {
-            width: 100%; padding: 1rem; background-color: #f8fafc; border: 2px solid #f1f5f9;
-            border-radius: 0.75rem; font-size: 0.875rem; font-weight: 700; color: #334155;
-            outline: none; transition: all 0.2s; appearance: none;
-        }
-        #id_notes { min-height: 120px; font-weight: 500; }
-        #id_faulty_hardware_part:focus, #id_software_issue_type:focus, #id_maintenance_type:focus, #id_notes:focus, select:focus, input[type="date"]:focus {
-            border-color: #3b82f6;
-        }
-
-        /* Dark mode */
-        .dark #id_faulty_hardware_part, .dark #id_software_issue_type, .dark #id_maintenance_type, .dark #id_notes, .dark select, .dark input[type="date"] {
-            background-color: #1e293b !important; border-color: #0f172a !important; color: #f1f5f9 !important; color-scheme: dark !important;
-        }
-        .dark #id_faulty_hardware_part:focus, .dark #id_software_issue_type:focus, .dark #id_maintenance_type:focus, .dark #id_notes:focus, .dark select:focus, .dark input[type="date"]:focus {
-            border-color: #3b82f6 !important;
-        }
-        .dark option { background-color: #1e293b; color: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    </style>
-
-    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 transition-colors">
-        <div>
-            <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Edit Maintenance Log</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest">Update Service Record for {{ form.instance.asset.assets_id }}</p>
+<div class="flex justify-center items-center min-h-[80vh] px-4 py-8 bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300 content-bg">
+    <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all registration-card">
+        
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-5 border-b border-slate-100 dark:border-slate-700 card-header-bg flex justify-between items-center">
+            <h2 class="font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest text-xs">
+                {% if log_id %} <i class="fas fa-edit mr-2 text-blue-500"></i> Update Service Log {% else %} <i class="fas fa-plus-circle mr-2 text-blue-500"></i> Create Service Log {% endif %}
+            </h2>
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">950th CEWW Inventory</span>
         </div>
-        <a href="{% url 'maintenance_list' %}" class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 font-bold text-xs uppercase tracking-widest transition-colors">
-            <i class="fas fa-arrow-left mr-2"></i> Back
-        </a>
+        
+        <form method="POST" enctype="multipart/form-data" class="p-4 sm:p-8 space-y-6" id="serviceLogForm" novalidate>
+            {% csrf_token %}
+            
+            <div class="flex justify-between items-start text-[11px] font-bold text-slate-500 italic">
+                <div class="space-y-1">
+                    <p class="text-slate-600 dark:text-slate-400 dark-mode-subtext font-black">Technician: <span class="text-blue-500 font-bold">{{ request.user.username }}</span></p>
+                    <p class="text-slate-800 dark:text-slate-400 dark-mode-subtext font-black">Date / Time: <span class="text-gray-500 font-bold">{% now "d-m-Y | H:i" %}</span></p>
+                </div>
+                <a href="{% url 'maintenance_list' %}" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all flex items-center gap-2 not-italic text-[10px] font-black uppercase border border-slate-200 dark:border-slate-700">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+
+            <div class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 pt-2">Select Asset:</label>
+                    <div class="md:col-span-2 relative">
+                        <div class="relative w-full custom-dropdown" id="dropdown-asset">
+                            <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
+                                <span class="selected-label flex items-center w-full">
+                                    {% if form.instance.asset %}
+                                        <span class="font-black text-blue-600 dark:text-blue-400">{{ form.instance.asset.assets_id }}</span> 
+                                        <span class="mx-2 text-slate-300">|</span> 
+                                        <span class="text-xs font-bold text-slate-500">{{ form.instance.asset.assets_name }}</span>
+                                        
+                                        {% if form.instance.asset.status == 'Maintenance' %}
+                                            <span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">
+                                                In Maintenance
+                                            </span>
+                                        {% endif %}
+                                    {% else %}
+                                        Select Asset ID / Name
+                                    {% endif %}
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                            </button>
+                            <div class="dropdown-list hidden absolute z-[110] mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl overflow-hidden">
+                                <div class="p-2 border-b dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+                                    <input type="text" id="assetSearch" placeholder="Search ID or Name..." class="w-full px-3 py-1.5 text-xs rounded border dark:bg-slate-900 dark:border-slate-600 outline-none focus:ring-1 focus:ring-blue-500">
+                                </div>
+                                <div id="asset-options-container" class="max-h-[180px] overflow-y-auto">
+                                    <div class="p-4 text-center text-xs text-slate-400 italic">Syncing with registry...</div>
+                                </div>
+                            </div>
+                            
+                            <div class="hidden">
+                                {{ form.asset }}
+                                <input type="hidden" id="custom-asset-tracker" value="{{ form.instance.asset.id|default_if_none:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="history-container" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col max-h-[350px] hidden mt-6">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4 shrink-0">
+                        <i class="fas fa-history"></i> Maintenance History
+                    </label>
+                    <div id="edit-maintenance-history-list" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-grow">
+                        <div class="text-center py-4">
+                            <i class="fas fa-spinner fa-spin text-slate-400 text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start md:items-center gap-1 md:gap-4">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Maintenance Type:</label>
+                    <div class="md:col-span-2">{{ form.maintenance_type }}</div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Hardware Component</label>
+                        <div class="relative group w-full">
+                            {{ form.faulty_hardware_part }}
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Software/OS Issue</label>
+                        <div class="relative group w-full">
+                            {{ form.software_issue_type }}
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Service Status</label>
+                        <div class="relative w-full custom-dropdown" id="dropdown-status">
+                            <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
+                                <span class="selected-label">
+                                    {% if form.instance.status %}{{ form.instance.status }}{% else %}In Progress{% endif %}
+                                </span>
+                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                            </button>
+                            <div class="dropdown-list hidden absolute z-[100] mt-1 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-2xl max-h-[150px] overflow-y-auto">
+                                {% for value, label in form.status.field.choices %}
+                                    <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0" data-value="{{ value }}">
+                                        {{ label }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="hidden">
+                                {{ form.status }}
+                                <input type="hidden" id="custom-status-tracker" value="{% if form.instance.status %}{{ form.instance.status }}{% else %}In Progress{% endif %}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Effective Service Date</label>
+                        <div class="relative group w-full">
+                            <input type="date" name="maintenance_date" id="id_maintenance_date" 
+                                value="{% if form.instance.maintenance_date %}{{ form.instance.maintenance_date|date:'Y-m-d' }}{% else %}{% now 'Y-m-d' %}{% endif %}"
+                                class="w-full px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 transition-all dark:[color-scheme:dark]">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 block">Description / Technical Notes</label>
+                    <div class="w-full">
+                        {{ form.notes }}
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <span class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest block">Reported Issue Photo (Before)</span>
+                    <label class="text-[8px] text-slate-400 uppercase font-bold">Upload a photo of the error screen or damaged hardware</label>
+                    <div class="w-full mt-1">
+                        <input type="file" name="maintenance_attachment" id="id_maintenance_attachment" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 dark:file:bg-amber-900/30 dark:file:text-amber-400 transition-all cursor-pointer focus:outline-none">
+                        
+                        {% if form.instance.maintenance_attachment %}
+                            <div class="mt-3 text-[9px] font-bold text-amber-600 flex flex-col gap-2 bg-amber-50 dark:bg-amber-900/20 w-fit px-3 py-3 rounded-xl border border-amber-100 dark:border-amber-800 shadow-sm">
+                                <span class="uppercase tracking-widest text-[8px] text-amber-500">Currently Uploaded Issue File:</span>
+                                <img src="{{ form.instance.maintenance_attachment.url }}" class="max-h-40 rounded-md object-contain border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-800" alt="Issue Photo">
+                                <a href="{{ form.instance.maintenance_attachment.url }}" target="_blank" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="completion-photo-container" class="{% if form.instance.status != 'Completed' %}hidden{% endif %} space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">Completed Service Photo (After)</span>
+                    <label class="text-[8px] text-slate-400 uppercase font-bold">Upload proof of repair or completed service logs</label>
+                    <div class="w-full mt-1">
+                        <input type="file" name="attachment" id="id_attachment" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 transition-all cursor-pointer focus:outline-none">
+                        
+                        {% if form.instance.attachment %}
+                            <div class="mt-3 text-[9px] font-bold text-emerald-600 flex flex-col gap-2 bg-emerald-50 dark:bg-emerald-900/20 w-fit px-3 py-3 rounded-xl border border-emerald-100 dark:border-emerald-800 shadow-sm">
+                                <span class="uppercase tracking-widest text-[8px] text-emerald-500">Currently Uploaded Completion File:</span>
+                                <img src="{{ form.instance.attachment.url }}" class="max-h-40 rounded-md object-contain border border-emerald-200 dark:border-emerald-700 bg-white dark:bg-slate-800" alt="Completed Work">
+                                <a href="{{ form.instance.attachment.url }}" target="_blank" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 sm:py-3 rounded-lg transition active:scale-[0.98] shadow-lg shadow-blue-500/30 uppercase tracking-widest text-xs">
+                    {% if log_id %}Update Service Record{% else %}Save Service Record{% endif %}
+                </button>
+            </div>
+        </form>
     </div>
-
-    <form method="POST" id="editMaintenanceForm" class="grid grid-cols-1 lg:grid-cols-3 gap-6" novalidate>
-        {% csrf_token %}
-        
-        {% for hidden in form.hidden_fields %}
-            {{ hidden }}
-        {% endfor %}
-        
-        <div class="space-y-4">
-            <div class="bg-slate-900 dark:bg-slate-950 rounded-2xl p-6 text-white shadow-xl border border-transparent dark:border-slate-800">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Asset under repair</label>
-                <h2 class="text-xl font-black mb-4">{{ form.instance.asset.assets_name }}</h2>
-                <div class="space-y-3 pt-4 border-t border-white/10">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] text-slate-500 font-bold uppercase">System ID</span>
-                        <span class="text-xs font-mono font-bold">{{ form.instance.asset.assets_id }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] text-slate-500 font-bold uppercase">Type</span>
-                        <span class="text-xs font-bold uppercase">{{ form.instance.asset.assets_type }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[350px]">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4 shrink-0">
-                    <i class="fas fa-history"></i> Maintenance History
-                </label>
-                
-                <div id="edit-maintenance-history-list" class="space-y-2 overflow-y-auto custom-scrollbar pr-2 flex-grow">
-                    <div class="text-center py-4">
-                        <i class="fas fa-spinner fa-spin text-slate-400 text-lg"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="hidden">{{ form.asset }}{% if form.technician %}{{ form.technician }}{% endif %}</div>
-        </div>
-
-        <div class="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-6 transition-colors flex flex-col">
-            
-            <div class="space-y-3">
-                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Update Service Status</label>
-                <div class="grid grid-cols-2 gap-4">
-                    <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-slate-100 dark:border-slate-800 has-[:checked]:border-blue-500 dark:has-[:checked]:border-blue-500">
-                        <input type="radio" name="{{ form.status.html_name }}" value="In Progress" {% if form.status.value == 'In Progress' %}checked{% endif %} class="hidden">
-                        <span class="text-xs font-bold uppercase group-has-[:checked]:text-blue-600 dark:text-slate-400">In Progress</span>
-                    </label>
-                    <label class="relative flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group border-slate-100 dark:border-slate-800 has-[:checked]:border-emerald-500 dark:has-[:checked]:border-emerald-500">
-                        <input type="radio" name="{{ form.status.html_name }}" value="Completed" {% if form.status.value == 'Completed' %}checked{% endif %} class="hidden">
-                        <span class="text-xs font-bold uppercase group-has-[:checked]:text-emerald-600 dark:text-slate-400">Completed</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Hardware Component</label>
-                    <div class="relative group">
-                        {{ form.faulty_hardware_part }}
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 dark:text-slate-500">
-                            <i class="fas fa-chevron-down text-[10px]"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Software/OS Issue</label>
-                    <div class="relative group">
-                        {{ form.software_issue_type }}
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 dark:text-slate-500">
-                            <i class="fas fa-chevron-down text-[10px]"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="space-y-2 relative">
-                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Maintenance Type</label>
-                    <div class="relative group">
-                        {{ form.maintenance_type }}
-                    </div>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Effective Service Date</label>
-                    <div class="relative group">
-                        <input type="date" name="maintenance_date" id="id_maintenance_date" 
-                            value="{% if form.instance.maintenance_date %}{{ form.instance.maintenance_date|date:'Y-m-d' }}{% else %}{{ form.instance.date|date:'Y-m-d' }}{% endif %}"
-                            class="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500 transition-all dark:[color-scheme:dark]">
-                    </div>
-                </div>            
-            </div>
-
-            <div class="space-y-2 flex-grow">
-                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Technical Description & Progress</label>
-                {{ form.notes }}
-            </div>
-
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-[0.98] transition-all mt-auto">
-                Update Service Record
-            </button>
-        </div>
-    </form>
 </div>
 
 <script>
-    $(document).ready(function() {
-        const logId = "{{ log_id }}";
-        const assetStringId = "{{ form.instance.asset.assets_id }}".trim();
-        const assetName = "{{ form.instance.asset.assets_name }}".trim();
+$(document).ready(function() {
+    const logId = "{{ log_id|default:'' }}";
+    const isEdit = logId !== "";
 
-        // 1. FETCH ASSET HISTORY VIA AJAX (FIXED)
+    // Toggle the Completion Photo Upload based on Status Selection
+    $('#dropdown-status .dropdown-item').on('click', function() {
+        const val = $(this).data('value');
+        if (val === 'Completed') {
+            $('#completion-photo-container').removeClass('hidden').hide().slideDown(300);
+        } else {
+            $('#completion-photo-container').slideUp(300);
+        }
+    });
+
+    // 1. FORCE-REMOVE 'REQUIRED' FROM NATIVE FIELDS
+    $('select[name="asset"], select[name="status"]').removeAttr('required').prop('required', false);
+
+    // 1.5 HARDWARE/SOFTWARE FILTERING LOGIC
+    function filterDiagnostics(assetType) {
+        if (!assetType) return;
+
+        const hwMap = {
+            'PC': ['Display', 'Keyboard', 'Storage', 'RAM', 'Motherboard', 'Power', 'Network', 'Cooling', 'Chassis', 'Other', ''],
+            'Laptop': ['Display', 'Battery', 'Keyboard', 'Storage', 'RAM', 'Motherboard', 'Power', 'Network', 'Cooling', 'Chassis', 'Other', ''],
+            'Server': ['Storage', 'RAM', 'Motherboard', 'Power', 'Network', 'Cooling', 'Chassis', 'Other', ''],
+            'Router': ['Power', 'Network', 'Cooling', 'Chassis', 'Other', ''],
+            'Switch': ['Power', 'Network', 'Cooling', 'Chassis', 'Other', '']
+        };
+
+        const swMap = {
+            'PC': ['OS', 'Driver', 'Security', 'Update', 'Config', 'License', 'Performance', 'App', ''],
+            'Laptop': ['OS', 'Driver', 'Security', 'Update', 'Config', 'License', 'Performance', 'App', ''],
+            'Server': ['OS', 'Firmware', 'Driver', 'Security', 'Update', 'Config', 'License', 'ServicePack', 'Performance', 'App', ''],
+            'Router': ['Firmware', 'Config', 'Update', 'Performance', ''],
+            'Switch': ['Firmware', 'Config', 'Update', 'Performance', '']
+        };
+
+        const allowedHw = hwMap[assetType] || [];
+        const allowedSw = swMap[assetType] || [];
+
+        $('#id_faulty_hardware_part option').each(function() {
+            if (allowedHw.includes($(this).val())) {
+                $(this).removeAttr('disabled').show();
+            } else {
+                $(this).attr('disabled', 'disabled').hide();
+                if ($(this).is(':selected')) $('#id_faulty_hardware_part').val('');
+            }
+        });
+
+        $('#id_software_issue_type option').each(function() {
+            if (allowedSw.includes($(this).val())) {
+                $(this).removeAttr('disabled').show();
+            } else {
+                $(this).attr('disabled', 'disabled').hide();
+                if ($(this).is(':selected')) $('#id_software_issue_type').val('');
+            }
+        });
+    }
+
+    const initialAssetType = "{{ form.instance.asset.assets_type|default:'' }}";
+    if (initialAssetType) filterDiagnostics(initialAssetType);
+
+    // 2. DYNAMIC ASSET FETCH
+    function fetchAssets() {
+        $.ajax({
+            url: '/api/assets/',
+            type: 'GET',
+            success: function(data) {
+                let html = '';
+                data.forEach(asset => {
+                    const maintenanceBadge = asset.status === 'Maintenance' 
+                        ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">In Maintenance</span>` 
+                        : '';
+
+                    html += `
+                        <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0" 
+                             data-value="${asset.id}" data-type="${asset.assets_type}" data-name="${asset.assets_name}" data-stringid="${asset.assets_id}" data-search="${asset.assets_id} ${asset.assets_name}">
+                            <div class="flex items-center w-full">
+                                <span class="font-black text-blue-600 dark:text-blue-400">${asset.assets_id}</span> 
+                                <span class="mx-2 text-slate-300">|</span> 
+                                <span class="text-xs font-bold text-slate-500">${asset.assets_name}</span>
+                                ${maintenanceBadge}
+                            </div>
+                        </div>`;
+                });
+                $('#asset-options-container').html(html || '<div class="p-4 text-center">No assets found.</div>');
+            }
+        });
+    }
+    fetchAssets();
+
+    // 3. FETCH HISTORY FOR SELECTED ASSET & SHOW IMAGES IN TIMELINE
+    function fetchAssetHistory(assetStringId, assetName) {
+        $('#history-container').removeClass('hidden');
+        $('#edit-maintenance-history-list').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-slate-400 text-lg"></i></div>');
+
         $.ajax({
             url: '/api/maintenance/',
             type: 'GET',
             success: function(data) {
-                // Safeguard for DRF pagination arrays
                 const logsArray = Array.isArray(data) ? data : (data.results || []);
 
-                // Filter logs to only include those matching this specific Asset
                 const assetLogs = logsArray.filter(log => {
-                    return (log.asset_string_id && log.asset_string_id.toString().trim() === assetStringId) || 
-                           (log.asset_name && log.asset_name.trim() === assetName);
+                    return (log.asset_string_id && log.asset_string_id.toString().trim() === assetStringId.trim()) || 
+                           (log.asset_name && log.asset_name.trim() === assetName.trim());
                 });
 
-                // Sort by latest date first
                 assetLogs.sort((a, b) => new Date(b.maintenance_date || b.date) - new Date(a.maintenance_date || a.date));
 
                 let historyHtml = '';
 
                 if (assetLogs.length === 0) {
-                    historyHtml = '<p class="text-[10px] font-bold text-slate-400 italic pt-2">No maintenance records found.</p>';
+                    historyHtml = '<p class="text-[10px] font-bold text-slate-400 italic pt-2">No past maintenance records found.</p>';
                 } else {
                     assetLogs.forEach(log => {
                         const isCurrent = log.id.toString() === logId.toString();
                         const isCompleted = log.status === 'Completed';
-                        
                         const dotColor = isCompleted ? 'bg-emerald-500' : 'bg-blue-500';
                         const badgeClass = isCompleted ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500';
                         
-                        // Style differently if this is the active log we are editing
-                        const activeClass = isCurrent 
-                            ? 'bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800 shadow-sm mb-3' 
-                            : 'pl-4 border-l-2 border-slate-200 dark:border-slate-700 pb-5 last:pb-0 mt-2';
-                        const dotPos = isCurrent ? 'hidden' : 'absolute -left-[5px] top-1';
-
                         let logDate = 'N/A';
                         if (log.maintenance_date) {
                             logDate = new Date(log.maintenance_date).toLocaleDateString('en-GB').replace(/\//g, '-');
@@ -199,9 +326,32 @@
 
                         let notesHtml = log.notes ? `<p class="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">${log.notes}</p>` : '';
 
+                        // DYNAMICALLY INJECT THUMBNAILS
+                        let attachHtml = '';
+                        if (log.maintenance_attachment) {
+                            attachHtml += `
+                                <div class="mt-2 mb-1 inline-block mr-2">
+                                    <span class="text-[8px] font-bold text-amber-500 uppercase block mb-1">Reported Issue</span>
+                                    <a href="${log.maintenance_attachment}" target="_blank" class="block w-fit relative group border border-amber-200 dark:border-amber-700 rounded-md p-1 bg-amber-50/50 dark:bg-amber-900/10">
+                                        <img src="${log.maintenance_attachment}" class="h-14 w-auto rounded object-cover shadow-sm" alt="Issue Photo">
+                                    </a>
+                                </div>
+                            `;
+                        }
+                        if (log.attachment) {
+                            attachHtml += `
+                                <div class="mt-2 mb-1 inline-block">
+                                    <span class="text-[8px] font-bold text-emerald-500 uppercase block mb-1">Completed Repair</span>
+                                    <a href="${log.attachment}" target="_blank" class="block w-fit relative group border border-emerald-200 dark:border-emerald-700 rounded-md p-1 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                        <img src="${log.attachment}" class="h-14 w-auto rounded object-cover shadow-sm" alt="Repair Photo">
+                                    </a>
+                                </div>
+                            `;
+                        }
+
                         historyHtml += `
-                            <div class="relative ${activeClass}">
-                                <div class="${dotPos} w-2 h-2 rounded-full ${dotColor}"></div>
+                            <div class="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 pb-5 last:pb-0 mt-2">
+                                <div class="absolute -left-[5px] top-1 w-2 h-2 rounded-full ${dotColor}"></div>
                                 <div class="flex justify-between items-start">
                                     <p class="text-[9px] font-black text-slate-400 uppercase">${logDate} <span class="ml-1 text-slate-300 dark:text-slate-600">#LOG-${log.id}</span></p>
                                     ${isCurrent ? '<span class="text-[8px] font-black text-white uppercase bg-blue-500 px-1.5 py-0.5 rounded shadow">Currently Editing</span>' : ''}
@@ -209,73 +359,162 @@
                                 <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 leading-tight">${log.maintenance_type}</p>
                                 ${diagHtml}
                                 ${notesHtml}
+                                <div class="flex flex-wrap gap-2">${attachHtml}</div>
                                 <span class="inline-block mt-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${badgeClass}">${log.status}</span>
                             </div>
                         `;
                     });
                 }
                 $('#edit-maintenance-history-list').html(historyHtml);
-            },
-            error: function(err) {
-                $('#edit-maintenance-history-list').html('<p class="text-[10px] font-bold text-red-500 italic pt-2 text-center"><i class="fas fa-exclamation-circle mr-1"></i> Failed to load history.</p>');
             }
         });
+    }
 
-        // 2. INHERIT FAULTY HARDWARE/SOFTWARE FROM ASSET IF EMPTY
-        const assetHwPart = "{{ form.instance.asset.faulty_hardware_part|default:'' }}";
-        const assetSwIssue = "{{ form.instance.asset.software_issue_type|default:'' }}";
+    if (isEdit) {
+        fetchAssetHistory("{{ form.instance.asset.assets_id }}", "{{ form.instance.asset.assets_name }}");
+    }
 
-        if (!$('#id_faulty_hardware_part').val() && assetHwPart !== "" && assetHwPart !== "None") {
-            $('#id_faulty_hardware_part').val(assetHwPart);
-        }
-        if (!$('#id_software_issue_type').val() && assetSwIssue !== "" && assetSwIssue !== "None") {
-            $('#id_software_issue_type').val(assetSwIssue);
-        }
+    // 4. DROPDOWN UI LOGIC
+    $(document).on('click', '.dropdown-toggle', function(e) {
+        e.stopPropagation();
+        const $list = $(this).next('.dropdown-list');
+        $('.dropdown-list').not($list).addClass('hidden');
+        $list.toggleClass('hidden');
+        if(!$list.hasClass('hidden')) $list.find('input').focus();
+    });
 
-        // 3. SUBMIT FORM VIA AJAX
-        $('[name="asset"], [name="technician"]').removeAttr('required').prop('required', false);
+    $(document).on('click', '.dropdown-item', function() {
+        const val = $(this).data('value');
+        const assetType = $(this).data('type');
+        const assetName = $(this).data('name');
+        const assetStringId = $(this).data('stringid');
+        const assetIdText = $(this).find('span.text-blue-600').text();
 
-        $('#editMaintenanceForm').on('submit', function(e) {
-            e.preventDefault(); 
-
-            const $btn = $('#submitBtn');
-            const originalText = $btn.html();
-            const assetPk = "{{ form.instance.asset.id }}"; 
+        const $dropdown = $(this).closest('.custom-dropdown');
+        
+        if ($dropdown.attr('id') === 'dropdown-asset') {
+            $('#custom-asset-tracker').val(val);
             
-            const payload = {
-                asset: parseInt(assetPk),
-                status: $('input[name="status"]:checked').val(),
-                maintenance_type: $('[name="maintenance_type"]').val(),
-                faulty_hardware_part: $('[name="faulty_hardware_part"]').val() || null,
-                software_issue_type: $('[name="software_issue_type"]').val() || null,
-                notes: $('textarea[name="notes"]').val(),
-                maintenance_date: $('#id_maintenance_date').val() 
-            };
+            const badgeHtml = $(this).find('.ml-auto').length > 0 ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">In Maintenance</span>` : '';
+            $dropdown.find('.selected-label').html(`<span class="font-black text-blue-600 dark:text-blue-400">${assetIdText}</span> <span class="mx-2 text-slate-300">|</span> <span class="text-xs font-bold text-slate-500">${assetName}</span> ${badgeHtml}`);
+            
+            filterDiagnostics(assetType);
+            fetchAssetHistory(assetStringId, assetName);
 
-            $btn.prop('disabled', true)
-                .addClass('opacity-70 cursor-not-allowed')
-                .html('<i class="fas fa-sync fa-spin mr-2"></i> COMMITTING TELEMETRY...');
+        } else if ($dropdown.attr('id') === 'dropdown-status') {
+            $dropdown.find('.selected-label').html($(this).html());
+            $('#custom-status-tracker').val(val);
+        }
+        
+        $('.dropdown-list').addClass('hidden');
+    });
 
-            $.ajax({
-                url: `/api/maintenance/${logId}/`,
-                type: 'PUT',
-                headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
-                data: JSON.stringify(payload),
-                contentType: 'application/json',
-                success: function(response) {
-                    $btn.removeClass('bg-blue-600').addClass('bg-emerald-600')
-                        .html('<i class="fas fa-check mr-2"></i> RECORD UPDATED');
-                    
-                    setTimeout(() => {
-                        window.location.href = "{% url 'maintenance_list' %}";
-                    }, 1000);
-                },
-                error: function(xhr) {
-                    $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalText);
-                    alert("Update Failed: " + (xhr.responseJSON?.detail || "Check required fields."));
-                }
-            });
+    $('#assetSearch').on('keyup', function() {
+        const val = $(this).val().toLowerCase();
+        $('#asset-options-container .dropdown-item').filter(function() {
+            $(this).toggle($(this).data('search').toLowerCase().indexOf(val) > -1);
         });
     });
+
+    $(document).on('click', function() { $('.dropdown-list').addClass('hidden'); });
+
+    // 5. API SUBMISSION
+    $('#serviceLogForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const assetPk = $('#custom-asset-tracker').val();
+        const statusVal = $('#custom-status-tracker').val();
+        const maintTypeVal = $('[name="maintenance_type"]').val();
+        const notesVal = $('textarea[name="notes"]').val();
+        
+        const hwPartVal = $('[name="faulty_hardware_part"]').val() || null;
+        const swIssueVal = $('[name="software_issue_type"]').val() || null;
+        const dateVal = $('#id_maintenance_date').val() || null;
+
+        if (!assetPk || assetPk === "" || !statusVal || statusVal === "") {
+            alert("Verification Failed: Please select an Asset and a Status.");
+            return;
+        }
+
+        const $btn = $('#submitBtn');
+        $btn.prop('disabled', true).text('SYNCHRONIZING...');
+
+        const formData = new FormData();
+        formData.append('asset', parseInt(assetPk));
+        formData.append('status', statusVal);
+        formData.append('maintenance_type', maintTypeVal);
+        formData.append('notes', notesVal);
+        
+        if (hwPartVal) formData.append('faulty_hardware_part', hwPartVal);
+        if (swIssueVal) formData.append('software_issue_type', swIssueVal);
+        if (dateVal) formData.append('maintenance_date', dateVal);
+
+        // CAPTURE REPORTED ISSUE PHOTO
+        const issueFileInput = $('#id_maintenance_attachment')[0];
+        if (issueFileInput && issueFileInput.files.length > 0) {
+            formData.append('maintenance_attachment', issueFileInput.files[0]);
+        }
+
+        // CAPTURE COMPLETED SERVICE PHOTO
+        const compFileInput = $('#id_attachment')[0];
+        if (compFileInput && compFileInput.files.length > 0) {
+            formData.append('attachment', compFileInput.files[0]);
+        }
+
+        const apiUrl = isEdit ? `/api/maintenance/${logId}/` : '/api/maintenance/';
+        const apiMethod = isEdit ? 'PUT' : 'POST';
+
+        $.ajax({
+            url: apiUrl,
+            type: apiMethod,
+            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+            data: formData,
+            processData: false, 
+            contentType: false, 
+            success: function() { 
+                window.location.href = '/maintenance/'; 
+            },
+            error: function(xhr) {
+                $btn.prop('disabled', false).text('RETRY SUBMISSION');
+                console.error("API Error Response:", xhr.responseText);
+                alert("Submission Refused: " + (xhr.responseJSON?.detail || "Check form details."));
+            }
+        });
+    });
+});
 </script>
+
+<style>
+    #serviceLogForm select, #serviceLogForm textarea, #serviceLogForm input[type="text"], #serviceLogForm input[type="date"] { 
+        width: 100% !important; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; font-size: 0.875rem; font-weight: 500; appearance: none; background-color: #ffffff;
+    }
+    body.dark-mode #serviceLogForm select, body.dark-mode #serviceLogForm textarea, body.dark-mode #serviceLogForm input[type="text"], body.dark-mode #serviceLogForm input[type="date"] {
+        background-color: #1e293b; border-color: #334155; color: #f1f5f9;
+    }
+    
+    #serviceLogForm select:focus, #serviceLogForm textarea:focus, #serviceLogForm input[type="text"]:focus, #serviceLogForm input[type="date"]:focus {
+        border-color: #3b82f6;
+    }
+
+    #serviceLogForm input[name="attachment"]::file-selector-button {
+        padding: 0.4rem 0.8rem; border-radius: 0.4rem; border: none; font-size: 0.7rem;
+        font-weight: 900; cursor: pointer; margin-right: 0.5rem;
+        background-color: #ecfdf5; color: #047857; transition: all 0.2s;
+    }
+    .dark #serviceLogForm input[name="attachment"]::file-selector-button { background-color: rgba(6, 78, 59, 0.3); color: #34d399; }
+
+    #serviceLogForm input[name="maintenance_attachment"]::file-selector-button {
+        padding: 0.4rem 0.8rem; border-radius: 0.4rem; border: none; font-size: 0.7rem;
+        font-weight: 900; cursor: pointer; margin-right: 0.5rem;
+        background-color: #fffbeb; color: #d97706; transition: all 0.2s;
+    }
+    .dark #serviceLogForm input[name="maintenance_attachment"]::file-selector-button { background-color: rgba(146, 64, 14, 0.3); color: #fbbf24; }
+
+    #asset-options-container::-webkit-scrollbar { width: 4px; }
+    #asset-options-container::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+    .dropdown-item .ml-auto {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+</style>
 {% endblock %}

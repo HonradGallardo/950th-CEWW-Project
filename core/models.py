@@ -2,8 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models import JSONField
+import pyotp
 
 
+class UserTOTP(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='totp')
+    # Automatically generates a secure 32-character base32 secret key when created
+    secret = models.CharField(max_length=32, default=pyotp.random_base32)
+    is_active = models.BooleanField(default=False) # Only true AFTER they scan the QR code
+    
 class UserPasskey(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='passkeys')
     name = models.CharField(max_length=100, default="My Authenticator") # e.g. "iPhone 15 Pro"
@@ -66,6 +73,8 @@ class Asset(models.Model):
     brand = models.CharField(max_length=50, blank=True, null=True, help_text="e.g. Dell, HP, Cisco, Juniper")
     model_number = models.CharField(max_length=100, blank=True, null=True)
     serial_number = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    attachment = models.FileField(upload_to='asset_attachments/', blank=True, null=True, help_text="Manuals, Invoices, Photos")
+    maintenance_attachment = models.FileField(upload_to='maintenance_attachments/', blank=True, null=True, help_text="Maintenance Logs, Repair Photos")
     
     # --- ASSIGNMENT & STATUS ---
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -130,7 +139,8 @@ class Maintenance(models.Model):
     notes = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='In Progress')
     maintenance_date = models.DateField(null=True, blank=True, help_text="The date the maintenance was or will be performed")
-    
+    attachment = models.FileField(upload_to='maintenance_attachments/', blank=True, null=True, help_text="Photos, Logs, Reports")
+    maintenance_attachment = models.FileField(upload_to='maintenance_attachments/', blank=True, null=True, help_text="Additional files related to maintenance")
     # --- NEW: ADD THESE TWO FIELDS HERE ---
     faulty_hardware_part = models.CharField(max_length=50, choices=Asset.HARDWARE_PART_CHOICES, blank=True, null=True)
     software_issue_type = models.CharField(max_length=50, choices=Asset.SOFTWARE_ISSUE_CHOICES, blank=True, null=True)
