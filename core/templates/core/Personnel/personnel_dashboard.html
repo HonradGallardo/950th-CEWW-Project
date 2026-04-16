@@ -1,194 +1,205 @@
 {% extends "base.html" %}
-{% load static %}
-
-{% block title %}Personnel Dashboard | On The Go AIMS{% endblock %}
 
 {% block content %}
-<div class="flex-1 p-4 md:p-6 flex flex-col gap-6 overflow-y-auto">
-    <div class="flex justify-between items-center shrink-0">
-        <h1 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white tracking-tight uppercase">
-            Dashboard Overview
-        </h1>
-        <div id="sync-indicator" class="hidden flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-100 dark:border-emerald-800">
-            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></div>
-            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Telemetry Live</span>
+<div id="fullHistoryModal" class="font-plex hidden fixed inset-0 z-[110] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" onclick="closeFullHistoryModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-slate-200 dark:border-slate-800">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+                <div>
+                    <h3 class="font-rajdhani text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Global Service Registry</h3>
+                    <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Complete Archive of All Maintenance Events</p>
+                </div>
+                <button onclick="closeFullHistoryModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="px-8 py-6 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a]">
+                <div id="global-history-list" class="space-y-4">
+                    </div>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-800/50 px-8 py-4 flex justify-end">
+                <button type="button" onclick="closeFullHistoryModal()" class="font-rajdhani rounded-xl border border-slate-300 dark:border-slate-600 px-6 py-2.5 bg-white dark:bg-slate-700 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 uppercase tracking-wider">
+                    Close Archive
+                </button>
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
-        <div class="lg:col-span-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col order-2 lg:order-1">
-            <div class="px-5 py-4 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">Recent Incident Reports</span>
-                <div class="w-full sm:w-auto relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                    <input type="text" id="incidentAjaxSearch" placeholder="Search ID, Type, Severity..." 
-                           class="w-full sm:w-64 pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
-                           value="{{ q_incident|default:'' }}">
+<div id="deleteModal" class="font-plex hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeDeleteModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white dark:bg-slate-800 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-700">
+            <div class="px-6 pt-6 pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto shrink-0 flex items-center justify-center h-12 w-12 rounded-xl bg-red-50 dark:bg-red-900/20 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fas fa-exclamation-triangle text-red-600"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="font-rajdhani text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="modal-title">Delete Incident</h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Are you sure you want to permanently remove this incident? This action cannot be undone.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <div class="overflow-x-auto flex-1">
-                <table class="w-full text-left text-[13px]" id="incidentTable">
-                    <thead class="bg-slate-50/50 dark:bg-slate-900/20 text-slate-500 dark:text-slate-400 uppercase text-[11px] tracking-wider border-b dark:border-slate-700">
-                        <tr>
-                            <th class="px-6 py-4">ID</th>
-                            <th class="px-6 py-4">Incident Type</th>
-                            <th class="px-6 py-4 text-center">Severity</th>
-                            <th class="px-6 py-4 text-center">Status</th>
-                            <th class="px-6 py-4">Date Reported</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
-                        {% for incident in page_obj %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer" onclick="window.location.href='{% url 'incident_list' %}'">
-                            <td class="px-6 py-4 font-mono text-slate-400">#{{ incident.id }}</td>
-                            <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">{{ incident.title }}</td>
-                            <td class="px-6 py-4 text-center">
-                                {% if incident.severity == 'Critical' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-black uppercase border border-red-200 dark:border-red-800">
-                                        <i class="fas fa-skull-crossbones mr-1.5 animate-pulse"></i> {{ incident.severity }}
-                                    </span>
-                                {% elif incident.severity == 'High' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-black uppercase border border-orange-200 dark:border-orange-800">
-                                        <i class="fas fa-exclamation-triangle mr-1.5"></i> {{ incident.severity }}
-                                    </span>
-                                {% elif incident.severity == 'Medium' %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-black uppercase border border-yellow-200 dark:border-yellow-800">
-                                        <i class="fas fa-bolt mr-1.5"></i> {{ incident.severity }}
-                                    </span>
-                                {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase border border-emerald-200 dark:border-emerald-800">
-                                        <i class="fas fa-shield-virus mr-1.5"></i> {{ incident.severity|default:"Low" }}
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase border border-blue-100 dark:border-blue-800/30">
-                                    {{ incident.status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{{ incident.date|date:"M d, Y" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5" class="p-10 text-center text-slate-400 italic">No incident reports available.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 sm:flex sm:flex-row-reverse gap-3">
+                <button type="button" id="confirmDeleteBtn" class="font-rajdhani w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-black text-white hover:bg-red-700 focus:outline-none sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Confirm Delete
+                </button>
+                <button type="button" onclick="closeDeleteModal()" class="font-rajdhani mt-3 w-full inline-flex justify-center rounded-xl border border-slate-300 dark:border-slate-600 shadow-sm px-4 py-2.5 bg-white dark:bg-slate-700 text-base font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm uppercase tracking-wider">
+                    Cancel
+                </button>
             </div>
-            
-            {% if page_obj.paginator.num_pages > 1 %}
-            <div class="px-5 py-3 border-t dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/20 flex justify-between items-center">
-                <div class="flex gap-2">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}&q_incident={{ q_incident }}" class="px-3 py-1 text-xs font-bold rounded border dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700 transition">Prev</a>
-                    {% endif %}
-                </div>
-                <div class="flex items-center gap-1">
-                    {% for i in page_obj.paginator.page_range %}
-                        <a href="?page={{ i }}&q_incident={{ q_incident }}" class="px-2.5 py-1 text-xs rounded {% if page_obj.number == i %}bg-blue-600 text-white{% else %}hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">{{ i }}</a>
-                    {% endfor %}
-                </div>
-                <div class="flex gap-2">
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}&q_incident={{ q_incident }}" class="px-3 py-1 text-xs font-bold rounded border dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700 transition">Next</a>
-                    {% endif %}
-                </div>
-            </div>
+        </div>
+    </div>
+</div>
+
+<div class="font-plex flex flex-col min-h-screen lg:h-[calc(100vh-120px)] lg:overflow-hidden space-y-4 p-2 sm:p-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 px-2">
+        <div>
+            <h1 class="font-rajdhani text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">Service History</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-wider">Live Repair Queue & History</p>
+        </div>
+        
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+            <button onclick="openFullHistoryModal()" class="font-rajdhani flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center uppercase tracking-widest">
+                <i class="fas fa-archive mr-2"></i> View Full Archive
+            </button>
+            {% if not request.user.groups.all.0.name == "Commander" %}
+            <a href="{% url 'add_maintenance' %}" class="font-rajdhani flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition flex items-center justify-center group uppercase tracking-widest">
+                <i class="fas fa-tools mr-2 group-hover:rotate-12 transition-transform"></i> Create Service Log
+            </a>
             {% endif %}
         </div>
-
-        <div class="flex flex-col gap-4 order-1 lg:order-2">
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Assets</p>
-                <p id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">{{ total_assets|default:"0" }}</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">My Tasks</p>
-                <p id="stat-my-tasks" class="text-3xl font-black text-emerald-500">{{ my_maintenance_count|default:"0" }}</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border-l-4 border-l-red-500 border-y border-r border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Alerts</p>
-                <p id="stat-alerts" class="text-3xl font-black text-red-500">{{ reported_incidents_count|default:"0" }}</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex-1">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-4">Incident Trends</p>
-                <div class="relative h-32">
-                    <canvas id="incidentTrendChart"></canvas>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-0">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
-            <div class="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex justify-between items-center">
-                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">My Assigned Assets</span>
-                <div class="relative">
-                    <input type="text" id="assetAjaxSearch" placeholder="Search Assets..." class="px-2 py-1 text-xs bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-md outline-none focus:border-blue-500" value="{{ q_asset|default:'' }}">
+    <div class="flex-1 grid grid-cols-12 gap-6 lg:min-h-0 lg:overflow-hidden pb-10 sm:pb-4">
+        
+        <div class="col-span-12 lg:col-span-8 flex flex-col h-fit lg:h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+            
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
+                <div class="flex items-center space-x-3 flex-1 overflow-x-auto no-scrollbar">
+                    <div class="relative flex-1 min-w-[150px] max-w-xs">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[10px]"></i>
+                        <input type="text" id="assetSearch" onkeyup="filterTable()" placeholder="Search ID or Name..." 
+                               class="text-xs pl-8 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/10 outline-none w-full">
+                    </div>
+                    
+                    <select id="typeFilter" onchange="filterTable()" class="text-xs px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold outline-none text-slate-600 dark:text-slate-300">
+                        <option value="">All Types</option>
+                        {% for type in asset_types %}<option value="{{ type }}">{{ type }}</option>{% endfor %}
+                    </select>
+
+                    <select id="statusFilter" onchange="filterTable()" class="text-xs px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold outline-none text-slate-600 dark:text-slate-300">
+                        <option value="">All Statuses</option>
+                        <option value="QUEUED">Queued</option>
+                        <option value="IN PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                    </select>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-[12px]">
-                    <thead class="text-slate-500 uppercase text-[10px] tracking-wider border-b dark:border-slate-700">
-                        <tr>
-                            <th class="px-5 py-3">Asset</th>
-                            <th class="px-5 py-3 text-center">Status</th>
-                            <th class="px-5 py-3">Added</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="assetTableBody">
-                        {% for asset in asset_page_obj %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='{% url 'asset_list' %}'">
-                            <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">{{ asset.assets_name }}</td>
-                            <td class="px-5 py-4 text-center">
-                                {% if asset.status == 'Active' %}
-                                    <span class="text-emerald-500 font-black uppercase text-[10px] bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">Active</span>
-                                {% elif asset.status == 'Maintenance' %}
-                                    <span class="text-amber-500 font-black uppercase text-[10px] bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-lg">Maintenance</span>
-                                {% else %}
-                                    <span class="text-red-500 font-black uppercase text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg">{{ asset.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-5 py-4 text-slate-400">{{ asset.date_added|date:"d-m-Y" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="p-8 text-center text-slate-400">No assets found.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+            <div class="flex-grow overflow-y-auto custom-scrollbar p-6 bg-slate-50 dark:bg-[#0f172a]">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6" id="tableBody">
+                    <div class="col-span-full p-10 text-center text-slate-400 italic">
+                        <i class="fas fa-spinner fa-spin mr-2"></i> Syncing with server...
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/50 flex items-center justify-between shrink-0">
+                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" id="pageInfo">Showing 0-0 of 0 logs</p>
+                <div class="flex items-center space-x-2" id="paginationControls"></div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
-            <div class="px-5 py-3 bg-slate-50/50 dark:bg-slate-800/50 border-b dark:border-slate-700 flex justify-between items-center">
-                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">Maintenance Tasks</span>
-                <div class="relative">
-                    <input type="text" id="taskAjaxSearch" placeholder="Search Tasks..." class="px-2 py-1 text-xs bg-white dark:bg-slate-900 border dark:border-slate-700 rounded-md outline-none focus:border-blue-500" value="{{ q_task|default:'' }}">
-                </div>
+        <div class="col-span-12 lg:col-span-4 flex flex-col h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 overflow-hidden">
+            <div id="placeholder-content" class="flex-1 flex flex-col items-center justify-center text-center">
+                <i class="fas fa-file-medical text-slate-200 dark:text-slate-800 text-5xl mb-4"></i>
+                <p class="font-rajdhani text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest">Select a card to view activity</p>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-[12px]">
-                    <thead class="text-slate-500 uppercase text-[10px] tracking-wider border-b dark:border-slate-700">
-                        <tr>
-                            <th class="px-5 py-3">Asset</th>
-                            <th class="px-5 py-3">Task Type</th>
-                            <th class="px-5 py-3 text-center">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="taskTableBody">
-                        {% for task in task_page_obj %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='{% url 'maintenance_list' %}'">
-                            <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">{{ task.asset.assets_name }}</td>
-                            <td class="px-5 py-4 text-slate-500">{{ task.maintenance_type }}</td>
-                            <td class="px-5 py-4 text-center">
-                                <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black uppercase">{{ task.status }}</span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="p-8 text-center text-slate-400">No active tasks.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+            <div id="detail-content" class="hidden flex-1 flex flex-col min-h-0">
+                <div class="flex justify-between items-start mb-6 border-b dark:border-slate-800 pb-4 shrink-0">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span id="det-icon" class="text-blue-500 dark:text-blue-400"></span>
+                            <h3 class="font-rajdhani font-black text-sm text-slate-800 dark:text-slate-100" id="det-id">---</h3>
+                        </div>
+                        <p class="font-rajdhani text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest mt-1" id="det-asset-type">---</p>
+                    </div>
+                    
+                    {% if not request.user.groups.all.0.name == "Commander" %}
+                    <form id="delete-log-form" method="POST" action="" class="hidden">
+                        {% csrf_token %}
+                        <button type="button" onclick="openDeleteModal()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 text-red-400 dark:text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                            <i class="fas fa-trash-alt text-[10px]"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-1 overflow-y-auto space-y-5 pr-2 custom-scrollbar">
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block">Log Created</label>
+                            <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200" id="det-date">---</p>
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500" id="det-time">---</p>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block">Service Date</label>
+                            <p class="text-[11px] font-bold text-blue-600 dark:text-blue-400 mt-1" id="det-maint-date">---</p>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <label class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase block">Status</label>
+                            <p class="text-[11px] font-black mt-1 uppercase" id="det-status">---</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 rounded-xl">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                            <i class="fas fa-user-cog text-xs"></i>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block">Assigned Technician</label>
+                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200" id="det-tech">---</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="font-rajdhani text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Technical Hardware</label>
+                        <div id="hardware-grid" class="grid grid-cols-2 gap-2">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="font-rajdhani text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2">Technical Notes</label>
+                        <div class="bg-slate-50/50 dark:bg-slate-800/30 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic" id="det-notes">---</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 border-t border-slate-100 dark:border-slate-800 pt-6">
+                        <label class="font-rajdhani text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-3">
+                            <i class="fas fa-history mr-1"></i> Asset Service History
+                        </label>
+                        <div id="asset-history-list" class="space-y-3 max-h-[180px] overflow-y-auto custom-scrollbar pr-2">
+                            </div>
+                    </div>
+
+                </div>
+
+                {% if not request.user.groups.all.0.name == "Commander" %}
+                <div class="mt-4 pt-4 shrink-0 border-t border-slate-100 dark:border-slate-800">
+                    <a id="det-edit-link" href="#" class="font-rajdhani w-full py-4 rounded-xl font-bold text-xs uppercase flex items-center justify-center shadow-lg transition-all bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 tracking-widest">
+                        <i class="fas fa-edit mr-2"></i> Update Service Log
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -196,168 +207,365 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    $(document).ready(function() {
-        window.syncDashboard = function() {
-            $('#sync-indicator').removeClass('hidden').addClass('flex');
+let currentPage = 1;
+const rowsPerPage = 6; 
+let allMaintenanceLogs = [];
+let currentOpenLogId = null;
 
-            $.ajax({
-                url: '/api/personnel/stats/', 
-                type: 'GET',
-                success: function(data) {
-                    $('#stat-total-assets').text(data.total_assets_count);
-                    
-                    const currentUser = data.user_info.username;
-                    const myTasks = data.recent_maintenance.filter(m => 
-                        m.technician_name === currentUser && m.status !== 'Completed'
-                    ).length;
-                    $('#stat-my-tasks').text(myTasks);
+function loadMaintenanceLogs() {
+    $.ajax({
+        url: '/api/maintenance/',
+        type: 'GET',
+        success: function(data) {
+            allMaintenanceLogs = data;
+            initTable(); 
+        },
+        error: function(err) { console.error("Telemetry Sync Failed", err); }
+    });
+}
 
-                    const openAlerts = data.recent_incidents.filter(i => i.status === 'Open').length;
-                    $('#stat-alerts').text(openAlerts);
+function getAssetIconClass(text) {
+    if (!text) return 'fa-microchip';
+    const t = text.toUpperCase();
+    if (t.includes('PC') || t.includes('DESKTOP')) return 'fa-desktop';
+    if (t.includes('LAPTOP')) return 'fa-laptop';
+    if (t.includes('SERVER')) return 'fa-server';
+    if (t.includes('ROUTER') || t.includes('NETWORK') || t.includes('SWITCH')) return 'fa-network-wired';
+    return 'fa-microchip';
+}
 
-                    // Trigger ALL table and chart refreshes
-                    renderIncidentTable(data.recent_incidents);
-                    renderTaskTable(data.recent_maintenance);
-                    renderAssetTable(data.assigned_assets);
-                    updateChart(data.recent_incidents);
-                },
-                error: function(xhr) {
-                    console.error("Telemetry Sync Failed. Status:", xhr.status);
-                },
-                complete: function() {
-                    setTimeout(() => $('#sync-indicator').fadeOut(), 2000);
-                }
-            });
-        };
+function initTable() {
+    const search = $("#assetSearch").val().toUpperCase();
+    const type = $("#typeFilter").val().toUpperCase();
+    const status = $("#statusFilter").val().toUpperCase();
 
-        function renderIncidentTable(incidents) {
-            const $tbody = $('#incidentTableBody');
-            if (!incidents || incidents.length === 0) {
-                $tbody.html('<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">No incident reports available.</td></tr>');
-                return;
-            }
-
-            let html = '';
-            incidents.forEach(inc => {
-                // Determine severity color
-                let sevColor = inc.severity === 'Critical' ? 'bg-red-100 text-red-700 border-red-200' : 
-                               inc.severity === 'High' ? 'bg-orange-100 text-orange-700 border-orange-200' :
-                               inc.severity === 'Medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
-                               'bg-emerald-100 text-emerald-700 border-emerald-200';
-
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors cursor-pointer" onclick="window.location.href='/incidents/'">
-                        <td class="px-6 py-4 font-mono text-slate-400">#${inc.id}</td>
-                        <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">${inc.title}</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase border ${sevColor}">
-                                ${inc.severity}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-black uppercase border border-blue-100">
-                                ${inc.status}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">${inc.formatted_date}</td>
-                    </tr>`;
-            });
-            $tbody.html(html);
-        }
-
-        function renderAssetTable(assets) {
-            const $tbody = $('#assetTableBody');
-            if (!assets || assets.length === 0) {
-                $tbody.html('<tr><td colspan="3" class="p-8 text-center text-slate-400">No assets assigned to you.</td></tr>');
-                return;
-            }
-
-            let html = '';
-            assets.forEach(asset => {
-                let statusBadge = asset.status === 'Active' ? '<span class="text-emerald-500 font-black uppercase text-[10px] bg-emerald-50 px-2 py-1 rounded-lg">Active</span>' : 
-                                  asset.status === 'Maintenance' ? '<span class="text-amber-500 font-black uppercase text-[10px] bg-amber-50 px-2 py-1 rounded-lg">Maintenance</span>' : 
-                                  `<span class="text-red-500 font-black uppercase text-[10px] bg-red-50 px-2 py-1 rounded-lg">${asset.status}</span>`;
-                
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='/assets/'">
-                        <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">${asset.assets_name}</td>
-                        <td class="px-5 py-4 text-center">${statusBadge}</td>
-                        <td class="px-5 py-4 text-slate-400">${asset.date_added}</td>
-                    </tr>`;
-            });
-            $tbody.html(html);
-        }
-
-        function renderTaskTable(tasks) {
-            const $tbody = $('#taskTableBody');
-            if (!tasks || tasks.length === 0) {
-                $tbody.html('<tr><td colspan="3" class="p-8 text-center text-slate-400">No active maintenance tasks.</td></tr>');
-                return;
-            }
-
-            let html = '';
-            tasks.forEach(task => {
-                html += `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition cursor-pointer" onclick="window.location.href='/maintenance/'">
-                        <td class="px-5 py-4 font-bold text-slate-700 dark:text-slate-200">${task.asset_name}</td>
-                        <td class="px-5 py-4 text-slate-500">${task.maintenance_type}</td>
-                        <td class="px-5 py-4 text-center">
-                            <span class="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[10px] font-black uppercase">${task.status}</span>
-                        </td>
-                    </tr>`;
-            });
-            $tbody.html(html);
-        }
-
-        function updateChart(incidents) {
-            if (!window.myTrendChart) return;
-            const counts = {};
-            incidents.forEach(inc => {
-                const d = inc.date_label || 'Today'; 
-                counts[d] = (counts[d] || 0) + 1;
-            });
-            window.myTrendChart.data.labels = Object.keys(counts);
-            window.myTrendChart.data.datasets[0].data = Object.values(counts);
-            window.myTrendChart.update();
-        }
-
-        syncDashboard();
-        setInterval(syncDashboard, 30000); 
+    const filtered = allMaintenanceLogs.filter(log => {
+        const matchesSearch = log.asset_name.toUpperCase().includes(search) || 
+                              (log.asset_string_id && log.asset_string_id.toString().includes(search));
+        const matchesType = type === "" || log.maintenance_type.toUpperCase() === type;
+        const matchesStatus = status === "" || log.status.toUpperCase() === status;
+        return matchesSearch && matchesType && matchesStatus;
     });
 
-    function initIncidentChart() {
-        const chartEl = document.getElementById('incidentTrendChart');
-        if (!chartEl) return;
-        const ctx = chartEl.getContext('2d');
-        
-        if (window.myTrendChart) window.myTrendChart.destroy();
-        window.myTrendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-                datasets: [{
-                    label: 'Incidents',
-                    data: [0,0,0,0,0],
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { display: false },
-                    y: { display: false, beginAtZero: true }
-                }
-            }
-        });
+    filtered.sort((a, b) => {
+        if (a.status !== b.status) {
+            if (a.status === 'Completed') return 1;
+            if (b.status === 'Completed') return -1;
+            return 0; 
+        }
+        return b.id - a.id; 
+    });
+
+    const totalEntries = filtered.length;
+    const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = Math.min(start + rowsPerPage, totalEntries);
+    const pageData = filtered.slice(start, end);
+
+    renderTableRows(pageData); 
+    renderPagination(totalPages);
+
+    $('#pageInfo').text(`Showing ${totalEntries === 0 ? 0 : start + 1}-${end} of ${totalEntries} logs`);
+}
+
+function renderTableRows(logs) {
+    const $container = $('#tableBody');
+    let html = '';
+
+    if (logs.length === 0) {
+        $container.html('<div class="col-span-full p-12 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">No logs found matching your criteria.</div>');
+        return;
     }
 
-    document.addEventListener('DOMContentLoaded', initIncidentChart);
+    logs.forEach(log => {
+        const isCompleted = log.status === 'Completed';
+        const statusPillClass = isCompleted 
+            ? "bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400" 
+            : "bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400";
+            
+        const hoverColorClass = isCompleted
+            ? "hover:border-emerald-400 hover:ring-4 hover:ring-emerald-500/20 dark:hover:border-emerald-500 dark:hover:ring-emerald-500/30"
+            : "hover:border-blue-400 hover:ring-4 hover:ring-blue-500/20 dark:hover:border-blue-500 dark:hover:ring-blue-500/30";
+
+        const accentLine = isCompleted ? "bg-emerald-500" : "bg-blue-500";
+        const isActive = currentOpenLogId == log.id ? `ring-2 ring-blue-500 border-blue-500 shadow-lg` : `border-slate-200 dark:border-slate-700`;
+        const textDim = isCompleted ? "opacity-60" : "";
+        
+        const iconClass = getAssetIconClass(log.asset_name + " " + (log.maintenance_type || ''));
+        const safeNotes = (log.notes || "No technical notes.").replace(/'/g, "\\'");
+        const safeFirmware = (log.firmware_os || 'N/A').replace(/'/g, "\\'");
+        const safeMac = (log.mac_address || 'N/A').replace(/'/g, "\\'");
+
+        let displayDate = 'N/A';
+        let displayTime = '--:--';
+        if (log.date) {
+            const d = new Date(log.date);
+            displayDate = d.toLocaleDateString('en-GB').replace(/\//g, '-'); 
+            displayTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        html += `
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive} ${hoverColorClass}"
+             onclick="showDetails({
+                 logId: '${log.id}',
+                 assetId: '${log.asset_string_id}',
+                 name: '${log.asset_name}',
+                 status: '${log.status}',
+                 tech: '${log.technician_name || 'System Generated'}',
+                 notes: '${safeNotes}',
+                 date: '${displayDate}',
+                 time: '${displayTime}',
+                 maint_date: '${log.formatted_maintenance_date || 'Not Scheduled'}',
+                 a_type: '${log.maintenance_type}',
+                 asset_category: '${log.asset_category || 'Workstation'}',
+                 processor: '${log.processor || 'N/A'}',
+                 ram: '${log.ram_gb || '0'}GB',
+                 storage: '${log.storage || 'N/A'}',
+                 ip: '${log.ip_address || 'Not Assigned'}',
+                 firmware: '${safeFirmware}',
+                 mac: '${safeMac}'
+             })">
+            
+            <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4 ${textDim}">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 group-hover:text-blue-500 transition-colors">
+                        <i class="fas ${iconClass} text-2xl"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-rajdhani font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight truncate max-w-[180px]">${log.asset_name}</h3>
+                        <span class="font-rajdhani text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${log.asset_string_id}</span>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col items-end gap-2 z-10 relative shrink-0 ml-2">
+                    <span class="font-rajdhani px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${statusPillClass}">
+                        ${log.status}
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10 ${textDim} mt-auto">
+                <div class="col-span-1">
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Service Type</label>
+                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">${log.maintenance_type}</p>
+                </div>
+                <div class="col-span-1">
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Technician</label>
+                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate">
+                        ${log.technician_name || 'System Generated'}
+                    </p>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Date Logged</label>
+                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">${displayDate} at ${displayTime}</p>
+                </div>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 w-full h-1 ${accentLine} opacity-50 group-hover:opacity-100 transition-opacity"></div>
+        </div>`;
+    });
+
+    $container.html(html);
+}
+
+function showDetails(data) {
+    currentOpenLogId = data.logId;
+    $('#placeholder-content').addClass('hidden');
+    $('#detail-content').removeClass('hidden');
+    
+    // Update Standard Fields
+    $('#det-id').text(data.name);
+    $('#det-asset-type').text(data.a_type);
+    $('#det-date').text(data.date);
+    $('#det-time').text(data.time); 
+    $('#det-tech').text(data.tech);
+    $('#det-status').text(data.status);
+    $('#det-notes').text(data.notes);
+    $('#det-maint-date').text(data.maint_date);
+    $('#det-edit-link').attr('href', `/maintenance/edit/${data.logId}/`);
+    $('#delete-log-form').removeClass('hidden');
+
+    // Hardware Logic
+    const hardwareContainer = $('#hardware-grid');
+    const type = (data.asset_category || '').toUpperCase();
+
+    if (type.includes('SERVER') || type.includes('ROUTER') || type.includes('SWITCH')) {
+        hardwareContainer.html(`
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="font-rajdhani text-[9px] text-slate-400 uppercase font-bold tracking-widest">IP Address</p>
+                <p class="text-[15px] font-bold text-blue-500 font-mono">${data.ip}</p>
+            </div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="font-rajdhani text-[9px] text-slate-400 uppercase font-bold tracking-widest">Firmware / OS</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.firmware}</p>
+            </div>
+            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="font-rajdhani text-[9px] text-slate-400 uppercase font-bold tracking-widest">MAC Address</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200 font-mono">${data.mac}</p>
+            </div>
+        `);
+    } else {
+        hardwareContainer.html(`
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="font-rajdhani text-[9px] text-slate-400 uppercase font-bold tracking-widest">Processor</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.processor}</p>
+            </div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="font-rajdhani text-[9px] text-slate-400 uppercase font-bold tracking-widest">RAM</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.ram}</p>
+            </div>
+            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                <p class="font-rajdhani text-[9px] text-slate-400 uppercase font-bold tracking-widest">Storage</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.storage}</p>
+            </div>
+        `);
+    }
+
+    const detIconClass = getAssetIconClass(data.name + " " + data.a_type);
+    $('#det-icon').removeClass().addClass(`fas ${detIconClass} text-blue-500 dark:text-blue-400 text-xl`);
+
+    // --- GENERATE ASSET SERVICE HISTORY ---
+    const historyContainer = $('#asset-history-list');
+    let historyHtml = '';
+
+    const assetHistory = allMaintenanceLogs.filter(log => {
+        return log.asset_string_id === data.assetId || log.asset_name === data.name;
+    });
+
+    // Sort by the actual date provided in the log
+    assetHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (assetHistory.length === 0) {
+        historyHtml = '<p class="text-[11px] text-slate-500 dark:text-slate-400 italic text-center py-4">No prior service telemetry.</p>';
+    } else {
+        assetHistory.forEach(log => {
+            const isCurrent = log.id.toString() === data.logId.toString();
+            const statusColor = log.status === 'Completed' ? 'text-emerald-500' : 'text-blue-500';
+            
+            // Format the date for the log entry
+            let logDate = 'N/A';
+            if (log.date) {
+                const d = new Date(log.date);
+                logDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+
+            historyHtml += `
+                <div class="flex items-start gap-3 p-3 rounded-xl border border-transparent transition-all ${isCurrent ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/50' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}">
+                    <div class="mt-1.5 w-2 h-2 rounded-full ${statusColor} bg-current shrink-0 shadow-[0_0_8px_currentColor]"></div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex justify-between items-start">
+                            <p class="font-rajdhani text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">${log.maintenance_type}</p>
+                            <span class="text-[9px] font-mono text-slate-400">${logDate}</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">
+                            BY: ${log.technician_name || 'SYSTEM'} • <span class="font-rajdhani uppercase tracking-widest ${statusColor}">${log.status}</span>
+                        </p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 line-clamp-1 italic">"${log.notes || 'No notes'}"</p>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    historyContainer.html(historyHtml);
+}
+
+function renderPagination(totalPages) {
+    const container = document.getElementById('paginationControls');
+    container.innerHTML = '';
+    if (totalPages <= 1) return;
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-500 hover:bg-slate-50'}`;
+        btn.onclick = () => { currentPage = i; initTable(); };
+        container.appendChild(btn);
+    }
+}
+
+function filterTable() { currentPage = 1; initTable(); }
+function openDeleteModal() { $('#deleteModal').removeClass('hidden'); }
+function closeDeleteModal() { $('#deleteModal').addClass('hidden'); }
+
+// Global History Functions
+function openFullHistoryModal() {
+    const list = $('#global-history-list');
+    let html = '';
+    
+    if (allMaintenanceLogs.length === 0) {
+        html = '<div class="text-center py-20 text-slate-400 italic text-sm">Registry is empty.</div>';
+    } else {
+        const sorted = [...allMaintenanceLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+        sorted.forEach(log => {
+            const statusColor = log.status === 'Completed' ? 'text-emerald-500' : 'text-blue-500';
+            const icon = getAssetIconClass(log.asset_name);
+            const d = new Date(log.date);
+            const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            html += `
+                <div class="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 shrink-0">
+                        <i class="fas ${icon} text-lg"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-rajdhani text-sm font-black text-slate-800 dark:text-slate-100 truncate uppercase">${log.asset_name}</h4>
+                            <span class="text-[9px] font-mono text-slate-500">${dateStr}</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="font-rajdhani text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">${log.asset_string_id}</span>
+                            <span class="text-slate-300 dark:text-slate-700">•</span>
+                            <span class="font-rajdhani text-[10px] font-black uppercase text-slate-500 tracking-widest">${log.maintenance_type}</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">Tech: ${log.technician_name || 'SYSTEM'}</p>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <span class="font-rajdhani text-[9px] font-black uppercase px-2 py-1 tracking-widest rounded bg-slate-100 dark:bg-slate-800 ${statusColor}">${log.status}</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    list.html(html);
+    $('#fullHistoryModal').removeClass('hidden');
+}
+
+function closeFullHistoryModal() { $('#fullHistoryModal').addClass('hidden'); }
+
+function deleteMaintenanceLog() {
+    if (!currentOpenLogId) return;
+    $.ajax({
+        url: `/api/maintenance/${currentOpenLogId}/`,
+        type: 'DELETE',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        success: function() {
+            closeDeleteModal();
+            loadMaintenanceLogs();
+            $('#detail-content').addClass('hidden');
+            $('#placeholder-content').removeClass('hidden');
+        }
+    });
+}
+
+$(document).ready(function() {
+    Chart.defaults.font.family = "'IBM Plex Sans', ui-sans-serif, system-ui";
+    
+    loadMaintenanceLogs();
+    $('#confirmDeleteBtn').on('click', deleteMaintenanceLog);
+    setInterval(loadMaintenanceLogs, 30000);
+});
 </script>
 
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
+
+    .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+    .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
 {% endblock %}
