@@ -152,7 +152,29 @@ def add_maintenance(request):
 @login_required
 def edit_maintenance(request, pk):
     log = get_object_or_404(Maintenance, pk=pk)
-    form = MaintenanceForm(instance=log)
+    
+    # 1. Check if the user is submitting the form (POST request)
+    if request.method == 'POST':
+        # Bind the incoming POST data to the existing log instance
+        form = MaintenanceForm(request.POST, instance=log)
+        
+        if form.is_valid():
+            # 2. Save the updated progress/status and date
+            updated_log = form.save()
+            
+            # 3. SMART LOGIC: If maintenance is completed, automatically activate the asset
+            if updated_log.status == 'Completed':
+                asset = updated_log.asset
+                if asset.status != 'Active':
+                    asset.status = 'Active'
+                    asset.save()
+                    
+            # Redirect back to the service history page
+            return redirect('maintenance_list')
+    else:
+        # If the user is just loading the page, populate the form with existing data
+        form = MaintenanceForm(instance=log)
+
     return render(request, 'core/Admin/edit_maintenance.html', {
         'form': form,
         'log_id': pk  # Pass ID for API URL construction
@@ -373,14 +395,14 @@ def delete_user(request, user_id):
 # --- SYSTEM UTILITIES ---
 @login_required
 def analytics_list(request):
-    # 1. Setup Time Window (Last 7 Days)
     today = timezone.now().date()
+    # Create the date list as before
     date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    
+    # FIX 1: Convert date objects to strings for 100% matching reliability
     labels = [d.strftime('%a') for d in date_list]
-    date_to_idx = {d: i for i, d in enumerate(date_list)}
-    incident_data = Incident.objects.values('severity').annotate(count=Count('id'))
+    date_to_idx = {d.strftime('%Y-%m-%d'): i for i, d in enumerate(date_list)}
 
-    # Initialize data arrays for Chart.js
     fixed_assets, pending_assets = [0]*7, [0]*7
     new_incidents, resolved_incidents = [0]*7, [0]*7
 
@@ -390,10 +412,14 @@ def analytics_list(request):
         .annotate(count=Count('id'))
     
     for item in maint_qs:
-        idx = date_to_idx.get(item['date__date'])
+        # String conversion to ensure dictionary lookup works
+        db_date_str = str(item['date__date'])[:10]
+        idx = date_to_idx.get(db_date_str)
         if idx is not None:
-            if item['status'] == 'Completed': fixed_assets[idx] = item['count']
-            else: pending_assets[idx] = item['count']
+            if item['status'] == 'Completed': 
+                fixed_assets[idx] += item['count']
+            else: 
+                pending_assets[idx] += item['count']
 
     # 3. Fetch Incident Trends
     inc_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
@@ -401,10 +427,19 @@ def analytics_list(request):
         .annotate(count=Count('id'))
 
     for item in inc_qs:
-        idx = date_to_idx.get(item['date__date'])
+        # FIX 2: Convert DB date to string and slice to ensure YYYY-MM-DD format
+        db_date_str = str(item['date__date'])[:10]
+        idx = date_to_idx.get(db_date_str)
+        
         if idx is not None:
-            if item['status'] == 'Resolved': resolved_incidents[idx] = item['count']
-            else: new_incidents[idx] = item['count']
+            # FIX 3: Use += so we don't overwrite multiple statuses on the same day
+            if item['status'] == 'Resolved': 
+                resolved_incidents[idx] += item['count']
+            else: 
+                # This catches 'Open', 'Investigating', etc.
+                new_incidents[idx] += item['count']
+
+    incident_data = Incident.objects.values('severity').annotate(count=Count('id'))
 
     # 4. Final Context for Template
     context = {

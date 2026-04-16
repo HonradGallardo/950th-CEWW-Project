@@ -1,242 +1,779 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard | On The Go AIMS{% endblock %}
+{% block title %}Dashboard | Admin Center{% endblock %}
 
 {% block content %}
-<div class="font-plex dashboard-grid space-y-8">
-    <h1 class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">Dashboard Overview</h1>
-    
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 my-6">
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
-            <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Total Assets</p>
-            <div id="stat-total-assets" class="text-3xl font-black text-slate-800 dark:text-white">--</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
-            <p class="text-green-500/70 text-[10px] font-black mb-1 tracking-widest uppercase">Assigned</p>
-            <div id="stat-assigned-assets" class="text-3xl font-black text-green-600">--</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
-            <p class="text-slate-400 text-[10px] font-black mb-1 tracking-widest uppercase">Maintenance</p>
-            <div id="stat-maintenance-count" class="text-3xl font-black text-slate-800 dark:text-white">--</div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center transition-colors">
-            <p class="text-red-400 text-[10px] font-black mb-1 tracking-widest uppercase">Open Incidents</p>
-            <div id="stat-open-incidents" class="text-3xl font-black text-red-600">--</div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 my-8">
-        <div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
-            <h3 class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Asset Distribution</h3>
-            <div class="chart-container h-[300px]"><canvas id="adminAssetChart"></canvas></div>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
-            <h3 class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest mb-6">Incident Severity</h3>
-            <div class="chart-container h-[300px]"><canvas id="adminIncidentPie"></canvas></div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 pb-10 mt-8">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden transition-colors">
-            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <span class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest">Recent Maintenance</span>
-            </div>
-            <div class="scroll-area custom-scrollbar overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                        <tr>
-                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Asset</th>
-                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Technician</th>
-                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50 dark:divide-slate-700" id="maintenanceTableBody">
-                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">Synchronizing...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden transition-colors">
-            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <span class="font-rajdhani font-black text-[10px] text-slate-400 uppercase tracking-widest">Open Incidents</span>
-            </div>
-            <div class="scroll-area custom-scrollbar overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
-                        <tr>
-                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Incident</th>
-                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px]">Severity</th>
-                            <th class="font-rajdhani px-6 py-3 font-black text-slate-400 uppercase tracking-widest text-[9px] text-right">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700" id="incidentTableBody">
-                        <tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">Synchronizing...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let assetChart, incidentChart;
-
-        // Initialize/Update Charts
-        function updateCharts(data) {
-            // Enhanced dark mode detection for both custom class and Tailwind native class
-            const isDark = document.body.classList.contains('dark-mode') || document.documentElement.classList.contains('dark');
-            const textColor = isDark ? '#f1f5f9' : '#94a3b8';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(148, 163, 184, 0.1)';
-
-            // 1. Asset Bar Chart
-            const assetCtx = document.getElementById('adminAssetChart');
-            if (assetCtx) {
-                if (assetChart) assetChart.destroy();
-                assetChart = new Chart(assetCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.asset_labels,
-                        datasets: [{
-                            data: data.asset_totals,
-                            backgroundColor: ['#3b82f6', '#818cf8', '#34d399', '#fbbf24'],
-                            borderRadius: 4,
-                            barThickness: 25
-                        }]
-                    },
-                    options: { 
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
-                            x: { grid: { display: false }, ticks: { color: textColor } }
-                        }
-                    }
-                });
-            }
-
-            // 2. Incident Pie Chart
-            const pieCtx = document.getElementById('adminIncidentPie');
-            if (pieCtx) {
-                if (incidentChart) incidentChart.destroy();
-                incidentChart = new Chart(pieCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: data.severity_labels,
-                        datasets: [{
-                            data: data.severity_totals,
-                            backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#94a3b8'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: { 
-                        maintainAspectRatio: false,
-                        cutout: '75%',
-                        plugins: { 
-                            legend: { 
-                                position: 'right', 
-                                labels: { usePointStyle: true, padding: 20, color: textColor, font: { weight: 'bold', size: 11 } } 
-                            } 
-                        } 
-                    } 
-                });
-            }
-        }
-
-        // Fetch Live Data
-        // admin_dashboard.html
-
-function refreshDashboard() {
-    $.ajax({
-        // Use Django's URL tag to guarantee it hits the right endpoint regardless of slashes
-        url: "{% url 'dashboard_stats_api' %}", 
-        type: 'GET',
-        success: function(data) {
-            // Update Counters
-            $('#stat-total-assets').text(data.total_assets);
-            $('#stat-assigned-assets').text(data.assigned_assets);
-            $('#stat-maintenance-count').text(data.maintenance_count);
-            $('#stat-open-incidents').text(data.open_incidents);
-
-            // Update Charts
-            updateCharts(data);
-
-            // Update Tables
-            renderMaintenanceTable(data.recent_maintenance);
-            renderIncidentTable(data.open_incidents_list);
-        },
-        error: function(xhr, status, error) { 
-            // 🟢 This will literally print the error code (e.g., "403" or "500") on the dashboard counter!
-            $('#stat-total-assets').text("HTTP " + xhr.status); 
-            
-            // 🟢 This will print the raw Python error inside the table!
-            $('#maintenanceTableBody').html(`
-                <tr>
-                    <td colspan="3" class="px-6 py-10 text-center text-red-500 font-bold uppercase tracking-widest text-[10px]">
-                        API REJECTED: ${xhr.responseText}
-                    </td>
-                </tr>
-            `);
-        }
-    });
-}
-
-        function renderMaintenanceTable(logs) {
-                    let html = '';
-                    if (!logs || logs.length === 0) {
-                        html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No maintenance records.</td></tr>';
-                    } else {
-                        logs.forEach(log => {
-                            const statusColor = log.status === 'Completed' ? 'text-green-500' : 'text-orange-400';
-                            // Use log.id which is guaranteed by the new API view
-                            html += `
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/maintenance/edit/${log.id}/'">
-                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${log.asset_name}</td>
-                                    <td class="px-6 py-4 text-slate-500 dark:text-slate-400">${log.technician_name || 'System'}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        <span class="text-[10px] font-black uppercase tracking-wider ${statusColor}">${log.status}</span>
-                                    </td>
-                                </tr>`;
-                        });
-                    }
-                    $('#maintenanceTableBody').html(html);
-                }
-
-                function renderIncidentTable(incidents) {
-                    let html = '';
-                    if (!incidents || incidents.length === 0) {
-                        html = '<tr><td colspan="3" class="px-6 py-10 text-center text-slate-400 italic">No open incidents.</td></tr>';
-                    } else {
-                        incidents.forEach(inc => {
-                            const sevColor = inc.severity === 'Critical' ? 'text-red-600' : (inc.severity === 'High' ? 'text-orange-500' : 'text-slate-400');
-                            // Use inc.id which is guaranteed by the new API view
-                            html += `
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer group" onclick="window.location.href='/incidents/edit/${inc.id}/'">
-                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 transition-colors">${inc.title}</td>
-                                    <td class="px-6 py-4"><span class="text-[10px] font-black uppercase tracking-wider ${sevColor}">${inc.severity}</span></td>
-                                    <td class="px-6 py-4 text-right"><span class="text-[10px] font-black uppercase tracking-wider text-blue-500">OPEN</span></td>
-                                </tr>`;
-                        });
-                    }
-                    $('#incidentTableBody').html(html);
-                }
-
-        refreshDashboard();
-        setInterval(refreshDashboard, 30000); 
-    });
-</script>
-
 <style>
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Subtle dark hover effect */
+    .ticket-row { transition: all 0.2s ease; cursor: pointer; }
+    .ticket-row:hover { background-color: rgba(255, 255, 255, 0.03) !important; }
+    .dark .ticket-row:hover { background-color: rgba(0, 0, 0, 0.2) !important; }
+
+    .id-badge { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: -0.02em; }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
 </style>
+
+<div class="font-plex">
+    <div id="assetDetailModal" class="hidden fixed inset-0 z-[110] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeAssetModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200 dark:border-slate-800">
+                <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                    <div class="flex items-center gap-4">
+                        <div id="asset_modal_icon_bg" class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                            <i id="asset_modal_icon" class="fas fa-microchip text-xl"></i>
+                        </div>
+                        <div>
+                            <span id="asset_modal_id" class="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded uppercase tracking-widest border border-blue-100 dark:border-slate-800"></span>
+                            <h3 class="font-rajdhani text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight mt-1" id="asset_modal_title">Asset Details</h3>
+                        </div>
+                    </div>
+                    <button onclick="closeAssetModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="px-8 py-8" id="asset_modal_content_area"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="incidentModal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity" onclick="closeIncidentModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-slate-200 dark:border-slate-800">
+                <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                    <div>
+                        <span id="modal_view_id" class="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded uppercase tracking-widest border border-blue-100 dark:border-blue-800"></span>
+                        <h3 class="font-rajdhani text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight mt-2" id="modal_view_title">Incident Detail</h3>
+                    </div>
+                    <button onclick="closeIncidentModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="px-8 py-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Severity</label><div id="modal_view_severity"></div></div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label><div id="modal_view_status"></div></div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Assigned Tech</label><p id="modal_view_assigned" class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase truncate"></p></div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Logged Time</label><p id="modal_view_date" class="text-xs font-bold text-slate-700 dark:text-slate-200"></p></div>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 p-6 rounded-2xl border border-blue-100/80 dark:border-blue-800/50 shadow-sm mb-8">
+                        <h4 class="font-rajdhani text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="fas fa-radar text-blue-500"></i> Threat Intelligence</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-5 gap-x-4">
+                            <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Category</label><p id="modal_view_category" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                            <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Threat Actor</label><p id="modal_view_threat_actor" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Unknown</p></div>
+                            <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Detection Source</label><p id="modal_view_detection" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                            <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Affected Area</label><p id="modal_view_affected_area" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                            <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Linked Asset</label><p id="modal_view_asset" class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                            <div><label class="block text-[9px] font-black text-blue-500/70 dark:text-blue-400/70 uppercase mb-1 tracking-wider">Impact (CIA)</label><p id="modal_view_impact" class="text-[10px] font-black text-slate-800 dark:text-slate-200 truncate">N/A</p></div>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="font-rajdhani text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                <i class="fas fa-align-left"></i> Investigation Summary
+                            </label>
+                            <div id="modal_view_description" class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-xl text-sm leading-relaxed dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-inner min-h-[80px]"></div>
+                        </div>
+                        <div id="modal_actions_taken_container" class="hidden">
+                            <label class="font-rajdhani text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                <i class="fas fa-history"></i> Progress & Actions Log
+                            </label>
+                            <div id="modal_view_actions" class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-xl text-sm font-mono dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-inner whitespace-pre-wrap min-h-[80px]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="maintDetailModal" class="hidden fixed inset-0 z-[120] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" onclick="closeMaintModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white dark:bg-slate-900 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200 dark:border-slate-800">
+                <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                    <div>
+                        <h3 class="font-rajdhani text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight" id="md_asset_name">---</h3>
+                        <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1" id="md_asset_id">---</p>
+                    </div>
+                    <button onclick="closeMaintModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <div class="px-8 py-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                            <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label>
+                            <div id="md_status"></div>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                            <label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Technician</label>
+                            <p id="md_tech" class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase truncate"></p>
+                        </div>
+                    </div>
+                    <div class="mb-6">
+                        <label class="font-rajdhani text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-2"><i class="fas fa-tools"></i> Technical Notes</label>
+                        <div id="md_notes" class="bg-slate-50/50 dark:bg-slate-800/50 p-4 rounded-xl text-sm leading-relaxed dark:text-slate-300 border border-slate-100 dark:border-slate-800 italic"></div>
+                    </div>
+                    <div id="md_hardware_grid" class="grid grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+        <h1 class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">Strategic Overview</h1>
+        <div class="flex items-center gap-2">
+            <div id="sync-status" class="hidden flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-full">
+                <div class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse mr-2"></div>
+                <span class="font-rajdhani text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">Syncing Telemetry</span>
+            </div>
+            <p class="font-rajdhani text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">Admin Operations Center</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+            <p class="font-rajdhani text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Operational Assets</p>
+            <div id="api-total-assets" class="text-3xl font-black text-slate-800 dark:text-slate-100">{{ total_assets|default:"0" }}</div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+            <p class="font-rajdhani text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Asset Readiness</p>
+            <div id="api-readiness" class="text-3xl font-black text-green-500">{{ readiness_rate|floatformat:1|default:"0.0" }}%</div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+            <p class="font-rajdhani text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Total Tickets</p>
+            <div id="api-total-tickets" class="text-3xl font-black text-blue-500">0</div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+            <p class="font-rajdhani text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Active Incidents</p>
+            <div id="api-incidents" class="text-3xl font-black text-orange-500">0</div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 group">
+            <p class="font-rajdhani text-slate-400 dark:text-slate-500 text-[10px] font-black mb-1 tracking-widest uppercase">Critical Threats</p>
+            <div id="api-critical" class="text-3xl font-black text-red-500">0</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 class="font-rajdhani font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center whitespace-nowrap">
+                    <i class="fas fa-exclamation-triangle mr-2 text-orange-500"></i> Active Incident Log
+                </h3>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <select id="incidentCategoryFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                        <option value="">All Categories</option>
+                        <option value="malware">Malware / Ransomware</option>
+                        <option value="phishing">Phishing / Social Engineering</option>
+                        <option value="unauthorized access">Unauthorized Access</option>
+                        <option value="ddos">Denial of Service (DDoS)</option>
+                        <option value="insider threat">Insider Threat</option>
+                        <option value="hardware loss">Hardware Loss / Physical Breach</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="incidentSeverityFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                        <option value="">All Severities</option>
+                        <option value="Critical">Critical Only</option>
+                        <option value="High">High Only</option>
+                        <option value="Medium">Medium Only</option>
+                        <option value="Low">Low Only</option>
+                    </select>
+                    <button onclick="clearIncidentFilters()" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg font-bold transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 flex-shrink-0">
+                        <i class="fas fa-undo text-[9px]"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-grow h-[320px]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="font-rajdhani px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Incident</th>
+                            <th class="font-rajdhani px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Category</th>
+                            <th class="font-rajdhani px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Severity</th>
+                            <th class="font-rajdhani px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-incidents" class="text-sm"></tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 flex items-center justify-between mt-auto">
+                <span id="incidentPageIndicator" class="text-[9px] font-bold text-slate-400 uppercase"></span>
+                <div id="incidentPagination" class="flex gap-1 items-center"></div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 class="font-rajdhani font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center whitespace-nowrap">
+                    <i class="fas fa-ticket-alt mr-2 text-blue-500"></i> Support Command Center
+                </h3>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <input type="text" id="ticketSearch" placeholder="Search tickets..." class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 w-full sm:w-24 flex-shrink-0">
+                    <button onclick="clearTicketFilters()" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg font-bold transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 flex-shrink-0">
+                        <i class="fas fa-undo text-[9px]"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-grow h-[320px]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="font-rajdhani px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Ref</th>
+                            <th class="font-rajdhani px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Priority</th>
+                            <th class="font-rajdhani px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Client</th>
+                            <th class="font-rajdhani px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ticketTableBody" class="text-sm divide-y divide-slate-50 dark:divide-slate-800">
+                        <tr><td colspan="4" class="p-6 text-center text-slate-400 italic">Syncing tickets...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 flex items-center justify-between mt-auto">
+                <span id="ticketPageIndicator" class="text-[9px] font-bold text-slate-400 uppercase"></span>
+                <div id="ticketPagination" class="flex gap-1 items-center"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 class="font-rajdhani font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center whitespace-nowrap">
+                    <i class="fas fa-boxes mr-2 text-blue-500"></i> IT Asset Inventory
+                </h3>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <select id="assetStatusFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="maintenance">Maintenance</option>
+                    </select>
+                    <input type="text" id="assetSearchInput" placeholder="Search..." class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 w-full sm:w-24 flex-shrink-0">
+                    <button onclick="clearAssetFilters()" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg font-bold transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 flex-shrink-0">
+                        <i class="fas fa-undo text-[9px]"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-grow h-[320px]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="font-rajdhani px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Asset Name</th>
+                            <th class="font-rajdhani px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">S/N</th>
+                            <th class="font-rajdhani px-6 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assetTableBody" class="text-sm divide-y divide-slate-50 dark:divide-slate-800"></tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 flex items-center justify-between mt-auto">
+                <span id="assetPageIndicator" class="text-[9px] font-bold text-slate-400 uppercase"></span>
+                <div id="assetPagination" class="flex gap-1 items-center"></div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 class="font-rajdhani font-black text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center whitespace-nowrap">
+                    <i class="fas fa-tools mr-2 text-blue-500"></i> Live Maintenance Queue
+                </h3>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <select id="maintStatusFilter" class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                    <input type="text" id="maintSearch" placeholder="Search..." class="text-[10px] bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 w-full sm:w-24 flex-shrink-0">
+                    <button onclick="clearMaintFilters()" class="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 px-2 py-1.5 rounded-lg font-bold transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1 flex-shrink-0">
+                        <i class="fas fa-undo text-[9px]"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-grow h-[320px]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="font-rajdhani px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Asset</th>
+                            <th class="font-rajdhani px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                            <th class="font-rajdhani px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maintenanceTableBody" class="text-sm divide-y divide-slate-50 dark:divide-slate-800">
+                        <tr><td colspan="3" class="p-6 text-center text-slate-400 italic">Syncing queue...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 flex items-center justify-between mt-auto">
+                <span id="maintPageIndicator" class="text-[9px] font-bold text-slate-400 uppercase"></span>
+                <div id="maintPagination" class="flex gap-1 items-center"></div>
+            </div>
+        </div>
+    </div>
+</div> <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        // Data and Pagination States
+        let allAssets = [];
+        let allMaint = [];
+        let allIncidents = [];
+        let allTickets = [];
+        
+        let assetPage = 1;
+        let maintPage = 1;
+        let incidentPage = 1;
+        let ticketPage = 1;
+        const itemsPerPage = 6;
+
+        // --- CLEAR FILTER FUNCTIONS ---
+        window.clearIncidentFilters = function() {
+            $('#incidentCategoryFilter').val('');
+            $('#incidentSeverityFilter').val('');
+            incidentPage = 1;
+            renderIncidentsUI();
+        };
+
+        window.clearMaintFilters = function() {
+            $('#maintStatusFilter').val('');
+            $('#maintSearch').val('');
+            maintPage = 1;
+            renderMaintUI();
+        };
+
+        window.clearAssetFilters = function() {
+            $('#assetStatusFilter').val('');
+            $('#assetSearchInput').val('');
+            assetPage = 1;
+            renderAssetUI();
+        };
+
+        window.clearTicketFilters = function() {
+            $('#ticketSearch').val('');
+            ticketPage = 1;
+            renderTicketUI();
+        }
+
+        // --- PAGINATION HELPER ---
+        function renderPaginationControls(containerId, currentPage, totalItems, itemsPerPage, setPageFuncName) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            let html = '';
+            
+            if (currentPage > 1) {
+                html += `<button onclick="${setPageFuncName}(${currentPage - 1})" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><i class="fas fa-chevron-left text-[10px]"></i></button>`;
+            } else {
+                html += `<button disabled class="p-1 px-2 opacity-30 cursor-not-allowed rounded"><i class="fas fa-chevron-left text-[10px]"></i></button>`;
+            }
+            
+            let startPage = Math.max(1, currentPage - 1);
+            let endPage = Math.min(totalPages, currentPage + 1);
+
+            if (currentPage === 1 && totalPages >= 3) {
+                endPage = 3;
+            } else if (currentPage === totalPages && totalPages >= 3) {
+                startPage = totalPages - 2;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `<button class="p-1 px-2 bg-blue-500 text-white rounded text-[10px] font-bold shadow-sm">${i}</button>`;
+                } else {
+                    html += `<button onclick="${setPageFuncName}(${i})" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-600 dark:text-slate-400 text-[10px] font-bold transition-colors">${i}</button>`;
+                }
+            }
+
+            if (currentPage < totalPages) {
+                html += `<button onclick="${setPageFuncName}(${currentPage + 1})" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"><i class="fas fa-chevron-right text-[10px]"></i></button>`;
+            } else {
+                html += `<button disabled class="p-1 px-2 opacity-30 cursor-not-allowed rounded"><i class="fas fa-chevron-right text-[10px]"></i></button>`;
+            }
+
+            $(`#${containerId}`).html(html);
+        }
+
+        // --- MAINTENANCE LOGIC ---
+        function loadMaintenance() {
+            $.ajax({
+                url: '/api/maintenance/', type: 'GET',
+                success: function(data) { 
+                    allMaint = data; 
+                    renderMaintUI(); 
+                }
+            });
+        }
+
+        window.renderMaintUI = function() {
+            const body = $('#maintenanceTableBody');
+            const search = $('#maintSearch').val().toLowerCase();
+            const statusFilter = $('#maintStatusFilter').val().toLowerCase();
+            
+            const filtered = allMaint.filter(m => {
+                const matchesSearch = m.asset_name.toLowerCase().includes(search) || m.asset_string_id.toLowerCase().includes(search);
+                const matchesStatus = statusFilter === "" || m.status.toLowerCase() === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+            
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (maintPage > totalPages) maintPage = totalPages;
+            if (maintPage < 1) maintPage = 1;
+
+            const paginated = filtered.slice((maintPage - 1) * itemsPerPage, maintPage * itemsPerPage);
+            body.empty();
+            
+            if(filtered.length === 0) {
+                body.append('<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">No logs match filters</td></tr>');
+            } else {
+                paginated.forEach(m => {
+                    const statusColor = m.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500';
+                    body.append(`
+                        <tr class="ticket-row group border-b border-slate-50 dark:border-slate-800/50" onclick="openMaintModal(${m.id})">
+                            <td class="px-4 py-3"><span class="font-bold text-slate-700 dark:text-slate-200">${m.asset_name}</span><br><span class="text-[9px] font-mono text-slate-400">${m.asset_string_id}</span></td>
+                            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${statusColor}">${m.status}</span></td>
+                            <td class="px-4 py-3 text-right"><i class="fas fa-chevron-right text-[10px] text-slate-300"></i></td>
+                        </tr>
+                    `);
+                });
+            }
+            
+            const startItem = filtered.length > 0 ? (maintPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(maintPage * itemsPerPage, filtered.length);
+            $('#maintPageIndicator').text(`Showing ${startItem}-${endItem} of ${filtered.length}`);
+            
+            renderPaginationControls('maintPagination', maintPage, filtered.length, itemsPerPage, 'setMaintPage');
+        };
+
+        window.openMaintModal = function(id) {
+            const m = allMaint.find(x => x.id == id);
+            if(!m) return;
+            $('#md_asset_name').text(m.asset_name);
+            $('#md_asset_id').text(m.asset_string_id);
+            $('#md_tech').text(m.technician_name || 'System');
+            $('#md_notes').text(m.notes || 'No technical notes available.');
+            
+            const sColor = m.status === 'Completed' ? 'bg-emerald-500 text-white' : 'bg-blue-500 text-white';
+            $('#md_status').html(`<span class="px-2 py-1 rounded text-[10px] font-black uppercase ${sColor}">${m.status}</span>`);
+
+            $('#md_hardware_grid').html(`
+                <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700"><label class="block text-[8px] font-black text-slate-400 uppercase">Processor</label><p class="text-xs font-bold">${m.processor || 'N/A'}</p></div>
+                <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700"><label class="block text-[8px] font-black text-slate-400 uppercase">RAM</label><p class="text-xs font-bold">${m.ram_gb || '0'} GB</p></div>
+            `);
+
+            $('#maintDetailModal').removeClass('hidden');
+            $('body').css('overflow', 'hidden');
+        };
+
+        window.closeMaintModal = function() { $('#maintDetailModal').addClass('hidden'); $('body').css('overflow', 'auto'); };
+
+        window.setMaintPage = (page) => { 
+            maintPage = page;
+            renderMaintUI(); 
+        };
+
+        // --- ASSET LOGIC ---
+        function loadAssets() {
+            $.ajax({ 
+                url: '/api/assets/', type: 'GET', 
+                success: function(data) { 
+                    allAssets = data; 
+                    renderAssetUI(); 
+                } 
+            });
+        }
+
+        function renderAssetUI() {
+            const body = $('#assetTableBody');
+            const search = $('#assetSearchInput').val().toLowerCase();
+            const statusFilter = $('#assetStatusFilter').val().toLowerCase();
+            
+            const filtered = allAssets.filter(a => {
+                const matchesSearch = a.assets_name.toLowerCase().includes(search) || (a.serial_number && a.serial_number.toLowerCase().includes(search));
+                const matchesStatus = statusFilter === "" || a.status.toLowerCase() === statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+            
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (assetPage > totalPages) assetPage = totalPages;
+            if (assetPage < 1) assetPage = 1;
+
+            const paginated = filtered.slice((assetPage - 1) * itemsPerPage, assetPage * itemsPerPage);
+            body.empty();
+            
+            if (filtered.length === 0) {
+                body.append('<tr><td colspan="3" class="p-4 text-center text-slate-400 italic">No assets match filters</td></tr>');
+            } else {
+                paginated.forEach(a => {
+                    const color = a.status === 'Active' ? 'text-emerald-500 bg-emerald-500/10' : 'text-amber-500 bg-amber-500/10';
+                    body.append(`<tr onclick="openAssetModal(${a.id})" class="cursor-pointer border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-100/5 transition-colors group">
+                        <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600">${a.assets_name}</td>
+                        <td class="px-6 py-4 text-[10px] font-mono font-bold text-slate-400">${a.serial_number || 'N/A'}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-0.5 rounded text-[8px] font-black uppercase ${color}">${a.status}</span></td>
+                    </tr>`);
+                });
+            }
+            
+            const startItem = filtered.length > 0 ? (assetPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(assetPage * itemsPerPage, filtered.length);
+            $('#assetPageIndicator').text(`Showing ${startItem}-${endItem} of ${filtered.length}`);
+            
+            renderPaginationControls('assetPagination', assetPage, filtered.length, itemsPerPage, 'setAssetPage');
+        }
+
+        function getAssetIcon(type) {
+            const map = { 'PC': 'fa-desktop', 'Laptop': 'fa-laptop', 'Server': 'fa-server', 'Router': 'fa-network-wired', 'Switch': 'fa-ethernet' };
+            return map[type] || 'fa-microchip';
+        }
+
+        window.openAssetModal = function(id) {
+            const a = allAssets.find(x => x.id == id);
+            if (!a) return;
+            $('#asset_modal_id').text(`#${a.assets_id}`);
+            $('#asset_modal_title').text(a.assets_name);
+            $('#asset_modal_icon').attr('class', `fas ${getAssetIcon(a.assets_type)} text-xl`);
+            $('#asset_modal_content_area').html(`<div class="grid grid-cols-2 gap-4"><div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Status</label><span class="px-2 py-1 rounded text-[10px] font-black uppercase ${a.status === 'Active' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}">${a.status}</span></div><div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800"><label class="block text-[9px] font-black text-slate-400 uppercase mb-1">Location</label><p class="text-xs font-bold dark:text-slate-200 uppercase">${a.location}</p></div></div>`);
+            $('#assetDetailModal').removeClass('hidden');
+        };
+
+        window.closeAssetModal = function() { $('#assetDetailModal').addClass('hidden'); };
+        
+        window.setAssetPage = (page) => { 
+            assetPage = page; 
+            renderAssetUI(); 
+        };
+
+        // --- INCIDENT LOGIC ---
+        window.renderIncidentsUI = function() {
+            const table = $('#table-incidents');
+            table.empty();
+            const severityFilter = $('#incidentSeverityFilter').val();
+            const categoryFilter = $('#incidentCategoryFilter').val().toLowerCase();
+            
+            let active = allIncidents.filter(i => i.status !== 'Resolved');
+            if (severityFilter) {
+                active = active.filter(i => i.severity === severityFilter);
+            }
+            if (categoryFilter) {
+                active = active.filter(i => (i.category || 'other').toLowerCase() === categoryFilter);
+            }
+            
+            const severityWeights = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1 };
+            active.sort((a, b) => {
+                const weightA = severityWeights[a.severity] || 0;
+                const weightB = severityWeights[b.severity] || 0;
+                if (weightB === weightA) return b.id - a.id;
+                return weightB - weightA;
+            });
+
+            const totalPages = Math.ceil(active.length / itemsPerPage) || 1;
+            if (incidentPage > totalPages) incidentPage = totalPages;
+            if (incidentPage < 1) incidentPage = 1;
+
+            const paginated = active.slice((incidentPage - 1) * itemsPerPage, incidentPage * itemsPerPage);
+
+            if (active.length === 0) {
+                table.append('<tr><td colspan="4" class="p-6 text-center text-slate-400 italic">No incidents match filters</td></tr>');
+            } else {
+                paginated.forEach(i => {
+                    let badgeClass = 'bg-slate-100 text-slate-500';
+                    if (i.severity === 'Critical') badgeClass = 'bg-red-500/10 text-red-500';
+                    else if (i.severity === 'High') badgeClass = 'bg-orange-500/10 text-orange-500';
+                    else if (i.severity === 'Medium') badgeClass = 'bg-amber-500/10 text-amber-500';
+                    else if (i.severity === 'Low') badgeClass = 'bg-emerald-500/10 text-emerald-500';
+
+                    let statusBadgeClass = 'bg-slate-100 text-slate-500';
+                    const statusLower = (i.status || '').toLowerCase();
+                    if (statusLower === 'open') {
+                        statusBadgeClass = 'bg-red-500/10 text-red-500 dark:bg-red-500/20';
+                    } else if (statusLower === 'investigating') {
+                        statusBadgeClass = 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20';
+                    } else if (statusLower === 'resolved') {
+                        statusBadgeClass = 'bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20';
+                    }
+
+                    table.append(`<tr onclick="openIncidentModal(${i.id})" class="cursor-pointer border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-100/5 transition-colors">
+                        <td class="px-6 py-4 font-bold">${i.title}</td>
+                        <td class="px-6 py-4 text-[9px] font-black uppercase text-slate-400">${i.category || 'Other'}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 rounded text-[8px] font-black uppercase ${badgeClass}">${i.severity}</span></td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 rounded text-[8px] font-black uppercase ${statusBadgeClass}">${i.status}</span></td>
+                    </tr>`);
+                });
+            }
+            
+            const startItem = active.length > 0 ? (incidentPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(incidentPage * itemsPerPage, active.length);
+            $('#incidentPageIndicator').text(`Showing ${startItem}-${endItem} of ${active.length}`);
+            
+            renderPaginationControls('incidentPagination', incidentPage, active.length, itemsPerPage, 'setIncidentPage');
+        };
+
+        window.openIncidentModal = function(id) {
+            $.ajax({
+                url: `/api/incidents/${id}/`, type: 'GET',
+                success: function(inc) {
+                    $('#modal_view_id').text(`INC-${String(inc.id).padStart(3, '0')}`);
+                    $('#modal_view_title').text(inc.title);
+                    $('#modal_view_assigned').text(inc.assigned_to_name || 'Unassigned');
+                    $('#modal_view_date').text(new Date(inc.date).toLocaleString());
+                    $('#modal_view_category').text(inc.category || 'N/A');
+                    $('#modal_view_description').text(inc.description || 'No summary provided.');
+                    
+                    if (inc.actions_taken || inc.actions) {
+                        $('#modal_actions_taken_container').removeClass('hidden');
+                        $('#modal_view_actions').text(inc.actions_taken || inc.actions);
+                    } else {
+                        $('#modal_actions_taken_container').addClass('hidden');
+                    }
+
+                    const sevColors = { 'Critical': 'bg-red-500 text-white', 'High': 'bg-orange-500 text-white', 'Medium': 'bg-amber-500 text-white', 'Low': 'bg-emerald-500 text-white' };
+                    $('#modal_view_severity').html(`<span class="px-2 py-1 rounded text-[10px] font-black uppercase ${sevColors[inc.severity] || 'bg-slate-500 text-white'}">${inc.severity}</span>`);
+                    
+                    let statusModalClass = 'bg-slate-500 text-white';
+                    const statusLower = (inc.status || '').toLowerCase();
+                    if (statusLower === 'open') {
+                        statusModalClass = 'bg-red-500 text-white';
+                    } else if (statusLower === 'investigating') {
+                        statusModalClass = 'bg-orange-500 text-white';
+                    } else if (statusLower === 'resolved') {
+                        statusModalClass = 'bg-emerald-500 text-white';
+                    }
+                    $('#modal_view_status').html(`<span class="px-2 py-1 rounded text-[10px] font-black uppercase ${statusModalClass}">${inc.status}</span>`);
+
+                    $('#incidentModal').removeClass('hidden');
+                    $('body').css('overflow', 'hidden');
+                }
+            });
+        };
+
+        window.closeIncidentModal = function() { $('#incidentModal').addClass('hidden'); $('body').css('overflow', 'auto'); };
+
+        window.setIncidentPage = (page) => { 
+            incidentPage = page; 
+            renderIncidentsUI(); 
+        };
+
+        // --- SUPPORT TICKETS LOGIC ---
+        window.initTicketSync = async function() {
+            try {
+                const response = await fetch('/tickets/api/support-api/', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await response.json();
+                allTickets = Array.isArray(data) ? data : (data.results || []);
+                $('#api-total-tickets').text(allTickets.length);
+                renderTicketUI();
+            } catch (err) { console.error(err); }
+        };
+
+        window.renderTicketUI = function() {
+            const body = $('#ticketTableBody');
+            const search = $('#ticketSearch').val().toLowerCase();
+            
+            const filtered = allTickets.filter(t => {
+                const searchStr = `${t.id} ${t.first_name} ${t.priority}`.toLowerCase();
+                return searchStr.includes(search);
+            });
+
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (ticketPage > totalPages) ticketPage = totalPages;
+            if (ticketPage < 1) ticketPage = 1;
+
+            const paginated = filtered.slice((ticketPage - 1) * itemsPerPage, ticketPage * itemsPerPage);
+            body.empty();
+
+            if (filtered.length === 0) {
+                body.append('<tr><td colspan="4" class="p-6 text-center text-slate-400 italic">No matching tickets</td></tr>');
+            } else {
+                paginated.forEach(t => {
+                    let pColor = 'border-blue-100 text-blue-500';
+                    if ((t.priority || '').toLowerCase() === 'high') pColor = 'border-orange-100 text-orange-500 bg-orange-50';
+                    if ((t.priority || '').toLowerCase() === 'critical') pColor = 'border-red-100 text-red-600 bg-red-50';
+                    
+                    body.append(`<tr class="ticket-row group border-b border-slate-50 dark:border-slate-800/50" onclick="window.location.href='/tickets/detail/${t.id}/'">
+                        <td class="px-4 py-3"><span class="id-badge text-[10px] font-bold text-slate-500">#${String(t.id).padStart(4, '0')}</span></td>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[9px] font-black border ${pColor}">${t.priority}</span></td>
+                        <td class="px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-200">${t.first_name || 'Unknown'}</td>
+                        <td class="px-4 py-3 text-right"><i class="fas fa-chevron-right text-[10px] text-slate-300"></i></td>
+                    </tr>`);
+                });
+            }
+
+            const startItem = filtered.length > 0 ? (ticketPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(ticketPage * itemsPerPage, filtered.length);
+            $('#ticketPageIndicator').text(`Showing ${startItem}-${endItem} of ${filtered.length}`);
+            
+            renderPaginationControls('ticketPagination', ticketPage, filtered.length, itemsPerPage, 'setTicketPage');
+        };
+
+        window.setTicketPage = (page) => {
+            ticketPage = page;
+            renderTicketUI();
+        };
+
+        // --- REFRESH DATA ---
+        window.refreshStrategicData = function() {
+            $('#sync-status').removeClass('hidden');
+            
+            $.ajax({
+                url: '/api/dashboard-stats/', type: 'GET',
+                success: function(data) {
+                    $('#api-total-assets').text(data.total_assets);
+                    $('#api-readiness').text((data.total_assets > 0 ? ((data.total_assets - data.maintenance_count) / data.total_assets * 100) : 0).toFixed(1) + '%');
+                }
+            });
+
+            $.ajax({
+                url: '/api/incidents/', type: 'GET',
+                success: function(incs) {
+                    allIncidents = incs;
+                    renderIncidentsUI();
+                    
+                    let activeIncidentsCount = 0;
+                    let criticalThreatsCount = 0;
+                    
+                    incs.forEach(i => {
+                        if (i.status !== 'Resolved') {
+                            activeIncidentsCount++;
+                            if (i.severity && i.severity.toUpperCase() === 'CRITICAL') {
+                                criticalThreatsCount++;
+                            }
+                        }
+                    });
+                    
+                    $('#api-incidents').text(activeIncidentsCount);
+                    $('#api-critical').text(criticalThreatsCount);
+                },
+                complete: function() { setTimeout(() => $('#sync-status').addClass('hidden'), 1000); }
+            });
+
+            loadMaintenance();
+            loadAssets();
+            initTicketSync();
+        };
+
+        // --- EVENT LISTENERS ---
+        $('#maintSearch').on('keyup', () => { maintPage = 1; renderMaintUI(); });
+        $('#maintStatusFilter').on('change', () => { maintPage = 1; renderMaintUI(); });
+        
+        $('#assetSearchInput').on('keyup', () => { assetPage = 1; renderAssetUI(); });
+        $('#assetStatusFilter').on('change', () => { assetPage = 1; renderAssetUI(); });
+        
+        $('#incidentSeverityFilter').on('change', () => { incidentPage = 1; renderIncidentsUI(); });
+        $('#incidentCategoryFilter').on('change', () => { incidentPage = 1; renderIncidentsUI(); });
+        
+        $('#ticketSearch').on('keyup', () => { ticketPage = 1; renderTicketUI(); });
+
+        refreshStrategicData();
+        setInterval(refreshStrategicData, 60000);
+    });
+</script>
 {% endblock %}

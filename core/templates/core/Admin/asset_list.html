@@ -8,7 +8,7 @@
     <div class="flex-1 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col min-h-[500px] lg:min-h-0">
         
         <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700 flex-none flex justify-between items-center">
-            <h2 class="font-rajdhani text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight drop-shadow-sm">IT Asset Inventory</h2>
+            <h2 class="font-rajdhani text-lg font-bold text-slate-800 dark:text-slate-100 mb-0 tracking-tight uppercase">IT Asset Inventory</h2>
             <div class="flex items-center gap-3">
                 {% if not request.user.groups.all.0.name == "Commander" %}
                 <a href="{% url 'add_asset' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2">
@@ -27,7 +27,7 @@
                 <div class="flex flex-col sm:flex-row w-full gap-2">
                     <div class="relative w-full sm:w-64">
                         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" id="searchInput" placeholder="Search assets..." 
+                        <input type="text" id="searchInput" placeholder="Search S/N, Name, or ID..." 
                             class="w-full pl-9 pr-3 py-2.5 sm:py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/10 text-slate-700 dark:text-slate-200 shadow-sm">
                     </div>
                     <select id="typeFilter" 
@@ -37,6 +37,7 @@
                         <option value="Laptop">Laptop</option>
                         <option value="Server">Server</option>
                         <option value="Router">Router</option>
+                        <option value="Switch">Network Switch</option>
                     </select>
                 </div>
             </div>
@@ -52,63 +53,59 @@
         </div>
     </div>
 
-<div class="w-full lg:w-80 flex-none pb-10 lg:pb-0 flex flex-col gap-6">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <h3 class="font-rajdhani font-black text-[10px] mb-6 text-slate-800 dark:text-slate-100 uppercase tracking-widest">Status Distribution</h3>
-        <div class="relative h-64 w-full"><canvas id="statusChart"></canvas></div>
-        <div class="mt-8 text-[10px] font-black text-slate-500 pt-6 flex justify-between items-center uppercase border-t border-slate-100 dark:border-slate-700">
-            <p>Total Assets Registered</p>
-            <span id="total-asset-badge" class="text-slate-900 dark:text-slate-100 text-xl font-black">0</span>
-        </div>
-    </div>
-
-    <div id="asset-detail-panel" class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[400px] sticky top-6">
-        <div id="detail-placeholder" class="h-full flex flex-col items-center justify-center text-center p-6">
-            <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4">
-                <i class="fas fa-microchip text-2xl"></i>
+    <div class="w-full lg:w-80 flex-none pb-10 lg:pb-0 flex flex-col gap-6">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 class="font-rajdhani font-black text-[10px] mb-6 text-slate-800 dark:text-slate-100 uppercase tracking-widest">Status Distribution</h3>
+            <div class="relative h-64 w-full"><canvas id="statusChart"></canvas></div>
+            <div class="mt-8 text-[10px] font-black text-slate-500 pt-6 flex justify-between items-center uppercase border-t border-slate-100 dark:border-slate-700">
+                <p>Total Registered Assets</p>
+                <span id="total-asset-badge" class="text-slate-900 dark:text-slate-100 text-xl font-black">0</span>
             </div>
-            <h4 class="font-rajdhani text-[10px] font-black uppercase tracking-widest text-slate-400">Asset Inspector</h4>
-            <p class="text-xs text-slate-500 mt-2 italic">Select an asset from the list to view specifications.</p>
         </div>
 
-        <div id="detail-content" class="hidden">
-            <div class="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100 dark:border-slate-700">
-                <div id="detail-icon-bg" class="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
-                    <i id="detail-icon" class="fas text-lg"></i>
+        <div id="asset-detail-panel" class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[400px] sticky top-6">
+            <div id="detail-placeholder" class="h-full flex flex-col items-center justify-center text-center p-6">
+                <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4">
+                    <i class="fas fa-microchip text-2xl"></i>
                 </div>
-                <div>
-                    <h3 id="detail-name" class="font-black text-slate-800 dark:text-slate-100 text-base leading-tight">---</h3>
-                    <span id="detail-type" class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">---</span>
-                </div>
+                <h4 class="font-rajdhani text-[10px] font-black uppercase tracking-widest text-slate-400">Asset Inspector</h4>
+                <p class="text-xs text-slate-500 mt-2 italic">Select an asset to analyze technical specifications.</p>
             </div>
 
-            <div class="space-y-5" id="detail-specs-list">
+            <div id="detail-content" class="hidden">
+                <div class="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100 dark:border-slate-700">
+                    <div id="detail-icon-bg" class="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                        <i id="detail-icon" class="fas text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 id="detail-name" class="font-black text-slate-800 dark:text-slate-100 text-base leading-tight">---</h3>
+                        <span id="detail-type" class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">---</span>
+                    </div>
                 </div>
+                <div class="space-y-5" id="detail-specs-list"></div>
+            </div>
         </div>
     </div>
 </div>
 
+<form style="display:none;">{% csrf_token %}</form>
+
 <script>
-/** * GLOBAL STATE */
 let allAssets = [];
 let currentPage = 1;
-const rowsPerPage = 6; // Changed from 12 to 6
+const rowsPerPage = 6;
 let myChart;
 
-/**
- * 1. API CONNECTIVITY
- */
-function loadAssets() {
-    //const typeFilter = $('#typeFilter').val();
-    let apiUrl = '/api/assets/';
-    //if (typeFilter !== 'all') apiUrl += `?assets_type=${typeFilter}`;
+// GUARANTEED EDIT CHECK: If NOT Commander, you can edit (Admins & Personnel).
+const userGroup = "{{ request.user.groups.all.0.name|default:'' }}";
+const canEditAsset = (userGroup !== "Commander");
 
+function loadAssets() {
     $.ajax({
-        url: apiUrl,
+        url: '/api/assets/',
         type: 'GET',
         success: function(data) {
             allAssets = data;
-           // currentPage = 1; 
             updateTableUI();
             updateDashboardMetrics(data);
         },
@@ -116,28 +113,21 @@ function loadAssets() {
     });
 }
 
-/**
- * 2. EXPANDED CARD RENDERING ENGINE
- */
 function updateTableUI() {
     const searchVal = $('#searchInput').val().toLowerCase();
-    const selectedType = $('#typeFilter').val(); // Get the dropdown value
+    const selectedType = $('#typeFilter').val(); 
     
     const filtered = allAssets.filter(a => {
-        // Match Search (Name, ID, or Location)
         const matchesSearch = a.assets_name.toLowerCase().includes(searchVal) || 
-                              (a.assets_id && a.assets_id.toString().toLowerCase().includes(searchVal)) ||
+                              (a.assets_id && a.assets_id.toLowerCase().includes(searchVal)) ||
+                              (a.serial_number && a.serial_number.toLowerCase().includes(searchVal)) ||
                               a.location.toLowerCase().includes(searchVal);
-        
-        // Match Type Dropdown
         const matchesType = (selectedType === 'all') || (a.assets_type === selectedType);
-
         return matchesSearch && matchesType;
     });
 
     const totalEntries = filtered.length;
     const totalPages = Math.ceil(totalEntries / rowsPerPage) || 1;
-    
     if (currentPage > totalPages) currentPage = totalPages;
 
     const start = (currentPage - 1) * rowsPerPage;
@@ -156,15 +146,13 @@ function renderCards(items) {
     let html = '';
 
     if (items.length === 0) {
-        $container.html('<div class="col-span-full p-12 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">No assets found matching your criteria.</div>');
+        $container.html('<div class="col-span-full p-12 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">No assets matching criteria.</div>');
         return;
     }
 
     items.forEach(asset => {
         const statusClasses = getStatusClasses(asset.status);
         const iconClass = getIconClass(asset.assets_type);
-        const isCommander = "{{ request.user.groups.all.0.name }}" === "Commander";
-        const assetId = asset.assets_id || asset.id;
         const hoverColorClass = getStatusHoverColor(asset.status);
 
         html += `
@@ -178,32 +166,46 @@ function renderCards(items) {
                     </div>
                     <div>
                         <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight">${asset.assets_name}</h3>
-                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${asset.assets_type}</span>
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${asset.brand || ''} ${asset.assets_type}</span>
                     </div>
                 </div>
                 
                 <div class="flex flex-col items-end gap-2 z-10 relative">
                     <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusClasses}">${asset.status}</span>
-                    ${!isCommander ? `<a href="/assets/edit/${asset.id}/" class="text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 p-1"><i class="fas fa-edit"></i></a>` : ''}
+                    ${canEditAsset ? `<a href="/assets/edit/${asset.id}/" class="text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 p-1"><i class="fas fa-edit"></i></a>` : ''}
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10">
                 <div>
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Asset ID</label>
-                    <p class="font-mono text-sm font-bold text-slate-700 dark:text-slate-300">#${assetId}</p>
+                    <p class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">#${asset.assets_id}</p>
                 </div>
                 <div>
-                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Location</label>
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate flex items-center gap-1.5">
-                        <i class="fas fa-map-marker-alt text-slate-300 dark:text-slate-600 text-xs"></i> ${asset.location}
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Serial Number</label>
+                    <p class="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate">${asset.serial_number || 'N/A'}</p>
+                </div>
+                <div>
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Physical Location</label>
+                    <p class="text-xs font-medium text-slate-600 dark:text-slate-400 truncate flex items-center gap-1.5">
+                        <i class="fas fa-map-marker-alt text-slate-300 text-[10px]"></i> ${asset.location}
                     </p>
                 </div>
-                <div class="col-span-2">
-                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">System Log</label>
-                    <p class="text-[10px] font-medium text-slate-500 dark:text-slate-400">Added: ${asset.date_added || 'N/A'}</p>
+                <div>
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Rack Position</label>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-300">${asset.rack_unit ? asset.rack_unit + 'U' : 'Desktop'}</p>
                 </div>
             </div>
+            <div>
+            <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">
+                ${asset.assets_type === 'Laptop' ? 'Battery Health' : 'Rack Position'}
+            </label>
+            <p class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                ${asset.assets_type === 'Laptop' 
+                    ? (asset.battery_health ? asset.battery_health + '%' : 'N/A') 
+                    : (asset.rack_unit ? asset.rack_unit + 'U' : 'Desktop')}
+            </p>
+        </div>
             
             <div class="absolute bottom-0 left-0 w-full h-1 ${getStatusAccentColor(asset.status)} opacity-50 group-hover:opacity-100 transition-opacity"></div>
         </div>`;
@@ -217,13 +219,10 @@ function renderPaginationControls(totalPages) {
     $container.empty();
     if (totalPages <= 1) return;
 
-    // --- SLIDING WINDOW LOGIC ---
-    // Define how many buttons to show (e.g., 3)
     const maxButtons = 3;
     let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
     let endPage = Math.min(totalPages, startPage + maxButtons - 1);
 
-    // Adjust startPage if we are near the end of the list
     if (endPage - startPage + 1 < maxButtons) {
         startPage = Math.max(1, endPage - maxButtons + 1);
     }
@@ -231,63 +230,42 @@ function renderPaginationControls(totalPages) {
     for (let i = startPage; i <= endPage; i++) {
         const isActive = (i === currentPage);
         const btnClass = isActive 
-            ? `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-blue-600 text-white border border-blue-600 shadow-sm`
-            : `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600`;
+            ? `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black bg-blue-600 text-white border border-blue-600 shadow-sm`
+            : `w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-50`;
         
         const $btn = $(`<button class="${btnClass}">${i}</button>`);
         $btn.on('click', function() {
             currentPage = i;
             updateTableUI();
-            // Optional: Scroll to top of container when page changes
             $('#assetCardContainer').animate({ scrollTop: 0 }, 'fast');
         });
         $container.append($btn);
     }
 }
 
-/**
- * 3. DASHBOARD METRICS (Chart & Total)
- */
 function updateDashboardMetrics(assets) {
-    // 1. Calculate Statuses for Chart
     const active = assets.filter(a => a.status === 'Active').length;
     const maintenance = assets.filter(a => a.status === 'Maintenance').length;
-    const inactive = assets.filter(a => a.status === 'Inactive' || a.status === 'Offline').length;
+    const inactive = assets.filter(a => a.status === 'Inactive' || a.status === 'Decommissioned').length;
 
-    // 2. Calculate Type Counts for Specifications Tab
-    const pcCount = assets.filter(a => a.assets_type === 'PC').length;
-    const laptopCount = assets.filter(a => a.assets_type === 'Laptop').length;
-    const serverCount = assets.filter(a => a.assets_type === 'Server').length;
-    const routerCount = assets.filter(a => a.assets_type === 'Router').length;
-
-    // 3. Update UI Badges
     $('#total-asset-badge').text(assets.length);
-    $('#count-PC').text(pcCount);
-    $('#count-Laptop').text(laptopCount);
-    $('#count-Server').text(serverCount);
-    $('#count-Router').text(routerCount);
 
-    // 4. Update Chart
     if (myChart) {
         myChart.data.datasets[0].data = [active, inactive, maintenance];
         myChart.update();
     }
 }
 
-/**
- * HELPERS & THEME
- */
 function getStatusClasses(status) {
-    if (status === 'Active') return 'bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400';
-    if (status === 'Maintenance') return 'bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-400';
-    return 'bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400';
+    if (status === 'Active') return 'bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400';
+    if (status === 'Maintenance') return 'bg-amber-50 border border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400';
+    return 'bg-red-50 border border-red-200 text-red-700 dark:bg-red-500/10 dark:text-red-400';
 }
 
-// Helper to apply a glowing ring and border based on status
 function getStatusHoverColor(status) {
-    if (status === 'Active') return 'hover:border-emerald-400 hover:ring-4 hover:ring-emerald-500/20 dark:hover:border-emerald-500 dark:hover:ring-emerald-500/30';
-    if (status === 'Maintenance') return 'hover:border-amber-400 hover:ring-4 hover:ring-amber-500/20 dark:hover:border-amber-500 dark:hover:ring-amber-500/30';
-    return 'hover:border-red-400 hover:ring-4 hover:ring-red-500/20 dark:hover:border-red-500 dark:hover:ring-red-500/30';
+    if (status === 'Active') return 'hover:border-emerald-400 hover:ring-4 hover:ring-emerald-500/10';
+    if (status === 'Maintenance') return 'hover:border-amber-400 hover:ring-4 hover:ring-amber-500/10';
+    return 'hover:border-red-400 hover:ring-4 hover:ring-red-500/10';
 }
 
 function getStatusAccentColor(status) {
@@ -297,7 +275,7 @@ function getStatusAccentColor(status) {
 }
 
 function getIconClass(type) {
-    const map = { 'PC': 'fa-desktop', 'Laptop': 'fa-laptop', 'Server': 'fa-server', 'Router': 'fa-network-wired' };
+    const map = { 'PC': 'fa-desktop', 'Laptop': 'fa-laptop', 'Server': 'fa-server', 'Router': 'fa-network-wired', 'Switch': 'fa-ethernet' };
     return map[type] || 'fa-microchip';
 }
 
@@ -318,20 +296,16 @@ function updateChartTheme() {
     myChart.update();
 }
 
-/**
- * INITIALIZATION
- */
 $(document).ready(function() {
-    // Theme Check
-    if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (localStorage.getItem('theme') === 'dark') {
         document.documentElement.classList.add('dark');
-        document.body.classList.add('dark-mode');
         $('#theme-icon').removeClass('fa-moon').addClass('fa-sun');
     }
 
-    // Init Chart
     const ctx = document.getElementById('statusChart').getContext('2d');
+    // Set custom font for Chart.js
     Chart.defaults.font.family = "'IBM Plex Sans', ui-sans-serif, system-ui";
+    
     myChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -340,8 +314,7 @@ $(document).ready(function() {
                 data: [0, 0, 0],
                 backgroundColor: ['#10b981', '#64748b', '#f59e0b'],
                 borderWidth: 4,
-                borderColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff',
-                hoverOffset: 4
+                borderColor: document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff'
             }]
         },
         options: {
@@ -349,40 +322,21 @@ $(document).ready(function() {
             maintainAspectRatio: false,
             cutout: '75%',
             plugins: {
-                legend: { 
-                    position: 'bottom', 
-                    labels: { 
-                        boxWidth: 8, 
-                        padding: 15, 
-                        font: { size: 9, weight: '900', family: "'IBM Plex Sans', sans-serif" },
-                        color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b'
-                    } 
-                }
+                legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 9, weight: '900' } } }
             }
         }
     });
 
-    // Initial Data Load
     loadAssets();
-
-    // Event Listeners
-    $('#searchInput').on('input', function() {
-            currentPage = 1;
-            updateTableUI();
-        });
-
-        // CHANGE THIS: Don't reload from server, just re-filter local data
-        $('#typeFilter').on('change', function() {
-            currentPage = 1;
-            updateTableUI();
-        });
-
-    // Sync situational awareness every 2 minutes
+    $('#searchInput, #typeFilter').on('input change', function() {
+        currentPage = 1;
+        updateTableUI();
+    });
     setInterval(loadAssets, 120000);
 });
 
 function showAssetDetails(id) {
-    const asset = allAssets.find(a => a.id == id || a.assets_id == id);
+    const asset = allAssets.find(a => a.id == id);
     if (!asset) return;
 
     // Toggle Visibility
@@ -392,12 +346,11 @@ function showAssetDetails(id) {
     // Update Header
     $('#detail-name').text(asset.assets_name);
     $('#detail-type').text(asset.assets_type);
-    
-    // Update Icon & Color based on type
-    const icon = getIconClass(asset.assets_type);
-    $('#detail-icon').attr('class', `fas ${icon}`);
-    
-    // Dynamic Specs list
+    $('#detail-icon').attr('class', `fas ${getIconClass(asset.assets_type)}`);
+
+    // Helper for inputs
+    const inputClass = "w-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded px-2 py-1.5 outline-none focus:border-blue-500 transition-colors placeholder-slate-300 dark:placeholder-slate-600 shadow-sm";
+
     let specsHtml = `
         <div class="grid grid-cols-2 gap-4">
             <div>
@@ -409,68 +362,182 @@ function showAssetDetails(id) {
                 <p class="text-xs font-mono font-bold dark:text-slate-300">#${asset.assets_id}</p>
             </div>
         </div>
-        <div class="pt-4 border-t border-slate-50 dark:border-slate-700/50">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Technical Hardware</label>
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-700/50 mt-4">
+            <div class="flex justify-between items-center mb-3">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Technical Payload</label>
+                ${canEditAsset ? `<span class="text-[8px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded uppercase tracking-wider"><i class="fas fa-lock-open mr-1"></i>Edit Mode</span>` : ''}
+            </div>
     `;
 
-    if (asset.assets_type === 'Router' || asset.assets_type === 'Server') {
-        specsHtml += `
-            <div class="space-y-3">
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">IP Address</p>
-                    <p class="text-sm font-mono font-bold text-blue-500">${asset.ip_address || 'N/A'}</p>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Firmware/OS</p>
-                    <p class="text-sm font-bold dark:text-slate-200">${asset.firmware_version || asset.processor || 'N/A'}</p>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">MAC Address</p>
-                    <p class="text-sm font-mono dark:text-slate-400 text-xs">${asset.mac_address || 'N/A'}</p>
-                </div>
-            </div>
-        `;
+    if (canEditAsset) {
+        specsHtml += `<form id="inlineSpecsForm" onsubmit="saveAssetSpecs(event, '${asset.id}')" class="space-y-3">`;
     } else {
-        // PC / Laptop View
-        specsHtml += `
-            <div class="space-y-3">
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Processor</p>
-                    <p class="text-sm font-bold dark:text-slate-200">${asset.processor || 'N/A'}</p>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">RAM</p>
-                    <p class="text-sm font-bold dark:text-slate-200">${asset.ram_gb ? asset.ram_gb + 'GB' : 'N/A'}</span>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Storage</p>
-                    <p class="text-sm font-bold dark:text-slate-200">${asset.storage_capacity|| 'N/A'}</span>
-                </div>
-            </div>
-        `;
+        specsHtml += `<div class="space-y-3">`;
     }
 
-    specsHtml += `
-        <div class="pt-6 mt-6 border-t border-slate-100 dark:border-slate-700/50">
-            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-3">Asset History</label>
-            <div class="space-y-2">
-                <div class="flex justify-between items-center text-[10px]">
-                    <span class="text-slate-500 uppercase font-bold">Registration Date</span>
-                    <span class="text-slate-700 dark:text-slate-300 font-mono">${asset.date_added || 'N/A'}</span>
+    // 1. Logic for Networking/Infrastructure (Router, Switch, Server)
+    if (['Router', 'Switch', 'Server'].includes(asset.assets_type)) {
+        if (canEditAsset) {
+            specsHtml += `
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Network Config</p>
+                    <input type="text" id="edit-ip" value="${asset.ip_address || ''}" placeholder="IP Address (e.g. 192.168.1.1)" class="${inputClass} font-mono text-blue-500">
+                    <input type="text" id="edit-mac" value="${asset.mac_address || ''}" placeholder="MAC Address" class="${inputClass} font-mono">
                 </div>
-                ${asset.date_updated ? `
-                <div class="flex justify-between items-center text-[10px]">
-                    <span class="text-slate-500 uppercase font-bold">Last Modification</span>
-                    <span class="text-slate-700 dark:text-slate-300 font-mono">${asset.date_updated}</span>
-                </div>` : ''}
-            </div>
-        </div>
-    `;
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Firmware Version</p>
+                    <input type="text" id="edit-firmware" value="${asset.firmware_version || ''}" placeholder="OS/Firmware Version" class="${inputClass}">
+                </div>
+            `;
+        } else {
+            specsHtml += `
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Network Config</p>
+                    <p class="text-xs font-mono font-bold text-blue-500">${asset.ip_address || 'NO IP'}</p>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1">${asset.mac_address || ''}</p>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Firmware</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${asset.firmware_version || 'N/A'}</p>
+                </div>
+            `;
+        }
+    }
 
-    specsHtml += `</div>`;
+    // 2. Logic for Computing Details (PC, Laptop, Server)
+    if (['PC', 'Laptop', 'Server'].includes(asset.assets_type)) {
+        if (canEditAsset) {
+            specsHtml += `
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Hardware Core</p>
+                    <input type="text" id="edit-processor" value="${asset.processor || ''}" placeholder="Processor (e.g. i7-12700K)" class="${inputClass}">
+                    <div class="flex gap-2">
+                        <div class="w-1/3 relative">
+                            <input type="number" id="edit-ram" value="${asset.ram_gb || ''}" placeholder="RAM" class="${inputClass}">
+                            <span class="absolute right-2 top-1.5 text-[9px] font-bold text-slate-400">GB</span>
+                        </div>
+                        <input type="text" id="edit-storage" value="${asset.storage_capacity || ''}" placeholder="Storage (e.g. 512GB SSD)" class="${inputClass} w-2/3">
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Operating System</p>
+                    <input type="text" id="edit-os" value="${asset.os_version || ''}" placeholder="OS Version" class="${inputClass}">
+                </div>
+            `;
+
+            if (asset.assets_type === 'Laptop') {
+                specsHtml += `
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health</p>
+                        <div class="relative w-1/3">
+                            <input type="number" min="0" max="100" id="edit-battery" value="${asset.battery_health || ''}" placeholder="Health" class="${inputClass}">
+                            <span class="absolute right-2 top-1.5 text-[9px] font-bold text-slate-400">%</span>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            specsHtml += `
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Hardware Core</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${asset.processor || 'N/A'}</p>
+                    <p class="text-[10px] font-bold text-blue-600 mt-1">${asset.ram_gb || 0}GB RAM | ${asset.storage_capacity || ''}</p>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Environment</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${asset.os_version || 'Unknown OS'}</p>
+                </div>
+            `;
+
+            if (asset.assets_type === 'Laptop' && asset.battery_health) {
+                const health = asset.battery_health;
+                const barColor = health > 70 ? 'bg-emerald-500' : health > 40 ? 'bg-amber-500' : 'bg-red-500';
+                specsHtml += `
+                    <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health</p>
+                            <span class="text-[10px] font-bold dark:text-slate-300">${health}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                            <div class="${barColor} h-full" style="width: ${health}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    if (canEditAsset) {
+        specsHtml += `
+                <button type="submit" id="saveSpecsBtn" class="w-full mt-4 bg-slate-800 hover:bg-slate-900 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all shadow-sm">
+                    Save Specifications
+                </button>
+            </form></div>
+        `;
+    } else {
+        specsHtml += `</div></div>`;
+    }
+
     $('#detail-specs-list').html(specsHtml);
 }
 
+// Function to handle the AJAX PATCH request from the generated form
+function saveAssetSpecs(event, assetId) {
+    event.preventDefault();
+    const btn = $('#saveSpecsBtn');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+
+    const payload = {};
+    
+    // Safely extract text inputs
+    if($('#edit-ip').length) payload.ip_address = $('#edit-ip').val() || null;
+    if($('#edit-mac').length) payload.mac_address = $('#edit-mac').val() || null;
+    if($('#edit-firmware').length) payload.firmware_version = $('#edit-firmware').val() || null;
+    if($('#edit-processor').length) payload.processor = $('#edit-processor').val() || null;
+    if($('#edit-storage').length) payload.storage_capacity = $('#edit-storage').val() || null;
+    if($('#edit-os').length) payload.os_version = $('#edit-os').val() || null;
+    
+    // Safely extract integers (avoids NaN crashing the API)
+    if($('#edit-ram').length) {
+        const r = $('#edit-ram').val();
+        payload.ram_gb = r ? parseInt(r) : null;
+    }
+    if($('#edit-battery').length) {
+        const b = $('#edit-battery').val();
+        payload.battery_health = b ? parseInt(b) : null;
+    }
+
+    const csrfToken = $('form[style="display:none;"] input[name="csrfmiddlewaretoken"]').val() || '{{ csrf_token }}';
+
+    $.ajax({
+        url: `/api/assets/${assetId}/`,
+        type: 'PATCH',
+        headers: { 'X-CSRFToken': csrfToken },
+        data: JSON.stringify(payload),
+        contentType: 'application/json',
+        success: function(updatedAsset) {
+            const index = allAssets.findIndex(a => a.id == assetId);
+            if (index !== -1) allAssets[index] = updatedAsset;
+            
+            btn.removeClass('bg-slate-800 dark:bg-blue-600').addClass('bg-emerald-500').html('<i class="fas fa-check mr-1"></i> Saved');
+            
+            setTimeout(() => {
+                btn.prop('disabled', false).removeClass('bg-emerald-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Specifications');
+                showAssetDetails(assetId);
+            }, 1000);
+        },
+        error: function(xhr) {
+            btn.prop('disabled', false).removeClass('bg-slate-800 dark:bg-blue-600').addClass('bg-red-500').html('<i class="fas fa-exclamation-triangle mr-1"></i> Error');
+            
+            setTimeout(() => {
+                btn.removeClass('bg-red-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Specifications');
+            }, 3000);
+            
+            console.error("API Error:", xhr.responseText);
+            alert("Failed to update specifications. " + (xhr.responseJSON?.detail || "Please check input formats."));
+        }
+    });
+}
 </script>
 
 <style>
@@ -482,6 +549,9 @@ function showAssetDetails(id) {
     .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
 </style>
 {% endblock %}
