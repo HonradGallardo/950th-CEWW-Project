@@ -8,7 +8,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 2. Initialize Environ
 env = environ.Env(
     DEBUG=(bool, False)
-    # Removed the incorrect ALLOWED_HOSTS definition from here
 )
 
 # 3. Read Environment Files (Priority: .sys_config then .env)
@@ -18,26 +17,17 @@ default_env_path = os.path.join(BASE_DIR, '.env')
 if os.path.exists(sys_env_path):
     environ.Env.read_env(sys_env_path)
 
-# Always try loading .env as well
 if os.path.exists(default_env_path):
     environ.Env.read_env(default_env_path)
 
 # 4. Core Security Settings
 SECRET_KEY = env('SECRET_KEY')
 
-# --- MERGE CONFLICT RESOLVED ---
 # Honrad-Branch (Active): Secure, environment-driven approach
 DEBUG = env.bool('DEBUG', default=False)
-# ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', '192.168.0.5'])
 
-# Christian-Branch (Preserved as comments): 
-# DEBUG = env('DEBUG', default=True) # Fallback to True for local testing
-# CRITICAL FIX: Hardcode the allowed hosts right here, overwriting the env file completely.
-
-# SECURITY FIX: Commented out the wildcard '*' to prevent Host Header attacks.
-# ALLOWED_HOSTS = ['*'] 
+# SECURITY FIX: Wildcard '*' removed to prevent Host Header attacks.
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost', 'onthego-aims.onrender.com'])
-# -------------------------------
 
 # 5. Application Definition
 INSTALLED_APPS = [
@@ -55,6 +45,7 @@ INSTALLED_APPS = [
     'anymail',
     'cloudinary_storage',
     'cloudinary',
+    'axes', # SECURITY: Added for brute-force protection
 ]
 
 # Session settings (in seconds)
@@ -75,14 +66,22 @@ REST_FRAMEWORK = {
     ]
 }
 
-# 7. Middleware (Consolidated to include WhiteNoise)
+# SECURITY: Authentication Backends for Axes integration
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# 7. Middleware (Consolidated & Secured)
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Added from the duplicate block below
+    'csp.middleware.CSPMiddleware', # SECURITY: Injected CSP Middleware
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware', # SECURITY: Injected Axes Middleware
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -107,51 +106,26 @@ TEMPLATES = [
     },
 ]
 
-# 9. Database Configuration (Pulled from DATABASE_URL)
+# 9. Database Configuration
 DATABASES = {
     'default': env.db(),
 }
 
-# 10. Email Configuration (Securely pulled from env)
-
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# 10. Email Configuration (Securely pulled from env)
-
+# 10. Email Configuration
 EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-
-# Feed the Resend API Key directly to Anymail
 ANYMAIL = {
-    # FIX APPLIED HERE: Using the variable name, not the actual secret key
     "BREVO_API_KEY": env('BREVO_API_KEY', default=''),
 }
-
-# Use the verified Gmail address from your Brevo account
 DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
 
-# OLD: Brevo SMTP setup (Preserved as comments)
-# EMAIL_HOST = env('EMAIL_HOST', default='smtp-relay.brevo.com')
-# EMAIL_PORT = env.int('EMAIL_PORT', default=2525)
-# DEFAULT_FROM_EMAIL = '950th CEWW System <honradg71@gmail.com>'
-
-# NEW: Resend SMTP setup
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
 EMAIL_PORT = env.int('EMAIL_PORT', default=2525) 
 EMAIL_USE_TLS = True
 
-# CRITICAL FIX: Sending FROM Resend's approved testing domain to bypass Google's spam block
-#DEFAULT_FROM_EMAIL = '950th CEWW System <onboarding@resend.dev>'
-
-# Active secure configuration (We will update Render to feed these into the app)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
 # 11. ReCaptcha Security
-# Original hardcoded credentials preserved as comments
-# RECAPTCHA_SITE_KEY = '6LfZKoksAAAAAIQa-R-ifpRM-KAWlH6GURcjcT5D'
-# RECAPTCHA_SECRET_KEY = '6LfZKoksAAAAAI2kvj1d2d-5KlL1dNDsC_YNn_Xo'
-
-# Active secure configuration
-# FIX APPLIED HERE: Using the variable names, not the actual secret keys
 RECAPTCHA_SITE_KEY = env('RECAPTCHA_SITE_KEY', default='')
 RECAPTCHA_SECRET_KEY = env('RECAPTCHA_SECRET_KEY', default='')
 
@@ -168,65 +142,67 @@ WEBAUTHN_ORIGIN = 'http://localhost:8000'
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# DUPLICATE MIDDLEWARE BLOCK COMMENTED OUT TO PREVENT OVERWRITING SECTION 7
-# MIDDLEWARE = [
-#     'django.middleware.security.SecurityMiddleware',
-#     'whitenoise.middleware.WhiteNoiseMiddleware',
-#     'django.contrib.sessions.middleware.SessionMiddleware',
-#     'django.middleware.common.CommonMiddleware',
-#     'django.middleware.csrf.CsrfViewMiddleware',
-#     'django.contrib.auth.middleware.AuthenticationMiddleware',
-#     'django.contrib.messages.middleware.MessageMiddleware',
-#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-# ]
-
-# OLD MEDIA SETTINGS (Preserved)
-# MEDIA_URL = env('MEDIA_URL', default='/media/')
-# MEDIA_ROOT = os.path.join(
-#    BASE_DIR,
-#    env('MEDIA_ROOT', default=env('MEDIA_ROOT_PATH', default='media'))
-# )
-
-# NEW CLOUDINARY STORAGE CONFIGURATION
-#CLOUDINARY_STORAGE = {
-#    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
-#    'API_KEY': env('CLOUDINARY_API_KEY', default=''),
-#    'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
-#    'RESOURCE_TYPE': 'auto'
-#}
-# Tell Django to route all uploaded files to Cloudinary automatically
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 MEDIA_URL = '/media/'
 
 # 14. Internationalization
 TIME_ZONE = 'Asia/Manila'
 USE_TZ = True
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # ==========================================
-# 15. SECURITY HARDENING (Added section)
+# 15. SECURITY HARDENING 
 # ==========================================
 
-# These settings are safe to have active globally and will not affect UI rendering.
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-
-# Protects against Clickjacking. If your UI specifically relies on embedding 
-# your site within iframes, change 'DENY' to 'SAMEORIGIN'.
 X_FRAME_OPTIONS = 'DENY' 
 
-# HTTPS/SSL Settings applied ONLY in production so local development stays intact.
+# --- NEW: Password Validation ---
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 12}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# --- NEW: Brute-Force Protection (Axes) ---
+AXES_FAILURE_LIMIT = 5            # Lock out after 5 failed attempts
+AXES_COOLOFF_TIME = 1             # Lock out duration in hours
+AXES_RESET_ON_SUCCESS = True      # Reset failed attempts on successful login
+AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"] # Block specific user from specific IP
+
+# --- NEW: Content Security Policy (CSP) ---
+# Enforces strict loading of resources to prevent XSS execution
+CSP_INCLUDE_NONCE_IN = ['script-src', 'style-src']
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = (
+    "'self'", 
+    "https://code.jquery.com", 
+    "'nonce'"
+)
+CSP_STYLE_SRC = (
+    "'self'", 
+    "https://fonts.googleapis.com", 
+    "https://cdnjs.cloudflare.com", # Assuming FontAwesome comes from here
+    "'nonce'"
+)
+CSP_FONT_SRC = (
+    "'self'", 
+    "https://fonts.gstatic.com", 
+    "https://cdnjs.cloudflare.com"
+)
+# Allows Cloudinary images and base64 previews
+CSP_IMG_SRC = ("'self'", "https://res.cloudinary.com", "data:", "blob:") 
+# Allows API calls to your own backend
+CSP_CONNECT_SRC = ("'self'",) 
+
+# HTTPS/SSL Settings applied ONLY in production
 if not DEBUG:
-    # Redirect all non-HTTPS requests to HTTPS
     SECURE_SSL_REDIRECT = True
-    
-    # Ensures cookies are only sent over HTTPS
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
-    # HTTP Strict Transport Security (HSTS) - Forces browsers to use HTTPS
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000 
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
