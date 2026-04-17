@@ -2,6 +2,8 @@
 {% load static %}
 
 {% block content %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
 <div class="font-plex flex justify-center items-center min-h-[80vh] px-4 py-8 bg-slate-50 dark:bg-[#0f172a] transition-colors duration-300 content-bg">
     <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all registration-card">
         
@@ -159,6 +161,7 @@
                         <div class="mt-3 text-[9px] font-bold text-blue-600 flex flex-col gap-2 bg-blue-50 dark:bg-blue-900/20 w-fit px-3 py-3 rounded-xl border border-blue-100 dark:border-blue-800 shadow-sm">
                             <span class="uppercase tracking-widest text-[8px] text-blue-500">Currently Uploaded Asset Photo:</span>
                             <img src="{{ form.instance.attachment.url }}" class="max-h-40 rounded-md object-contain border border-blue-200 dark:border-blue-700 bg-white dark:bg-slate-800" alt="Asset Photo">
+                            
                             <a href="{{ form.instance.attachment.url }}" target="_blank" rel="noopener noreferrer" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
                         </div>
                     {% endif %}
@@ -175,8 +178,23 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
+
+// 🚨 SECURITY: XSS Sanitization Utility
+const SecurityUtils = {
+    escapeHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+};
+
 $(document).ready(function() {
-    // SECURED: Added escapejs to prevent Cross-Site Scripting via template variables
+    // 🚨 SECURITY: Prevent XSS injection via Django template variables inside JS strings
     const assetPk = "{{ asset.pk|escapejs|default:'' }}";
     const isEdit = assetPk !== "";
 
@@ -260,7 +278,7 @@ $(document).ready(function() {
         $.ajax({
             url: isEdit ? `/api/assets/${assetPk}/` : '/api/assets/',
             type: isEdit ? 'PATCH' : 'POST',
-            // SECURED: Escaped CSRF Token
+            // 🚨 SECURITY: Django tag inside JS must be escaped
             headers: { 'X-CSRFToken': '{{ csrf_token|escapejs }}' },
             data: formData,
             processData: false,
@@ -291,7 +309,7 @@ $(document).ready(function() {
                     $.ajax({
                         url: '/api/maintenance/',
                         type: 'POST',
-                        // SECURED: Escaped CSRF Token
+                        // 🚨 SECURITY: Django tag inside JS must be escaped
                         headers: { 'X-CSRFToken': '{{ csrf_token|escapejs }}' },
                         data: maintData,
                         processData: false,
@@ -312,7 +330,8 @@ $(document).ready(function() {
                 let errorMsg = "Database Error:\n";
                 if (xhr.responseJSON) {
                     for (const [key, value] of Object.entries(xhr.responseJSON)) {
-                        errorMsg += `- ${key}: ${value}\n`;
+                        // 🚨 SECURITY: Apply escapeHTML before returning server error messages to the client
+                        errorMsg += `- ${SecurityUtils.escapeHTML(key)}: ${SecurityUtils.escapeHTML(String(value))}\n`;
                     }
                 }
                 alert(errorMsg);
