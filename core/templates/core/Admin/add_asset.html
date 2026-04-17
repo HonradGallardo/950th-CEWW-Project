@@ -140,7 +140,8 @@
                             <input type="file" name="maintenance_attachment" id="id_maintenance_attachment" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-amber-100 file:text-amber-700 hover:file:bg-amber-200 dark:file:bg-amber-900/30 dark:file:text-amber-400 transition-all cursor-pointer focus:outline-none">
                             {% if form.instance.maintenance_attachment %}
                                 <div class="mt-3 text-[9px] font-bold text-amber-600 flex items-center gap-1 bg-amber-50 dark:bg-amber-900/20 w-fit px-3 py-1.5 rounded-lg border border-amber-100 dark:border-amber-800">
-                                    <i class="fas fa-tools"></i> <a href="{{ form.instance.maintenance_attachment.url }}" target="_blank" class="underline">Current Maintenance File</a>
+                                    <i class="fas fa-tools"></i> 
+                                    <a href="{{ form.instance.maintenance_attachment.url }}" target="_blank" rel="noopener noreferrer" class="underline">Current Maintenance File</a>
                                 </div>
                             {% endif %}
                         </div>
@@ -158,7 +159,7 @@
                         <div class="mt-3 text-[9px] font-bold text-blue-600 flex flex-col gap-2 bg-blue-50 dark:bg-blue-900/20 w-fit px-3 py-3 rounded-xl border border-blue-100 dark:border-blue-800 shadow-sm">
                             <span class="uppercase tracking-widest text-[8px] text-blue-500">Currently Uploaded Asset Photo:</span>
                             <img src="{{ form.instance.attachment.url }}" class="max-h-40 rounded-md object-contain border border-blue-200 dark:border-blue-700 bg-white dark:bg-slate-800" alt="Asset Photo">
-                            <a href="{{ form.instance.attachment.url }}" target="_blank" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
+                            <a href="{{ form.instance.attachment.url }}" target="_blank" rel="noopener noreferrer" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
                         </div>
                     {% endif %}
                 </div>
@@ -173,12 +174,12 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 $(document).ready(function() {
-    const assetPk = "{{ asset.pk|default:'' }}";
+    // SECURED: Added escapejs to prevent Cross-Site Scripting via template variables
+    const assetPk = "{{ asset.pk|escapejs|default:'' }}";
     const isEdit = assetPk !== "";
 
-    // Toggle Specs logic preserved
     function toggleSpecs() {
         const type = $('select[name="assets_type"]').val();
         $('#specs-logic-container').removeClass('hidden');
@@ -196,7 +197,6 @@ $(document).ready(function() {
         }
     }
 
-    // Toggle Maintenance details visibility
     function checkMaintenance() {
         const status = $('input[name="status"]:checked').val();
         if (status === 'Maintenance') {
@@ -204,7 +204,6 @@ $(document).ready(function() {
         } else {
             $('#maintenance-logic-container').stop().slideUp(300);
             
-            // Auto-clear maintenance fields if status is changed away from Maintenance
             $('select[name="faulty_hardware_part"]').val('');
             $('select[name="software_issue_type"]').val('');
             $('textarea[name="maintenance_reason"]').val('');
@@ -225,7 +224,6 @@ $(document).ready(function() {
 
         const formData = new FormData();
         
-        // Append text fields dynamically
         const fields = [
             'assets_name', 'assets_type', 'brand', 'serial_number', 'location', 
             'os_version', 'processor', 'ram_gb', 'storage_capacity', 
@@ -235,7 +233,6 @@ $(document).ready(function() {
 
         fields.forEach(field => {
             const val = $(`[name="${field}"]`).val();
-            // This safely prevents empty strings from crashing numerical fields
             if (val && val.trim() !== "") {
                 formData.append(field, val);
             }
@@ -245,13 +242,11 @@ $(document).ready(function() {
         formData.append('status', statusVal);
         formData.append('is_redundant_power', $('input[name="is_redundant_power"]').is(':checked'));
 
-        // FIX: Safely append Assigned To ONLY if an actual User is selected
         const assignedToVal = $('select[name="assigned_to"]').val();
         if (assignedToVal && assignedToVal.trim() !== "") {
             formData.append('assigned_to', assignedToVal);
         }
 
-        // HANDLE SEPARATED FILES FOR ASSET
         const assetFile = $('input[name="attachment"]')[0];
         if (assetFile && assetFile.files.length > 0) {
             formData.append('attachment', assetFile.files[0]);
@@ -262,17 +257,16 @@ $(document).ready(function() {
             formData.append('maintenance_attachment', maintFile.files[0]);
         }
 
-        // STEP 1: SAVE THE ASSET
         $.ajax({
             url: isEdit ? `/api/assets/${assetPk}/` : '/api/assets/',
             type: isEdit ? 'PATCH' : 'POST',
-            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            // SECURED: Escaped CSRF Token
+            headers: { 'X-CSRFToken': '{{ csrf_token|escapejs }}' },
             data: formData,
             processData: false,
             contentType: false,
             success: (response) => {
                 
-                // STEP 2: AUTO-GENERATE MAINTENANCE TICKET IF NEEDED
                 if (statusVal === 'Maintenance') {
                     $btn.text('GENERATING MAINTENANCE TICKET...');
                     
@@ -290,7 +284,6 @@ $(document).ready(function() {
                     const sw = $('select[name="software_issue_type"]').val();
                     if (sw) maintData.append('software_issue_type', sw);
 
-                    // FIX: Pass the maintenance attachment into the Ticket's Reported Issue field
                     if (maintFile && maintFile.files.length > 0) {
                         maintData.append('maintenance_attachment', maintFile.files[0]);
                     }
@@ -298,7 +291,8 @@ $(document).ready(function() {
                     $.ajax({
                         url: '/api/maintenance/',
                         type: 'POST',
-                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        // SECURED: Escaped CSRF Token
+                        headers: { 'X-CSRFToken': '{{ csrf_token|escapejs }}' },
                         data: maintData,
                         processData: false,
                         contentType: false,
@@ -315,7 +309,6 @@ $(document).ready(function() {
             error: (xhr) => {
                 $btn.prop('disabled', false).text('COMMIT CHANGES TO DATABASE');
                 
-                // This will pop up a clean error message telling you exactly which field failed!
                 let errorMsg = "Database Error:\n";
                 if (xhr.responseJSON) {
                     for (const [key, value] of Object.entries(xhr.responseJSON)) {
@@ -329,7 +322,7 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
