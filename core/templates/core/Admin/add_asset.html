@@ -25,19 +25,19 @@
             <div class="space-y-4">
                 <span class="font-rajdhani text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] block">Base Identification</span>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Asset Name</label>
                         {{ form.assets_name }}
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Device Type</label>
                         {{ form.assets_type }}
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Brand / Manufacturer</label>
                         {{ form.brand }}
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Serial Number (S/N)</label>
                         {{ form.serial_number }}
                     </div>
@@ -45,11 +45,11 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div class="space-y-1">
+                <div class="space-y-1 relative group">
                     <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Physical Location</label>
                     {{ form.location }}
                 </div>
-                <div class="space-y-1">
+                <div class="space-y-1 relative group">
                     <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Assigned Personnel</label>
                     {{ form.assigned_to }}
                 </div>
@@ -59,19 +59,19 @@
                 <span class="font-rajdhani text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] block">Hardware Payload Details</span>
                 
                 <div id="specs-computing" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in">
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Processor</label>
                         {{ form.processor }}
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">RAM (GB)</label>
                         {{ form.ram_gb }}
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Storage</label>
                         {{ form.storage_capacity }}
                     </div>
-                    <div id="laptop-only-field" class="space-y-1 hidden">
+                    <div id="laptop-only-field" class="space-y-1 relative group hidden">
                         <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Battery Health %</label>
                         {{ form.battery_health }}
                     </div>
@@ -79,19 +79,19 @@
 
                 <div id="specs-networking" class="hidden space-y-4 animate-fade-in">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="space-y-1">
+                        <div class="space-y-1 relative group">
                             <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Static IP Address</label>
                             {{ form.ip_address }}
                         </div>
-                        <div class="space-y-1">
+                        <div class="space-y-1 relative group">
                             <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">MAC Address</label>
                             {{ form.mac_address }}
                         </div>
-                        <div class="space-y-1">
+                        <div class="space-y-1 relative group">
                             <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Total Ports</label>
                             {{ form.total_ports }}
                         </div>
-                        <div class="space-y-1 flex flex-col justify-end pb-2 pl-1">
+                        <div class="space-y-1 flex flex-col justify-end pb-2 pl-1 relative group">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 {{ form.is_redundant_power }}
                                 <span class="text-[10px] font-black text-slate-500 uppercase">Dual/Redundant PSU</span>
@@ -100,7 +100,7 @@
                     </div>
                 </div>
                 
-                <div id="specs-shared" class="space-y-1">
+                <div id="specs-shared" class="space-y-1 relative group">
                     <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">OS / Firmware Version</label>
                     {{ form.os_version }}
                 </div>
@@ -121,16 +121,16 @@
 
                 <div id="maintenance-logic-container" class="hidden space-y-4 p-5 bg-amber-500/5 border border-amber-500/20 rounded-2xl animate-pulse-subtle">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="space-y-1">
+                        <div class="space-y-1 relative group">
                             <label class="text-[9px] font-black text-amber-600 uppercase ml-1">Faulty Hardware Part</label>
                             {{ form.faulty_hardware_part }}
                         </div>
-                        <div class="space-y-1">
+                        <div class="space-y-1 relative group">
                             <label class="text-[9px] font-black text-amber-600 uppercase ml-1">Software Issue Type</label>
                             {{ form.software_issue_type }}
                         </div>
                     </div>
-                    <div class="space-y-1">
+                    <div class="space-y-1 relative group">
                         <label class="text-[9px] font-black text-amber-600 uppercase ml-1">Detailed Technical Reason</label>
                         {{ form.maintenance_reason }}
                     </div>
@@ -179,7 +179,7 @@
 
 <script nonce="{{ request.csp_nonce }}">
 
-// 🚨 SECURITY: XSS Sanitization Utility
+// 🚨 SECURITY: XSS Sanitization Fallback Utility
 const SecurityUtils = {
     escapeHTML(str) {
         if (typeof str !== 'string') return str;
@@ -194,7 +194,6 @@ const SecurityUtils = {
 };
 
 $(document).ready(function() {
-    // 🚨 SECURITY: Prevent JS context injection
     const assetPk = "{{ asset.pk|escapejs|default:'' }}";
     const isEdit = assetPk !== "";
 
@@ -240,12 +239,13 @@ $(document).ready(function() {
         const $btn = $('#submitBtn');
         const originalBtnText = $btn.html();
         
-        // Adopted from Code 2 UX: Add processing state and restrict multi-clicking
-        $btn.prop('disabled', true)
-            .addClass('opacity-70 cursor-not-allowed')
-            .html('<i class="fas fa-circle-notch fa-spin mr-2"></i> PROCESSING ASSET...');
+        $btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin mr-2"></i> PROCESSING ASSET...');
+
+        // 🚨 SECURITY: Clear previous warning messages
+        $('.xss-security-warning').remove();
 
         const formData = new FormData();
+        let securityViolationDetected = false;
         
         const fields = [
             'assets_name', 'assets_type', 'brand', 'serial_number', 'location', 
@@ -254,14 +254,43 @@ $(document).ready(function() {
             'maintenance_reason', 'faulty_hardware_part', 'software_issue_type'
         ];
 
+        // 🚨 SECURITY BLOCK: Actively Reject Malicious Payloads
+        const xssRegex = /<[a-z][\s\S]*>/i; // Detects HTML tags like <script> or <img>
+
         fields.forEach(field => {
-            const val = $(`[name="${field}"]`).val();
+            const $input = $(`[name="${field}"]`);
+            const val = $input.val();
+            
             if (val && val.trim() !== "") {
-                // 🚨 SECURITY: Sanitize inputs BEFORE adding to the database! 
-                // This converts <script> to &lt;script&gt; effectively neutralizing the dashboard payload.
-                formData.append(field, SecurityUtils.escapeHTML(val));
+                if (xssRegex.test(val) || val.toLowerCase().includes('javascript:') || val.toLowerCase().includes('onerror=')) {
+                    securityViolationDetected = true;
+                    
+                    // Highlight the offending input field
+                    $input.addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
+                    
+                    // Append the visual error block directly below the input (just like Code 2)
+                    $input.parent().append(`
+                        <div class="xss-security-warning space-y-1 mt-2 animate-fade-in">
+                            <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20">
+                                <i class="fas fa-shield-alt mr-2"></i> Security Alert: HTML tags or scripts are not permitted in this field.
+                            </p>
+                        </div>
+                    `);
+                } else {
+                    // Reset field styling if clean
+                    $input.removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
+                    
+                    // Double layer of protection: Escape before appending
+                    formData.append(field, SecurityUtils.escapeHTML(val));
+                }
             }
         });
+
+        // 🚨 ABORT SUBMISSION IF XSS DETECTED
+        if (securityViolationDetected) {
+            $btn.prop('disabled', false).html(originalBtnText);
+            return false; // Halts the AJAX request entirely
+        }
 
         const statusVal = $('input[name="status"]:checked').val() || 'Active';
         formData.append('status', SecurityUtils.escapeHTML(statusVal));
@@ -285,7 +314,6 @@ $(document).ready(function() {
         $.ajax({
             url: isEdit ? `/api/assets/${assetPk}/` : '/api/assets/',
             type: isEdit ? 'PATCH' : 'POST',
-            // 🚨 SECURITY: Include standard XHR header + escaped CSRF tokens
             headers: { 
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': '{{ csrf_token|escapejs }}' 
@@ -337,13 +365,11 @@ $(document).ready(function() {
                 }
             },
             error: (xhr) => {
-                // Revert UX state
                 $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnText);
                 
                 let errorMsg = "Database Error:\n";
                 if (xhr.responseJSON) {
                     for (const [key, value] of Object.entries(xhr.responseJSON)) {
-                        // 🚨 SECURITY: Safely escape JSON properties
                         errorMsg += `- ${SecurityUtils.escapeHTML(key)}: ${SecurityUtils.escapeHTML(String(value))}\n`;
                     }
                 }
@@ -360,6 +386,7 @@ $(document).ready(function() {
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 
+    /* Adopted the refined input styling from Code 2 */
     #assetForm input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), 
     #assetForm select, #assetForm textarea {
         background: transparent; border: 1px solid rgba(148, 163, 184, 0.2);
