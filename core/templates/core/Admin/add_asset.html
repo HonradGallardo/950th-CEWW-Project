@@ -19,7 +19,7 @@
             </div>
         </div>
         
-        <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6" id="assetForm">
+        <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6" id="assetForm" autocomplete="off">
             {% csrf_token %}
             
             <div class="space-y-4">
@@ -169,7 +169,7 @@
             </div>
 
             <div class="flex flex-col gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <button type="submit" id="submitBtn" class="font-rajdhani w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all text-sm uppercase tracking-widest active:scale-95">
+                <button type="submit" id="submitBtn" class="font-rajdhani w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all text-sm uppercase tracking-widest active:scale-[0.98]">
                     Commit Changes to Database
                 </button>
             </div>
@@ -194,7 +194,7 @@ const SecurityUtils = {
 };
 
 $(document).ready(function() {
-    // 🚨 SECURITY: Prevent XSS injection via Django template variables inside JS strings
+    // 🚨 SECURITY: Prevent JS context injection
     const assetPk = "{{ asset.pk|escapejs|default:'' }}";
     const isEdit = assetPk !== "";
 
@@ -238,7 +238,12 @@ $(document).ready(function() {
     $('#assetForm').on('submit', function(e) {
         e.preventDefault();
         const $btn = $('#submitBtn');
-        $btn.prop('disabled', true).text('PROCESSING ASSET...');
+        const originalBtnText = $btn.html();
+        
+        // Adopted from Code 2 UX: Add processing state and restrict multi-clicking
+        $btn.prop('disabled', true)
+            .addClass('opacity-70 cursor-not-allowed')
+            .html('<i class="fas fa-circle-notch fa-spin mr-2"></i> PROCESSING ASSET...');
 
         const formData = new FormData();
         
@@ -252,17 +257,19 @@ $(document).ready(function() {
         fields.forEach(field => {
             const val = $(`[name="${field}"]`).val();
             if (val && val.trim() !== "") {
-                formData.append(field, val);
+                // 🚨 SECURITY: Sanitize inputs BEFORE adding to the database! 
+                // This converts <script> to &lt;script&gt; effectively neutralizing the dashboard payload.
+                formData.append(field, SecurityUtils.escapeHTML(val));
             }
         });
 
         const statusVal = $('input[name="status"]:checked').val() || 'Active';
-        formData.append('status', statusVal);
+        formData.append('status', SecurityUtils.escapeHTML(statusVal));
         formData.append('is_redundant_power', $('input[name="is_redundant_power"]').is(':checked'));
 
         const assignedToVal = $('select[name="assigned_to"]').val();
         if (assignedToVal && assignedToVal.trim() !== "") {
-            formData.append('assigned_to', assignedToVal);
+            formData.append('assigned_to', SecurityUtils.escapeHTML(assignedToVal));
         }
 
         const assetFile = $('input[name="attachment"]')[0];
@@ -278,15 +285,18 @@ $(document).ready(function() {
         $.ajax({
             url: isEdit ? `/api/assets/${assetPk}/` : '/api/assets/',
             type: isEdit ? 'PATCH' : 'POST',
-            // 🚨 SECURITY: Django tag inside JS must be escaped
-            headers: { 'X-CSRFToken': '{{ csrf_token|escapejs }}' },
+            // 🚨 SECURITY: Include standard XHR header + escaped CSRF tokens
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token|escapejs }}' 
+            },
             data: formData,
             processData: false,
             contentType: false,
             success: (response) => {
                 
                 if (statusVal === 'Maintenance') {
-                    $btn.text('GENERATING MAINTENANCE TICKET...');
+                    $btn.html('<i class="fas fa-tools mr-2"></i> GENERATING TICKET...');
                     
                     const maintData = new FormData();
                     maintData.append('asset', response.id); 
@@ -294,13 +304,13 @@ $(document).ready(function() {
                     maintData.append('maintenance_type', 'System Auto-Generated Report');
                     
                     const reason = $('textarea[name="maintenance_reason"]').val();
-                    if (reason) maintData.append('notes', reason);
+                    if (reason) maintData.append('notes', SecurityUtils.escapeHTML(reason));
                     
                     const hw = $('select[name="faulty_hardware_part"]').val();
-                    if (hw) maintData.append('faulty_hardware_part', hw);
+                    if (hw) maintData.append('faulty_hardware_part', SecurityUtils.escapeHTML(hw));
                     
                     const sw = $('select[name="software_issue_type"]').val();
-                    if (sw) maintData.append('software_issue_type', sw);
+                    if (sw) maintData.append('software_issue_type', SecurityUtils.escapeHTML(sw));
 
                     if (maintFile && maintFile.files.length > 0) {
                         maintData.append('maintenance_attachment', maintFile.files[0]);
@@ -309,8 +319,10 @@ $(document).ready(function() {
                     $.ajax({
                         url: '/api/maintenance/',
                         type: 'POST',
-                        // 🚨 SECURITY: Django tag inside JS must be escaped
-                        headers: { 'X-CSRFToken': '{{ csrf_token|escapejs }}' },
+                        headers: { 
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': '{{ csrf_token|escapejs }}' 
+                        },
                         data: maintData,
                         processData: false,
                         contentType: false,
@@ -325,12 +337,13 @@ $(document).ready(function() {
                 }
             },
             error: (xhr) => {
-                $btn.prop('disabled', false).text('COMMIT CHANGES TO DATABASE');
+                // Revert UX state
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnText);
                 
                 let errorMsg = "Database Error:\n";
                 if (xhr.responseJSON) {
                     for (const [key, value] of Object.entries(xhr.responseJSON)) {
-                        // 🚨 SECURITY: Apply escapeHTML before returning server error messages to the client
+                        // 🚨 SECURITY: Safely escape JSON properties
                         errorMsg += `- ${SecurityUtils.escapeHTML(key)}: ${SecurityUtils.escapeHTML(String(value))}\n`;
                     }
                 }
