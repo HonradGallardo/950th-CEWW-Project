@@ -175,18 +175,19 @@ AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"] # Block specific user from 
 
 # --- NEW: Content Security Policy (CSP) ---
 # Enforces strict loading of resources to prevent XSS execution
-CSP_INCLUDE_NONCE_IN = ['script-src', 'style-src']
+CSP_INCLUDE_NONCE_IN = ['script-src'] # style-src removed to allow Tailwind inline rendering
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_SCRIPT_SRC = (
     "'self'", 
     "https://code.jquery.com", 
+    "https://cdn.tailwindcss.com", # Allows Tailwind CDN execution
     "'nonce'"
 )
 CSP_STYLE_SRC = (
     "'self'", 
     "https://fonts.googleapis.com", 
-    "https://cdnjs.cloudflare.com", # Assuming FontAwesome comes from here
-    "'nonce'"
+    "https://cdnjs.cloudflare.com",
+    "'unsafe-inline'" # CRITICAL FIX: Allows Tailwind and inline HTML styles to render
 )
 CSP_FONT_SRC = (
     "'self'", 
