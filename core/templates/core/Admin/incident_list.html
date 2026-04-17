@@ -353,7 +353,7 @@ function updateSummaryCounts() {
     $('#count-resolved').text(allIncidents.filter(i => i.status === 'Resolved').length);
 }
 
-function applyFilters() {
+function applyFilters(resetPage = true) {
     const searchTerm = $('#searchInput').val().toLowerCase();
     const severityFilter = $('#severityFilter').val();
     const categoryFilter = $('#categoryFilter').val();
