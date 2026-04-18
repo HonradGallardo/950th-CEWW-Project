@@ -577,9 +577,20 @@ function renderCards(incidents) {
             ? 'border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/20 shadow-md bg-blue-50/50 dark:bg-blue-900/20' 
             : 'border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50';
 
+        // NEW: Determine if the card border should blink based on Status and Severity
+        let cardBlinkClass = '';
+        if (safeStatus === 'Open') {
+            if (safeSeverity === 'Critical') {
+                cardBlinkClass = 'animate-border-critical';
+            } else if (safeSeverity === 'High') {
+                cardBlinkClass = 'animate-border-high';
+            }
+        }
+
         // SECURITY: Replaced inline onclick with safe data-id binding
+        // Added ${cardBlinkClass} to the end of the class list
         html += `
-        <div data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-card border rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-200 flex flex-col justify-between min-h-[160px] group active:scale-[0.98] ${activeClass}">
+        <div data-id="${SecurityUtils.escapeHTML(String(inc.id))}" class="incident-card border rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-200 flex flex-col justify-between min-h-[160px] group active:scale-[0.98] ${activeClass} ${cardBlinkClass}">
             
             <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center gap-3 min-w-0 pr-2">
@@ -851,5 +862,24 @@ $(document).ready(function() {
         50% { opacity: 0.15; transform: scale(0.96); }
     }
     .animate-blink { animation: blinkWarning 0.8s ease-in-out infinite; }
+    /* Custom Border Blinking Animations */
+    @keyframes borderPulseCritical {
+        0%, 100% { border-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        50% { border-color: rgba(239, 68, 68, 0.1); box-shadow: none; }
+    }
+    
+    @keyframes borderPulseHigh {
+        0%, 100% { border-color: #f97316; box-shadow: 0 0 10px rgba(249, 115, 22, 0.4); }
+        50% { border-color: rgba(249, 115, 22, 0.1); box-shadow: none; }
+    }
+
+    /* !important ensures the blink overrides the default slate or active blue borders */
+    .animate-border-critical { 
+        animation: borderPulseCritical 1.2s ease-in-out infinite !important; 
+    }
+    
+    .animate-border-high { 
+        animation: borderPulseHigh 1.2s ease-in-out infinite !important; 
+    }
 </style>
 {% endblock %}
