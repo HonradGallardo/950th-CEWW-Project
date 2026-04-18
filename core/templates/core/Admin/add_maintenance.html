@@ -213,7 +213,6 @@ const SecurityUtils = {
 };
 
 $(document).ready(function() {
-    // 🚨 SECURITY: Ensure template variables safely escape to JS context
     const logId = "{{ log_id|escapejs|default:'' }}";
     const isEdit = logId !== "";
 
@@ -407,7 +406,6 @@ $(document).ready(function() {
     }
 
     if (isEdit) {
-        // 🚨 PREVENT XSS ON INITIAL LOAD
         const initialAssetId = SecurityUtils.escapeHTML("{{ form.instance.asset.assets_id|escapejs }}");
         const initialAssetName = SecurityUtils.escapeHTML("{{ form.instance.asset.assets_name|escapejs }}");
         fetchAssetHistory(initialAssetId, initialAssetName);
@@ -428,7 +426,6 @@ $(document).ready(function() {
         const assetStringId = $(this).data('stringid');
         const photoUrl = $(this).data('photo');
         
-        // 🚨 SECURITY: Text extraction prevents embedded HTML execution
         const assetIdText = $(this).find('span.text-blue-600').text();
         const assetNameText = $(this).find('span.text-slate-500').text();
 
@@ -439,7 +436,6 @@ $(document).ready(function() {
             
             const badgeHtml = $(this).find('.ml-auto').length > 0 ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">In Maintenance</span>` : '';
             
-            // Render safely extracted text
             $dropdown.find('.selected-label').html(`<span class="font-black text-blue-600 dark:text-blue-400">${SecurityUtils.escapeHTML(assetIdText)}</span> <span class="mx-2 text-slate-300">|</span> <span class="text-xs font-bold text-slate-500">${SecurityUtils.escapeHTML(assetNameText)}</span> ${badgeHtml}`);
             
             if (photoUrl && photoUrl !== "null" && photoUrl !== "") {
@@ -477,14 +473,13 @@ $(document).ready(function() {
         
         const assetPk = $('#custom-asset-tracker').val();
         const statusVal = $('#custom-status-tracker').val();
-        const maintTypeVal = $('[name="maintenance_type"]').val();
-        const notesVal = $('textarea[name="notes"]').val();
+        let maintTypeVal = $('[name="maintenance_type"]').val() || '';
+        let notesVal = $('textarea[name="notes"]').val() || '';
         
         const hwPartVal = $('[name="faulty_hardware_part"]').val() || null;
         const swIssueVal = $('[name="software_issue_type"]').val() || null;
         const dateVal = $('#id_maintenance_date').val() || null;
 
-        // Validation
         if (!assetPk || assetPk === "" || !statusVal || statusVal === "") {
             alert("Verification Failed: Please select an Asset and a Status.");
             return;
@@ -499,7 +494,6 @@ $(document).ready(function() {
         
         $('.xss-security-warning').remove();
         
-        // Remove error states from potential payload fields
         const $notesField = $('textarea[name="notes"]');
         const $maintTypeField = $('[name="maintenance_type"]');
         
@@ -523,7 +517,7 @@ $(document).ready(function() {
         testPayload(notesVal, $notesField);
         testPayload(maintTypeVal, $maintTypeField);
 
-        // Abort Submission
+        // Abort Submission if malicious payload detected
         if (securityViolationDetected) {
             return false; 
         }
@@ -532,7 +526,7 @@ $(document).ready(function() {
 
         const formData = new FormData();
         
-        // 🚨 Double Protection: Escape Data before sending
+        // 🚨 Double Protection: Escape Data before sending to the backend
         formData.append('asset', parseInt(assetPk));
         formData.append('status', SecurityUtils.escapeHTML(statusVal));
         formData.append('maintenance_type', SecurityUtils.escapeHTML(maintTypeVal));
@@ -558,10 +552,10 @@ $(document).ready(function() {
         $.ajax({
             url: apiUrl,
             type: apiMethod,
-            // 🚨 SECURITY: Ensure CSRF Tokens are escaped in headers
+            // 🚨 FIX: Extract CSRF Token reliably from DOM to prevent 403 Forbidden Errors
             headers: { 
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': '{{ csrf_token|escapejs }}' 
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() 
             },
             data: formData,
             processData: false, 
@@ -576,7 +570,6 @@ $(document).ready(function() {
                 if (xhr.responseJSON) {
                     errorMsg = "Submission Refused:\n";
                     for (const [key, value] of Object.entries(xhr.responseJSON)) {
-                        // 🚨 SECURITY: Prevent arbitrary backend errors from acting as XSS payloads
                         errorMsg += `- ${SecurityUtils.escapeHTML(key)}: ${SecurityUtils.escapeHTML(String(value))}\n`;
                     }
                 }
