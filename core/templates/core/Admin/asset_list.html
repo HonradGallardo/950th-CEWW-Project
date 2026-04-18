@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com https://cdn.jsdelivr.net; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js" nonce="{{ request.csp_nonce }}"></script>
 
 <div class="font-plex flex flex-col lg:flex-row gap-6 lg:h-full lg:overflow-hidden p-1 sm:p-0 transition-colors duration-300 dark:bg-slate-900">
     
@@ -90,14 +92,29 @@
 
 <form style="display:none;">{% csrf_token %}</form>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
+
+// 🚨 SECURITY: Core XSS Sanitization Utility
+const SecurityUtils = {
+    escapeHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+};
+
 let allAssets = [];
 let currentPage = 1;
 const rowsPerPage = 6;
 let myChart;
 
-// GUARANTEED EDIT CHECK: If NOT Commander, you can edit (Admins & Personnel).
-const userGroup = "{{ request.user.groups.all.0.name|default:'' }}";
+// 🚨 SECURITY: Django variable injected safely into JS
+const userGroup = "{{ request.user.groups.all.0.name|escapejs|default:'' }}";
 const canEditAsset = (userGroup !== "Commander");
 
 function loadAssets() {
@@ -118,10 +135,10 @@ function updateTableUI() {
     const selectedType = $('#typeFilter').val(); 
     
     const filtered = allAssets.filter(a => {
-        const matchesSearch = a.assets_name.toLowerCase().includes(searchVal) || 
+        const matchesSearch = (a.assets_name && a.assets_name.toLowerCase().includes(searchVal)) || 
                               (a.assets_id && a.assets_id.toLowerCase().includes(searchVal)) ||
                               (a.serial_number && a.serial_number.toLowerCase().includes(searchVal)) ||
-                              a.location.toLowerCase().includes(searchVal);
+                              (a.location && a.location.toLowerCase().includes(searchVal));
         const matchesType = (selectedType === 'all') || (a.assets_type === selectedType);
         return matchesSearch && matchesType;
     });
@@ -155,8 +172,27 @@ function renderCards(items) {
         const iconClass = getIconClass(asset.assets_type);
         const hoverColorClass = getStatusHoverColor(asset.status);
 
+        // 🚨 SECURITY FIX: DOM XSS Mitigation - Escape all variables before template injection
+        const safeId = SecurityUtils.escapeHTML(String(asset.id));
+        const safeName = SecurityUtils.escapeHTML(asset.assets_name || 'Unnamed Asset');
+        const safeBrand = SecurityUtils.escapeHTML(asset.brand || '');
+        const safeType = SecurityUtils.escapeHTML(asset.assets_type || '');
+        const safeStatus = SecurityUtils.escapeHTML(asset.status || 'Unknown');
+        const safeAssetId = SecurityUtils.escapeHTML(asset.assets_id || '');
+        const safeSerial = SecurityUtils.escapeHTML(asset.serial_number || 'N/A');
+        const safeLocation = SecurityUtils.escapeHTML(asset.location || '');
+        
+        let safeSecondaryStat = '';
+        let safeSecondaryLabel = asset.assets_type === 'Laptop' ? 'Battery Health' : 'Rack Position';
+        
+        if (asset.assets_type === 'Laptop') {
+            safeSecondaryStat = SecurityUtils.escapeHTML(asset.battery_health ? asset.battery_health + '%' : 'N/A');
+        } else {
+            safeSecondaryStat = SecurityUtils.escapeHTML(asset.rack_unit ? asset.rack_unit + 'U' : 'Desktop');
+        }
+
         html += `
-        <div onclick="showAssetDetails('${asset.id}')" 
+        <div onclick="showAssetDetails('${safeId}')" 
              class="cursor-pointer bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300 relative overflow-hidden group hover:-translate-y-1 hover:shadow-lg ${hoverColorClass}">
             
             <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4">
@@ -165,49 +201,39 @@ function renderCards(items) {
                         <i class="fas ${iconClass} text-2xl"></i>
                     </div>
                     <div>
-                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight">${asset.assets_name}</h3>
-                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${asset.brand || ''} ${asset.assets_type}</span>
+                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight">${safeName}</h3>
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${safeBrand} ${safeType}</span>
                     </div>
                 </div>
                 
                 <div class="flex flex-col items-end gap-2 z-10 relative">
-                    <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusClasses}">${asset.status}</span>
-                    ${canEditAsset ? `<a href="/assets/edit/${asset.id}/" class="text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 p-1"><i class="fas fa-edit"></i></a>` : ''}
+                    <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusClasses}">${safeStatus}</span>
+                    ${canEditAsset ? `<a href="/assets/edit/${safeId}/" class="text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 p-1"><i class="fas fa-edit"></i></a>` : ''}
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10">
                 <div>
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Asset ID</label>
-                    <p class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">#${asset.assets_id}</p>
+                    <p class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">#${safeAssetId}</p>
                 </div>
                 <div>
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Serial Number</label>
-                    <p class="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate">${asset.serial_number || 'N/A'}</p>
+                    <p class="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate">${safeSerial}</p>
                 </div>
                 <div>
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Physical Location</label>
                     <p class="text-xs font-medium text-slate-600 dark:text-slate-400 truncate flex items-center gap-1.5">
-                        <i class="fas fa-map-marker-alt text-slate-300 text-[10px]"></i> ${asset.location}
+                        <i class="fas fa-map-marker-alt text-slate-300 text-[10px]"></i> ${safeLocation}
                     </p>
                 </div>
                 <div>
-                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Rack Position</label>
-                    <p class="text-xs font-bold text-slate-700 dark:text-slate-300">${asset.rack_unit ? asset.rack_unit + 'U' : 'Desktop'}</p>
+                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">${safeSecondaryLabel}</label>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-300">${safeSecondaryStat}</p>
                 </div>
             </div>
-            <div>
-            <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">
-                ${asset.assets_type === 'Laptop' ? 'Battery Health' : 'Rack Position'}
-            </label>
-            <p class="text-xs font-bold text-slate-700 dark:text-slate-300">
-                ${asset.assets_type === 'Laptop' 
-                    ? (asset.battery_health ? asset.battery_health + '%' : 'N/A') 
-                    : (asset.rack_unit ? asset.rack_unit + 'U' : 'Desktop')}
-            </p>
-        </div>
             
-            <div class="absolute bottom-0 left-0 w-full h-1 ${getStatusAccentColor(asset.status)} opacity-50 group-hover:opacity-100 transition-opacity"></div>
+            <div class="absolute bottom-0 left-0 w-full h-1 ${getStatusAccentColor(safeStatus)} opacity-50 group-hover:opacity-100 transition-opacity"></div>
         </div>`;
     });
     
@@ -303,7 +329,6 @@ $(document).ready(function() {
     }
 
     const ctx = document.getElementById('statusChart').getContext('2d');
-    // Set custom font for Chart.js
     Chart.defaults.font.family = "'IBM Plex Sans', ui-sans-serif, system-ui";
     
     myChart = new Chart(ctx, {
@@ -339,27 +364,39 @@ function showAssetDetails(id) {
     const asset = allAssets.find(a => a.id == id);
     if (!asset) return;
 
-    // Toggle Visibility
     $('#detail-placeholder').addClass('hidden');
     $('#detail-content').removeClass('hidden');
 
-    // Update Header
+    // 🚨 SECURITY: Safe DOM manipulation
     $('#detail-name').text(asset.assets_name);
     $('#detail-type').text(asset.assets_type);
     $('#detail-icon').attr('class', `fas ${getIconClass(asset.assets_type)}`);
 
-    // Helper for inputs
     const inputClass = "w-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded px-2 py-1.5 outline-none focus:border-blue-500 transition-colors placeholder-slate-300 dark:placeholder-slate-600 shadow-sm";
+
+    // 🚨 SECURITY FIX: DOM XSS Mitigation - Escape properties bound for HTML attributes
+    const safeStatus = SecurityUtils.escapeHTML(asset.status || 'Unknown');
+    const safeAssetId = SecurityUtils.escapeHTML(asset.assets_id || '');
+    const safeIdValue = SecurityUtils.escapeHTML(String(asset.id));
+    
+    const safeIp = SecurityUtils.escapeHTML(asset.ip_address || '');
+    const safeMac = SecurityUtils.escapeHTML(asset.mac_address || '');
+    const safeFirmware = SecurityUtils.escapeHTML(asset.firmware_version || '');
+    const safeProcessor = SecurityUtils.escapeHTML(asset.processor || '');
+    const safeStorage = SecurityUtils.escapeHTML(asset.storage_capacity || '');
+    const safeOs = SecurityUtils.escapeHTML(asset.os_version || '');
+    const safeRam = SecurityUtils.escapeHTML(String(asset.ram_gb || ''));
+    const safeBatteryHealth = SecurityUtils.escapeHTML(String(asset.battery_health || ''));
 
     let specsHtml = `
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
-                <p class="text-xs font-bold ${asset.status === 'Active' ? 'text-emerald-500' : 'text-amber-500'}">${asset.status}</p>
+                <p class="text-xs font-bold ${asset.status === 'Active' ? 'text-emerald-500' : 'text-amber-500'}">${safeStatus}</p>
             </div>
             <div>
                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Asset ID</label>
-                <p class="text-xs font-mono font-bold dark:text-slate-300">#${asset.assets_id}</p>
+                <p class="text-xs font-mono font-bold dark:text-slate-300">#${safeAssetId}</p>
             </div>
         </div>
         <div class="pt-4 border-t border-slate-100 dark:border-slate-700/50 mt-4">
@@ -370,58 +407,56 @@ function showAssetDetails(id) {
     `;
 
     if (canEditAsset) {
-        specsHtml += `<form id="inlineSpecsForm" onsubmit="saveAssetSpecs(event, '${asset.id}')" class="space-y-3">`;
+        specsHtml += `<form id="inlineSpecsForm" onsubmit="saveAssetSpecs(event, '${safeIdValue}')" class="space-y-3 relative">`;
     } else {
         specsHtml += `<div class="space-y-3">`;
     }
 
-    // 1. Logic for Networking/Infrastructure (Router, Switch, Server)
     if (['Router', 'Switch', 'Server'].includes(asset.assets_type)) {
         if (canEditAsset) {
             specsHtml += `
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Network Config</p>
-                    <input type="text" id="edit-ip" value="${asset.ip_address || ''}" placeholder="IP Address (e.g. 192.168.1.1)" class="${inputClass} font-mono text-blue-500">
-                    <input type="text" id="edit-mac" value="${asset.mac_address || ''}" placeholder="MAC Address" class="${inputClass} font-mono">
+                    <input type="text" id="edit-ip" value="${safeIp}" placeholder="IP Address (e.g. 192.168.1.1)" class="${inputClass} font-mono text-blue-500 edit-field">
+                    <input type="text" id="edit-mac" value="${safeMac}" placeholder="MAC Address" class="${inputClass} font-mono edit-field">
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Firmware Version</p>
-                    <input type="text" id="edit-firmware" value="${asset.firmware_version || ''}" placeholder="OS/Firmware Version" class="${inputClass}">
+                    <input type="text" id="edit-firmware" value="${safeFirmware}" placeholder="OS/Firmware Version" class="${inputClass} edit-field">
                 </div>
             `;
         } else {
             specsHtml += `
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Network Config</p>
-                    <p class="text-xs font-mono font-bold text-blue-500">${asset.ip_address || 'NO IP'}</p>
-                    <p class="text-[10px] font-mono text-slate-500 mt-1">${asset.mac_address || ''}</p>
+                    <p class="text-xs font-mono font-bold text-blue-500">${safeIp || 'NO IP'}</p>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1">${safeMac}</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Firmware</p>
-                    <p class="text-xs font-bold dark:text-slate-200">${asset.firmware_version || 'N/A'}</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${safeFirmware || 'N/A'}</p>
                 </div>
             `;
         }
     }
 
-    // 2. Logic for Computing Details (PC, Laptop, Server)
     if (['PC', 'Laptop', 'Server'].includes(asset.assets_type)) {
         if (canEditAsset) {
             specsHtml += `
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Hardware Core</p>
-                    <input type="text" id="edit-processor" value="${asset.processor || ''}" placeholder="Processor (e.g. i7-12700K)" class="${inputClass}">
+                    <input type="text" id="edit-processor" value="${safeProcessor}" placeholder="Processor (e.g. i7-12700K)" class="${inputClass} edit-field">
                     <div class="flex gap-2">
                         <div class="w-1/3 relative">
-                            <input type="number" id="edit-ram" value="${asset.ram_gb || ''}" placeholder="RAM" class="${inputClass}">
+                            <input type="number" id="edit-ram" value="${safeRam}" placeholder="RAM" class="${inputClass} edit-field">
                             <span class="absolute right-2 top-1.5 text-[9px] font-bold text-slate-400">GB</span>
                         </div>
-                        <input type="text" id="edit-storage" value="${asset.storage_capacity || ''}" placeholder="Storage (e.g. 512GB SSD)" class="${inputClass} w-2/3">
+                        <input type="text" id="edit-storage" value="${safeStorage}" placeholder="Storage (e.g. 512GB SSD)" class="${inputClass} w-2/3 edit-field">
                     </div>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Operating System</p>
-                    <input type="text" id="edit-os" value="${asset.os_version || ''}" placeholder="OS Version" class="${inputClass}">
+                    <input type="text" id="edit-os" value="${safeOs}" placeholder="OS Version" class="${inputClass} edit-field">
                 </div>
             `;
 
@@ -430,7 +465,7 @@ function showAssetDetails(id) {
                     <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
                         <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health</p>
                         <div class="relative w-1/3">
-                            <input type="number" min="0" max="100" id="edit-battery" value="${asset.battery_health || ''}" placeholder="Health" class="${inputClass}">
+                            <input type="number" min="0" max="100" id="edit-battery" value="${safeBatteryHealth}" placeholder="Health" class="${inputClass} edit-field">
                             <span class="absolute right-2 top-1.5 text-[9px] font-bold text-slate-400">%</span>
                         </div>
                     </div>
@@ -440,12 +475,12 @@ function showAssetDetails(id) {
             specsHtml += `
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Hardware Core</p>
-                    <p class="text-xs font-bold dark:text-slate-200">${asset.processor || 'N/A'}</p>
-                    <p class="text-[10px] font-bold text-blue-600 mt-1">${asset.ram_gb || 0}GB RAM | ${asset.storage_capacity || ''}</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${safeProcessor || 'N/A'}</p>
+                    <p class="text-[10px] font-bold text-blue-600 mt-1">${safeRam || 0}GB RAM | ${safeStorage}</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Environment</p>
-                    <p class="text-xs font-bold dark:text-slate-200">${asset.os_version || 'Unknown OS'}</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${safeOs || 'Unknown OS'}</p>
                 </div>
             `;
 
@@ -481,15 +516,12 @@ function showAssetDetails(id) {
     $('#detail-specs-list').html(specsHtml);
 }
 
-// Function to handle the AJAX PATCH request from the generated form
+// 🚨 SECURITY: Active Pre-Submission Payload Rejection
 function saveAssetSpecs(event, assetId) {
     event.preventDefault();
     const btn = $('#saveSpecsBtn');
-    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
-
-    const payload = {};
     
-    // Safely extract text inputs
+    const payload = {};
     if($('#edit-ip').length) payload.ip_address = $('#edit-ip').val() || null;
     if($('#edit-mac').length) payload.mac_address = $('#edit-mac').val() || null;
     if($('#edit-firmware').length) payload.firmware_version = $('#edit-firmware').val() || null;
@@ -497,7 +529,6 @@ function saveAssetSpecs(event, assetId) {
     if($('#edit-storage').length) payload.storage_capacity = $('#edit-storage').val() || null;
     if($('#edit-os').length) payload.os_version = $('#edit-os').val() || null;
     
-    // Safely extract integers (avoids NaN crashing the API)
     if($('#edit-ram').length) {
         const r = $('#edit-ram').val();
         payload.ram_gb = r ? parseInt(r) : null;
@@ -507,7 +538,52 @@ function saveAssetSpecs(event, assetId) {
         payload.battery_health = b ? parseInt(b) : null;
     }
 
-    const csrfToken = $('form[style="display:none;"] input[name="csrfmiddlewaretoken"]').val() || '{{ csrf_token }}';
+    // 🚨 SECURITY BLOCK: XSS Verification
+    const xssRegex = /<[a-z][\s\S]*>/i;
+    let securityViolation = false;
+    
+    // Reset previous warnings
+    $('.xss-security-warning').remove();
+    $('.edit-field').removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
+
+    for (const [key, val] of Object.entries(payload)) {
+        if (typeof val === 'string' && (xssRegex.test(val) || val.toLowerCase().includes('javascript:') || val.toLowerCase().includes('onerror='))) {
+            securityViolation = true;
+            
+            // Map the payload key back to its input ID for visual highlighting
+            const inputMap = {
+                'ip_address': '#edit-ip', 'mac_address': '#edit-mac', 'firmware_version': '#edit-firmware',
+                'processor': '#edit-processor', 'storage_capacity': '#edit-storage', 'os_version': '#edit-os'
+            };
+            
+            const $field = $(inputMap[key]);
+            $field.addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
+            
+            if ($('#inlineSpecsForm').find('.xss-security-warning').length === 0) {
+                $('#inlineSpecsForm').append(`
+                    <div class="xss-security-warning space-y-1 mt-2 animate-fade-in absolute -bottom-12 left-0 w-full z-10">
+                        <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20 shadow-md">
+                            <i class="fas fa-shield-alt mr-2"></i> Security Alert: HTML tags or scripts are not permitted.
+                        </p>
+                    </div>
+                `);
+            }
+        }
+    }
+
+    if (securityViolation) {
+        return false; // Abort the AJAX call
+    }
+
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
+    const csrfToken = $('form[style="display:none;"] input[name="csrfmiddlewaretoken"]').val() || '{{ csrf_token|escapejs }}';
+
+    // 🚨 Double protection: Escape all strings going into the JSON payload
+    for (const key in payload) {
+        if (typeof payload[key] === 'string') {
+            payload[key] = SecurityUtils.escapeHTML(payload[key]);
+        }
+    }
 
     $.ajax({
         url: `/api/assets/${assetId}/`,
@@ -540,7 +616,7 @@ function saveAssetSpecs(event, assetId) {
 }
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
@@ -553,5 +629,8 @@ function saveAssetSpecs(event, assetId) {
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 </style>
 {% endblock %}

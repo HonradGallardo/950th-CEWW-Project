@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com https://cdn.jsdelivr.net; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="font-plex flex flex-col min-h-screen space-y-6 overflow-y-auto pb-10 p-2 md:p-4 transition-colors duration-300 content-bg">
@@ -96,7 +98,22 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
+
+// 🚨 SECURITY: XSS Sanitization Utility (Added to prevent DOM XSS in Dashboard Injection)
+const SecurityUtils = {
+    escapeHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+};
+
 $(document).ready(function() {
     let assetChartObj, incidentChartObj;
 
@@ -237,9 +254,10 @@ $(document).ready(function() {
 
                 initCharts(data);
 
-                $('#predicted-count').text(data.predicted_incidents);
+                // Safe text injection
+                $('#predicted-count').text(SecurityUtils.escapeHTML(String(data.predicted_incidents)));
                 
-                const confidenceLevel = data.confidence_level || 'High';
+                const confidenceLevel = SecurityUtils.escapeHTML(String(data.confidence_level || 'High'));
                 let width = '92%'; let confColor = 'text-emerald-400'; let barColor = 'bg-emerald-500';
                 
                 if (confidenceLevel === 'Medium') { width = '65%'; confColor = 'text-amber-400'; barColor = 'bg-amber-500'; }
@@ -249,9 +267,8 @@ $(document).ready(function() {
                 $('#confidence-badge').text(`CONFIDENCE: ${confidenceLevel}`).attr('class', `font-rajdhani text-[9px] font-black uppercase tracking-wider ${confColor}`);
 
                 // --- DYNAMIC AI INCIDENT SUMMARY GENERATION ---
-                const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
+                const timestamp = SecurityUtils.escapeHTML(now.toISOString().replace('T', ' ').substring(0, 19));
                 
-                // Calculate incident totals from the API arrays
                 const totalNew = data.new_incidents.reduce((a, b) => a + b, 0);
                 const totalResolved = data.resolved_incidents.reduce((a, b) => a + b, 0);
                 const netChange = totalNew - totalResolved;
@@ -261,10 +278,10 @@ $(document).ready(function() {
                 let aiLines = [
                     `<span class="text-slate-500">[${timestamp}]</span> <span class="text-blue-400 font-bold">sys@ceww-ai:~#</span> run-predictive-analytics --target=incidents`,
                     `<span class="text-amber-400 italic">Aggregating 7-day incident telemetry...</span>`,
-                    `<span class="text-slate-300">Detected <b class="text-rose-400">${totalNew}</b> new security/hardware anomalies. Mitigated <b class="text-emerald-400">${totalResolved}</b>.</span>`,
-                    `<span class="text-slate-300">Net Risk Delta: <b class="${netChangeColor}">${sign}${netChange}</b> active vectors.</span>`,
+                    `<span class="text-slate-300">Detected <b class="text-rose-400">${SecurityUtils.escapeHTML(String(totalNew))}</b> new security/hardware anomalies. Mitigated <b class="text-emerald-400">${SecurityUtils.escapeHTML(String(totalResolved))}</b>.</span>`,
+                    `<span class="text-slate-300">Net Risk Delta: <b class="${netChangeColor}">${sign}${SecurityUtils.escapeHTML(String(netChange))}</b> active vectors.</span>`,
                     `<span class="text-amber-400 italic mt-2 block">Running Monte Carlo simulation for 30-day forecast...</span>`,
-                    `<span class="text-blue-300">Projected Future Anomalies: <b>${data.predicted_incidents}</b> (Confidence: ${confidenceLevel})</span>`
+                    `<span class="text-blue-300">Projected Future Anomalies: <b>${SecurityUtils.escapeHTML(String(data.predicted_incidents))}</b> (Confidence: ${confidenceLevel})</span>`
                 ];
 
                 if (data.is_rising) {
@@ -299,20 +316,23 @@ $(document).ready(function() {
                 // Fire the typewriter effect
                 terminalLineEffect(aiLines, 'advisory-text', 400);
 
-                // Update Risk Profile Grid with AI "Scoring"
+                // 🚨 SECURITY FIX: Escape User-Generated Asset Types to prevent DOM XSS
                 let gridHtml = '';
                 data.asset_types.forEach(entry => {
                     const riskScore = Math.min(Math.round((entry.total * 3.4) + 12), 99);
                     const riskColor = riskScore > 75 ? 'text-rose-500' : (riskScore > 40 ? 'text-amber-500' : 'text-emerald-500');
                     const riskBg = riskScore > 75 ? 'bg-rose-500' : (riskScore > 40 ? 'bg-amber-500' : 'bg-emerald-500');
+                    
+                    const safeAssetType = SecurityUtils.escapeHTML(String(entry.assets_type));
+                    const safeTotal = SecurityUtils.escapeHTML(String(entry.total));
 
                     gridHtml += `
                     <div class="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 info-badge transition-all hover:-translate-y-1 hover:shadow-md relative overflow-hidden group">
                         <div class="absolute top-0 left-0 w-1 h-full ${riskBg} opacity-50 group-hover:opacity-100 transition-opacity"></div>
                         <div class="pl-2">
-                            <p class="font-rajdhani text-[9px] font-black text-slate-400 uppercase tracking-widest">${entry.assets_type}</p>
+                            <p class="font-rajdhani text-[9px] font-black text-slate-400 uppercase tracking-widest">${safeAssetType}</p>
                             <div class="flex items-end justify-between mt-2 mb-3">
-                                <span class="text-2xl font-black text-slate-800 dark-mode-text leading-none">${entry.total}</span>
+                                <span class="text-2xl font-black text-slate-800 dark-mode-text leading-none">${safeTotal}</span>
                                 <span class="font-rajdhani text-[9px] font-bold text-slate-400 uppercase">Deployed</span>
                             </div>
                             <div class="flex items-center justify-between border-t border-slate-200 dark:border-slate-700 pt-2">
@@ -336,7 +356,7 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
