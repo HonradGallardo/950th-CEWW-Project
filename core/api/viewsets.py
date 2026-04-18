@@ -508,10 +508,32 @@ class AssetViewSet(viewsets.ModelViewSet):
                 )
                 
 class MaintenanceViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated] # 🚨 SECURITY: Explicit Auth Requirement
     queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer
 
-    # 🚨 FILTER LOGIC
+    # 🚨 SECURITY FIX: Catch 500 Backend Crashes during Save
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            from rest_framework.exceptions import ValidationError
+            if isinstance(e, ValidationError): raise e
+            import traceback
+            print(traceback.format_exc())
+            return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
+
+    # 🚨 SECURITY FIX: Catch 500 Backend Crashes during Update
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            from rest_framework.exceptions import ValidationError
+            if isinstance(e, ValidationError): raise e
+            import traceback
+            print(traceback.format_exc())
+            return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
+
     def get_queryset(self):
         queryset = super().get_queryset()
         category = self.request.query_params.get('category')
@@ -521,52 +543,40 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
             )
         return queryset
 
-    # 🚨 SECURITY FIX: Catch 500 crashes and send the exact Python error to the frontend!
-    def create(self, request, *args, **kwargs):
-        try:
-            return super().create(request, *args, **kwargs)
-        except Exception as e:
-            from rest_framework.exceptions import ValidationError
-            if isinstance(e, ValidationError):
-                raise e # Let normal 400 Bad Request validations pass through
-            
-            import traceback
-            print(traceback.format_exc()) # Still log it to your terminal
-            return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
-
     def perform_create(self, serializer):
-        # Automatically set the technician to the currently logged-in user
-        serializer.save(technician=self.request.user)
-
-    # 🚨 SECURITY FIX: Catch 500 crashes on Updates too!
-    def update(self, request, *args, **kwargs):
-        try:
-            return super().update(request, *args, **kwargs)
-        except Exception as e:
-            from rest_framework.exceptions import ValidationError
-            if isinstance(e, ValidationError):
-                raise e
+        # 🚨 CRITICAL API FIX: Force asset relationship if serializer drops it
+        asset_id = self.request.data.get('asset') or self.request.data.get('asset_id')
+        save_kwargs = {'technician': self.request.user}
+        
+        # Manually inject the asset_id directly to the database layer
+        if asset_id and str(asset_id).isdigit():
+            save_kwargs['asset_id'] = int(asset_id)
             
-            import traceback
-            print(traceback.format_exc())
-            return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
+        serializer.save(**save_kwargs)
 
     def perform_update(self, serializer):
-        # 1. Save the updated maintenance log first
-        instance = serializer.save()
+        # 🚨 CRITICAL API FIX: Force asset relationship if serializer drops it
+        asset_id = self.request.data.get('asset') or self.request.data.get('asset_id')
+        save_kwargs = {}
+        
+        if asset_id and str(asset_id).isdigit():
+            save_kwargs['asset_id'] = int(asset_id)
+            
+        instance = serializer.save(**save_kwargs)
         
         # 2. SMART LOGIC: If maintenance is completed, automatically activate the asset
         if instance.status == 'Completed':
             asset = instance.asset
-            if asset.status != 'Active':
+            if asset and asset.status != 'Active':
                 asset.status = 'Active'
                 asset.save()
 
     def perform_destroy(self, instance):
         # Clean up the destroy method to avoid save errors on deleted objects
         asset = instance.asset
-        asset.status = 'Active'
-        asset.save()
+        if asset:
+            asset.status = 'Active'
+            asset.save()
         instance.delete()
 
 
