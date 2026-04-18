@@ -511,7 +511,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
     queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer
 
-    # 🚨 ADDED FILTER LOGIC: Matches Type OR Status
+    # 🚨 FILTER LOGIC
     def get_queryset(self):
         queryset = super().get_queryset()
         category = self.request.query_params.get('category')
@@ -521,9 +521,35 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
             )
         return queryset
 
+    # 🚨 SECURITY FIX: Catch 500 crashes and send the exact Python error to the frontend!
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            from rest_framework.exceptions import ValidationError
+            if isinstance(e, ValidationError):
+                raise e # Let normal 400 Bad Request validations pass through
+            
+            import traceback
+            print(traceback.format_exc()) # Still log it to your terminal
+            return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
+
     def perform_create(self, serializer):
         # Automatically set the technician to the currently logged-in user
         serializer.save(technician=self.request.user)
+
+    # 🚨 SECURITY FIX: Catch 500 crashes on Updates too!
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            from rest_framework.exceptions import ValidationError
+            if isinstance(e, ValidationError):
+                raise e
+            
+            import traceback
+            print(traceback.format_exc())
+            return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
 
     def perform_update(self, serializer):
         # 1. Save the updated maintenance log first
