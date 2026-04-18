@@ -67,9 +67,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 items-start md:items-center gap-1 md:gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 items-start md:items-center gap-1 md:gap-4 relative group">
                     <label class="text-sm font-bold text-slate-700 dark:text-slate-300">Maintenance Type:</label>
-                    <div class="md:col-span-2">{{ form.maintenance_type }}</div>
+                    <div class="md:col-span-2 relative w-full">{{ form.maintenance_type }}</div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -498,21 +498,30 @@ $(document).ready(function() {
         const xssRegex = /<[a-z][\s\S]*>/i; 
         
         $('.xss-security-warning').remove();
-        $('textarea[name="notes"]').removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
+        
+        // Remove error states from potential payload fields
+        const $notesField = $('textarea[name="notes"]');
+        const $maintTypeField = $('[name="maintenance_type"]');
+        
+        $notesField.removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
+        $maintTypeField.removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
 
-        if (notesVal && (xssRegex.test(notesVal) || notesVal.toLowerCase().includes('javascript:') || notesVal.toLowerCase().includes('onerror='))) {
-            securityViolationDetected = true;
-            const $notesField = $('textarea[name="notes"]');
-            
-            $notesField.addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
-            $notesField.parent().append(`
-                <div class="xss-security-warning space-y-1 mt-2 animate-fade-in absolute -bottom-10 left-0 w-full z-10">
-                    <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20 shadow-md">
-                        <i class="fas fa-shield-alt mr-2"></i> Security Alert: HTML tags or scripts are not permitted in this field.
-                    </p>
-                </div>
-            `);
+        function testPayload(fieldVal, $fieldElement) {
+            if (fieldVal && (xssRegex.test(fieldVal) || fieldVal.toLowerCase().includes('javascript:') || fieldVal.toLowerCase().includes('onerror='))) {
+                securityViolationDetected = true;
+                $fieldElement.addClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
+                $fieldElement.parent().append(`
+                    <div class="xss-security-warning space-y-1 mt-2 animate-fade-in absolute -bottom-12 left-0 w-full z-10">
+                        <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20 shadow-md">
+                            <i class="fas fa-shield-alt mr-2"></i> Security Alert: HTML tags or scripts are not permitted in this field.
+                        </p>
+                    </div>
+                `);
+            }
         }
+
+        testPayload(notesVal, $notesField);
+        testPayload(maintTypeVal, $maintTypeField);
 
         // Abort Submission
         if (securityViolationDetected) {
@@ -550,7 +559,10 @@ $(document).ready(function() {
             url: apiUrl,
             type: apiMethod,
             // 🚨 SECURITY: Ensure CSRF Tokens are escaped in headers
-            headers: { 'X-CSRFToken': '{{ csrf_token|escapejs }}' },
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token|escapejs }}' 
+            },
             data: formData,
             processData: false, 
             contentType: false, 
