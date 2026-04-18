@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com https://cdn.jsdelivr.net; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
 <div id="fullHistoryModal" class="font-plex hidden fixed inset-0 z-[110] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" onclick="closeFullHistoryModal()"></div>
@@ -205,7 +207,40 @@
     </div>
 </div>
 
-<script>
+<form style="display:none;">{% csrf_token %}</form>
+
+<script nonce="{{ request.csp_nonce }}">
+
+// 🚨 SECURITY: Django Standard CSRF Cookie Fetcher
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 10) === ('csrftoken=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    return cookieValue || $('input[name="csrfmiddlewaretoken"]').val();
+}
+
+// 🚨 SECURITY: Core XSS Sanitization Utility
+const SecurityUtils = {
+    escapeHTML(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    }
+};
+
 let currentPage = 1;
 const rowsPerPage = 6; 
 let allMaintenanceLogs = [];
@@ -239,10 +274,10 @@ function initTable() {
     const status = $("#statusFilter").val().toUpperCase();
 
     const filtered = allMaintenanceLogs.filter(log => {
-        const matchesSearch = log.asset_name.toUpperCase().includes(search) || 
+        const matchesSearch = (log.asset_name && log.asset_name.toUpperCase().includes(search)) || 
                               (log.asset_string_id && log.asset_string_id.toString().includes(search));
-        const matchesType = type === "" || log.maintenance_type.toUpperCase() === type;
-        const matchesStatus = status === "" || log.status.toUpperCase() === status;
+        const matchesType = type === "" || (log.maintenance_type && log.maintenance_type.toUpperCase() === type);
+        const matchesStatus = status === "" || (log.status && log.status.toUpperCase() === status);
         return matchesSearch && matchesType && matchesStatus;
     });
 
@@ -292,10 +327,7 @@ function renderTableRows(logs) {
         const isActive = currentOpenLogId == log.id ? `ring-2 ring-blue-500 border-blue-500 shadow-lg` : `border-slate-200 dark:border-slate-700`;
         const textDim = isCompleted ? "opacity-60" : "";
         
-        const iconClass = getAssetIconClass(log.asset_name + " " + (log.maintenance_type || ''));
-        const safeNotes = (log.notes || "No technical notes.").replace(/'/g, "\\'");
-        const safeFirmware = (log.firmware_os || 'N/A').replace(/'/g, "\\'");
-        const safeMac = (log.mac_address || 'N/A').replace(/'/g, "\\'");
+        const iconClass = getAssetIconClass((log.asset_name || '') + " " + (log.maintenance_type || ''));
 
         let displayDate = 'N/A';
         let displayTime = '--:--';
@@ -305,27 +337,18 @@ function renderTableRows(logs) {
             displayTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
+        // 🚨 SECURITY FIX: Escape all variables before injection
+        const safeName = SecurityUtils.escapeHTML(log.asset_name || 'Unknown Asset');
+        const safeStringId = SecurityUtils.escapeHTML(log.asset_string_id || '');
+        const safeStatus = SecurityUtils.escapeHTML(log.status || 'Unknown');
+        const safeMaintType = SecurityUtils.escapeHTML(log.maintenance_type || 'Unspecified');
+        const safeTechName = SecurityUtils.escapeHTML(log.technician_name || 'System Generated');
+        const safeNotes = SecurityUtils.escapeHTML(log.notes || 'No notes');
+
+        // 🚨 SECURITY FIX: Pass only the log.id to the onclick handler, NOT a JSON object
         html += `
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive} ${hoverColorClass}"
-             onclick="showDetails({
-                 logId: '${log.id}',
-                 assetId: '${log.asset_string_id}',
-                 name: '${log.asset_name}',
-                 status: '${log.status}',
-                 tech: '${log.technician_name || 'System Generated'}',
-                 notes: '${safeNotes}',
-                 date: '${displayDate}',
-                 time: '${displayTime}',
-                 maint_date: '${log.formatted_maintenance_date || 'Not Scheduled'}',
-                 a_type: '${log.maintenance_type}',
-                 asset_category: '${log.asset_category || 'Workstation'}',
-                 processor: '${log.processor || 'N/A'}',
-                 ram: '${log.ram_gb || '0'}GB',
-                 storage: '${log.storage || 'N/A'}',
-                 ip: '${log.ip_address || 'Not Assigned'}',
-                 firmware: '${safeFirmware}',
-                 mac: '${safeMac}'
-             })">
+             onclick="showDetails(${log.id})">
             
             <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4 ${textDim}">
                 <div class="flex items-center gap-4">
@@ -333,14 +356,14 @@ function renderTableRows(logs) {
                         <i class="fas ${iconClass} text-2xl"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-rajdhani font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight truncate max-w-[180px]">${log.asset_name}</h3>
-                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${log.asset_string_id}</span>
+                        <h3 class="font-rajdhani font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight truncate max-w-[180px]">${safeName}</h3>
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${safeStringId}</span>
                     </div>
                 </div>
                 
                 <div class="flex flex-col items-end gap-2 z-10 relative shrink-0 ml-2">
                     <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusPillClass}">
-                        ${log.status}
+                        ${safeStatus}
                     </span>
                 </div>
             </div>
@@ -348,12 +371,12 @@ function renderTableRows(logs) {
             <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10 ${textDim} mt-auto">
                 <div class="col-span-1">
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Service Type</label>
-                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">${log.maintenance_type}</p>
+                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">${safeMaintType}</p>
                 </div>
                 <div class="col-span-1">
                     <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Technician</label>
                     <p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate">
-                        ${log.technician_name || 'System Generated'}
+                        ${safeTechName}
                     </p>
                 </div>
                 <div class="col-span-2">
@@ -369,99 +392,123 @@ function renderTableRows(logs) {
     $container.html(html);
 }
 
-function showDetails(data) {
-    currentOpenLogId = data.logId;
+// 🚨 SECURITY FIX: Retrieve the object securely from the array instead of parsing an inline string
+function showDetails(id) {
+    const log = allMaintenanceLogs.find(l => l.id == id);
+    if (!log) return;
+    
+    currentOpenLogId = log.id;
     $('#placeholder-content').addClass('hidden');
     $('#detail-content').removeClass('hidden');
     
-    // Update Standard Fields
-    $('#det-id').text(data.name);
-    $('#det-asset-type').text(data.a_type);
-    $('#det-date').text(data.date);
-    $('#det-time').text(data.time); 
-    $('#det-tech').text(data.tech);
-    $('#det-status').text(data.status);
-    $('#det-notes').text(data.notes);
-    $('#det-maint-date').text(data.maint_date);
-    $('#det-edit-link').attr('href', `/maintenance/edit/${data.logId}/`);
+    let displayDate = 'N/A';
+    let displayTime = '--:--';
+    if (log.date) {
+        const d = new Date(log.date);
+        displayDate = d.toLocaleDateString('en-GB').replace(/\//g, '-'); 
+        displayTime = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // 🚨 SECURITY FIX: Use .text() for text elements to automatically escape contents
+    $('#det-id').text(log.asset_name || 'Unknown Asset');
+    $('#det-asset-type').text(log.maintenance_type || 'Unspecified');
+    $('#det-date').text(displayDate);
+    $('#det-time').text(displayTime); 
+    $('#det-tech').text(log.technician_name || 'System Generated');
+    $('#det-status').text(log.status || 'Unknown');
+    $('#det-notes').text(log.notes || 'No technical notes.');
+    $('#det-maint-date').text(log.formatted_maintenance_date || 'Not Scheduled');
+    $('#det-edit-link').attr('href', `/maintenance/edit/${log.id}/`);
     $('#delete-log-form').removeClass('hidden');
 
     // Hardware Logic
     const hardwareContainer = $('#hardware-grid');
-    const type = (data.asset_category || '').toUpperCase();
+    const type = (log.asset_category || '').toUpperCase();
+
+    // 🚨 SECURITY FIX: Escape variables before injecting into .html()
+    const safeIp = SecurityUtils.escapeHTML(log.ip_address || 'Not Assigned');
+    const safeFirmware = SecurityUtils.escapeHTML(log.firmware_os || 'N/A');
+    const safeMac = SecurityUtils.escapeHTML(log.mac_address || 'N/A');
+    const safeProcessor = SecurityUtils.escapeHTML(log.processor || 'N/A');
+    const safeRam = SecurityUtils.escapeHTML(String(log.ram_gb || '0'));
+    const safeStorage = SecurityUtils.escapeHTML(log.storage || 'N/A');
 
     if (type.includes('SERVER') || type.includes('ROUTER') || type.includes('SWITCH')) {
         hardwareContainer.html(`
             <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                 <p class="text-[8px] text-slate-400 uppercase font-bold">IP Address</p>
-                <p class="text-[15px] font-bold text-blue-500 font-mono">${data.ip}</p>
+                <p class="text-[15px] font-bold text-blue-500 font-mono">${safeIp}</p>
             </div>
             <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                 <p class="text-[8px] text-slate-400 uppercase font-bold">Firmware / OS</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.firmware}</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${safeFirmware}</p>
             </div>
             <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                 <p class="text-[8px] text-slate-400 uppercase font-bold">MAC Address</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200 font-mono">${data.mac}</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200 font-mono">${safeMac}</p>
             </div>
         `);
     } else {
         hardwareContainer.html(`
             <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                 <p class="text-[8px] text-slate-400 uppercase font-bold">Processor</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.processor}</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${safeProcessor}</p>
             </div>
             <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                 <p class="text-[8px] text-slate-400 uppercase font-bold">RAM</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.ram}</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${safeRam}GB</p>
             </div>
             <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
                 <p class="text-[8px] text-slate-400 uppercase font-bold">Storage</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.storage}</p>
+                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${safeStorage}</p>
             </div>
         `);
     }
 
-    const detIconClass = getAssetIconClass(data.name + " " + data.a_type);
+    const detIconClass = getAssetIconClass(log.asset_name + " " + log.maintenance_type);
     $('#det-icon').removeClass().addClass(`fas ${detIconClass} text-blue-500 dark:text-blue-400 text-xl`);
 
     // --- GENERATE ASSET SERVICE HISTORY ---
     const historyContainer = $('#asset-history-list');
     let historyHtml = '';
 
-    const assetHistory = allMaintenanceLogs.filter(log => {
-        return log.asset_string_id === data.assetId || log.asset_name === data.name;
+    const assetHistory = allMaintenanceLogs.filter(hLog => {
+        return hLog.asset_string_id === log.asset_string_id || hLog.asset_name === log.asset_name;
     });
 
-    // Sort by the actual date provided in the log
     assetHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (assetHistory.length === 0) {
         historyHtml = '<p class="text-[11px] text-slate-500 dark:text-slate-400 italic text-center py-4">No prior service telemetry.</p>';
     } else {
-        assetHistory.forEach(log => {
-            const isCurrent = log.id.toString() === data.logId.toString();
-            const statusColor = log.status === 'Completed' ? 'text-emerald-500' : 'text-blue-500';
+        assetHistory.forEach(hLog => {
+            const isCurrent = hLog.id.toString() === log.id.toString();
+            const statusColor = hLog.status === 'Completed' ? 'text-emerald-500' : 'text-blue-500';
             
-            // Format the date for the log entry
-            let logDate = 'N/A';
-            if (log.date) {
-                const d = new Date(log.date);
-                logDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            let hLogDate = 'N/A';
+            if (hLog.date) {
+                const d = new Date(hLog.date);
+                hLogDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
             }
+
+            // 🚨 SECURITY FIX: Escape variables before injecting into inner loop
+            const safeHwMaintType = SecurityUtils.escapeHTML(hLog.maintenance_type || 'Unspecified');
+            const safeHwTech = SecurityUtils.escapeHTML(hLog.technician_name || 'SYSTEM');
+            const safeHwStatus = SecurityUtils.escapeHTML(hLog.status || 'Unknown');
+            const safeHwNotes = SecurityUtils.escapeHTML(hLog.notes || 'No notes');
 
             historyHtml += `
                 <div class="flex items-start gap-3 p-3 rounded-xl border border-transparent transition-all ${isCurrent ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/50' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}">
                     <div class="mt-1.5 w-2 h-2 rounded-full ${statusColor} bg-current shrink-0 shadow-[0_0_8px_currentColor]"></div>
                     <div class="min-w-0 flex-1">
                         <div class="flex justify-between items-start">
-                            <p class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">${log.maintenance_type}</p>
-                            <span class="text-[9px] font-mono text-slate-400">${logDate}</span>
+                            <p class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">${safeHwMaintType}</p>
+                            <span class="text-[9px] font-mono text-slate-400">${hLogDate}</span>
                         </div>
                         <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">
-                            BY: ${log.technician_name || 'SYSTEM'} • <span class="uppercase ${statusColor}">${log.status}</span>
+                            BY: ${safeHwTech} • <span class="uppercase ${statusColor}">${safeHwStatus}</span>
                         </p>
-                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 line-clamp-1 italic">"${log.notes || 'No notes'}"</p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 line-clamp-1 italic">"${safeHwNotes}"</p>
                     </div>
                 </div>
             `;
@@ -502,6 +549,13 @@ function openFullHistoryModal() {
             const d = new Date(log.date);
             const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
+            // 🚨 SECURITY FIX: Escape values injected into the global history modal
+            const safeName = SecurityUtils.escapeHTML(log.asset_name || 'Unknown');
+            const safeStringId = SecurityUtils.escapeHTML(log.asset_string_id || '');
+            const safeMaintType = SecurityUtils.escapeHTML(log.maintenance_type || '');
+            const safeTech = SecurityUtils.escapeHTML(log.technician_name || 'SYSTEM');
+            const safeStatus = SecurityUtils.escapeHTML(log.status || 'Unknown');
+
             html += `
                 <div class="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-all">
                     <div class="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 shrink-0">
@@ -509,18 +563,18 @@ function openFullHistoryModal() {
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-start">
-                            <h4 class="font-rajdhani text-sm font-black text-slate-800 dark:text-slate-100 truncate">${log.asset_name}</h4>
+                            <h4 class="font-rajdhani text-sm font-black text-slate-800 dark:text-slate-100 truncate">${safeName}</h4>
                             <span class="text-[9px] font-mono text-slate-500">${dateStr}</span>
                         </div>
                         <div class="flex items-center gap-2 mt-1">
-                            <span class="font-rajdhani text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">${log.asset_string_id}</span>
+                            <span class="font-rajdhani text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">${safeStringId}</span>
                             <span class="text-slate-300 dark:text-slate-700">•</span>
-                            <span class="font-rajdhani text-[10px] font-black uppercase text-slate-500">${log.maintenance_type}</span>
+                            <span class="font-rajdhani text-[10px] font-black uppercase text-slate-500">${safeMaintType}</span>
                         </div>
-                        <p class="font-rajdhani text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">Tech: ${log.technician_name || 'SYSTEM'}</p>
+                        <p class="font-rajdhani text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">Tech: ${safeTech}</p>
                     </div>
                     <div class="shrink-0 text-right">
-                        <span class="font-rajdhani text-[9px] font-black uppercase px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 ${statusColor}">${log.status}</span>
+                        <span class="font-rajdhani text-[9px] font-black uppercase px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 ${statusColor}">${safeStatus}</span>
                     </div>
                 </div>
             `;
@@ -532,17 +586,26 @@ function openFullHistoryModal() {
 
 function closeFullHistoryModal() { $('#fullHistoryModal').addClass('hidden'); }
 
+// 🚨 SECURITY FIX: Apply the CSRF extraction utility to the delete method
 function deleteMaintenanceLog() {
     if (!currentOpenLogId) return;
     $.ajax({
         url: `/api/maintenance/${currentOpenLogId}/`,
         type: 'DELETE',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        headers: { 
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFToken() 
+        },
         success: function() {
             closeDeleteModal();
             loadMaintenanceLogs();
             $('#detail-content').addClass('hidden');
             $('#placeholder-content').removeClass('hidden');
+        },
+        error: function(xhr) {
+            console.error("Delete Failed", xhr.responseText);
+            closeDeleteModal();
+            alert("Failed to delete the log. You may not have permission.");
         }
     });
 }
@@ -554,7 +617,7 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
