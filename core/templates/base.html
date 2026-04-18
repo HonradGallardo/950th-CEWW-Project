@@ -6,7 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}IT Asset & Cyber System{% endblock %}</title>
 
-    <script>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'nonce-{{ request.csp_nonce }}' https://cdnjs.cloudflare.com https://code.jquery.com https://cdn.tailwindcss.com https://cdn.jsdelivr.net; img-src 'self' data: https://res.cloudinary.com; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+
+    <script nonce="{{ request.csp_nonce }}">
+        window.SecurityUtils = {
+            escapeHTML(str) {
+                if (typeof str !== 'string') return str;
+                return str.replace(/[&<>'"]/g, tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag));
+            }
+        };
+    </script>
+
+    <script nonce="{{ request.csp_nonce }}">
         (function() {
             const theme = localStorage.getItem('theme');
             if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -15,16 +32,16 @@
         })();
     </script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
+    <script src="https://cdn.tailwindcss.com" nonce="{{ request.csp_nonce }}"></script>
+    <script nonce="{{ request.csp_nonce }}">
         tailwind.config = { darkMode: 'class' }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" nonce="{{ request.csp_nonce }}"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" nonce="{{ request.csp_nonce }}"></script>
     
-    <style>
+    <style nonce="{{ request.csp_nonce }}">
         html.dark { background-color: #0f172a !important; }
         html.dark body { background-color: #0f172a !important; color: #f1f5f9; }
 
@@ -36,7 +53,6 @@
         
         body, html { 
             height: 100vh; margin: 0; overflow-x: hidden;
-            background-color: #e2e8f0; /* Soft slate-200 */
         }
 
         /* Stops all animations from firing when the page first loads to prevent FOUC */
@@ -51,11 +67,10 @@
             height: 100vh;
             background-color: #1e293b; 
             z-index: 50; 
-            overflow-x: hidden; /* This masks the inner container */
+            overflow-x: hidden;
             transition: width var(--transition), box-shadow var(--transition), transform var(--transition);
         }
 
-        /* The inner container stays rigidly 260px so content NEVER squishes or snaps */
         .sidebar-inner {
             width: var(--sb-width);
             height: 100%;
@@ -70,13 +85,13 @@
             transition: margin-left var(--transition), width var(--transition); 
         }
 
-        /* --- DESKTOP BEHAVIOR: Always collapsed, floats on hover --- */
+        /* --- DESKTOP BEHAVIOR --- */
         @media (min-width: 1025px) {
             #sidebar { width: var(--sb-collapsed); }
             
             #sidebar:hover {
                 width: var(--sb-width);
-                box-shadow: 4px 0 25px rgba(0,0,0,0.3); /* Floats over content */
+                box-shadow: 4px 0 25px rgba(0,0,0,0.3);
             }
 
             #main-content { 
@@ -84,7 +99,6 @@
                 width: calc(100% - var(--sb-collapsed));
             }
 
-            /* Geometrically perfect centering for the 80px state */
             .nav-item {
                 display: flex;
                 align-items: center;
@@ -102,7 +116,6 @@
                 flex-shrink: 0;
             }
 
-            /* Text fades in and out */
             .sidebar-text { 
                 opacity: 0; 
                 font-size: 1.15rem;
@@ -111,16 +124,13 @@
                 transition: opacity var(--transition), transform var(--transition); 
             }
 
-            .nav-item.shadow-inner .sidebar-text {
-                font-weight: 700;
-            }
+            .nav-item.shadow-inner .sidebar-text { font-weight: 700; }
             
             #sidebar:hover .sidebar-text { 
                 opacity: 1; 
                 transform: translateX(0);
             }
 
-            /* Header Absolute Positioning */
             .sidebar-header { position: relative; height: 73px; display: flex; align-items: center; border-bottom: 1px solid rgba(71, 85, 105, 0.5); flex-shrink: 0; }
             .sidebar-icon-only { position: absolute; left: 24px; width: 32px; text-align: center; transition: opacity var(--transition); }
             .sidebar-brand-text { position: absolute; left: 68px; opacity: 0; transform: translateX(10px); transition: opacity var(--transition), transform var(--transition); }
@@ -128,7 +138,6 @@
             #sidebar:hover .sidebar-icon-only { opacity: 0; pointer-events: none; }
             #sidebar:hover .sidebar-brand-text { opacity: 1; transform: translateX(0); }
 
-            /* Theme Switcher */
             .theme-switch-container { opacity: 0; pointer-events: none; padding: 0 24px; margin-bottom: 1.5rem; transition: opacity var(--transition); }
             #sidebar:hover .theme-switch-container { opacity: 1; pointer-events: auto; }
         }
@@ -163,48 +172,57 @@
         .theme-pill { position: absolute; width: 50%; height: calc(100% - 4px); background: #3b82f6; border-radius: 50px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); left: 2px; }
         body.dark-mode .theme-pill { transform: translateX(calc(100% - 4px)); }
         
-        /* --- LIGHT MODE SPECIFIC OVERRIDES (Modernized & Professional) --- */
-        body:not(.dark-mode) { background-color: #e2e8f0 !important; } /* slate-200 Base Background */
-        
+        /* --- 🎨 ERGONOMIC LIGHT MODE SPECIFIC OVERRIDES --- */
+        body:not(.dark-mode) { 
+            background-color: #f1f5f9 !important; /* Soft Slate 100 Base */
+            color: #334155 !important; /* Softer text color */
+        } 
+        body:not(.dark-mode) header {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
         body:not(.dark-mode) .bg-white { 
-            background-color: #f8fafc !important; /* slate-50 for all cards/panels - softer than pure white */
-            border-color: #cbd5e1 !important; /* slate-300 for subtle, professional borders */
+            background-color: #ffffff !important; 
+            border-color: #e2e8f0 !important; 
             border-width: 1px !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important; /* Adds modern depth */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03) !important; /* Gentle Drop shadow */
         }
         
         body:not(.dark-mode) .border-slate-50, 
         body:not(.dark-mode) .border-slate-100, 
         body:not(.dark-mode) .border-slate-200,
         body:not(.dark-mode) .border-slate-300 { 
-            border-color: #cbd5e1 !important; /* slate-300 for interior lines */ 
+            border-color: #e2e8f0 !important; /* Replaces harsh borders with soft ones */ 
         }
+
+        /* Mute harsh black text */
+        body:not(.dark-mode) h1, 
+        body:not(.dark-mode) h2, 
+        body:not(.dark-mode) h3, 
+        body:not(.dark-mode) .text-slate-800 { color: #1e293b !important; }
+        body:not(.dark-mode) .text-slate-700 { color: #334155 !important; }
 
         /* Table Overrides */
         body:not(.dark-mode) table { 
-            background-color: #f8fafc !important; /* slate-50 */
-            border: 1px solid #cbd5e1 !important; /* slate-300 */
+            background-color: #ffffff !important; 
+            border: 1px solid #e2e8f0 !important; 
         }
         body:not(.dark-mode) th { 
-            background-color: #f1f5f9 !important; /* slate-100 header */
-            color: #475569 !important; /* slate-600 text for strong readability */
-            border-bottom: 1px solid #cbd5e1 !important; /* slate-300 */
+            background-color: #f8fafc !important; 
+            color: #475569 !important; 
+            border-bottom: 1px solid #e2e8f0 !important; 
             font-weight: 600 !important;
         }
-        body:not(.dark-mode) td { 
-            border-bottom: 1px solid #e2e8f0 !important; /* slate-200 softer internal borders */
-        }
-        body:not(.dark-mode) tr:hover td { 
-            background-color: #f1f5f9 !important; /* slate-100 hover effect */
-        }
+        body:not(.dark-mode) td { border-bottom: 1px solid #f1f5f9 !important; }
+        body:not(.dark-mode) tr:hover td { background-color: #f8fafc !important; }
 
         /* Graph/Canvas Overrides */
         body:not(.dark-mode) canvas { 
-            background-color: #f8fafc !important; /* slate-50 */
-            border: 1px solid #cbd5e1 !important; /* slate-300 */
+            background-color: #ffffff !important; 
+            border: 1px solid #e2e8f0 !important; 
             border-radius: 0.5rem; 
             padding: 0.5rem; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
         }
 
         /* --- DARK MODE OVERRIDES --- */
@@ -232,7 +250,7 @@
 <body class="bg-slate-200 font-rajdhani preload"> 
     <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
 
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         (function() {
             if (localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
@@ -317,7 +335,7 @@
                         </span>
                         <span class="sidebar-text">Tickets</span>
                     </a>
-                                                                                                        
+                                                                                                                                                                                                            
                     <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-pie"></i> <span class="sidebar-text">Reports</span>
                     </a>
@@ -368,7 +386,7 @@
         </div>
 
         <div id="main-content"> 
-            <header class="bg-slate-50 px-4 md:px-8 h-[73px] flex items-center justify-between border-b border-slate-300 shrink-0 sticky top-0 z-40">
+            <header class="px-4 md:px-8 h-[73px] flex items-center justify-between shrink-0 sticky top-0 z-40">
                 <div class="flex items-center min-w-0 flex-1">
                     <button id="burgerBtn" class="lg:hidden p-2 mr-2 text-slate-600 hover:text-blue-600 focus:outline-none flex-shrink-0 transition-transform">
                         <i class="fas fa-bars text-lg"></i>
@@ -427,7 +445,7 @@
         </div>
     </div>
 
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
         $(document).ready(function() {
             // Remove preload class after rendering to prevent FOUC / snap-jank on load
             $(window).on('load', function() {
@@ -553,8 +571,11 @@
                 }
             }
 
-            // 2. Dynamic Toast Spawner
+            // 2. Dynamic Toast Spawner (🚨 SECURITY FIX: Escaping inputs to prevent DOM XSS in toasts)
             function spawnToast(title, message, iconClass, colorClass) {
+                const safeTitle = window.SecurityUtils.escapeHTML(title);
+                const safeMessage = window.SecurityUtils.escapeHTML(message);
+
                 const toastId = 'toast-' + Date.now() + Math.floor(Math.random() * 1000);
                 const toastHtml = `
                     <div id="${toastId}" class="pointer-events-auto w-72 sm:w-80 bg-white dark:bg-slate-800 border-l-4 border-${colorClass}-500 shadow-2xl rounded-lg p-4 transform transition-all duration-500 translate-x-full opacity-0">
@@ -563,8 +584,8 @@
                                 <i class="fas ${iconClass} animate-[ring_2s_ease-in-out_infinite]"></i>
                             </div>
                             <div class="flex-1">
-                                <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">${title}</h4>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-snug">${message}</p>
+                                <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">${safeTitle}</h4>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-snug">${safeMessage}</p>
                             </div>
                             <button onclick="$('#${toastId}').remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none">
                                 <i class="fas fa-times"></i>
@@ -591,6 +612,7 @@
                 let isRead = $item.data('read') === true; 
                 
                 if (!knownNotifIds.has(idStr)) {
+                    // Extracting via .text() is inherently safe from script injection, but we still escaped it in spawnToast above
                     let msg = $item.find('.notif-message-item').text().trim();
                     let msgLower = msg.toLowerCase();
                     
