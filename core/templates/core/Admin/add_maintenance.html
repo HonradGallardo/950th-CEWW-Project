@@ -198,6 +198,24 @@
 
 <script nonce="{{ request.csp_nonce }}">
 
+// 🚨 SECURITY: Django Standard CSRF Cookie Fetcher
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, 10) === ('csrftoken=')) {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    // Fallback to the hidden input if cookie is HttpOnly
+    return cookieValue || $('input[name="csrfmiddlewaretoken"]').val();
+}
+
 // 🚨 SECURITY: XSS Sanitization Utility
 const SecurityUtils = {
     escapeHTML(str) {
@@ -213,6 +231,7 @@ const SecurityUtils = {
 };
 
 $(document).ready(function() {
+    // 🚨 SECURITY: Ensure template variables safely escape to JS context
     const logId = "{{ log_id|escapejs|default:'' }}";
     const isEdit = logId !== "";
 
@@ -406,6 +425,7 @@ $(document).ready(function() {
     }
 
     if (isEdit) {
+        // 🚨 PREVENT XSS ON INITIAL LOAD
         const initialAssetId = SecurityUtils.escapeHTML("{{ form.instance.asset.assets_id|escapejs }}");
         const initialAssetName = SecurityUtils.escapeHTML("{{ form.instance.asset.assets_name|escapejs }}");
         fetchAssetHistory(initialAssetId, initialAssetName);
@@ -426,6 +446,7 @@ $(document).ready(function() {
         const assetStringId = $(this).data('stringid');
         const photoUrl = $(this).data('photo');
         
+        // 🚨 SECURITY: Text extraction prevents embedded HTML execution
         const assetIdText = $(this).find('span.text-blue-600').text();
         const assetNameText = $(this).find('span.text-slate-500').text();
 
@@ -436,6 +457,7 @@ $(document).ready(function() {
             
             const badgeHtml = $(this).find('.ml-auto').length > 0 ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">In Maintenance</span>` : '';
             
+            // Render safely extracted text
             $dropdown.find('.selected-label').html(`<span class="font-black text-blue-600 dark:text-blue-400">${SecurityUtils.escapeHTML(assetIdText)}</span> <span class="mx-2 text-slate-300">|</span> <span class="text-xs font-bold text-slate-500">${SecurityUtils.escapeHTML(assetNameText)}</span> ${badgeHtml}`);
             
             if (photoUrl && photoUrl !== "null" && photoUrl !== "") {
@@ -552,10 +574,10 @@ $(document).ready(function() {
         $.ajax({
             url: apiUrl,
             type: apiMethod,
-            // 🚨 FIX: Extract CSRF Token reliably from DOM to prevent 403 Forbidden Errors
+            // 🚨 SECURITY FIX: Extract CSRF Token robustly to prevent 403 / 500 server crashes
             headers: { 
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() 
+                'X-CSRFToken': getCSRFToken() 
             },
             data: formData,
             processData: false, 
@@ -566,12 +588,17 @@ $(document).ready(function() {
             error: function(xhr) {
                 $btn.prop('disabled', false).html(originalBtnText);
                 
-                let errorMsg = "System Error: Failed to commit to database.\n";
+                // 🚨 Enhanced Error Reporting: Show exact server status if JSON is missing
+                let errorMsg = "System Error: Failed to commit to database.\n\n";
                 if (xhr.responseJSON) {
                     errorMsg = "Submission Refused:\n";
                     for (const [key, value] of Object.entries(xhr.responseJSON)) {
                         errorMsg += `- ${SecurityUtils.escapeHTML(key)}: ${SecurityUtils.escapeHTML(String(value))}\n`;
                     }
+                } else {
+                    errorMsg += `HTTP Status: ${xhr.status} ${xhr.statusText}\n`;
+                    errorMsg += `Please check the browser console for details.`;
+                    console.error("Raw API Error Response:", xhr.responseText);
                 }
                 alert(errorMsg);
             }
