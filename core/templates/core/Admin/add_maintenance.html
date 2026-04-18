@@ -32,7 +32,7 @@
                     <label class="text-sm font-bold text-slate-700 dark:text-slate-300 pt-2">Select Asset:</label>
                     <div class="md:col-span-2 relative">
                         <div class="relative w-full custom-dropdown" id="dropdown-asset">
-                            <button type="button" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
+                            <button type="button" id="asset-dropdown-btn" class="dropdown-toggle w-full flex justify-between items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 transition-all outline-none dropdown-button">
                                 <span class="selected-label flex items-center w-full">
                                     {% if form.instance.asset %}
                                         <span class="font-black text-blue-600 dark:text-blue-400">{{ form.instance.asset.assets_id }}</span> 
@@ -502,9 +502,31 @@ $(document).ready(function() {
         const swIssueVal = $('[name="software_issue_type"]').val() || null;
         const dateVal = $('#id_maintenance_date').val() || null;
 
-        if (!assetPk || assetPk === "" || !statusVal || statusVal === "") {
-            alert("Verification Failed: Please select an Asset and a Status.");
-            return;
+        // 🚨 CRITICAL FIX: Ensure assetPk is treated as an integer OR explicitly flag it as an error
+        if (!assetPk || assetPk === "" || isNaN(parseInt(assetPk)) || !statusVal || statusVal === "") {
+            
+            // Visually highlight the dropdown button to show the user what they missed
+            $('#asset-dropdown-btn').addClass('border-red-500 bg-red-50 dark:bg-red-900/10 text-red-600').removeClass('border-slate-200 dark:border-slate-700');
+            
+            // Add a small warning message below the dropdown if it doesn't already exist
+            if ($('#asset-dropdown-btn').siblings('.xss-security-warning').length === 0) {
+                $('#asset-dropdown-btn').parent().append(`
+                    <div class="xss-security-warning space-y-1 mt-2 animate-fade-in absolute -bottom-10 left-0 w-full z-10">
+                        <p class="text-red-600 dark:text-red-400 text-xs font-semibold flex items-center bg-red-50 dark:bg-red-500/10 p-2.5 rounded-lg border border-red-100 dark:border-red-500/20 shadow-md">
+                            <i class="fas fa-exclamation-circle mr-2"></i> You must select an Asset from the dropdown menu.
+                        </p>
+                    </div>
+                `);
+            }
+            
+            // Auto-remove the styling when they open the dropdown again
+            $('#asset-dropdown-btn').on('click.errorClear', function() {
+                $(this).removeClass('border-red-500 bg-red-50 dark:bg-red-900/10 text-red-600').addClass('border-slate-200 dark:border-slate-700');
+                $(this).siblings('.xss-security-warning').remove();
+                $(this).off('click.errorClear'); 
+            });
+
+            return; // Abort submission
         }
 
         const $btn = $('#submitBtn');
@@ -516,6 +538,7 @@ $(document).ready(function() {
         
         $('.xss-security-warning').remove();
         
+        // Remove error states from potential payload fields
         const $notesField = $('textarea[name="notes"]');
         const $maintTypeField = $('[name="maintenance_type"]');
         
@@ -549,7 +572,8 @@ $(document).ready(function() {
         const formData = new FormData();
         
         // 🚨 Double Protection: Escape Data before sending to the backend
-        formData.append('asset', parseInt(assetPk));
+        // Use parseInt to ensure we are sending a valid primary key to the database
+        formData.append('asset', parseInt(assetPk, 10));
         formData.append('status', SecurityUtils.escapeHTML(statusVal));
         formData.append('maintenance_type', SecurityUtils.escapeHTML(maintTypeVal));
         formData.append('notes', SecurityUtils.escapeHTML(notesVal));
