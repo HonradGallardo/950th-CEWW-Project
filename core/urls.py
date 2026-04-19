@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from django.views.generic import TemplateView
 from . import views
-from .viewsets import SendLoginOTPAPI
+from core.api.viewsets import SendLoginOTPAPI
 from django.contrib.auth import views as auth_views
 # Import modular viewsets
 from core.api.viewsets import (
