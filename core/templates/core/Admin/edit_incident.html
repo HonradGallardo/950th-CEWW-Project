@@ -554,6 +554,16 @@ $(document).ready(function() {
         const formData = new FormData(this);
         const originalBtnText = $btn.html();
         
+        // --- NEW RESTRICTION LOGIC ---
+        // Automatically assign to the current user if the incident is currently unassigned
+        const initialAssignedId = "{{ incident.assigned_to_id|default:'' }}";
+        const currentUserId = "{{ request.user.id }}";
+        
+        if (initialAssignedId === "") {
+            formData.set('assigned_to', currentUserId);
+        }
+        // -----------------------------
+
         const issue = $('#log_issue').val()?.trim() || "";
         const action = $('#log_action').val()?.trim() || "";
         const result = $('#log_result').val()?.trim() || "";
