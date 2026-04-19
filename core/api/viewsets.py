@@ -240,42 +240,21 @@ class APILoginView(LoginView):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             user = form.get_user()
             
-            # --- MFA LOGIC CHECK ---
-            mfa_enabled = True
+            # --- NEW MFA LOGIC: Check the UserTOTP database ---
+            user_totp = UserTOTP.objects.filter(user=user, is_active=True).first()
 
-            if mfa_enabled:
-                
-                if not user.email or user.email.strip() == "":
-                    return JsonResponse({
-                        'status': 'error',
-                        'message': 'MFA is required, but no email is registered to this account. Please contact your system administrator.'
-                    }, status=400)
-                # 1. Generate a 6-digit OTP
-                generated_otp = str(random.randint(100000, 999999))
-                
-                # 2. Store pre-auth info in the session securely
+            if user_totp:
+                # 1. Tell the session who is logging in and how to verify them
                 self.request.session['mfa_user_id'] = user.id
-                self.request.session['mfa_expected_otp'] = generated_otp
+                self.request.session['mfa_method'] = 'totp'
 
-                # 3. Send the OTP via Email
-                subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
-                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
-                try:
-                    send_mail(
-                        subject, message,
-                        getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'),
-                        [user.email], fail_silently=True,
-                    )
-                except Exception as e:
-                    print(f"Failed to send MFA email: {e}")
-
-                # 4. Tell the frontend to show the MFA form!
+                # 2. Tell the frontend to show the 6-digit input form
                 return JsonResponse({
                     'status': 'success',
                     'mfa_required': True 
                 })
             else:
-                # Standard Login (No MFA)
+                # Standard Login (If they haven't set up the authenticator yet)
                 login(self.request, user)
                 return JsonResponse({
                     'status': 'success',
@@ -292,34 +271,45 @@ class APILoginView(LoginView):
 
 
 class VerifyMFAAPI(APIView):
-    """Endpoint to verify the OTP entered during login."""
+    """Endpoint to verify the Google Authenticator OTP entered during login."""
     permission_classes = [AllowAny]
 
     def post(self, request):
-        otp_code = request.data.get('otp_code')
+        otp_code = request.data.get('otp_code') 
         user_id = request.session.get('mfa_user_id')
-        expected_otp = request.session.get('mfa_expected_otp')
+        mfa_method = request.session.get('mfa_method')
 
         # 1. Check if the session expired
-        if not user_id or not expected_otp:
+        if not user_id:
             return Response({"message": "Session expired. Please log in again."}, status=400)
 
-        # 2. Verify the Code
-        if str(otp_code) == str(expected_otp):
-            user = User.objects.filter(id=user_id).first()
-            if user:
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"message": "User account error."}, status=400)
+
+        # 2. Verify the Google Authenticator Code
+        if mfa_method == 'totp':
+            user_totp = UserTOTP.objects.filter(user=user, is_active=True).first()
+            
+            if not user_totp:
+                return Response({"message": "MFA configuration error."}, status=400)
+                
+            # Use pyotp to verify the 6 digits from the user's phone against the database secret
+            totp = pyotp.TOTP(user_totp.secret)
+            
+            if totp.verify(otp_code):
                 # Success! Log them in officially.
                 login(request, user)
                 
                 # Clean up session data
                 del request.session['mfa_user_id']
-                del request.session['mfa_expected_otp']
+                del request.session['mfa_method']
                 
                 return Response({"status": "success", "redirect_url": "/role-redirect/"})
             else:
-                return Response({"message": "User account error."}, status=400)
+                return Response({"message": "Invalid Authenticator code."}, status=400)
 
-        return Response({"message": "Invalid verification code."}, status=400)
+        return Response({"message": "Invalid MFA request."}, status=400)
 
 class DashboardStatsAPI(APIView):
     """Provides live data for dashboard counters, charts, and tables."""
