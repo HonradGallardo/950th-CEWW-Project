@@ -11,7 +11,9 @@ from core.api.viewsets import (
     MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, 
     NotificationViewSet, UserViewSet, DashboardStatsAPI, 
     ForgotPasswordAPI, APILoginView, VerifyMFAAPI, 
-    PersonnelStatsAPI, GenerateTOTPAPI, VerifyTOTPSetupAPI
+    PersonnelStatsAPI, GenerateTOTPAPI, VerifyTOTPSetupAPI, 
+    PasskeyRegisterOptionsAPI, PasskeyRegisterVerifyAPI, 
+    PasskeyLoginOptionsAPI, PasskeyLoginVerifyAPI,
 )
 from core.api.viewsets import GenerateTOTPAPI, VerifyTOTPSetupAPI
 
@@ -39,6 +41,14 @@ urlpatterns = [
 
     path('api/totp/generate/', GenerateTOTPAPI.as_view(), name='api_totp_generate'),
     path('api/totp/verify-setup/', VerifyTOTPSetupAPI.as_view(), name='api_totp_verify'),
+
+    # PASSKEY REGISTRATION (For the Profile Page)
+    path('api/webauthn/register-options/', PasskeyRegisterOptionsAPI.as_view(), name='webauthn_register_options'),
+    path('api/webauthn/register-verify/', PasskeyRegisterVerifyAPI.as_view(), name='webauthn_register_verify'),
+
+    # PASSKEY LOGIN (For the Login Page)
+    path('api/webauthn/login-options/', PasskeyLoginOptionsAPI.as_view(), name='webauthn_login_options'),
+    path('api/webauthn/login-verify/', PasskeyLoginVerifyAPI.as_view(), name='webauthn_login_verify'),
 
     # --- 2. API DATA HUB ---
     # Because of this line below, the router automatically adds "/api/" 

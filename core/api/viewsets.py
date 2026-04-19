@@ -38,6 +38,15 @@ from core.api.serializers import (
     NotificationSerializer,
 )
 
+# Ensure these match your local environment
+if settings.DEBUG:
+    RP_ID = "localhost"
+    ORIGIN = "http://localhost:8000"
+else:
+    # --- FIX: Update to your new Railway Domain ---
+    RP_ID = "onthego-aims.up.railway.app"
+    ORIGIN = "https://onthego-aims.up.railway.app"
+
 class GenerateTOTPAPI(APIView):
     permission_classes = [IsAuthenticated]
 
