@@ -47,6 +47,13 @@ class MaintenanceForm(forms.ModelForm):
 
         
 class AssetForm(forms.ModelForm):
+
+    def clean_ip_address(self):
+        ip = self.cleaned_data.get('ip_address')
+        if ip:
+            # Strip accidental whitespace
+            return ip.strip()
+        return ip
     class Meta:
         model = Asset
         # Added 'brand', 'serial_number', and other missing fields requested by your template
@@ -82,6 +89,7 @@ class AssetForm(forms.ModelForm):
             'faulty_hardware_part': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
             'software_issue_type': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
         }
+        
         
 class UserForm(forms.ModelForm):
     email = forms.EmailField(required=True)

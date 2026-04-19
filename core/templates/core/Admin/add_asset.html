@@ -281,7 +281,7 @@ $(document).ready(function() {
                     $input.removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
                     
                     // Double layer of protection: Escape before appending
-                    formData.append(field, SecurityUtils.escapeHTML(val));
+                    formData.append(field, SecurityUtils.escapeHTML(val.trim()));
                 }
             }
         });
