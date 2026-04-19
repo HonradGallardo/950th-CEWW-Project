@@ -43,17 +43,15 @@ class GenerateTOTPAPI(APIView):
 
     def get(self, request):
         try:
-            # 1. Grab the user's TOTP profile (your model auto-generates the secret!)
+            # Connects strictly to the UserTOTP table
             user_totp, created = UserTOTP.objects.get_or_create(user=request.user)
             
-            # 2. Generate the URI that the QR code needs
             totp = pyotp.TOTP(user_totp.secret)
             qr_uri = totp.provisioning_uri(
                 name=request.user.email or request.user.username,
                 issuer_name="950th CEWW AIMS"
             )
 
-            # 3. Send it back to the JavaScript
             return Response({
                 "secret": user_totp.secret,
                 "qr_uri": qr_uri
@@ -75,10 +73,11 @@ class VerifyTOTPSetupAPI(APIView):
         if not code:
             return Response({"message": "Verification code is required."}, status=400)
 
-        # Verify the 6-digit code from their phone
         totp = pyotp.TOTP(user_totp.secret)
+        
+        # Verify the code
         if totp.verify(code):
-            # SUCCESS: Activate it!
+            # SUCCESS: Saves the active status to UserTOTP
             user_totp.is_active = True
             user_totp.save()
             return Response({"status": "success"})
@@ -242,7 +241,7 @@ class APILoginView(LoginView):
             user = form.get_user()
             
             # --- MFA LOGIC CHECK ---
-            mfa_enabled = True
+            mfa_enabled = False
 
             if mfa_enabled:
                 

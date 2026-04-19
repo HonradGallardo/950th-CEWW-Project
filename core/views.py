@@ -6,7 +6,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, QueryDict
 from django.db.models import Count, Q
-from .models import Asset, Maintenance, Incident, Notification, Profile
+from .models import Asset, Maintenance, Incident, Notification, Profile, UserTOTP
 from .forms import AssetForm, MaintenanceForm, UserForm
 from django.utils import timezone
 from datetime import timedelta
