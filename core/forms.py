@@ -49,31 +49,38 @@ class MaintenanceForm(forms.ModelForm):
 class AssetForm(forms.ModelForm):
     class Meta:
         model = Asset
-        # Added the technical fields to the list so they can be saved
+        # Added 'brand', 'serial_number', and other missing fields requested by your template
         fields = [
-            'assets_name', 'assets_type', 'location', 'status', 
+            'assets_name', 'assets_type', 'brand', 'serial_number', 'location', 'status', 
             'assigned_to', 'maintenance_reason', 'processor', 
             'ram_gb', 'storage_capacity', 'ip_address', 
-            'mac_address', 'firmware_version'
+            'mac_address', 'firmware_version', 'os_version', 'battery_health',
+            'total_ports', 'is_redundant_power', 'faulty_hardware_part', 'software_issue_type'
         ]
         
         widgets = {
             'assets_name': forms.TextInput(attrs={'placeholder': 'Asset Name', 'class': 'w-full p-2 border rounded text-sm'}),
             'assets_type': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
+            'brand': forms.TextInput(attrs={'placeholder': 'Brand / Manufacturer', 'class': 'w-full p-2 border rounded text-sm'}),
+            'serial_number': forms.TextInput(attrs={'placeholder': 'Serial Number (S/N)', 'class': 'w-full p-2 border rounded text-sm'}),
             'location': forms.TextInput(attrs={'placeholder': 'Location', 'class': 'w-full p-2 border rounded text-sm'}),
             'assigned_to': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
             'status': forms.RadioSelect(),
-            'maintenance_reason': forms.TextInput(attrs={
-                'placeholder': 'Maintenance Reason', 
-                'class': 'w-full p-2 border rounded text-sm'
-            }),
+            'maintenance_reason': forms.TextInput(attrs={'placeholder': 'Maintenance Reason', 'class': 'w-full p-2 border rounded text-sm'}),
+            
             # Technical Specification Widgets
             'processor': forms.TextInput(attrs={'placeholder': 'Processor (e.g. Intel i7)', 'class': 'w-full p-2 border rounded text-sm'}),
             'ram_gb': forms.NumberInput(attrs={'placeholder': 'RAM in GB', 'class': 'w-full p-2 border rounded text-sm'}),
             'storage_capacity': forms.TextInput(attrs={'placeholder': 'Storage (e.g. 512GB SSD)', 'class': 'w-full p-2 border rounded text-sm'}),
             'ip_address': forms.TextInput(attrs={'placeholder': 'IP Address', 'class': 'w-full p-2 border rounded text-sm'}),
             'mac_address': forms.TextInput(attrs={'placeholder': 'MAC Address', 'class': 'w-full p-2 border rounded text-sm'}),
-            'firmware_version': forms.TextInput(attrs={'placeholder': 'Firmware/OS Version', 'class': 'w-full p-2 border rounded text-sm'}),
+            'firmware_version': forms.TextInput(attrs={'placeholder': 'Firmware Version', 'class': 'w-full p-2 border rounded text-sm'}),
+            'os_version': forms.TextInput(attrs={'placeholder': 'OS Version', 'class': 'w-full p-2 border rounded text-sm'}),
+            'battery_health': forms.NumberInput(attrs={'placeholder': 'Battery Health %', 'class': 'w-full p-2 border rounded text-sm'}),
+            'total_ports': forms.NumberInput(attrs={'placeholder': 'Total Ports', 'class': 'w-full p-2 border rounded text-sm'}),
+            'is_redundant_power': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500'}),
+            'faulty_hardware_part': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
+            'software_issue_type': forms.Select(attrs={'class': 'w-full p-2 border rounded text-sm'}),
         }
         
 class UserForm(forms.ModelForm):
