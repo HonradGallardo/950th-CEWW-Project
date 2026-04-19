@@ -188,10 +188,20 @@ def delete_maintenance(request, pk):
 # --- INCIDENT MODULE ---
 @login_required
 def incident_list(request):
-    # Commanders CAN access this (view only)
+    # Block Regular personnel
     if request.user.groups.filter(name='Regular').exists() and not request.user.is_superuser:
         raise PermissionDenied("Access Denied: Insufficient clearance.")
-    return render(request, 'core/Admin/incident_list.html', {'incidents': Incident.objects.all()})
+        
+    # 1. CHECK IF USER IS COMMANDER
+    is_commander = request.user.groups.filter(name='Commander').exists()
+    
+    # 2. PASS THE VARIABLE TO THE TEMPLATE
+    context = {
+        'incidents': Incident.objects.all(),
+        'is_commander': is_commander, # <-- THIS IS THE MISSING PIECE
+    }
+    
+    return render(request, 'core/Admin/incident_list.html', context)
 
 @login_required
 def add_incident(request):
