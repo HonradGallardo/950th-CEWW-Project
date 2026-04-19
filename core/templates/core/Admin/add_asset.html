@@ -322,62 +322,8 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: (response) => {
-                
-                if (statusVal === 'Maintenance') {
-                    $btn.html('<i class="fas fa-tools mr-2"></i> GENERATING TICKET...');
-                    
-                    const maintData = new FormData();
-                    maintData.append('asset', response.id); 
-                    maintData.append('status', 'In Progress');
-                    maintData.append('maintenance_type', 'System Auto-Generated Report');
-                    
-                    const reason = $('[name="maintenance_reason"]').val();
-                    if (reason) maintData.append('notes', SecurityUtils.escapeHTML(reason));
-                    
-                    const hw = $('select[name="faulty_hardware_part"]').val();
-                    if (hw) maintData.append('faulty_hardware_part', SecurityUtils.escapeHTML(hw));
-                    
-                    const sw = $('select[name="software_issue_type"]').val();
-                    if (sw) maintData.append('software_issue_type', SecurityUtils.escapeHTML(sw));
-
-                    if (maintFile && maintFile.files.length > 0) {
-                        maintData.append('maintenance_attachment', maintFile.files[0]);
-                    }
-
-                    $.ajax({
-                        url: '/api/maintenance/',
-                        type: 'POST',
-                        headers: { 
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': '{{ csrf_token|escapejs }}' 
-                        },
-                        data: maintData,
-                        processData: false,
-                        contentType: false,
-                        success: () => window.location.href = '/assets/',
-                        error: (xhr) => {
-                            // 1. Build a detailed error message
-                            let errorMsg = "Asset saved, but Maintenance Ticket failed:\n\n";
-                            
-                            if (xhr.responseJSON) {
-                                for (const [key, value] of Object.entries(xhr.responseJSON)) {
-                                    errorMsg += `❌ ${SecurityUtils.escapeHTML(key)}: ${SecurityUtils.escapeHTML(String(value))}\n`;
-                                }
-                            } else {
-                                // Fallback if the server crashes (500 Error)
-                                errorMsg += `Server Error: ${xhr.status} ${xhr.statusText}`;
-                            }
-                            
-                            // 2. Alert the specific error
-                            alert(errorMsg);
-                            
-                            // 3. Temporarily comment out the redirect so you aren't forced away from the page
-                            // window.location.href = '/assets/';
-                        }
-                    });
-                } else {
-                    window.location.href = '/assets/';
-                }
+                // Let the Django backend handle the ticket creation natively
+                window.location.href = '/assets/';
             },
             error: (xhr) => {
                 $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed').html(originalBtnText);
