@@ -354,7 +354,8 @@ function updateSummaryCounts() {
 }
 
 function applyFilters(resetPage = true) {
-    const searchTerm = $('#searchInput').val().toLowerCase();
+    // Added .trim() to prevent accidental spacebar searches
+    const searchTerm = $('#searchInput').val().toLowerCase().trim();
     const severityFilter = $('#severityFilter').val();
     const categoryFilter = $('#categoryFilter').val();
     const sortOrder = $('#sortOrder').val();
@@ -364,12 +365,28 @@ function applyFilters(resetPage = true) {
     const dateTo = $('#dateTo').val();
 
     filteredIncidents = allIncidents.filter(inc => {
-        const matchesSearch = 
-            String(inc.id).includes(searchTerm) ||
-            (inc.title || "").toLowerCase().includes(searchTerm) ||
-            (inc.description || "").toLowerCase().includes(searchTerm) ||
-            (inc.category || "").toLowerCase().includes(searchTerm) ||
-            (inc.asset || "").toLowerCase().includes(searchTerm);
+        // 1. Fix the ID padding so "0016" matches ID 16
+        const paddedId = String(inc.id).padStart(4, '0');
+        
+        // 2. Create a massive searchable string containing ALL incident properties
+        const searchableText = [
+            paddedId, 
+            `inc-${paddedId}`, 
+            inc.title, 
+            inc.description, 
+            inc.category, 
+            inc.linked_asset,     // Catch "LPT-EXEC-04"
+            inc.affected_area, 
+            inc.threat_actor, 
+            inc.detection_source, // Catch "Routine Audit"
+            inc.cve_id,
+            inc.root_cause,
+            inc.assigned_to_name,
+            inc.reported_by_name
+        ].map(val => val || "").join(" ").toLowerCase();
+
+        // 3. Match against the super-string
+        const matchesSearch = searchTerm === "" || searchableText.includes(searchTerm);
         
         const matchesSeverity = severityFilter === 'ALL' || inc.severity === severityFilter;
         const matchesCategory = categoryFilter === 'ALL' || (inc.category || "Uncategorized") === categoryFilter;
