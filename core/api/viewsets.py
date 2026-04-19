@@ -19,11 +19,13 @@ from django.core.mail import send_mail
 from django.contrib.auth.views import LoginView
 import requests
 import json, base64
+import pyotp
 from django.http import HttpResponse
 from webauthn import generate_authentication_options, verify_authentication_response
 from rest_framework.authentication import SessionAuthentication
 from webauthn.helpers.options_to_json import options_to_json
 from core.models import UserPasskey
+from core.models import UserTOTP
 from rest_framework.exceptions import PermissionDenied
 from webauthn.helpers.structs import PublicKeyCredentialDescriptor
 from webauthn.helpers.base64url_to_bytes import base64url_to_bytes
@@ -36,13 +38,52 @@ from core.api.serializers import (
     NotificationSerializer,
 )
 
-# Ensure these match your local environment
-if settings.DEBUG:
-    RP_ID = "localhost"
-    ORIGIN = "http://localhost:8000"
-else:
-    RP_ID = "nine50ceww-aims.onrender.com"
-    ORIGIN = "https://nine50ceww-aims.onrender.com"
+class GenerateTOTPAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # 1. Grab the user's TOTP profile (your model auto-generates the secret!)
+            user_totp, created = UserTOTP.objects.get_or_create(user=request.user)
+            
+            # 2. Generate the URI that the QR code needs
+            totp = pyotp.TOTP(user_totp.secret)
+            qr_uri = totp.provisioning_uri(
+                name=request.user.email or request.user.username,
+                issuer_name="950th CEWW AIMS"
+            )
+
+            # 3. Send it back to the JavaScript
+            return Response({
+                "secret": user_totp.secret,
+                "qr_uri": qr_uri
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class VerifyTOTPSetupAPI(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        code = request.data.get('code')
+
+        try:
+            user_totp = UserTOTP.objects.get(user=request.user)
+        except UserTOTP.DoesNotExist:
+            return Response({"message": "Setup not initialized."}, status=400)
+
+        if not code:
+            return Response({"message": "Verification code is required."}, status=400)
+
+        # Verify the 6-digit code from their phone
+        totp = pyotp.TOTP(user_totp.secret)
+        if totp.verify(code):
+            # SUCCESS: Activate it!
+            user_totp.is_active = True
+            user_totp.save()
+            return Response({"status": "success"})
+        else:
+            return Response({"message": "Invalid code. Please try again."}, status=400)
 
 # ==========================================
 # PASSKEY REGISTRATION (For Profile Page)
@@ -581,6 +622,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
 
 
 class IncidentViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated, IsNotCommanderOrReadOnly]
     queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
 

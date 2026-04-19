@@ -6,7 +6,8 @@ from django.views.generic import TemplateView
 from . import views
 from django.contrib.auth import views as auth_views
 # Import modular viewsets
-from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI, PersonnelStatsAPI
+from core.api.viewsets import AssetViewSet, ChangePasswordAPI, IncidentCommentViewSet, MaintenanceViewSet, IncidentViewSet, MonitoringDataAPI, NotificationViewSet, UserViewSet, DashboardStatsAPI,ForgotPasswordAPI, APILoginView, VerifyMFAAPI, PersonnelStatsAPI, GenerateTOTPAPI, VerifyTOTPSetupAPI
+from core.api.views import GenerateTOTPAPI, VerifyTOTPSetupAPI
 
 router = DefaultRouter()
 router.register(r'assets', AssetViewSet)

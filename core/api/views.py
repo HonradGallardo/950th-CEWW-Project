@@ -2,63 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Count
-import pyotp
-from rest_framework.views import APIView
 from ..models import Asset, Maintenance, Incident
-
-class GenerateTOTPAPI(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        try:
-            # 1. Generate a random base32 secret
-            secret = pyotp.random_base32()
-            
-            # 2. Store it temporarily in the session
-            request.session['pending_totp_secret'] = secret
-
-            # 3. Generate the URI for the QR code
-            totp = pyotp.TOTP(secret)
-            qr_uri = totp.provisioning_uri(
-                name=request.user.email or request.user.username,
-                issuer_name="950th CEWW AIMS"
-            )
-
-            return Response({
-                "secret": secret,
-                "qr_uri": qr_uri
-            })
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
-
-class VerifyTOTPSetupAPI(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        code = request.data.get('code')
-        secret = request.session.get('pending_totp_secret')
-
-        if not secret or not code:
-            return Response({"message": "Session expired. Please click setup again."}, status=400)
-
-        totp = pyotp.TOTP(secret)
-        
-        # Verify the 6-digit code
-        if totp.verify(code):
-            # SUCCESS: Save the secret to the user's profile
-            profile = request.user.profile
-            
-            # NOTE: Ensure your Profile model has these two fields!
-            profile.totp_secret = secret  
-            profile.is_totp_enabled = True
-            profile.save()
-
-            # Clean up the session
-            del request.session['pending_totp_secret']
-
-            return Response({"status": "success"})
-        else:
-            return Response({"message": "Invalid code. Please try again."}, status=400)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
