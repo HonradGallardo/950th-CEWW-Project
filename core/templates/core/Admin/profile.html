@@ -180,18 +180,22 @@
     {% endif %}
 </a>
 
-          <a href="#" id="register-passkey-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-500 transition-all group cursor-pointer">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
-                <i class="fas fa-fingerprint"></i>
-              </div>
-              <div>
-                <p class="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase">Passkey</p>
-                <p class="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500/70">Register Biometrics</p>
-              </div>
-            </div>
-            <i class="fas fa-plus text-emerald-300 group-hover:text-emerald-500 transition-colors"></i>
-          </a>
+          <a href="#" id="register-passkey-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border {% if passkey_enabled %}border-emerald-500{% else %}border-emerald-100 dark:border-emerald-900/30{% endif %} hover:border-emerald-500 transition-all group cursor-pointer">
+    <div class="flex items-center gap-4">
+        <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
+            <i class="fas fa-fingerprint"></i>
+        </div>
+        <div>
+            <p class="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase">Passkey</p>
+            <p class="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500/70">Register Biometrics</p>
+        </div>
+    </div>
+    {% if passkey_enabled %}
+        <i class="fas fa-check text-emerald-500"></i>
+    {% else %}
+        <i class="fas fa-plus text-emerald-300 group-hover:text-emerald-500 transition-colors"></i>
+    {% endif %}
+</a>
 
           <a href="{% url 'custom_password_change' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-blue-500 transition-all group">
             <div class="flex items-center gap-4">
@@ -408,6 +412,12 @@
             
             if (verification.status === 'success') {
                 alert("Passkey successfully registered! You can now use it to log in.");
+                
+                // --- NEW: Instantly update the UI to show the checkmark ---
+                const $pkBtn = $('#register-passkey-btn');
+                $pkBtn.removeClass('border-emerald-100 dark:border-emerald-900/30').addClass('border-emerald-500');
+                $pkBtn.find('.fa-plus').removeClass('fa-plus text-emerald-300 group-hover:text-emerald-500').addClass('fa-check text-emerald-500');
+                
             } else {
                 alert("Verification failed: " + verification.error);
             }

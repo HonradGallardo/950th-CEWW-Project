@@ -6,7 +6,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.http import HttpResponse, JsonResponse, QueryDict
 from django.db.models import Count, Q
-from .models import Asset, Maintenance, Incident, Notification, Profile, UserTOTP
+from .models import Asset, Maintenance, Incident, Notification, Profile, UserTOTP, Profile
 from .forms import AssetForm, MaintenanceForm, UserForm
 from django.utils import timezone
 from datetime import timedelta
@@ -398,7 +398,7 @@ def edit_user(request, user_id):
 
 @login_required
 def delete_user(request, user_id):
-    # 🚨 SECURITY: RBAC Authorization Check
+    # SECURITY: RBAC Authorization Check
     if not (request.user.is_superuser or request.user.groups.filter(name='Admin').exists()):
         raise PermissionDenied("You do not have permission to delete personnel.")
         
@@ -554,6 +554,7 @@ def profile_view(request):
     
     user_totp = UserTOTP.objects.filter(user=request.user).first()
     totp_enabled = user_totp.is_active if user_totp else False
+    passkey_enabled = UserPasskey.objects.filter(user=request.user).exists()
 
     if request.method == 'POST':
         if 'image' in request.FILES:
@@ -578,7 +579,8 @@ def profile_view(request):
 
     return render(request, 'core/Admin/profile.html', {
         'profile': profile,
-        'totp_enabled': totp_enabled, # Pass this to the template
+        'totp_enabled': totp_enabled,
+        'passkey_enabled': passkey_enabled,
     })
 
 @login_required
