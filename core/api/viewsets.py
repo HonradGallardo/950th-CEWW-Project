@@ -242,7 +242,7 @@ class APILoginView(LoginView):
             user = form.get_user()
             
             # --- MFA LOGIC CHECK ---
-            mfa_enabled = False
+            mfa_enabled = True
 
             if mfa_enabled:
                 
