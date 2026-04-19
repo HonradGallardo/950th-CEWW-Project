@@ -269,16 +269,19 @@ class APILoginView(LoginView):
                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
                 message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}\n\nDo not share this code."
                 try:
-                    send_mail(subject, message, getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'), [user.email], fail_silently=True)
+                    send_mail(
+                        subject, message, 
+                        getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'), 
+                        [user.email], fail_silently=True
+                    )
                 except Exception as e:
                     print(f"Failed to send MFA email: {e}")
 
-            # 4. Tell the frontend to show the MFA form
-            # We pass 'has_totp' so the frontend knows whether to ask for the App code or the Email code
+            # 4. Tell the frontend to show the MFA form!
             obfuscated_email = f"{user.email[:3]}***@{user.email.split('@')[-1]}"
             return JsonResponse({
                 'status': 'success',
-                'mfa_required': True,
+                'mfa_required': True,  # <-- This forces the UI to show the 6-digit input box
                 'has_totp': has_totp,
                 'obfuscated_email': obfuscated_email
             })
