@@ -30,6 +30,9 @@ urlpatterns = [
     path('api/forgot-password/', ForgotPasswordAPI.as_view(), name='api_forgot_password'),
     path('api/change-password/', ChangePasswordAPI.as_view(), name='api_change_password'),
 
+    path('api/totp/generate/', GenerateTOTPAPI.as_view(), name='api_totp_generate'),
+    path('api/totp/verify-setup/', VerifyTOTPSetupAPI.as_view(), name='api_totp_verify'),
+
     # --- 2. API DATA HUB ---
     # Because of this line below, the router automatically adds "/api/" 
     # to "report/it-asset", making it exactly what your Javascript wants!
