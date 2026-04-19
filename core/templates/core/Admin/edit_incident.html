@@ -554,8 +554,9 @@ $(document).ready(function() {
         const formData = new FormData(this);
         const originalBtnText = $btn.html();
         
-        // --- NEW RESTRICTION LOGIC ---
-        // Automatically assign to the current user if the incident is currently unassigned
+        // --- REFINED RESTRICTION LOGIC ---
+        // Auto-assign to current user ONLY if it started unassigned 
+        // AND the user didn't explicitly select another technician in the dropdown
         const initialAssignedId = "{{ incident.assigned_to_id|default:'' }}";
         const currentUserId = "{{ request.user.id }}";
         const selectedTech = formData.get('assigned_to');
@@ -563,7 +564,7 @@ $(document).ready(function() {
         if (initialAssignedId === "" && (!selectedTech || selectedTech === "")) {
             formData.set('assigned_to', currentUserId);
         }
-        // -----------------------------
+        // ---------------------------------
 
         const issue = $('#log_issue').val()?.trim() || "";
         const action = $('#log_action').val()?.trim() || "";
