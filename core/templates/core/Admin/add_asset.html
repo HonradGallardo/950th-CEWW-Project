@@ -331,7 +331,7 @@ $(document).ready(function() {
                     maintData.append('status', 'In Progress');
                     maintData.append('maintenance_type', 'System Auto-Generated Report');
                     
-                    const reason = $('textarea[name="maintenance_reason"]').val();
+                    const reason = $('[name="maintenance_reason"]').val();
                     if (reason) maintData.append('notes', SecurityUtils.escapeHTML(reason));
                     
                     const hw = $('select[name="faulty_hardware_part"]').val();
@@ -355,9 +355,24 @@ $(document).ready(function() {
                         processData: false,
                         contentType: false,
                         success: () => window.location.href = '/assets/',
-                        error: () => {
-                            alert("Asset saved, but failed to auto-generate the Maintenance Ticket.");
-                            window.location.href = '/assets/';
+                        error: (xhr) => {
+                            // 1. Build a detailed error message
+                            let errorMsg = "Asset saved, but Maintenance Ticket failed:\n\n";
+                            
+                            if (xhr.responseJSON) {
+                                for (const [key, value] of Object.entries(xhr.responseJSON)) {
+                                    errorMsg += `❌ ${SecurityUtils.escapeHTML(key)}: ${SecurityUtils.escapeHTML(String(value))}\n`;
+                                }
+                            } else {
+                                // Fallback if the server crashes (500 Error)
+                                errorMsg += `Server Error: ${xhr.status} ${xhr.statusText}`;
+                            }
+                            
+                            // 2. Alert the specific error
+                            alert(errorMsg);
+                            
+                            // 3. Temporarily comment out the redirect so you aren't forced away from the page
+                            // window.location.href = '/assets/';
                         }
                     });
                 } else {
