@@ -11,6 +11,7 @@ from .forms import AssetForm, MaintenanceForm, UserForm
 from django.utils import timezone
 from datetime import timedelta
 import bleach
+from core.models import UserPasskey
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 
@@ -552,8 +553,11 @@ def reports(request):
 def profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     
+    # Check Authenticator Status
     user_totp = UserTOTP.objects.filter(user=request.user).first()
     totp_enabled = user_totp.is_active if user_totp else False
+
+    # --- NEW: Check Passkey Status ---
     passkey_enabled = UserPasskey.objects.filter(user=request.user).exists()
 
     if request.method == 'POST':
@@ -580,7 +584,7 @@ def profile_view(request):
     return render(request, 'core/Admin/profile.html', {
         'profile': profile,
         'totp_enabled': totp_enabled,
-        'passkey_enabled': passkey_enabled,
+        'passkey_enabled': passkey_enabled, # <-- Pass the variable to the HTML!
     })
 
 @login_required

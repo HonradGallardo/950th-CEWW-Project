@@ -382,6 +382,12 @@
     // --- 3. PASSKEY REGISTRATION LOGIC ---
     $('#register-passkey-btn').on('click', async function(e) {
         e.preventDefault();
+
+        if ($(this).find('.fa-check').length > 0) {
+            if (!confirm("A passkey is already registered. Do you want to register another device?")) {
+                return; // Stop if they click cancel
+            }
+        }
         
         const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
 
