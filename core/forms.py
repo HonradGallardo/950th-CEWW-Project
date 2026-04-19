@@ -6,7 +6,7 @@ from .models import Asset, Maintenance, Incident
 class MaintenanceForm(forms.ModelForm):
     class Meta:
         model = Maintenance
-        fields = ['asset', 'maintenance_type', 'status', 'notes']
+        fields = ['asset', 'maintenance_type', 'status', 'notes', 'faulty_hardware_part', 'software_issue_type']
         widgets = {
             'asset': forms.Select(attrs={
                 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'
@@ -33,13 +33,13 @@ class MaintenanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         edit_mode = kwargs.pop('edit_mode', False)
         super().__init__(*args, **kwargs)
-        # 1. 🔍 FILTER: Only show assets waiting for maintenance (Queued or Maintenance)
+        # 1. FILTER: Only show assets waiting for maintenance (Queued or Maintenance)
         # Note: Replace 'Maintenance' with whatever your "Queued" status string is in Asset model
         if not edit_mode:
             self.fields['asset'].queryset = Asset.objects.filter(status='Maintenance')
             self.fields['asset'].label_from_instance = lambda obj: f"{obj.assets_id} - {obj.assets_name}"
 
-        # 2. 🔒 EDIT MODE: lock the Asset choice, but leave notes/status open for the tech
+        # 2. EDIT MODE: lock the Asset choice, but leave notes/status open for the tech
         if edit_mode:
             self.fields['asset'].disabled = True
             self.fields['status'].disabled = True
@@ -107,7 +107,7 @@ class UserForm(forms.ModelForm):
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'password']
 
-    # 🚨 SECURITY: Strict Backend Input Sanitization
+    # SECURITY: Strict Backend Input Sanitization
     # This strips all HTML tags (like <script> or <img>) before saving to the DB
     def clean_first_name(self):
         data = self.cleaned_data.get('first_name', '')
