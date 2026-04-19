@@ -13,19 +13,19 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import status
 from django.contrib.auth import login, update_session_auth_hash
-from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission, SAFE_METHODS
+from rest_framework.permissions import IsAuthenticated, AllowAny
 import random
 from django.core.mail import send_mail
 from django.contrib.auth.views import LoginView
 import requests
 import json, base64
 import pyotp
+from core.models import UserTOTP
 from django.http import HttpResponse
 from webauthn import generate_authentication_options, verify_authentication_response
 from rest_framework.authentication import SessionAuthentication
 from webauthn.helpers.options_to_json import options_to_json
 from core.models import UserPasskey
-from core.models import UserTOTP
 from rest_framework.exceptions import PermissionDenied
 from webauthn.helpers.structs import PublicKeyCredentialDescriptor
 from webauthn.helpers.base64url_to_bytes import base64url_to_bytes
@@ -84,7 +84,6 @@ class VerifyTOTPSetupAPI(APIView):
             return Response({"status": "success"})
         else:
             return Response({"message": "Invalid code. Please try again."}, status=400)
-
 # ==========================================
 # PASSKEY REGISTRATION (For Profile Page)
 # ==========================================
@@ -622,21 +621,8 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
 
 
 class IncidentViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, IsNotCommanderOrReadOnly]
     queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
-
-    class IsNotCommanderOrReadOnly(BasePermission):
-        def has_permission(self, request, view):
-            # SAFE_METHODS are GET, HEAD, or OPTIONS (View/Read only)
-            if request.method in SAFE_METHODS:
-                return True
-            
-            # Check if user is a commander
-            is_commander = getattr(request.user, 'is_commander', False) or request.user.groups.filter(name='Commander').exists()
-            
-            # If they are a commander, deny permission (False). Otherwise, allow (True).
-            return not is_commander
 
     def get_queryset(self):
         queryset = super().get_queryset()
