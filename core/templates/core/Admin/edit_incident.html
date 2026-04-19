@@ -558,8 +558,9 @@ $(document).ready(function() {
         // Automatically assign to the current user if the incident is currently unassigned
         const initialAssignedId = "{{ incident.assigned_to_id|default:'' }}";
         const currentUserId = "{{ request.user.id }}";
+        const selectedTech = formData.get('assigned_to');
         
-        if (initialAssignedId === "") {
+        if (initialAssignedId === "" && (!selectedTech || selectedTech === "")) {
             formData.set('assigned_to', currentUserId);
         }
         // -----------------------------
