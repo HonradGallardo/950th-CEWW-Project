@@ -13,7 +13,7 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import status
 from django.contrib.auth import login, update_session_auth_hash
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission, SAFE_METHODS
 import random
 from django.core.mail import send_mail
 from django.contrib.auth.views import LoginView
@@ -625,6 +625,18 @@ class IncidentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsNotCommanderOrReadOnly]
     queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
+
+    class IsNotCommanderOrReadOnly(BasePermission):
+        def has_permission(self, request, view):
+            # SAFE_METHODS are GET, HEAD, or OPTIONS (View/Read only)
+            if request.method in SAFE_METHODS:
+                return True
+            
+            # Check if user is a commander
+            is_commander = getattr(request.user, 'is_commander', False) or request.user.groups.filter(name='Commander').exists()
+            
+            # If they are a commander, deny permission (False). Otherwise, allow (True).
+            return not is_commander
 
     def get_queryset(self):
         queryset = super().get_queryset()
