@@ -60,7 +60,7 @@ urlpatterns = [
 
     # --- 3. CORE PAGES ---
     path('', views.landing, name='landing'),
-    path('login/', APILoginView.as_view(), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('role-redirect/', views.role_redirect, name='role_redirect'),
     path('profile/', views.profile_view, name='profile'),
