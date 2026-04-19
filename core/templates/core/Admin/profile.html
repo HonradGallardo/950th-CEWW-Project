@@ -163,18 +163,22 @@
         </div>
         <div class="p-6 flex flex-wrap gap-4">
           
-          <a href="#" id="setup-totp-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 hover:border-indigo-500 transition-all group cursor-pointer">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600">
-                <i class="fas fa-qrcode"></i>
-              </div>
-              <div>
-                <p class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase">Authenticator</p>
-                <p class="text-[10px] font-bold text-indigo-600/70 dark:text-indigo-500/70">Google Auth / Authy</p>
-              </div>
-            </div>
-            <i class="fas fa-plus text-indigo-300 group-hover:text-indigo-500 transition-colors"></i>
-          </a>
+          <a href="#" id="setup-totp-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border {% if totp_enabled %}border-emerald-500{% else %}border-indigo-100{% endif %} dark:border-indigo-900/30 hover:border-indigo-500 transition-all group cursor-pointer">
+    <div class="flex items-center gap-4">
+        <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600">
+            <i class="fas fa-qrcode"></i>
+        </div>
+        <div>
+            <p class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase">Authenticator</p>
+            <p class="text-[10px] font-bold text-indigo-600/70 dark:text-indigo-500/70">Google Auth / Authy</p>
+        </div>
+    </div>
+    {% if totp_enabled %}
+        <i class="fas fa-check text-emerald-500"></i>
+    {% else %}
+        <i class="fas fa-plus text-indigo-300 group-hover:text-indigo-500 transition-colors"></i>
+    {% endif %}
+</a>
 
           <a href="#" id="register-passkey-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-500 transition-all group cursor-pointer">
             <div class="flex items-center gap-4">
@@ -304,7 +308,15 @@
     $('#setup-totp-btn').on('click', function(e) {
       e.preventDefault();
       const $btn = $(this);
-      $btn.find('.fa-plus').removeClass('fa-plus').addClass('fa-spinner fa-spin text-indigo-500');
+      
+      // THE MISSING CHECK: Stop if it's already active!
+      if ($btn.find('.fa-check').length > 0) {
+          if (!confirm("Authenticator is already linked. Do you want to reset it and link a new device?")) {
+              return; // Stop the script here if they cancel
+          }
+      }
+      
+      $btn.find('.fa-plus, .fa-check').removeClass('fa-plus fa-check text-emerald-500').addClass('fa-spinner fa-spin text-indigo-500');
       
       $.ajax({
           url: '/api/totp/generate/',

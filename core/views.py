@@ -205,7 +205,7 @@ def incident_list(request):
 
 @login_required
 def add_incident(request):
-    # 🚨 SECURITY: Block Regular AND Commander roles
+    # SECURITY: Block Regular AND Commander roles
     restricted_groups = ['Regular', 'Commander']
     if request.user.groups.filter(name__in=restricted_groups).exists() and not request.user.is_superuser:
         raise PermissionDenied("Access Denied: Commanders and Regular personnel cannot log incidents.")
@@ -227,7 +227,7 @@ def add_incident(request):
 
 @login_required
 def edit_incident(request, incident_id):
-    # 🚨 SECURITY: Block Regular AND Commander roles
+    # SECURITY: Block Regular AND Commander roles
     restricted_groups = ['Regular', 'Commander']
     if request.user.groups.filter(name__in=restricted_groups).exists() and not request.user.is_superuser:
         raise PermissionDenied("Access Denied: Commanders and Regular personnel cannot modify incidents.")
@@ -285,7 +285,7 @@ def user_list(request):
 
 @login_required
 def add_user(request):
-    # 🚨 SECURITY: RBAC Authorization Check
+    # SECURITY: RBAC Authorization Check
     if not (request.user.is_superuser or request.user.groups.filter(name='Admin').exists()):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'error': 'Unauthorized: Administrator privileges required.'}, status=403)
@@ -342,7 +342,7 @@ def add_user(request):
 
 @login_required
 def edit_user(request, user_id):
-    # 🚨 SECURITY: RBAC Authorization Check
+    # SECURITY: RBAC Authorization Check
     if not (request.user.is_superuser or request.user.groups.filter(name='Admin').exists()):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'error': 'Unauthorized: Administrator privileges required.'}, status=403)
@@ -552,11 +552,14 @@ def reports(request):
 def profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     
+    user_totp = UserTOTP.objects.filter(user=request.user).first()
+    totp_enabled = user_totp.is_active if user_totp else False
+
     if request.method == 'POST':
         if 'image' in request.FILES:
             profile.image = request.FILES['image']
         
-        # 🚨 SECURITY: Sanitize direct POST requests to prevent DB Injection
+        # SECURITY: Sanitize direct POST requests to prevent DB Injection
         profile.rank = bleach.clean(request.POST.get('rank', profile.rank), tags=[], strip=True)
         profile.phone = bleach.clean(request.POST.get('phone', profile.phone), tags=[], strip=True)
         profile.save()
@@ -573,7 +576,10 @@ def profile_view(request):
                 'image_url': profile.image.url if profile.image else None
             })
 
-    return render(request, 'core/Admin/profile.html', {'profile': profile})
+    return render(request, 'core/Admin/profile.html', {
+        'profile': profile,
+        'totp_enabled': totp_enabled, # Pass this to the template
+    })
 
 @login_required
 def mark_all_as_read(request):
