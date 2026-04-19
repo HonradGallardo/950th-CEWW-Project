@@ -4,6 +4,7 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from django.views.generic import TemplateView
 from . import views
+from .views import SendLoginOTPAPI
 from django.contrib.auth import views as auth_views
 # Import modular viewsets
 from core.api.viewsets import (
@@ -33,6 +34,7 @@ router.register(r'report/incident', IncidentViewSet, basename='report-incident')
 urlpatterns = [
     # --- 1. CUSTOM API ENDPOINTS (MUST BE ABOVE THE ROUTER) ---
     path('api/verify-mfa/', VerifyMFAAPI.as_view(), name='api_verify_mfa'),
+    path('api/send-login-otp/', SendLoginOTPAPI.as_view(), name='api_send_login_otp'),
     path('api/dashboard-stats/', DashboardStatsAPI.as_view(), name='dashboard_stats_api'),
     path('api/personnel/stats/', PersonnelStatsAPI.as_view(), name='personnel_stats_api'),
     path('api/monitoring-data/', MonitoringDataAPI.as_view(), name='monitoring_data_api'),
