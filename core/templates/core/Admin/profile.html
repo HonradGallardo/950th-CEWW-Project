@@ -11,6 +11,13 @@
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 
+    /* Globally apply smooth transitions to color-related properties for seamless theme toggling */
+    *, ::before, ::after {
+        transition-property: background-color, border-color, color, fill, stroke;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 300ms;
+    }
+
     /* Force the QR code to stay black-on-white and reject dark mode inversions */
     #qrcode {
         background-color: #ffffff !important;
