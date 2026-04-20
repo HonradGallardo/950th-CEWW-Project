@@ -253,6 +253,9 @@ class APILoginView(LoginView):
             generated_otp = str(random.randint(100000, 999999))
             self.request.session['mfa_user_id'] = user.id
             self.request.session['mfa_expected_otp'] = generated_otp
+            
+            # FIX: Force save the session to the database
+            self.request.session.save()
 
             # 2. Check the database for an active Authenticator/TOTP link
             user_totp = UserTOTP.objects.filter(user=user, is_active=True).first()
@@ -311,11 +314,16 @@ class SendLoginOTPAPI(APIView):
 class VerifyMFAAPI(APIView):
     """Verifies either the Email OTP OR the Google Authenticator code."""
     permission_classes = [AllowAny]
+    authentication_classes = [SessionAuthentication] # FIX: Enforce DRF to process cookies
 
     def post(self, request):
         otp_code = request.data.get('otp_code') 
-        user_id = request.session.get('mfa_user_id')
-        expected_otp = request.session.get('mfa_expected_otp')
+        
+        # FIX: Unwrap the DRF request to use the raw Django HttpRequest
+        django_request = request._request
+        
+        user_id = django_request.session.get('mfa_user_id')
+        expected_otp = django_request.session.get('mfa_expected_otp')
 
         if not user_id:
             return Response({"message": "Session expired. Please log in again."}, status=400)
@@ -340,16 +348,12 @@ class VerifyMFAAPI(APIView):
 
         # IF EITHER MATCHES -> SUCCESS
         if is_valid:
-            # 1. Clean up session BEFORE login to prevent overriding the new auth cookie
-            del request.session['mfa_user_id']
-            if 'mfa_expected_otp' in request.session:
-                del request.session['mfa_expected_otp']
+            # Clean up the session variables safely
+            django_request.session.pop('mfa_user_id', None)
+            django_request.session.pop('mfa_expected_otp', None)
             
-            # 2. Log them in with an explicit backend to guarantee session creation
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            
-            # 3. Force save the session
-            request.session.save()
+            # Log the user in strictly on the raw Django request
+            login(django_request, user, backend='django.contrib.auth.backends.ModelBackend')
             
             return Response({"status": "success", "redirect_url": "/role-redirect/"})
         else:
