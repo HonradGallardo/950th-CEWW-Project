@@ -269,7 +269,7 @@ class APILoginView(LoginView):
                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
                 message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
                 try:
-                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=True)
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
                 except Exception as e:
                     print(f"MFA Email failed: {e}")
 
