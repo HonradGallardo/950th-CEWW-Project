@@ -340,10 +340,16 @@ class VerifyMFAAPI(APIView):
 
         # IF EITHER MATCHES -> SUCCESS
         if is_valid:
-            login(request, user)
+            # 1. Clean up session BEFORE login to prevent overriding the new auth cookie
             del request.session['mfa_user_id']
             if 'mfa_expected_otp' in request.session:
                 del request.session['mfa_expected_otp']
+            
+            # 2. Log them in with an explicit backend to guarantee session creation
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            
+            # 3. Force save the session
+            request.session.save()
             
             return Response({"status": "success", "redirect_url": "/role-redirect/"})
         else:
