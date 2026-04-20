@@ -359,6 +359,58 @@
         });
 
         // ==========================================
+        // 3. HANDLE MFA FORM SUBMISSION
+        // ==========================================
+        $('#mfaForm').on('submit', function(e) {
+            e.preventDefault(); // Stop the browser from reloading the page
+            
+            const $form = $(this);
+            const $btn = $form.find('button[type="submit"]');
+            const originalBtnText = $btn.html();
+            const otpCode = $('#otp_code').val();
+            
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Verifying...');
+            
+            $.ajax({
+                url: "/api/verify-mfa/",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ otp_code: otpCode }),
+                headers: { 
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Success! Redirect the user to the dashboard
+                        window.location.href = response.redirect_url;
+                    }
+                },
+                error: function(xhr) {
+                    // Reset the button and show the error modal
+                    $btn.prop('disabled', false).html(originalBtnText);
+                    
+                    let errorMsg = "Verification failed. Please try again.";
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    
+                    showErrorModal(errorMsg);
+                    
+                    // Clear the input and refocus it so they can try again quickly
+                    $('#otp_code').val('').focus();
+                }
+            });
+        });
+
+        // Add functionality to the "Cancel & Go Back" button while we are at it
+        $('#backToLoginBtn').on('click', function() {
+            $('#mfaForm').addClass('hidden');
+            $('#loginForm').removeClass('hidden');
+            $('#otp_code').val('');
+        });
+
+        // ==========================================
         // 4. HANDLE PASSKEY AUTHENTICATION
         // ==========================================
         $('#passkey-login-btn').on('click', async function() {
