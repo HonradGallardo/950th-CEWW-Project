@@ -22,34 +22,40 @@
         transition-duration: 300ms !important;
     }
 
-    /* BUGFIX: Force input text colors to bypass WebKit freeze bugs and global overrides */
+    /* BUGFIX 1: Force input text colors to bypass WebKit freeze bugs */
     html:not(.dark) input:not(:disabled),
     html:not(.dark) select:not(:disabled) {
-        color: #1e293b !important; /* Tailwind slate-800 */
+        color: #1e293b !important; 
         -webkit-text-fill-color: #1e293b !important;
     }
     
     html:not(.dark) input:disabled,
     html:not(.dark) select:disabled {
-        color: #64748b !important; /* Tailwind slate-500 */
+        color: #64748b !important; 
         -webkit-text-fill-color: #64748b !important;
     }
 
     html.dark input:not(:disabled),
     html.dark select:not(:disabled) {
-        color: #f1f5f9 !important; /* Tailwind slate-100 */
+        color: #f1f5f9 !important; 
         -webkit-text-fill-color: #f1f5f9 !important;
     }
     
     html.dark input:disabled,
     html.dark select:disabled {
-        color: #94a3b8 !important; /* Tailwind slate-400 */
+        color: #94a3b8 !important; 
         -webkit-text-fill-color: #94a3b8 !important;
     }
 
     /* Protect placeholder text from inheriting the hardcoded text-fill color */
     html:not(.dark) input::placeholder { -webkit-text-fill-color: #94a3b8 !important; }
     html.dark input::placeholder { -webkit-text-fill-color: #64748b !important; }
+
+    /* BUGFIX 2: Force standard text classes to win specificity battles against base.html in light mode */
+    html:not(.dark) .text-slate-800 { color: #1e293b !important; }
+    html:not(.dark) .text-slate-700 { color: #334155 !important; }
+    html:not(.dark) .text-slate-600 { color: #475569 !important; }
+    html:not(.dark) .text-slate-500 { color: #64748b !important; }
 
     /* Force the QR code to stay black-on-white and reject dark mode inversions */
     #qrcode { background-color: #ffffff !important; }
