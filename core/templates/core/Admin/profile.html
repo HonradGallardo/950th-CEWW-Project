@@ -10,6 +10,19 @@
 
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
+
+    /* Force the QR code to stay black-on-white and reject dark mode inversions */
+#qrcode {
+    background-color: #ffffff !important;
+}
+
+#qrcode img, 
+#qrcode canvas {
+    filter: none !important;
+    -webkit-filter: none !important;
+    mix-blend-mode: normal !important;
+    background-color: #ffffff !important;
+}
   </style>
 
   <div class="font-plex flex flex-col min-h-screen space-y-6 p-4 md:p-8 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
