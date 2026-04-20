@@ -15,6 +15,7 @@ from rest_framework import status
 from django.contrib.auth import login, update_session_auth_hash
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import random
+from django.views import View
 from django.core.mail import send_mail
 from django.contrib.auth.views import LoginView
 import requests
@@ -311,31 +312,26 @@ class SendLoginOTPAPI(APIView):
         except Exception as e:
             return Response({"message": "Failed to send email. Check server logs."}, status=500)
 
-class VerifyMFAAPI(APIView):
-    """Verifies either the Email OTP OR the Google Authenticator code."""
-    permission_classes = [AllowAny]
-    authentication_classes = [SessionAuthentication] # FIX: Enforce DRF to process cookies
-
-    def post(self, request):
-        otp_code = request.data.get('otp_code') 
-        
-        # FIX: Unwrap the DRF request to use the raw Django HttpRequest
-        django_request = request._request
-        
-        user_id = django_request.session.get('mfa_user_id')
-        expected_otp = django_request.session.get('mfa_expected_otp')
+class VerifyMFAAPI(View):
+    """Verifies either the Email OTP OR the Google Authenticator code natively."""
+    
+    def post(self, request, *args, **kwargs):
+        # Using standard Django request parsing for AJAX form data
+        otp_code = request.POST.get('otp_code') 
+        user_id = request.session.get('mfa_user_id')
+        expected_otp = request.session.get('mfa_expected_otp')
 
         if not user_id:
-            return Response({"message": "Session expired. Please log in again."}, status=400)
+            return JsonResponse({"message": "Session expired. Please log in again."}, status=400)
 
         user = User.objects.filter(id=user_id).first()
         if not user:
-            return Response({"message": "User account error."}, status=400)
+            return JsonResponse({"message": "User account error."}, status=400)
 
         is_valid = False
 
         # METHOD 1: Check if they typed the code from their Email
-        if str(otp_code) == str(expected_otp):
+        if expected_otp and str(otp_code) == str(expected_otp):
             is_valid = True
 
         # METHOD 2: Check if they typed the code from Google Authenticator
@@ -348,16 +344,19 @@ class VerifyMFAAPI(APIView):
 
         # IF EITHER MATCHES -> SUCCESS
         if is_valid:
-            # Clean up the session variables safely
-            django_request.session.pop('mfa_user_id', None)
-            django_request.session.pop('mfa_expected_otp', None)
+            # 1. Clean up session cleanly
+            request.session.pop('mfa_user_id', None)
+            request.session.pop('mfa_expected_otp', None)
             
-            # Log the user in strictly on the raw Django request
-            login(django_request, user, backend='django.contrib.auth.backends.ModelBackend')
+            # 2. Log them in using standard Django auth
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             
-            return Response({"status": "success", "redirect_url": "/role-redirect/"})
+            # 3. Force save the session cookie to the database & browser
+            request.session.save()
+            
+            return JsonResponse({"status": "success", "redirect_url": "/role-redirect/"})
         else:
-            return Response({"message": "Invalid code. Please try again."}, status=400)
+            return JsonResponse({"message": "Invalid code. Please try again."}, status=400)
 
 class DashboardStatsAPI(APIView):
     """Provides live data for dashboard counters, charts, and tables."""
