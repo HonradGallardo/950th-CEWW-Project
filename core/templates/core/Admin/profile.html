@@ -1,4 +1,4 @@
-  {% extends "base.html" %} 
+{% extends "base.html" %} 
 
   {% block content %}
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,17 +12,17 @@
     .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 
     /* Force the QR code to stay black-on-white and reject dark mode inversions */
-#qrcode {
-    background-color: #ffffff !important;
-}
+    #qrcode {
+        background-color: #ffffff !important;
+    }
 
-#qrcode img, 
-#qrcode canvas {
-    filter: none !important;
-    -webkit-filter: none !important;
-    mix-blend-mode: normal !important;
-    background-color: #ffffff !important;
-}
+    #qrcode img, 
+    #qrcode canvas {
+        filter: none !important;
+        -webkit-filter: none !important;
+        mix-blend-mode: normal !important;
+        background-color: #ffffff !important;
+    }
   </style>
 
   <div class="font-plex flex flex-col min-h-screen space-y-6 p-4 md:p-8 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
@@ -35,11 +35,11 @@
 
     <div class="grid grid-cols-12 gap-6">
       <div class="col-span-12 lg:col-span-4 space-y-6">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
           <div class="h-24 bg-gradient-to-r from-blue-600 to-indigo-700"></div>
           <div class="px-6 pb-6">
             <div class="relative -mt-12 mb-4">
-              <div class="relative inline-block p-1 bg-white dark:bg-slate-800 rounded-2xl group cursor-pointer" onclick="document.getElementById('profile_image_input').click()">
+              <div class="relative inline-block p-1 bg-white dark:bg-slate-800 rounded-2xl group cursor-pointer transition-colors" onclick="document.getElementById('profile_image_input').click()">
                 <div class="w-24 h-24 bg-slate-200 dark:bg-slate-700 rounded-xl flex items-center justify-center overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-all">
                   {% if profile.image %}
                   <img src="{{ profile.image.url }}" class="w-full h-full object-cover" id="profile-preview"/>
@@ -53,11 +53,11 @@
                   <i class="fas fa-camera text-white text-lg"></i>
                 </div>
               </div>
-              <span class="absolute bottom-2 left-20 w-5 h-5 bg-emerald-500 border-4 border-white dark:border-slate-800 rounded-full"></span>
+              <span class="absolute bottom-2 left-20 w-5 h-5 bg-emerald-500 border-4 border-white dark:border-slate-800 rounded-full transition-colors"></span>
             </div>
 
             <div class="flex items-center gap-3">
-              <div id="rank-badge-display" class="flex items-center justify-center w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-900/50 p-1">
+              <div id="rank-badge-display" class="flex items-center justify-center w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-900/50 p-1 transition-colors">
                 <img id="current-rank-img" src="/static/core/images/badge/{{ profile.rank|default:'Airman' }}.png" class="w-full h-full object-contain filter dark:brightness-110" onerror="this.style.display = 'none'"/>
               </div>
               <div>
@@ -79,20 +79,20 @@
           </div>
         </div>
 
-        <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-blue-900/10">
-          <h3 class="font-rajdhani text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Operational Impact</h3>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 text-slate-800 dark:text-white shadow-xl shadow-blue-900/5 dark:shadow-blue-900/10 transition-colors">
+          <h3 class="font-rajdhani text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4">Operational Impact</h3>
           <div class="grid grid-cols-1 gap-4">
-            <div class="bg-slate-800/50 rounded-2xl p-4">
-              <p class="text-2xl font-black text-blue-400">{{ incidents_reported|default:"0" }}</p>
-              <p class="text-[9px] font-bold uppercase text-slate-500">Incidents Identified</p>
+            <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-transparent rounded-2xl p-4 transition-colors">
+              <p class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ incidents_reported|default:"0" }}</p>
+              <p class="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-400">Incidents Identified</p>
             </div>
           </div>
         </div>
       </div>
 
       <div class="col-span-12 lg:col-span-8 space-y-6">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
             <h3 class="font-rajdhani text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Account Credentials</h3>
           </div>
 
@@ -103,14 +103,14 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Username</label>
-                <input type="text" value="{{ user.username }}" disabled class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 opacity-70 cursor-not-allowed"/>
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Username</label>
+                <input type="text" value="{{ user.username }}" disabled class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 dark:text-slate-400 opacity-70 cursor-not-allowed transition-colors"/>
               </div>
 
               <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Air Force Rank</label>
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Air Force Rank</label>
                 
-                <select id="rank_select" disabled class="appearance-none w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 opacity-70 cursor-not-allowed outline-none transition-all">
+                <select id="rank_select" disabled class="appearance-none w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 dark:text-slate-400 opacity-70 cursor-not-allowed outline-none transition-colors">
                   <optgroup label="Enlisted">
                     <option value="Airman" {% if profile.rank == "Airman" %}selected{% endif %}>Airman</option>
                     <option value="Airman Second Class" {% if profile.rank == "Airman Second Class" %}selected{% endif %}>Airman Second Class</option>
@@ -144,46 +144,46 @@
               </div>
 
               <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Email Address</label>
-                <input type="email" name="email" id="email_input" value="{{ user.email }}" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Email Address</label>
+                <input type="email" name="email" id="email_input" value="{{ user.email }}" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"/>
               </div>
 
               <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">First Name</label>
-                <input type="text" name="first_name" id="first_name_input" value="{{ user.first_name }}" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">First Name</label>
+                <input type="text" name="first_name" id="first_name_input" value="{{ user.first_name }}" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"/>
               </div>
 
               <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Last Name</label>
-                <input type="text" name="last_name" id="last_name_input" value="{{ user.last_name }}" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Last Name</label>
+                <input type="text" name="last_name" id="last_name_input" value="{{ user.last_name }}" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"/>
               </div>
 
               <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Phone Number</label>
-                <input type="text" name="phone" id="phone_input" value="{{ profile.phone|default_if_none:'' }}" maxlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09123456789" class="w-full bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Phone Number</label>
+                <input type="text" name="phone" id="phone_input" value="{{ profile.phone|default_if_none:'' }}" maxlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09123456789" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"/>
               </div> 
             </div>
 
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end transition-colors">
               <button type="submit" id="updateProfileBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all active:scale-95">Update Profile</button>
             </div>
           </form>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-          <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
             <h3 class="font-rajdhani text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Security & Privacy</h3>
           </div>
           <div class="p-6 flex flex-wrap gap-4">
             
             <a href="#" id="setup-totp-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border {% if totp_enabled %}border-emerald-500{% else %}border-indigo-100{% endif %} dark:border-indigo-900/30 hover:border-indigo-500 transition-all group cursor-pointer">
       <div class="flex items-center gap-4">
-          <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600">
+          <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 transition-colors">
               <i class="fas fa-qrcode"></i>
           </div>
           <div>
-              <p class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase">Authenticator</p>
-              <p class="text-[10px] font-bold text-indigo-600/70 dark:text-indigo-500/70">Google Auth / Authy</p>
+              <p class="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase transition-colors">Authenticator</p>
+              <p class="text-[10px] font-bold text-indigo-600/70 dark:text-indigo-500/70 transition-colors">Google Auth / Authy</p>
           </div>
       </div>
       {% if totp_enabled %}
@@ -195,12 +195,12 @@
 
             <a href="#" id="register-passkey-btn" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-500 transition-all group cursor-pointer">
       <div class="flex items-center gap-4">
-          <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600">
+          <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 transition-colors">
               <i class="fas fa-fingerprint"></i>
           </div>
           <div>
-              <p class="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase">Passkey</p>
-              <p class="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500/70">Register Biometrics</p>
+              <p class="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase transition-colors">Passkey</p>
+              <p class="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-500/70 transition-colors">Register Biometrics</p>
           </div>
       </div>
       {% if passkey_enabled %}
@@ -212,12 +212,12 @@
 
             <a href="{% url 'custom_password_change' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-blue-500 transition-all group">
               <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600">
+                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 transition-colors">
                   <i class="fas fa-lock"></i>
                 </div>
                 <div>
-                  <p class="text-xs font-black text-slate-700 dark:text-slate-100 uppercase">Password</p>
-                  <p class="text-[10px] font-bold text-slate-500">Change security key</p>
+                  <p class="text-xs font-black text-slate-700 dark:text-slate-100 uppercase transition-colors">Password</p>
+                  <p class="text-[10px] font-bold text-slate-500 transition-colors">Change security key</p>
                 </div>
               </div>
               <i class="fas fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
@@ -225,18 +225,18 @@
 
             <a href="{% url 'logout' %}" class="flex-1 min-w-[200px] flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/20 transition-all group">
               <div class="flex items-center gap-4">
-                <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600">
+                <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600 transition-colors">
                   <i class="fas fa-sign-out-alt"></i>
                 </div>
                 <div>
-                  <p class="text-xs font-black text-red-600 dark:text-red-400 uppercase">Session</p>
-                  <p class="text-[10px] font-bold text-red-500/70">Terminate connection</p>
+                  <p class="text-xs font-black text-red-600 dark:text-red-400 uppercase transition-colors">Session</p>
+                  <p class="text-[10px] font-bold text-red-500/70 transition-colors">Terminate connection</p>
                 </div>
               </div>
               <i class="fas fa-chevron-right text-slate-300 group-hover:text-red-500 transition-colors"></i>
             </a>
 
-            <div id="qrCodeContainer" class="hidden w-full mt-2 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center text-center">
+            <div id="qrCodeContainer" class="hidden w-full mt-2 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col items-center text-center transition-colors">
               <p class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-4">
                 1. Scan this image with Google Authenticator or Authy
               </p>
@@ -246,11 +246,11 @@
               <p class="text-[10px] text-slate-500 mt-4 uppercase tracking-widest">
                 Or enter this secret key manually:
               </p>
-              <span id="totpSecret" class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm mt-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded"></span>
+              <span id="totpSecret" class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm mt-1 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded transition-colors"></span>
               
-              <div class="w-full max-w-xs mt-6 border-t border-slate-200 dark:border-slate-700 pt-4">
+              <div class="w-full max-w-xs mt-6 border-t border-slate-200 dark:border-slate-700 pt-4 transition-colors">
                   <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">2. Verify to link account</p>
-                  <input type="text" id="totpConfirmCode" maxlength="6" class="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-mono text-xl tracking-[0.5em] focus:ring-2 focus:ring-emerald-500 outline-none mb-3 text-slate-800 dark:text-white" placeholder="••••••">
+                  <input type="text" id="totpConfirmCode" maxlength="6" class="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-mono text-xl tracking-[0.5em] focus:ring-2 focus:ring-emerald-500 outline-none mb-3 text-slate-800 dark:text-white transition-colors" placeholder="••••••">
                   
                   <button id="finishSetupBtn" type="button" class="w-full bg-emerald-600 text-white px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20">
                     Verify & Link App
