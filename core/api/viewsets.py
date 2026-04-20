@@ -312,12 +312,15 @@ class SendLoginOTPAPI(APIView):
         except Exception as e:
             return Response({"message": "Failed to send email. Check server logs."}, status=500)
 
-class VerifyMFAAPI(View):
+class VerifyMFAAPI(APIView):
     """Verifies either the Email OTP OR the Google Authenticator code natively."""
+    permission_classes = [AllowAny]
     
     def post(self, request, *args, **kwargs):
-        # Using standard Django request parsing for AJAX form data
-        otp_code = request.POST.get('otp_code') 
+        # FIX: Use DRF's request.data to properly parse application/json payloads
+        otp_code = request.data.get('otp_code') 
+        
+        # We need to access standard Django session variables
         user_id = request.session.get('mfa_user_id')
         expected_otp = request.session.get('mfa_expected_otp')
 
