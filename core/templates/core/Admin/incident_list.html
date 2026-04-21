@@ -94,7 +94,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 w-full 2xl:w-auto justify-start 2xl:justify-end">
-            <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1 sm:py-1.5">
+            <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl px-2.5 py-1 sm:py-1.5">
                 <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
                 <div class="flex items-center gap-1">
                     <span class="text-[9px] font-black text-slate-400 uppercase">From</span>
@@ -107,11 +107,11 @@
                 </div>
             </div>
 
-            <select id="categoryFilter" autocomplete="off" class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-1.5 sm:p-2">
+            <select id="categoryFilter" autocomplete="off" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-1.5 sm:p-2">
                 <option value="ALL">All Categories</option>
             </select>
 
-            <select id="severityFilter" autocomplete="off" class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-1.5 sm:p-2">
+            <select id="severityFilter" autocomplete="off" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-1.5 sm:p-2">
                 <option value="ALL">All Severities</option>
                 <option value="Critical">Critical</option>
                 <option value="High">High</option>
@@ -119,12 +119,12 @@
                 <option value="Low">Low</option>
             </select>
             
-            <select id="sortOrder" autocomplete="off" class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-1.5 sm:p-2">
+            <select id="sortOrder" autocomplete="off" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-[11px] font-black uppercase tracking-wider rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-1.5 sm:p-2">
                 <option value="NEWEST">Sort: Newest First</option>
                 <option value="OLDEST">Sort: Oldest First</option>
             </select>
 
-            <div class="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-600">
+            <div class="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-600">
                 <button type="button" class="status-btn active px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors text-white bg-blue-600 shadow-sm" data-status="ALL">All</button>
                 <button type="button" class="status-btn px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" data-status="Open">Open</button>
                 <button type="button" class="status-btn px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" data-status="Investigating">Investigating</button>
