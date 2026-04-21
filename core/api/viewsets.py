@@ -258,6 +258,7 @@ class PasskeyLoginVerifyAPI(APIView):
 #             # ----------------------------
 
 #         return super().form_valid(form)
+
 class APILoginView(LoginView):
     template_name = 'registration/login.html'
 
@@ -281,28 +282,30 @@ class APILoginView(LoginView):
             if not has_totp:
                 if not user.email:
                     return JsonResponse({
-                        'status': 'error', 
+                        'status': 'error',
                         'message': 'MFA required but no email is linked to this account.'
                     }, status=400)
                     
                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
                 message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
                 try:
-                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                    # Using getattr to safely fallback if DEFAULT_FROM_EMAIL isn't in settings
+                    send_mail(subject, message, getattr(settings, 'DEFAULT_FROM_EMAIL', 'admin@950ceww.local'), [user.email], fail_silently=False)
                 except Exception as e:
                     print(f"MFA Email failed: {e}")
 
-            # 4. CRITICAL: Always return mfa_required=True to trigger the 6-digit prompt
+            # 4. CRITICAL: Always return mfa_required=True to trigger the frontend 6-digit prompt
             obfuscated_email = f"{user.email[:3]}***@{user.email.split('@')[-1]}" if user.email else "your email"
+            
             return JsonResponse({
                 'status': 'success',
-                'mfa_required': False,
+                'mfa_required': True,  # FIXED: Changed from False to True so the frontend stops the redirect
                 'has_totp': has_totp,
                 'obfuscated_email': obfuscated_email
             })
-              
+               
         return super().form_valid(form)
-    
+
 class SendLoginOTPAPI(APIView):
     """Triggered when a user with Authenticator prefers to use Email instead."""
     permission_classes = [AllowAny]
