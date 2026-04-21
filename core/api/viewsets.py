@@ -767,49 +767,72 @@ class IncidentCommentViewSet(viewsets.ModelViewSet):
 
 class MonitoringDataAPI(APIView):
     def get(self, request):
-        today = timezone.now().date()
-        date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
-        labels = [d.strftime('%a') for d in date_list]
-        date_to_idx = {d: i for i, d in enumerate(date_list)}
+        try:
+            # 1. Ensure exact Timezone matching (fixes the zero-data bug on charts)
+            today = timezone.localtime().date()
+            date_list = [today - timedelta(days=i) for i in range(6, -1, -1)]
+            labels = [d.strftime('%a') for d in date_list]
+            
+            # Map string dates to index for perfectly safe matching
+            date_to_idx = {d.strftime('%Y-%m-%d'): i for i, d in enumerate(date_list)}
 
-        fixed_assets, pending_assets = [0]*7, [0]*7
-        new_incidents, resolved_incidents = [0]*7, [0]*7
+            fixed_assets, pending_assets = [0]*7, [0]*7
+            new_incidents, resolved_incidents = [0]*7, [0]*7
 
-        # 1. Maintenance Trends
-        maint_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
-            .values('date__date', 'status').annotate(count=Count('id'))
-        for item in maint_qs:
-            idx = date_to_idx.get(item['date__date'])
-            if idx is not None:
-                if item['status'] == 'Completed': fixed_assets[idx] = item['count']
-                else: pending_assets[idx] = item['count']
+            # Safely create a timezone-aware starting point
+            start_date = timezone.make_aware(timezone.datetime.combine(date_list[0], timezone.datetime.min.time()))
 
-        # 2. Incident Trends
-        inc_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
-            .values('date__date', 'status').annotate(count=Count('id'))
-        for item in inc_qs:
-            idx = date_to_idx.get(item['date__date'])
-            if idx is not None:
-                if item['status'] == 'Resolved': resolved_incidents[idx] = item['count']
-                else: new_incidents[idx] = item['count']
+            # 2. Safely group Maintenance Data in Python (Bypasses Postgres __date bugs)
+            recent_maint = Maintenance.objects.filter(date__gte=start_date)
+            for m in recent_maint:
+                date_str = timezone.localtime(m.date).strftime('%Y-%m-%d')
+                idx = date_to_idx.get(date_str)
+                if idx is not None:
+                    if m.status in ['Completed', 'Resolved']:
+                        fixed_assets[idx] += 1
+                    else:
+                        pending_assets[idx] += 1
 
-        # 3. Basic AI Prediction (Linear Growth)
-        # We check if incidents today are higher than the 7-day average
-        avg_incidents = sum(new_incidents) / 7
-        predicted = int(avg_incidents * 30) + 2 # Projection for next 30 days
-        is_rising = new_incidents[-1] > avg_incidents
+            # 3. Safely group Incident Data in Python
+            recent_incidents = Incident.objects.filter(date__gte=start_date)
+            for inc in recent_incidents:
+                date_str = timezone.localtime(inc.date).strftime('%Y-%m-%d')
+                idx = date_to_idx.get(date_str)
+                if idx is not None:
+                    # Accurately count all resolved variations
+                    if inc.status in ['Resolved', 'Closed', 'Completed']:
+                        resolved_incidents[idx] += 1
+                    else:
+                        new_incidents[idx] += 1
 
-        return Response({
-            'labels': labels,
-            'fixed_assets': fixed_assets,
-            'pending_assets': pending_assets,
-            'new_incidents': new_incidents,
-            'resolved_incidents': resolved_incidents,
-            'predicted_incidents': max(predicted, 1),
-            'confidence_level': 'High' if sum(new_incidents) > 5 else 'Medium',
-            'is_rising': is_rising,
-            'asset_types': list(Asset.objects.values('assets_type').annotate(total=Count('id')))
-        })
+            # 4. Accurate AI Predictive Forecasting
+            total_recent = sum(new_incidents)
+            avg_incidents = total_recent / 7.0
+            
+            # Forecast algorithm: Average * 30 days + active backlog penalty
+            active_backlog = sum(pending_assets)
+            predicted = int(avg_incidents * 30) + int(active_backlog * 0.5)
+            
+            is_rising = new_incidents[-1] > avg_incidents or active_backlog > 5
+
+            # 5. Get true asset types for risk profiling
+            asset_types = list(Asset.objects.values('assets_type').annotate(total=Count('id')))
+
+            return Response({
+                'labels': labels,
+                'fixed_assets': fixed_assets,
+                'pending_assets': pending_assets,
+                'new_incidents': new_incidents,
+                'resolved_incidents': resolved_incidents,
+                'predicted_incidents': max(predicted, 0),
+                'confidence_level': 'High' if total_recent > 3 else ('Medium' if total_recent > 0 else 'Low'),
+                'is_rising': is_rising,
+                'asset_types': asset_types
+            })
+        except Exception as e:
+            import traceback
+            print("ANALYTICS API CRASHED:", traceback.format_exc())
+            return Response({"error": str(e)}, status=500)
         
 class NotificationViewSet(viewsets.ModelViewSet):
     """API for dynamic notification bell updates."""

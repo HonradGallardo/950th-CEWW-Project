@@ -99,7 +99,6 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
-
 // 🚨 SECURITY: XSS Sanitization Utility (Added to prevent DOM XSS in Dashboard Injection)
 const SecurityUtils = {
     escapeHTML(str) {
@@ -193,8 +192,15 @@ $(document).ready(function() {
             }
         });
 
+        // FIX: Realistic AI Predictive Line Algorithm
         const incidentCtx = document.getElementById('incidentChart').getContext('2d');
-        let predictiveData = data.new_incidents.map((val, idx) => val * (1 + (idx * 0.08)));
+        const baseline = data.predicted_incidents / 30; // Daily average projection
+        
+        let predictiveData = data.new_incidents.map((val, idx) => {
+            // Generates a smooth, logical trend line even if daily incidents are 0
+            let trend = baseline + (data.is_rising ? (idx * 0.15) : -(idx * 0.05));
+            return Number(Math.max(trend, val * 1.1).toFixed(1));
+        });
 
         if (incidentChartObj) incidentChartObj.destroy();
         incidentChartObj = new Chart(incidentCtx, {
@@ -316,10 +322,14 @@ $(document).ready(function() {
                 // Fire the typewriter effect
                 terminalLineEffect(aiLines, 'advisory-text', 400);
 
-                // 🚨 SECURITY FIX: Escape User-Generated Asset Types to prevent DOM XSS
+                // FIX: Realistic System Risk Calculation
+                let totalSystemAnomalies = data.new_incidents.reduce((a,b)=>a+b,0) + data.pending_assets.reduce((a,b)=>a+b,0);
+                
                 let gridHtml = '';
                 data.asset_types.forEach(entry => {
-                    const riskScore = Math.min(Math.round((entry.total * 3.4) + 12), 99);
+                    // Logic: Base risk is total assets of this type + overall active system anomalies
+                    const riskScore = Math.min(Math.round((entry.total * 1.2) + (totalSystemAnomalies * 2.5) + 5), 99);
+                    
                     const riskColor = riskScore > 75 ? 'text-rose-500' : (riskScore > 40 ? 'text-amber-500' : 'text-emerald-500');
                     const riskBg = riskScore > 75 ? 'bg-rose-500' : (riskScore > 40 ? 'bg-amber-500' : 'bg-emerald-500');
                     
