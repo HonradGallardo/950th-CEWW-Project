@@ -281,7 +281,7 @@ class APILoginView(LoginView):
             obfuscated_email = f"{user.email[:3]}***@{user.email.split('@')[-1]}" if user.email else "your email"
             return JsonResponse({
                 'status': 'success',
-                'mfa_required': True,
+                'mfa_required': False,
                 'has_totp': has_totp,
                 'obfuscated_email': obfuscated_email
             })
