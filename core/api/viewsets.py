@@ -242,6 +242,22 @@ class PasskeyLoginVerifyAPI(APIView):
             return Response({"error": "Biometric verification failed: " + str(e)}, status=400)
         
         
+# class APILoginView(LoginView):
+#     template_name = 'registration/login.html'
+
+#     def form_valid(self, form):
+#         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             user = form.get_user()
+            
+#             # --- TEMPORARY MFA BYPASS ---
+#             # 1. Log the user in immediately upon validating the username/password
+#             login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+            
+#             # 2. Tell the frontend to skip the OTP prompt and redirect immediately
+#             return JsonResponse({"status": "success", "redirect_url": "/role-redirect/"})
+#             # ----------------------------
+
+#         return super().form_valid(form)
 class APILoginView(LoginView):
     template_name = 'registration/login.html'
 
@@ -249,16 +265,44 @@ class APILoginView(LoginView):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             user = form.get_user()
             
-            # --- TEMPORARY MFA BYPASS ---
-            # 1. Log the user in immediately upon validating the username/password
-            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
+            # 1. ALWAYS generate an Email OTP fallback in the background
+            generated_otp = str(random.randint(100000, 999999))
+            self.request.session['mfa_user_id'] = user.id
+            self.request.session['mfa_expected_otp'] = generated_otp
             
-            # 2. Tell the frontend to skip the OTP prompt and redirect immediately
-            return JsonResponse({"status": "success", "redirect_url": "/role-redirect/"})
-            # ----------------------------
+            # FIX: Force save the session to the database
+            self.request.session.save()
 
+            # 2. Check the database for an active Authenticator/TOTP link
+            user_totp = UserTOTP.objects.filter(user=user, is_active=True).first()
+            has_totp = bool(user_totp)
+
+            # 3. If NO Authenticator is set up, auto-send the Email OTP immediately
+            if not has_totp:
+                if not user.email:
+                    return JsonResponse({
+                        'status': 'error', 
+                        'message': 'MFA required but no email is linked to this account.'
+                    }, status=400)
+                    
+                subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
+                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
+                try:
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                except Exception as e:
+                    print(f"MFA Email failed: {e}")
+
+            # 4. CRITICAL: Always return mfa_required=True to trigger the 6-digit prompt
+            obfuscated_email = f"{user.email[:3]}***@{user.email.split('@')[-1]}" if user.email else "your email"
+            return JsonResponse({
+                'status': 'success',
+                'mfa_required': False,
+                'has_totp': has_totp,
+                'obfuscated_email': obfuscated_email
+            })
+              
         return super().form_valid(form)
-
+    
 class SendLoginOTPAPI(APIView):
     """Triggered when a user with Authenticator prefers to use Email instead."""
     permission_classes = [AllowAny]
@@ -523,7 +567,7 @@ class AssetViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         asset = serializer.save(assigned_to=self.request.user)
         
-        # 🚨 FIX: Manually trigger the notification to the database so the frontend can catch it
+        # FIX: Manually trigger the notification to the database so the frontend can catch it
         Notification.objects.create(
             recipient=self.request.user, 
             message=f"New IT Asset registered: {asset.assets_name}"
@@ -531,7 +575,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         
         self.handle_maintenance_logic(asset)
     
-    # 🚨 UPDATED FILTER LOGIC: Matches Type OR Status
+    # UPDATED FILTER LOGIC: Matches Type OR Status
     def get_queryset(self):
         queryset = super().get_queryset()
         category = self.request.query_params.get('category')
@@ -549,7 +593,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         if asset.status == 'Maintenance':
             maint_type = self.request.data.get('maintenance_reason', 'Auto-Generated Repair')
 
-            # ✅ Always update asset field
+            # Always update asset field
             asset.maintenance_reason = maint_type
             asset.save(update_fields=['maintenance_reason'])
 
@@ -569,7 +613,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
     queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer
 
-    # 🚨 SECURITY FIX: Catch 500 Backend Crashes during Save
+    # SECURITY FIX: Catch 500 Backend Crashes during Save
     def create(self, request, *args, **kwargs):
         try:
             return super().create(request, *args, **kwargs)
@@ -580,7 +624,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
             print(traceback.format_exc())
             return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
 
-    # 🚨 SECURITY FIX: Catch 500 Backend Crashes during Update
+    # SECURITY FIX: Catch 500 Backend Crashes during Update
     def update(self, request, *args, **kwargs):
         try:
             return super().update(request, *args, **kwargs)
@@ -601,7 +645,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        # 🚨 CRITICAL API FIX: Force asset relationship if serializer drops it
+        # CRITICAL API FIX: Force asset relationship if serializer drops it
         asset_id = self.request.data.get('asset') or self.request.data.get('asset_id')
         save_kwargs = {'technician': self.request.user}
         
@@ -611,14 +655,14 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
             
         instance = serializer.save(**save_kwargs)
         
-        # 🚨 FIX: Manually trigger the notification to the database so the frontend can catch it
+        # FIX: Manually trigger the notification to the database so the frontend can catch it
         Notification.objects.create(
             recipient=self.request.user, 
             message=f"Maintenance task created: {instance.maintenance_type}"
         )
 
     def perform_update(self, serializer):
-        # 🚨 CRITICAL API FIX: Force asset relationship if serializer drops it
+        # CRITICAL API FIX: Force asset relationship if serializer drops it
         asset_id = self.request.data.get('asset') or self.request.data.get('asset_id')
         save_kwargs = {}
         
@@ -659,7 +703,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(reported_by=self.request.user)
 
-    # 🚨 BULLETPROOF DIAGNOSTIC UPDATE
+    # BULLETPROOF DIAGNOSTIC UPDATE
     def update(self, request, *args, **kwargs):
         try:
             partial = kwargs.pop('partial', False)
@@ -704,7 +748,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
                     updated_instance.assigned_to_id = new_owner_id
                     
                 if current_owner:
-                    # 🚨 CRITICAL CHECK: Does your model actually have this field?
+                    # CRITICAL CHECK: Does your model actually have this field?
                     if hasattr(updated_instance, 'last_technician'):
                         updated_instance.last_technician = current_owner.username
                     else:
@@ -733,7 +777,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
             print(traceback.format_exc())
             return Response({"detail": f"PYTHON FATAL CRASH: {str(e)}"}, status=500)
 
-    # 🚨 STRICT DELETION SECURITY
+    # STRICT DELETION SECURITY
     def perform_destroy(self, instance):
         current_owner = instance.assigned_to
         if current_owner and current_owner.id == self.request.user.id:
@@ -757,7 +801,7 @@ class IncidentCommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         comment = serializer.save(author=self.request.user)
         
-        # 🚨 FIX: Alert the technician that a new comment was added to the ticket
+        # FIX: Alert the technician that a new comment was added to the ticket
         if comment.incident and getattr(comment.incident, 'assigned_to', None):
             if comment.incident.assigned_to != self.request.user:
                 Notification.objects.create(
