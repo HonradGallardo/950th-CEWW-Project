@@ -608,7 +608,7 @@
                     } 
                     else if (msgLower.includes('ticket') || msgLower.includes('message') || msgLower.includes('comment') || msgLower.includes('reply') || msgLower.includes('request') || msgLower.includes('support')) { 
                         title = "Support Ticket"; iconClass = "fa-ticket-alt"; colorClass = "indigo"; category = "ticket"; 
-}
+                    }
 
                     if (allowSpawn) {
                         spawnToast(title, msg, iconClass, colorClass);
@@ -648,7 +648,6 @@
                 sessionStorage.setItem('navBadgeCounts', JSON.stringify({asset: 0, incident: 0, maintenance: 0, ticket: 0}));
             });
 
-            // FIX 2: Rewritten Polling Logic to safely use API and Fallback
             // 7. Background Polling Logic
             function checkForNewNotifications() {
                 // Try to use the faster API endpoint first

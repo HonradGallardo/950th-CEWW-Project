@@ -11,6 +11,9 @@ from django.utils.html import escape, strip_tags
 import os 
 
 from ..models import Ticket, TicketMessage, TicketAttachment
+# Import Notification from your core app
+from core.models import Notification 
+
 import cloudinary.uploader  
 
 # --- SECURITY CONSTANTS ---
@@ -243,6 +246,19 @@ class TicketViewSet(viewsets.ModelViewSet):
             message=text
         )
 
+        # ---> 🚨 NOTIFICATION TRIGGER: NEW TICKET MESSAGE <---
+        if target_user and target_user != request.user:
+            Notification.objects.create(
+                recipient=target_user,
+                message=f"New ticket message from {request.user.username}"
+            )
+        elif not is_group_chat and ticket.user != request.user:
+            # Fallback: Notify ticket owner if an admin replies but target_user wasn't explicitly set
+            Notification.objects.create(
+                recipient=ticket.user,
+                message=f"New reply on your support ticket #{ticket.id}"
+            )
+
         for f in files:
             # SECURITY FIX: Validate Extension AND Size
             ext = os.path.splitext(f.name)[1].lower()
@@ -317,6 +333,12 @@ class TicketViewSet(viewsets.ModelViewSet):
             status="Pending"
         )
 
+        # ---> 🚨 NOTIFICATION TRIGGER: TICKET CREATED <---
+        Notification.objects.create(
+            recipient=ticket_owner,
+            message=f"Support ticket submitted successfully: {ticket.subject}"
+        )
+
         files = self.request.FILES.getlist('attachments')
         for f in files:
             # SECURITY FIX: Validate Extension AND Size
@@ -366,6 +388,12 @@ class TicketViewSet(viewsets.ModelViewSet):
                 ticket.technician = new_tech
                 if ticket.status == 'Pending':
                     ticket.status = 'In Progress'
+
+                # ---> 🚨 NOTIFICATION TRIGGER: TICKET ASSIGNED <---
+                Notification.objects.create(
+                    recipient=new_tech,
+                    message=f"You have been assigned to Support Ticket #{ticket.id}"
+                )
         else:
             if ticket.technician:
                 ticket.last_technician = ticket.technician.username
@@ -397,16 +425,5 @@ class TicketViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_403_FORBIDDEN
                 )
                 
-        ticket.delete()
-        return Response({'status': 'success', 'message': 'Ticket deleted'}, status=status.HTTP_204_NO_CONTENT)
-    
-    def destroy(self, request, pk=None):
-        ticket = self.get_object()
-        user_is_admin = request.user.is_staff or request.user.groups.filter(name='Admin').exists()
-        if not user_is_admin and ticket.user != request.user:
-            return Response(
-                {'message': 'You do not have permission to delete this ticket.'}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
         ticket.delete()
         return Response({'status': 'success', 'message': 'Ticket deleted'}, status=status.HTTP_204_NO_CONTENT)

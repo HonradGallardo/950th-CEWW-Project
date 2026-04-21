@@ -44,7 +44,6 @@ if settings.DEBUG:
     RP_ID = "localhost"
     ORIGIN = "http://localhost:8000"
 else:
-    # --- FIX: Update to your new Railway Domain ---
     RP_ID = "onthego-aims.up.railway.app"
     ORIGIN = "https://onthego-aims.up.railway.app"
 
@@ -93,6 +92,7 @@ class VerifyTOTPSetupAPI(APIView):
             return Response({"status": "success"})
         else:
             return Response({"message": "Invalid code. Please try again."}, status=400)
+
 # ==========================================
 # PASSKEY REGISTRATION (For Profile Page)
 # ==========================================
@@ -258,52 +258,6 @@ class APILoginView(LoginView):
             # ----------------------------
 
         return super().form_valid(form)
-
-# OTP and MFA
-# class APILoginView(LoginView):
-#     template_name = 'registration/login.html'
-
-#     def form_valid(self, form):
-#         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#             user = form.get_user()
-            
-#             # 1. ALWAYS generate an Email OTP fallback in the background
-#             generated_otp = str(random.randint(100000, 999999))
-#             self.request.session['mfa_user_id'] = user.id
-#             self.request.session['mfa_expected_otp'] = generated_otp
-            
-#             # FIX: Force save the session to the database
-#             self.request.session.save()
-
-#             # 2. Check the database for an active Authenticator/TOTP link
-#             user_totp = UserTOTP.objects.filter(user=user, is_active=True).first()
-#             has_totp = bool(user_totp)
-
-#             # 3. If NO Authenticator is set up, auto-send the Email OTP immediately
-#             if not has_totp:
-#                 if not user.email:
-#                     return JsonResponse({
-#                         'status': 'error', 
-#                         'message': 'MFA required but no email is linked to this account.'
-#                     }, status=400)
-                    
-#                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
-#                 message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
-#                 try:
-#                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-#                 except Exception as e:
-#                     print(f"MFA Email failed: {e}")
-
-#             # 4. CRITICAL: Always return mfa_required=True to trigger the 6-digit prompt
-#             obfuscated_email = f"{user.email[:3]}***@{user.email.split('@')[-1]}" if user.email else "your email"
-#             return JsonResponse({
-#                 'status': 'success',
-#                 'mfa_required': False,
-#                 'has_totp': has_totp,
-#                 'obfuscated_email': obfuscated_email
-#             })
-                
-#         return super().form_valid(form)
 
 class SendLoginOTPAPI(APIView):
     """Triggered when a user with Authenticator prefers to use Email instead."""
@@ -568,6 +522,13 @@ class AssetViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         asset = serializer.save(assigned_to=self.request.user)
+        
+        # 🚨 FIX: Manually trigger the notification to the database so the frontend can catch it
+        Notification.objects.create(
+            recipient=self.request.user, 
+            message=f"New IT Asset registered: {asset.assets_name}"
+        )
+        
         self.handle_maintenance_logic(asset)
     
     # 🚨 UPDATED FILTER LOGIC: Matches Type OR Status
@@ -648,7 +609,13 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
         if asset_id and str(asset_id).isdigit():
             save_kwargs['asset_id'] = int(asset_id)
             
-        serializer.save(**save_kwargs)
+        instance = serializer.save(**save_kwargs)
+        
+        # 🚨 FIX: Manually trigger the notification to the database so the frontend can catch it
+        Notification.objects.create(
+            recipient=self.request.user, 
+            message=f"Maintenance task created: {instance.maintenance_type}"
+        )
 
     def perform_update(self, serializer):
         # 🚨 CRITICAL API FIX: Force asset relationship if serializer drops it
@@ -788,7 +755,15 @@ class IncidentCommentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        comment = serializer.save(author=self.request.user)
+        
+        # 🚨 FIX: Alert the technician that a new comment was added to the ticket
+        if comment.incident and getattr(comment.incident, 'assigned_to', None):
+            if comment.incident.assigned_to != self.request.user:
+                Notification.objects.create(
+                    recipient=comment.incident.assigned_to,
+                    message=f"New reply on ticket #{comment.incident.id}: {comment.incident.title}"
+                )
 
 class MonitoringDataAPI(APIView):
     def get(self, request):
