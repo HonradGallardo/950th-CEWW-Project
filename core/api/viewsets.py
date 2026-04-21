@@ -242,7 +242,6 @@ class PasskeyLoginVerifyAPI(APIView):
             return Response({"error": "Biometric verification failed: " + str(e)}, status=400)
         
         
-        
 class APILoginView(LoginView):
     template_name = 'registration/login.html'
 
@@ -250,43 +249,61 @@ class APILoginView(LoginView):
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
             user = form.get_user()
             
-            # 1. ALWAYS generate an Email OTP fallback in the background
-            generated_otp = str(random.randint(100000, 999999))
-            self.request.session['mfa_user_id'] = user.id
-            self.request.session['mfa_expected_otp'] = generated_otp
+            # --- TEMPORARY MFA BYPASS ---
+            # 1. Log the user in immediately upon validating the username/password
+            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
             
-            # FIX: Force save the session to the database
-            self.request.session.save()
+            # 2. Tell the frontend to skip the OTP prompt and redirect immediately
+            return JsonResponse({"status": "success", "redirect_url": "/role-redirect/"})
+            # ----------------------------
 
-            # 2. Check the database for an active Authenticator/TOTP link
-            user_totp = UserTOTP.objects.filter(user=user, is_active=True).first()
-            has_totp = bool(user_totp)
-
-            # 3. If NO Authenticator is set up, auto-send the Email OTP immediately
-            if not has_totp:
-                if not user.email:
-                    return JsonResponse({
-                        'status': 'error', 
-                        'message': 'MFA required but no email is linked to this account.'
-                    }, status=400)
-                    
-                subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
-                message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
-                try:
-                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-                except Exception as e:
-                    print(f"MFA Email failed: {e}")
-
-            # 4. CRITICAL: Always return mfa_required=True to trigger the 6-digit prompt
-            obfuscated_email = f"{user.email[:3]}***@{user.email.split('@')[-1]}" if user.email else "your email"
-            return JsonResponse({
-                'status': 'success',
-                'mfa_required': False,
-                'has_totp': has_totp,
-                'obfuscated_email': obfuscated_email
-            })
-                
         return super().form_valid(form)
+
+# OTP and MFA
+# class APILoginView(LoginView):
+#     template_name = 'registration/login.html'
+
+#     def form_valid(self, form):
+#         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             user = form.get_user()
+            
+#             # 1. ALWAYS generate an Email OTP fallback in the background
+#             generated_otp = str(random.randint(100000, 999999))
+#             self.request.session['mfa_user_id'] = user.id
+#             self.request.session['mfa_expected_otp'] = generated_otp
+            
+#             # FIX: Force save the session to the database
+#             self.request.session.save()
+
+#             # 2. Check the database for an active Authenticator/TOTP link
+#             user_totp = UserTOTP.objects.filter(user=user, is_active=True).first()
+#             has_totp = bool(user_totp)
+
+#             # 3. If NO Authenticator is set up, auto-send the Email OTP immediately
+#             if not has_totp:
+#                 if not user.email:
+#                     return JsonResponse({
+#                         'status': 'error', 
+#                         'message': 'MFA required but no email is linked to this account.'
+#                     }, status=400)
+                    
+#                 subject = 'SYSTEM ALERT: Login Verification - 950th CEWW'
+#                 message = f"Attention {user.username},\n\nYour secure login verification code is: {generated_otp}"
+#                 try:
+#                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+#                 except Exception as e:
+#                     print(f"MFA Email failed: {e}")
+
+#             # 4. CRITICAL: Always return mfa_required=True to trigger the 6-digit prompt
+#             obfuscated_email = f"{user.email[:3]}***@{user.email.split('@')[-1]}" if user.email else "your email"
+#             return JsonResponse({
+#                 'status': 'success',
+#                 'mfa_required': False,
+#                 'has_totp': has_totp,
+#                 'obfuscated_email': obfuscated_email
+#             })
+                
+#         return super().form_valid(form)
 
 class SendLoginOTPAPI(APIView):
     """Triggered when a user with Authenticator prefers to use Email instead."""
