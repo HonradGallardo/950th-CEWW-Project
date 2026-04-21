@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Ticket(models.Model):
     STATUS_CHOICES = [
@@ -24,7 +26,7 @@ class Ticket(models.Model):
         blank=True,
         related_name='technician_tickets'
     )
-    last_technician = models.CharField(max_length=150, blank=True, null=True) # Add this!
+    last_technician = models.CharField(max_length=150, blank=True, null=True) 
 
     subject = models.CharField(max_length=255)
     category = models.CharField(max_length=100)
@@ -50,15 +52,11 @@ class Ticket(models.Model):
         return f"Ticket #{self.id} - {self.subject}"
 
 
-# models.py
-
-# models.py
 class TicketMessage(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     attachment = models.FileField(upload_to='chat_attachments/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    # Add this field if it's missing or clashing
     recipient = models.ForeignKey(
         User, 
         on_delete=models.SET_NULL, 
@@ -68,7 +66,6 @@ class TicketMessage(models.Model):
     )
     message = models.TextField()
     is_group_chat = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['created_at']
@@ -80,7 +77,6 @@ class TicketMessage(models.Model):
 class TicketAttachment(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='all_attachments')
     
-    # ADD THIS FIELD: Links the file to a specific message bubble
     message = models.ForeignKey(
         TicketMessage, 
         on_delete=models.CASCADE, 
@@ -94,3 +90,61 @@ class TicketAttachment(models.Model):
 
     def __str__(self):
         return f"File for Ticket #{self.ticket.id} (Msg: {self.message_id or 'General'})"
+
+
+# ==========================================
+# 🚨 AUTOMATIC NOTIFICATION SIGNALS 🚨
+# ==========================================
+
+@receiver(post_save, sender=Ticket)
+def notify_new_ticket(sender, instance, created, **kwargs):
+    """Triggers automatically when a new Ticket is saved to the database"""
+    if created:
+        from core.models import Notification # Local import to prevent circular dependencies
+        
+        # 1. Notify the user who submitted the ticket
+        if instance.user and instance.user.username != 'PublicGuest':
+            Notification.objects.create(
+                recipient=instance.user,
+                message=f"Support ticket submitted successfully: {instance.subject}"
+            )
+            
+        # 2. Notify all Admins that a new ticket arrived
+        admin_users = User.objects.filter(groups__name='Admin')
+        for admin in admin_users:
+            if admin != instance.user:  # Don't notify the admin if they submitted it themselves
+                Notification.objects.create(
+                    recipient=admin,
+                    message=f"New support ticket requires review: {instance.subject}"
+                )
+
+@receiver(post_save, sender=TicketMessage)
+def notify_new_ticket_message(sender, instance, created, **kwargs):
+    """Triggers automatically when a new message or reply is sent in a ticket"""
+    if created:
+        from core.models import Notification # Local import
+        
+        ticket = instance.ticket
+        sender_user = instance.sender
+        recipient_user = instance.recipient
+
+        # Scenario A: An explicit recipient was selected (Direct message)
+        if recipient_user and recipient_user != sender_user:
+            Notification.objects.create(
+                recipient=recipient_user,
+                message=f"New ticket message from {sender_user.username}"
+            )
+            
+        # Scenario B: No explicit recipient, but the ticket is assigned to a technician
+        elif ticket.technician and ticket.technician != sender_user:
+            Notification.objects.create(
+                recipient=ticket.technician,
+                message=f"New reply on ticket #{ticket.id} from {sender_user.username}"
+            )
+            
+        # Scenario C: A technician/admin replied, so notify the ticket owner
+        elif ticket.user and ticket.user != sender_user:
+            Notification.objects.create(
+                recipient=ticket.user,
+                message=f"New update on your support ticket #{ticket.id}"
+            )
