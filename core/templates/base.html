@@ -596,10 +596,19 @@
                     let colorClass = "blue";
                     let category = null;
 
-                    if (msgLower.includes('asset')) { title = "New IT Asset"; iconClass = "fa-laptop-code"; colorClass = "emerald"; category = "asset"; } 
-                    else if (msgLower.includes('incident') || msgLower.includes('threat')) { title = "Security Incident"; iconClass = "fa-shield-alt"; colorClass = "rose"; category = "incident"; } 
-                    else if (msgLower.includes('maintenance') || msgLower.includes('repair')) { title = "Maintenance Update"; iconClass = "fa-tools"; colorClass = "amber"; category = "maintenance"; } 
-                    else if (msgLower.includes('ticket')) { title = "Support Ticket"; iconClass = "fa-ticket-alt"; colorClass = "indigo"; category = "ticket"; }
+                    // Smart Keyword Scanner: Checks for multiple synonyms to catch different backend phrasing
+                    if (msgLower.includes('asset') || msgLower.includes('device') || msgLower.includes('hardware') || msgLower.includes('equipment') || msgLower.includes('registered')) { 
+                        title = "New IT Asset"; iconClass = "fa-laptop-code"; colorClass = "emerald"; category = "asset"; 
+                    } 
+                    else if (msgLower.includes('incident') || msgLower.includes('threat') || msgLower.includes('security') || msgLower.includes('breach')) { 
+                        title = "Security Incident"; iconClass = "fa-shield-alt"; colorClass = "rose"; category = "incident"; 
+                    } 
+                    else if (msgLower.includes('maintenance') || msgLower.includes('repair') || msgLower.includes('service') || msgLower.includes('fix') || msgLower.includes('task')) { 
+                        title = "Maintenance Update"; iconClass = "fa-tools"; colorClass = "amber"; category = "maintenance"; 
+                    } 
+                    else if (msgLower.includes('ticket') || msgLower.includes('message') || msgLower.includes('comment') || msgLower.includes('reply') || msgLower.includes('request') || msgLower.includes('support')) { 
+                        title = "Support Ticket"; iconClass = "fa-ticket-alt"; colorClass = "indigo"; category = "ticket"; 
+}
 
                     if (allowSpawn) {
                         spawnToast(title, msg, iconClass, colorClass);
