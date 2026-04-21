@@ -827,11 +827,12 @@
         const tempId = 'temp-' + Date.now();
         const tempMsg = {
             id: tempId,
-            message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
-            sender_name: MY_USERNAME,
+            // Escape the raw input here before it goes into the optimistic feed
+            message: SecurityUtils.escapeHTML(messageText) || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
+            sender_name: SecurityUtils.escapeHTML(MY_USERNAME),
             sender_avatar: myAvatarUrl, 
             is_me: true,
-            recipient_name: activeChatPartnerId === 'GROUP_CHAT' ? 'Everyone' : (activeChatPartnerId === MY_USERNAME ? CLIENT_USERNAME : activeChatPartnerId),
+            recipient_name: activeChatPartnerId === 'GROUP_CHAT' ? 'Everyone' : SecurityUtils.escapeHTML(activeChatPartnerId === MY_USERNAME ? CLIENT_USERNAME : activeChatPartnerId),
             timestamp: 'Sending...'
         };
 
@@ -979,10 +980,10 @@
             
             if (!isSystemUpdate && !isGroupMessage && !isPrivateMessage) return; 
 
-            // 🚨 SECURITY: Isolate all dynamic payload outputs preventing XSS mapping.
-            const safeMsg = SecurityUtils.escapeHTML(msg.message);
-            const safeSender = SecurityUtils.escapeHTML(msg.sender_name);
-            const safeTime = SecurityUtils.escapeHTML(msg.timestamp);
+            // Trust the sanitized data coming from the backend
+            const safeMsg = msg.message;
+            const safeSender = msg.sender_name;
+            const safeTime = msg.timestamp;
 
             if (isSystemUpdate) {
                 chatBox.insertAdjacentHTML('beforeend', `<div class="flex justify-center my-4"><span class="text-xs bg-slate-200 dark:bg-slate-800 px-4 py-1.5 rounded-full font-medium text-slate-600 dark:text-slate-400 shadow-sm border border-slate-300 dark:border-slate-700"><i class="fas fa-info-circle mr-1.5 opacity-70"></i> ${safeMsg}</span></div>`);
