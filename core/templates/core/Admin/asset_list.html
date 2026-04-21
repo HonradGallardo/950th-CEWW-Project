@@ -515,6 +515,13 @@ function showAssetDetails(id) {
     }
 
     $('#detail-specs-list').html(specsHtml);
+
+    // ✨ NEW: Auto-scroll to the details panel on smaller screens
+    if (window.innerWidth < 1024) {
+        $('html, body').animate({
+            scrollTop: $("#asset-detail-panel").offset().top - 80 // 80px offset for the fixed navbar
+        }, 500);
+    }
 }
 
 // 🚨 SECURITY: Active Pre-Submission Payload Rejection
