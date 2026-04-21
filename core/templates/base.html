@@ -253,18 +253,16 @@
                 </div>
 
                 <nav class="flex-1 mt-4 space-y-1.5 custom-scrollbar overflow-y-auto pt-2 pb-4">
-                    {% with current=request.resolver_match.url_name %}
-
                     {% if request.user.groups.all.0.name != 'Regular' %}
-                    <a href="{% url 'dashboard' %}" class="nav-item {% if current == 'dashboard' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'dashboard' %}" class="nav-item {% if request.path == '/' or '/dashboard' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-th-large"></i> <span class="sidebar-text">Dashboard</span>
                     </a>
 
-                    <a href="{% url 'analytics_list' %}" class="nav-item {% if current == 'analytics_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'analytics_list' %}" class="nav-item {% if '/analytic' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-line"></i> <span class="sidebar-text">Analytics</span>
                     </a>
                     
-                    <a href="{% url 'incident_list' %}" data-category="incident" class="nav-item {% if current == 'incident_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'incident_list' %}" data-category="incident" class="nav-item {% if '/incident' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <span class="relative">
                             <i class="fas fa-exclamation-triangle"></i>
                             <span id="badge-incident" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
@@ -272,7 +270,7 @@
                         <span class="sidebar-text">Incidents</span>
                     </a>
 
-                    <a href="{% url 'asset_list' %}" data-category="asset" class="nav-item {% if current == 'asset_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'asset_list' %}" data-category="asset" class="nav-item {% if '/asset' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <span class="relative">
                             <i class="fas fa-laptop"></i>
                             <span id="badge-asset" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
@@ -280,7 +278,7 @@
                         <span class="sidebar-text">IT Assets</span>
                     </a>
 
-                    <a href="{% url 'maintenance_list' %}" data-category="maintenance" class="nav-item {% if current == 'maintenance_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'maintenance_list' %}" data-category="maintenance" class="nav-item {% if '/maintenance' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <span class="relative">
                             <i class="fas fa-tools"></i>
                             <span id="badge-maintenance" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
@@ -290,7 +288,7 @@
                     {% endif %}
 
                     {% if request.user.groups.all.0.name == 'Regular' %}
-                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if '/ticket' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <span class="relative">
                             <i class="fas fa-file-alt"></i>
                             <span id="badge-ticket" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
@@ -300,7 +298,7 @@
                     {% endif %}
 
                     {% if request.user.groups.all.0.name == 'Personnel' %}
-                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if '/ticket' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <span class="relative">
                             <i class="fas fa-file-alt"></i>
                             <span id="badge-ticket" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
@@ -310,36 +308,35 @@
                     {% endif %}
 
                     {% if request.user.groups.all.0.name == 'Commander' %}
-                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if current == 'submit_ticket' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'tickets:submit_ticket' %}" data-category="ticket" class="nav-item {% if '/ticket' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <span class="relative">
                             <i class="fas fa-file-alt"></i>
                             <span id="badge-ticket" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
                         </span>
                         <span class="sidebar-text">Tickets</span>
                     </a>
-                                                                                                        
-                    <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                                                                                                                                            
+                    <a href="{% url 'reports' %}" class="nav-item {% if '/report' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-pie"></i> <span class="sidebar-text">Reports</span>
                     </a>
                     {% endif %}
 
                     {% if request.user.groups.all.0.name == 'Admin' %}
-                    <a href="{% url 'tickets:admin_tickets' %}" data-category="ticket" class="nav-item {% if current == 'admin_tickets' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'tickets:admin_tickets' %}" data-category="ticket" class="nav-item {% if '/ticket' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <span class="relative">
                             <i class="fas fa-file-alt"></i>
                             <span id="badge-ticket" class="hidden absolute -top-1 right-0 bg-red-500 text-white text-[8px] font-black h-[14px] w-[14px] flex items-center justify-center rounded-full border-[1.5px] border-[#1e293b] shadow-md"></span>
                         </span>
                         <span class="sidebar-text">Tickets</span>
                     </a>
-                    <a href="{% url 'user_list' %}" class="nav-item {% if current == 'user_list' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'user_list' %}" class="nav-item {% if '/user' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-users"></i> <span class="sidebar-text">Users</span>
                     </a>
-                    <a href="{% url 'reports' %}" class="nav-item {% if current == 'reports' %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
+                    <a href="{% url 'reports' %}" class="nav-item {% if '/report' in request.path %} bg-white/10 text-white font-rajdhani shadow-inner {% else %} text-slate-400 hover:bg-white/5 hover:text-white {% endif %}">
                         <i class="fas fa-chart-pie"></i> <span class="sidebar-text">Reports</span>
                     </a>
                     {% endif %}
                     
-                    {% endwith %}
                 </nav>
 
                 <div class="theme-switch-container">
@@ -642,29 +639,72 @@
                 sessionStorage.setItem('navBadgeCounts', JSON.stringify({asset: 0, incident: 0, maintenance: 0, ticket: 0}));
             });
 
+            // FIX 2: Rewritten Polling Logic to safely use API and Fallback
             // 7. Background Polling Logic
             function checkForNewNotifications() {
+                // Try to use the faster API endpoint first
                 $.ajax({
-                    url: window.location.href, 
+                    url: '/api/notifications/',
                     type: 'GET',
-                    success: function(response) {
-                        let tempDom = $('<output>').append($.parseHTML(response));
-                        let fetchedItems = tempDom.find('.notif-item').toArray().reverse();
+                    dataType: 'json',
+                    success: function(data) {
                         let originalCount = knownNotifIds.size;
-
-                        fetchedItems.forEach(function(item) {
-                            processNotificationItem($(item), true);
-                        });
-
-                        // If any new notifications were added, save memory and redraw
+                        let newHtml = '';
+                        
+                        if (data && data.length > 0) {
+                            data.slice(0, 5).forEach(function(n) {
+                                let isRead = n.is_read;
+                                let idStr = n.id.toString();
+                                
+                                newHtml += `
+                                    <div class="notif-item px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors" data-id="${n.id}" data-read="${isRead}">
+                                        <p class="text-xs text-slate-700 dark:text-slate-300 leading-snug notif-message-item">${n.message}</p>
+                                    </div>
+                                `;
+                                
+                                if (!knownNotifIds.has(idStr)) {
+                                    let $dummy = $('<div>').data('id', n.id).data('read', isRead).append(
+                                        $('<p>').addClass('notif-message-item').text(n.message)
+                                    );
+                                    processNotificationItem($dummy, true);
+                                }
+                            });
+                        } else {
+                            newHtml = '<div class="px-4 py-8 text-center"><p class="text-xs text-slate-400 italic">No reports</p></div>';
+                        }
+                        
                         if (knownNotifIds.size > originalCount) {
                             sessionStorage.setItem('navBadgeCounts', JSON.stringify(badgeCounts));
                             sessionStorage.setItem('knownNotifs', JSON.stringify(Array.from(knownNotifIds)));
                             updateNavBadges();
-                            
-                            let newDropdownHtml = tempDom.find('#notifListContainer').html();
-                            $('#notifListContainer').html(newDropdownHtml);
+                            $('#notifListContainer').html(newHtml);
                         }
+                    },
+                    error: function() {
+                        // Fallback: If API routing changes, safely poll the root '/' dashboard route 
+                        // instead of window.location to guarantee we grab base.html and don't break active forms
+                        $.ajax({
+                            url: '/', 
+                            type: 'GET',
+                            success: function(response) {
+                                let tempDom = $('<output>').append($.parseHTML(response));
+                                let fetchedItems = tempDom.find('.notif-item').toArray().reverse();
+                                let originalCount = knownNotifIds.size;
+
+                                fetchedItems.forEach(function(item) {
+                                    processNotificationItem($(item), true);
+                                });
+
+                                if (knownNotifIds.size > originalCount) {
+                                    sessionStorage.setItem('navBadgeCounts', JSON.stringify(badgeCounts));
+                                    sessionStorage.setItem('knownNotifs', JSON.stringify(Array.from(knownNotifIds)));
+                                    updateNavBadges();
+                                    
+                                    let newDropdownHtml = tempDom.find('#notifListContainer').html();
+                                    $('#notifListContainer').html(newDropdownHtml);
+                                }
+                            }
+                        });
                     }
                 });
             }
