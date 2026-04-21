@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.utils.html import escape # SECURITY: Global XSS Neutralizer
 from ..models import Ticket, TicketMessage, TicketAttachment
 from django.contrib.auth.models import User
 
@@ -30,14 +29,7 @@ class TicketMessageSerializer(serializers.ModelSerializer):
     def get_is_me(self, obj):
         request = self.context.get('request')
         return obj.sender == request.user if request else False
-        
-    # SECURITY FIX: Globally sanitize EVERY string field before it leaves the API
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        for key, value in data.items():
-            if isinstance(value, str):
-                data[key] = escape(value)
-        return data
+
 
 class TicketSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.username', read_only=True)
@@ -71,11 +63,3 @@ class TicketSerializer(serializers.ModelSerializer):
                 return obj.user.profile.image.url
         except:
             return None
-            
-    # SECURITY FIX: Globally sanitize EVERY string field before it leaves the API
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        for key, value in data.items():
-            if isinstance(value, str):
-                data[key] = escape(value)
-        return data
