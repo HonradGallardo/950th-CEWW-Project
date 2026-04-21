@@ -3,7 +3,7 @@
 
 {% block content %}
 <style nonce="{{ request.csp_nonce }}">
-    @import url('[https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap)');
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700;800&display=swap');
     .font-rajdhani { font-family: 'Rajdhani', sans-serif !important; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif !important; }
 
@@ -98,23 +98,6 @@ main {
         height: 100vh;
         height: 100dvh; /* Smoothly covers mobile browser address bars */
     }
-    
-    /* Code Block Styling */
-    pre {
-        background-color: #1e293b;
-        color: #e2e8f0;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        overflow-x: auto;
-        font-family: monospace;
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-        border: 1px solid #334155;
-    }
-    code {
-        font-family: monospace;
-    }
 </style>
 
 <div class="font-plex h-screen bg-slate-50 dark:bg-[#020617] flex flex-col transition-colors duration-500 overflow-hidden text-slate-900 dark:text-slate-100 main-container">
@@ -145,9 +128,9 @@ main {
             </div>
             <div class="relative group">
                 {% if request.user.profile.image %}
-                    <img src="{{ request.user.profile.image.url }}" onerror="this.src='[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ request.user.username|urlencode }}&background=3b82f6&color=fff&bold=true';" class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+                    <img src="{{ request.user.profile.image.url }}" onerror="this.src='https://ui-avatars.com/api/?name={{ request.user.username|urlencode }}&background=3b82f6&color=fff&bold=true';" class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
                 {% else %}
-                    <img src="[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){{ request.user.username|default:'U'|urlencode }}&background=3b82f6&color=fff&bold=true" class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
+                    <img src="https://ui-avatars.com/api/?name={{ request.user.username|default:'U'|urlencode }}&background=3b82f6&color=fff&bold=true" class="w-8 h-8 md:w-10 md:h-10 rounded-xl border-2 border-slate-100 dark:border-slate-700 object-cover shadow-sm group-hover:border-blue-500 transition-all cursor-pointer">
                 {% endif %}
             </div>
         </div>
@@ -533,7 +516,7 @@ main {
                             <div class="flex-1 relative">
                                 <textarea id="chatInput" rows="1" 
                                           class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-slate-800 rounded-2xl py-3.5 md:py-4 pl-12 md:pl-14 pr-[4.5rem] md:pr-28 text-xs md:text-sm outline-none focus:border-blue-500 focus:ring-2 ring-blue-500/20 transition-all resize-none shadow-sm" 
-                                          placeholder="Type your message here... You can use ``` to wrap code snippets."></textarea>
+                                          placeholder="Type your message here..."></textarea>
                                 
                                 <button type="button" onclick="document.getElementById('chatFileInput').click()" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-2 focus:outline-none">
                                     <i class="fas fa-paperclip text-base md:text-lg"></i>
@@ -659,18 +642,6 @@ main {
                 return '#';
             }
             return sanitized;
-        },
-        
-        // 🚨 FIX: Safe Markdown Code Block Parser
-        // Converts ```code``` into styled <pre><code> HTML while ensuring everything inside remains escaped
-        formatCodeBlocks(escapedStr) {
-            if (typeof escapedStr !== 'string') return escapedStr;
-            
-            // The string is ALREADY escaped by the time it reaches here.
-            // We just look for the triple backticks and wrap them in secure pre/code tags.
-            return escapedStr.replace(/```([\s\S]*?)```/g, function(match, codeContent) {
-                return `<pre><code>${codeContent}</code></pre>`;
-            });
         }
     };
 
@@ -1183,22 +1154,18 @@ main {
         },
 
         appendUserMessage(text) {
-            // 🚨 SECURITY: Sanitized User Input + Code Block Parsing
+            // 🚨 SECURITY: Sanitized User Input
             const safeText = SecurityUtils.escapeHTML(text);
-            const formattedText = SecurityUtils.formatCodeBlocks(safeText);
-            
             const div = document.createElement('div');
             div.className = "flex justify-end mb-4 animate-in slide-in-from-right-4 duration-300";
-            div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3 rounded-2xl rounded-tr-none text-xs font-bold shadow-lg shadow-blue-500/10 max-w-[80%]">${formattedText}</div>`;
+            div.innerHTML = `<div class="bg-blue-600 text-white px-5 py-3 rounded-2xl rounded-tr-none text-xs font-bold shadow-lg shadow-blue-500/10 max-w-[80%]">${safeText}</div>`;
             document.getElementById('assistant-chat').appendChild(div);
             this.scrollToAssistantBottom();
         },
 
         appendBotMessage(text) {
-            // 🚨 SECURITY: Sanitized Bot Input + Code Block Parsing
+            // 🚨 SECURITY: Sanitized Bot Input
             const safeText = SecurityUtils.escapeHTML(text);
-            const formattedText = SecurityUtils.formatCodeBlocks(safeText);
-            
             const div = document.createElement('div');
             div.className = "flex justify-start mb-4 animate-in slide-in-from-left-4 duration-300";
             div.innerHTML = `
@@ -1206,7 +1173,7 @@ main {
                     <div class="w-8 h-8 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm">
                         <i class="fas fa-robot text-xs text-blue-500"></i>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-2xl rounded-tl-none text-xs font-medium shadow-sm leading-relaxed">${formattedText}</div>
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-5 py-3 rounded-2xl rounded-tl-none text-xs font-medium shadow-sm leading-relaxed">${safeText}</div>
                 </div>`;
             document.getElementById('assistant-chat').appendChild(div);
             this.scrollToAssistantBottom();
@@ -1671,8 +1638,8 @@ main {
             const generateAdminItem = (name) => {
                 const userMsg = this.fullMessageCache.find(m => m.sender_name === name && m.sender_avatar);
                 const avatarSrc = userMsg ? userMsg.sender_avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=3b82f6&color=fff`;
-                // 🚨 SECURITY: Sanitizing admin name injection
-                const safeName = SecurityUtils.escapeHTML(name);
+                // SECURITY: Sanitizing admin name injection
+                const safeName = name; // The backend already sanitized this
 
                 return `
                 <div onclick="SupportConsole.loadTechnicianConversation('${safeName}')" id="staff-item-${safeName}"
@@ -1876,11 +1843,9 @@ main {
             }
 
             htmlContent += messages.map(msg => {
-                // 🚨 SECURITY: Sanitizing DOM Injections AND Parsing Code Blocks
-                const safeSenderName = SecurityUtils.escapeHTML(msg.sender_name);
-                const safeMessage = SecurityUtils.escapeHTML(msg.message);
-                const formattedMessage = SecurityUtils.formatCodeBlocks(safeMessage); // Convert code blocks!
-                
+                // 🚨 SECURITY: Sanitizing DOM Injections
+                const safeSenderName = msg.sender_name;
+                const safeMessage = msg.message;
                 const isMe = msg.is_me;
                 const attachments = msg.attachments || [];
 
@@ -1895,7 +1860,7 @@ main {
                     return `
                     <div class="flex justify-center py-2 animate-in fade-in duration-500 w-full">
                         <span class="text-[9px] bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full uppercase font-bold text-slate-500 border border-slate-200 dark:border-slate-700 shadow-sm">
-                            ${formattedMessage}
+                            ${safeMessage}
                         </span>
                     </div>`;
                 }
@@ -1974,8 +1939,8 @@ main {
                     <div class="max-w-[85%] sm:max-w-[75%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
                         <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-blue-500 text-right' : 'text-slate-500'}">${safeSenderName}</div>
                         ${hasText ? `
-                        <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words overflow-x-auto max-w-full">
-                            ${formattedMessage}
+                        <div class="px-4 py-2.5 rounded-2xl text-[13px] md:text-sm shadow-sm ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-bl-none'} break-words">
+                            ${safeMessage}
                         </div>` : ''}
                         ${mediaHtml}
                         ${fileHtml}
@@ -2018,8 +1983,8 @@ main {
             const tempId = 'temp-' + Date.now();
             const tempMsg = {
                 id: tempId,
-                message: messageText || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
-                sender_name: "{{ request.user.username|escapejs }}", 
+                message: SecurityUtils.escapeHTML(messageText) || (filesToUpload.length > 0 ? "Sending attachments..." : ""),
+                sender_name: SecurityUtils.escapeHTML("{{ request.user.username|escapejs }}"),
                 sender_avatar: myAvatarUrl, // FIX: Injects the real profile image!
                 is_me: true,
                 recipient_name: this.activeRecipient === 'GROUP_CHAT' ? 'Everyone' : (this.activeRecipient || "Everyone"),
