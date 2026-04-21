@@ -122,7 +122,8 @@ function loadAssets() {
         url: '/api/assets/',
         type: 'GET',
         success: function(data) {
-            allAssets = data;
+            // Sort data so the newest assets (highest ID) appear first
+            allAssets = data.sort((a, b) => b.id - a.id);
             updateTableUI();
             updateDashboardMetrics(data);
         },
