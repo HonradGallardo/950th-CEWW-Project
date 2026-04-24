@@ -12,7 +12,7 @@ class MaintenanceForm(forms.ModelForm):
         fields = [
             'asset', 'maintenance_type', 'status', 'notes', 
             'maintenance_date', 'faulty_hardware_part', 'software_issue_type',
-            'attachment' 
+            'attachment' , 'issue_description', 'solution_description', 'solved_description'
         ]
         widgets = {
             'asset': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
@@ -24,7 +24,10 @@ class MaintenanceForm(forms.ModelForm):
             'maintenance_date': forms.DateInput(attrs={'type': 'date', 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50'}),
             'faulty_hardware_part': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 appearance-none'}),
             'software_issue_type': forms.Select(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 appearance-none'}),
-            
+            'issue_description': forms.Textarea(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 h-32'}),
+            'solution_description': forms.Textarea(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 h-32'}),
+            'solved_description': forms.Textarea(attrs={'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 h-32'}),
+
             # --- NEW: ATTACHMENT WIDGET ---
             'attachment': forms.ClearableFileInput(attrs={
                 'class': 'w-full p-2 border rounded-lg text-sm bg-slate-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'

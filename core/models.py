@@ -144,6 +144,9 @@ class Maintenance(models.Model):
     # --- NEW: ADD THESE TWO FIELDS HERE ---
     faulty_hardware_part = models.CharField(max_length=50, choices=Asset.HARDWARE_PART_CHOICES, blank=True, null=True)
     software_issue_type = models.CharField(max_length=50, choices=Asset.SOFTWARE_ISSUE_CHOICES, blank=True, null=True)
+    issue_description = models.TextField(blank=True, null=True)
+    solution_description = models.TextField(blank=True, null=True)
+    solved_description = models.TextField(blank=True, null=True)
 
     date = models.DateTimeField(auto_now_add=True)  
     last_modified = models.DateTimeField(auto_now=True)

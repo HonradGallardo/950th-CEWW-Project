@@ -16,8 +16,7 @@
                 </button>
             </div>
             <div class="px-8 py-6 max-h-[70vh] overflow-y-auto custom-scrollbar bg-white dark:bg-[#0f172a]">
-                <div id="global-history-list" class="space-y-4">
-                    </div>
+                <div id="global-history-list" class="space-y-4"></div>
             </div>
             <div class="bg-slate-50 dark:bg-slate-800/50 px-8 py-4 flex justify-end">
                 <button type="button" onclick="closeFullHistoryModal()" class="rounded-xl border border-slate-300 dark:border-slate-600 px-6 py-2.5 bg-white dark:bg-slate-700 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 uppercase tracking-wider">
@@ -80,7 +79,6 @@
     <div class="flex-1 grid grid-cols-12 gap-6 lg:min-h-0 lg:overflow-hidden pb-10 sm:pb-4">
         
         <div class="col-span-12 lg:col-span-8 flex flex-col h-fit lg:h-full bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            
             <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
                 <div class="flex items-center space-x-3 flex-1 overflow-x-auto no-scrollbar">
                     <div class="relative flex-1 min-w-[150px] max-w-xs">
@@ -172,8 +170,7 @@
 
                     <div class="mb-5">
                         <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-2">Technical Hardware</label>
-                        <div id="hardware-grid" class="grid grid-cols-2 gap-2">
-                        </div>
+                        <div id="hardware-grid" class="grid grid-cols-2 gap-2"></div>
                     </div>
 
                     <div>
@@ -187,8 +184,7 @@
                         <label class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase block mb-3">
                             <i class="fas fa-history mr-1"></i> Asset Service History
                         </label>
-                        <div id="asset-history-list" class="space-y-3 max-h-[180px] overflow-y-auto custom-scrollbar pr-2">
-                            </div>
+                        <div id="asset-history-list" class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2"></div>
                     </div>
 
                 </div>
@@ -272,7 +268,6 @@ function initTable() {
 function renderTableRows(logs) {
     const $container = $('#tableBody');
     let html = '';
-
     if (logs.length === 0) {
         $container.html('<div class="col-span-full p-12 text-center text-slate-400 italic bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">No logs found matching your criteria.</div>');
         return;
@@ -281,21 +276,13 @@ function renderTableRows(logs) {
     logs.forEach(log => {
         const isCompleted = log.status === 'Completed';
         const statusPillClass = isCompleted 
-            ? "bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400" 
-            : "bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400";
-            
-        const hoverColorClass = isCompleted
-            ? "hover:border-emerald-400 hover:ring-4 hover:ring-emerald-500/20 dark:hover:border-emerald-500 dark:hover:ring-emerald-500/30"
-            : "hover:border-blue-400 hover:ring-4 hover:ring-blue-500/20 dark:hover:border-blue-500 dark:hover:ring-blue-500/30";
-
+            ? "bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" 
+            : "bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400";
         const accentLine = isCompleted ? "bg-emerald-500" : "bg-blue-500";
         const isActive = currentOpenLogId == log.id ? `ring-2 ring-blue-500 border-blue-500 shadow-lg` : `border-slate-200 dark:border-slate-700`;
-        const textDim = isCompleted ? "opacity-60" : "";
         
         const iconClass = getAssetIconClass(log.asset_name + " " + (log.maintenance_type || ''));
         const safeNotes = (log.notes || "No technical notes.").replace(/'/g, "\\'");
-        const safeFirmware = (log.firmware_os || 'N/A').replace(/'/g, "\\'");
-        const safeMac = (log.mac_address || 'N/A').replace(/'/g, "\\'");
 
         let displayDate = 'N/A';
         let displayTime = '--:--';
@@ -306,7 +293,7 @@ function renderTableRows(logs) {
         }
 
         html += `
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive} ${hoverColorClass}"
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border shadow-sm transition-all duration-300 relative overflow-hidden group cursor-pointer h-full flex flex-col ${isActive}"
              onclick="showDetails({
                  logId: '${log.id}',
                  assetId: '${log.asset_string_id}',
@@ -323,58 +310,40 @@ function renderTableRows(logs) {
                  ram: '${log.ram_gb || '0'}GB',
                  storage: '${log.storage || 'N/A'}',
                  ip: '${log.ip_address || 'Not Assigned'}',
-                 firmware: '${safeFirmware}',
-                 mac: '${safeMac}'
+                 firmware: '${(log.firmware_os || 'N/A').replace(/'/g, "\\'")}',
+                 mac: '${(log.mac_address || 'N/A').replace(/'/g, "\\'")}'
              })">
             
-            <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4 ${textDim}">
+            <div class="flex justify-between items-start mb-5 border-b border-slate-100 dark:border-slate-700/50 pb-4">
                 <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 group-hover:text-blue-500 transition-colors">
+                    <div class="w-14 h-14 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 flex items-center justify-center text-slate-500 shrink-0 group-hover:text-blue-500 transition-colors">
                         <i class="fas ${iconClass} text-2xl"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight tracking-tight truncate max-w-[180px]">${log.asset_name}</h3>
-                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest block mt-1">${log.asset_string_id}</span>
+                        <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight truncate max-w-[180px]">${log.asset_name}</h3>
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase block mt-1">${log.asset_string_id}</span>
                     </div>
                 </div>
-                
-                <div class="flex flex-col items-end gap-2 z-10 relative shrink-0 ml-2">
-                    <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusPillClass}">
-                        ${log.status}
-                    </span>
-                </div>
+                <span class="px-3 py-1 rounded-md text-[10px] font-black uppercase ${statusPillClass}">${log.status}</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10 ${textDim} mt-auto">
-                <div class="col-span-1">
-                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Service Type</label>
-                    <p class="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">${log.maintenance_type}</p>
-                </div>
-                <div class="col-span-1">
-                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Technician</label>
-                    <p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate">
-                        ${log.technician_name || 'System Generated'}
-                    </p>
-                </div>
-                <div class="col-span-2">
-                    <label class="text-[9px] uppercase font-black text-slate-400 tracking-widest block mb-1">Date Logged</label>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400">${displayDate} at ${displayTime}</p>
-                </div>
+            <div class="grid grid-cols-2 gap-y-4 gap-x-6 mb-2 relative z-10 mt-auto">
+                <div class="col-span-1"><label class="text-[9px] uppercase font-black text-slate-400 block">Service Type</label><p class="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">${log.maintenance_type}</p></div>
+                <div class="col-span-1"><label class="text-[9px] uppercase font-black text-slate-400 block">Technician</label><p class="text-sm font-medium text-slate-600 dark:text-slate-400 truncate">${log.technician_name || 'System'}</p></div>
+                <div class="col-span-2"><label class="text-[9px] uppercase font-black text-slate-400 block">Date Logged</label><p class="text-xs font-medium text-slate-500 dark:text-slate-400">${displayDate} at ${displayTime}</p></div>
             </div>
-            
             <div class="absolute bottom-0 left-0 w-full h-1 ${accentLine} opacity-50 group-hover:opacity-100 transition-opacity"></div>
         </div>`;
     });
-
     $container.html(html);
 }
 
+// THIS IS THE MAIN UPDATE FOR THE ASSET SERVICE HISTORY
 function showDetails(data) {
     currentOpenLogId = data.logId;
     $('#placeholder-content').addClass('hidden');
     $('#detail-content').removeClass('hidden');
     
-    // Update Standard Fields
     $('#det-id').text(data.name);
     $('#det-asset-type').text(data.a_type);
     $('#det-date').text(data.date);
@@ -388,66 +357,47 @@ function showDetails(data) {
 
     // Hardware Logic
     const hardwareContainer = $('#hardware-grid');
-    const type = (data.asset_category || '').toUpperCase();
-
-    if (type.includes('SERVER') || type.includes('ROUTER') || type.includes('SWITCH')) {
+    if ((data.asset_category || '').toUpperCase().match(/SERVER|ROUTER|SWITCH/)) {
         hardwareContainer.html(`
-            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                <p class="text-[8px] text-slate-400 uppercase font-bold">IP Address</p>
-                <p class="text-[15px] font-bold text-blue-500 font-mono">${data.ip}</p>
-            </div>
-            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                <p class="text-[8px] text-slate-400 uppercase font-bold">Firmware / OS</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.firmware}</p>
-            </div>
-            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                <p class="text-[8px] text-slate-400 uppercase font-bold">MAC Address</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200 font-mono">${data.mac}</p>
-            </div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800"><p class="text-[8px] text-slate-400 uppercase font-bold">IP</p><p class="text-[15px] font-bold text-blue-500 font-mono">${data.ip}</p></div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800"><p class="text-[8px] text-slate-400 uppercase font-bold">Firmware</p><p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.firmware}</p></div>
+            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800"><p class="text-[8px] text-slate-400 uppercase font-bold">MAC</p><p class="text-[15px] font-bold text-slate-700 dark:text-slate-200 font-mono">${data.mac}</p></div>
         `);
     } else {
         hardwareContainer.html(`
-            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                <p class="text-[8px] text-slate-400 uppercase font-bold">Processor</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.processor}</p>
-            </div>
-            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                <p class="text-[8px] text-slate-400 uppercase font-bold">RAM</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.ram}</p>
-            </div>
-            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
-                <p class="text-[8px] text-slate-400 uppercase font-bold">Storage</p>
-                <p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.storage}</p>
-            </div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800"><p class="text-[8px] text-slate-400 uppercase font-bold">Processor</p><p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.processor}</p></div>
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800"><p class="text-[8px] text-slate-400 uppercase font-bold">RAM</p><p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.ram}</p></div>
+            <div class="col-span-2 bg-slate-50/50 dark:bg-slate-800/30 p-2 rounded-lg border border-slate-100 dark:border-slate-800"><p class="text-[8px] text-slate-400 uppercase font-bold">Storage</p><p class="text-[15px] font-bold text-slate-700 dark:text-slate-200">${data.storage}</p></div>
         `);
     }
 
     const detIconClass = getAssetIconClass(data.name + " " + data.a_type);
     $('#det-icon').removeClass().addClass(`fas ${detIconClass} text-blue-500 dark:text-blue-400 text-xl`);
 
-    // --- GENERATE ASSET SERVICE HISTORY ---
+    // ASSET SERVICE HISTORY WITH 3-PART LOGS
     const historyContainer = $('#asset-history-list');
     let historyHtml = '';
-
-    const assetHistory = allMaintenanceLogs.filter(log => {
-        return log.asset_string_id === data.assetId || log.asset_name === data.name;
-    });
-
-    // Sort by the actual date provided in the log
+    const assetHistory = allMaintenanceLogs.filter(log => log.asset_string_id === data.assetId || log.asset_name === data.name);
     assetHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (assetHistory.length === 0) {
-        historyHtml = '<p class="text-[11px] text-slate-500 dark:text-slate-400 italic text-center py-4">No prior service telemetry.</p>';
+        historyHtml = '<p class="text-[11px] text-slate-500 italic text-center py-4">No prior telemetry.</p>';
     } else {
         assetHistory.forEach(log => {
             const isCurrent = log.id.toString() === data.logId.toString();
             const statusColor = log.status === 'Completed' ? 'text-emerald-500' : 'text-blue-500';
-            
-            // Format the date for the log entry
-            let logDate = 'N/A';
-            if (log.date) {
-                const d = new Date(log.date);
-                logDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            const logDate = log.date ? new Date(log.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'N/A';
+
+            // New Technical Logs Section
+            let techLogsHtml = '';
+            if (log.issue_description || log.solution_description || log.solved_description) {
+                techLogsHtml = `
+                    <div class="mt-2 space-y-1.5 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                        ${log.issue_description ? `<p class="text-[10px] leading-tight"><span class="text-rose-500 font-black uppercase text-[8px] mr-1">Issue:</span> <span class="text-slate-600 dark:text-slate-300">${log.issue_description}</span></p>` : ''}
+                        ${log.solution_description ? `<p class="text-[10px] leading-tight"><span class="text-amber-500 font-black uppercase text-[8px] mr-1">Action:</span> <span class="text-slate-600 dark:text-slate-300">${log.solution_description}</span></p>` : ''}
+                        ${log.solved_description ? `<p class="text-[10px] leading-tight"><span class="text-emerald-500 font-black uppercase text-[8px] mr-1">Status:</span> <span class="text-slate-600 dark:text-slate-300">${log.solved_description}</span></p>` : ''}
+                    </div>
+                `;
             }
 
             historyHtml += `
@@ -458,9 +408,7 @@ function showDetails(data) {
                             <p class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">${log.maintenance_type}</p>
                             <span class="text-[9px] font-mono text-slate-400">${logDate}</span>
                         </div>
-                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">
-                            BY: ${log.technician_name || 'SYSTEM'} • <span class="uppercase ${statusColor}">${log.status}</span>
-                        </p>
+                        ${techLogsHtml}
                         <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 line-clamp-1 italic">"${log.notes || 'No notes'}"</p>
                     </div>
                 </div>
@@ -477,7 +425,7 @@ function renderPagination(totalPages) {
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.innerText = i;
-        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-500 hover:bg-slate-50'}`;
+        btn.className = `w-7 h-7 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 border dark:border-slate-700 text-slate-500'}`;
         btn.onclick = () => { currentPage = i; initTable(); };
         container.appendChild(btn);
     }
@@ -487,11 +435,9 @@ function filterTable() { currentPage = 1; initTable(); }
 function openDeleteModal() { $('#deleteModal').removeClass('hidden'); }
 function closeDeleteModal() { $('#deleteModal').addClass('hidden'); }
 
-// Global History Functions
 function openFullHistoryModal() {
     const list = $('#global-history-list');
     let html = '';
-    
     if (allMaintenanceLogs.length === 0) {
         html = '<div class="text-center py-20 text-slate-400 italic text-sm">Registry is empty.</div>';
     } else {
@@ -499,31 +445,16 @@ function openFullHistoryModal() {
         sorted.forEach(log => {
             const statusColor = log.status === 'Completed' ? 'text-emerald-500' : 'text-blue-500';
             const icon = getAssetIconClass(log.asset_name);
-            const d = new Date(log.date);
-            const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
+            const dateStr = log.date ? new Date(log.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'N/A';
             html += `
-                <div class="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-4 hover:shadow-md transition-all">
-                    <div class="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 shrink-0">
-                        <i class="fas ${icon} text-lg"></i>
-                    </div>
+                <div class="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 flex items-center gap-4 hover:shadow-md transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400 shrink-0"><i class="fas ${icon} text-lg"></i></div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-start">
-                            <h4 class="text-sm font-black text-slate-800 dark:text-slate-100 truncate">${log.asset_name}</h4>
-                            <span class="text-[9px] font-mono text-slate-500">${dateStr}</span>
-                        </div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider">${log.asset_string_id}</span>
-                            <span class="text-slate-300 dark:text-slate-700">•</span>
-                            <span class="text-[10px] font-black uppercase text-slate-500">${log.maintenance_type}</span>
-                        </div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">Tech: ${log.technician_name || 'SYSTEM'}</p>
+                        <div class="flex justify-between items-start"><h4 class="text-sm font-black text-slate-800 dark:text-slate-100 truncate">${log.asset_name}</h4><span class="text-[9px] font-mono text-slate-500">${dateStr}</span></div>
+                        <div class="flex items-center gap-2 mt-1"><span class="text-[10px] font-black uppercase text-blue-600 tracking-wider">${log.asset_string_id}</span><span class="text-slate-300">•</span><span class="text-[10px] font-black uppercase text-slate-500">${log.maintenance_type}</span></div>
                     </div>
-                    <div class="shrink-0 text-right">
-                        <span class="text-[9px] font-black uppercase px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 ${statusColor}">${log.status}</span>
-                    </div>
-                </div>
-            `;
+                    <div class="shrink-0 text-right"><span class="text-[9px] font-black uppercase px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 ${statusColor}">${log.status}</span></div>
+                </div>`;
         });
     }
     list.html(html);

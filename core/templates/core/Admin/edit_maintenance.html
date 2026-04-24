@@ -36,7 +36,6 @@
                                         <span class="font-black text-blue-600 dark:text-blue-400">{{ form.instance.asset.assets_id }}</span> 
                                         <span class="mx-2 text-slate-300">|</span> 
                                         <span class="text-xs font-bold text-slate-500">{{ form.instance.asset.assets_name }}</span>
-                                        
                                         {% if form.instance.asset.status == 'Maintenance' %}
                                             <span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">
                                                 In Maintenance
@@ -56,7 +55,6 @@
                                     <div class="p-4 text-center text-xs text-slate-400 italic">Syncing with registry...</div>
                                 </div>
                             </div>
-                            
                             <div class="hidden">
                                 {{ form.asset }}
                                 <input type="hidden" id="custom-asset-tracker" value="{{ form.instance.asset.id|default_if_none:'' }}">
@@ -65,13 +63,13 @@
                     </div>
                 </div>
 
-                <div id="history-container" class="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col max-h-[350px] hidden mt-6">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4 shrink-0">
-                        <i class="fas fa-history"></i> Maintenance History
+                <div id="history-container" class="bg-blue-50/50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-100 dark:border-blue-900/30 hidden mt-4 transition-all">
+                    <label class="text-[9px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest flex items-center gap-2 mb-3">
+                        <i class="fas fa-history"></i> Detailed Maintenance History
                     </label>
-                    <div id="edit-maintenance-history-list" class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-grow">
+                    <div id="edit-maintenance-history-list" class="space-y-4 max-h-[300px] overflow-y-auto pr-3 custom-scrollbar">
                         <div class="text-center py-4">
-                            <i class="fas fa-spinner fa-spin text-slate-400 text-lg"></i>
+                            <i class="fas fa-spinner fa-spin text-blue-400 text-lg"></i>
                         </div>
                     </div>
                 </div>
@@ -91,7 +89,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Software/OS Issue</label>
                         <div class="relative group w-full">
@@ -103,7 +100,28 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <span class="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest block"><i class="fas fa-microchip mr-1"></i> Technical Reporting</span>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-rose-500 uppercase">1. Issue / Diagnostic Found</label>
+                            <textarea name="issue_description" id="id_issue_description" rows="2" placeholder="Describe the specific fault..." class="technical-textarea">{{ form.instance.issue_description|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-amber-500 uppercase">2. Action Taken / Solution</label>
+                            <textarea name="solution_description" id="id_solution_description" rows="2" placeholder="Describe the steps taken..." class="technical-textarea">{{ form.instance.solution_description|default:'' }}</textarea>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-emerald-500 uppercase">3. Resolved State / Verification</label>
+                            <textarea name="solved_description" id="id_solved_description" rows="2" placeholder="Confirm the current state..." class="technical-textarea">{{ form.instance.solved_description|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <div class="space-y-1">
                         <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Service Status</label>
                         <div class="relative w-full custom-dropdown" id="dropdown-status">
@@ -120,7 +138,6 @@
                                     </div>
                                 {% endfor %}
                             </div>
-
                             <div class="hidden">
                                 {{ form.status }}
                                 <input type="hidden" id="custom-status-tracker" value="{% if form.instance.status %}{{ form.instance.status }}{% else %}In Progress{% endif %}">
@@ -138,40 +155,28 @@
                     </div>
                 </div>
 
-                <div class="space-y-2 pt-2">
-                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 block">Description / Technical Notes</label>
-                    <div class="w-full">
-                        {{ form.notes }}
-                    </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-slate-700 dark:text-slate-300 block">General Notes (Internal)</label>
+                    <div class="w-full">{{ form.notes }}</div>
                 </div>
 
-                <div class="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <span class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest block">Reported Issue Photo (Before)</span>
-                    <label class="text-[8px] text-slate-400 uppercase font-bold">Upload a photo of the error screen or damaged hardware</label>
-                    <div class="w-full mt-1">
-                        <input type="file" name="maintenance_attachment" id="id_maintenance_attachment" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 dark:file:bg-amber-900/30 dark:file:text-amber-400 transition-all cursor-pointer focus:outline-none">
-                        
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div class="space-y-2">
+                        <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest block">Before Photo</span>
+                        <input type="file" name="maintenance_attachment" id="id_maintenance_attachment" class="file-input-custom">
                         {% if form.instance.maintenance_attachment %}
-                            <div class="mt-3 text-[9px] font-bold text-amber-600 flex flex-col gap-2 bg-amber-50 dark:bg-amber-900/20 w-fit px-3 py-3 rounded-xl border border-amber-100 dark:border-amber-800 shadow-sm">
-                                <span class="uppercase tracking-widest text-[8px] text-amber-500">Currently Uploaded Issue File:</span>
-                                <img src="{{ form.instance.maintenance_attachment.url }}" class="max-h-40 rounded-md object-contain border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-800" alt="Issue Photo">
-                                <a href="{{ form.instance.maintenance_attachment.url }}" target="_blank" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
+                            <div class="mt-2 preview-card border-amber-100 bg-amber-50 dark:bg-amber-900/10">
+                                <img src="{{ form.instance.maintenance_attachment.url }}" class="max-h-32 rounded object-contain mx-auto" alt="Issue Photo">
                             </div>
                         {% endif %}
                     </div>
-                </div>
 
-                <div id="completion-photo-container" class="{% if form.instance.status != 'Completed' %}hidden{% endif %} space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">Completed Service Photo (After)</span>
-                    <label class="text-[8px] text-slate-400 uppercase font-bold">Upload proof of repair or completed service logs</label>
-                    <div class="w-full mt-1">
-                        <input type="file" name="attachment" id="id_attachment" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 transition-all cursor-pointer focus:outline-none">
-                        
+                    <div id="completion-photo-container" class="{% if form.instance.status != 'Completed' %}hidden{% endif %} space-y-2">
+                        <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest block">After Photo</span>
+                        <input type="file" name="attachment" id="id_attachment" class="file-input-custom">
                         {% if form.instance.attachment %}
-                            <div class="mt-3 text-[9px] font-bold text-emerald-600 flex flex-col gap-2 bg-emerald-50 dark:bg-emerald-900/20 w-fit px-3 py-3 rounded-xl border border-emerald-100 dark:border-emerald-800 shadow-sm">
-                                <span class="uppercase tracking-widest text-[8px] text-emerald-500">Currently Uploaded Completion File:</span>
-                                <img src="{{ form.instance.attachment.url }}" class="max-h-40 rounded-md object-contain border border-emerald-200 dark:border-emerald-700 bg-white dark:bg-slate-800" alt="Completed Work">
-                                <a href="{{ form.instance.attachment.url }}" target="_blank" class="underline mt-1"><i class="fas fa-paperclip"></i> View Document / Image</a>
+                            <div class="mt-2 preview-card border-emerald-100 bg-emerald-50 dark:bg-emerald-900/10">
+                                <img src="{{ form.instance.attachment.url }}" class="max-h-32 rounded object-contain mx-auto" alt="Completed Work">
                             </div>
                         {% endif %}
                     </div>
@@ -180,7 +185,7 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-800 mt-6">
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 sm:py-3 rounded-lg transition active:scale-[0.98] shadow-lg shadow-blue-500/30 uppercase tracking-widest text-xs">
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-lg transition active:scale-[0.98] shadow-lg shadow-blue-500/30 uppercase tracking-widest text-xs">
                     {% if log_id %}Update Service Record{% else %}Save Service Record{% endif %}
                 </button>
             </div>
@@ -193,7 +198,7 @@ $(document).ready(function() {
     const logId = "{{ log_id|default:'' }}";
     const isEdit = logId !== "";
 
-    // Toggle the Completion Photo Upload based on Status Selection
+    // UI: Toggle completion photo
     $('#dropdown-status .dropdown-item').on('click', function() {
         const val = $(this).data('value');
         if (val === 'Completed') {
@@ -203,13 +208,9 @@ $(document).ready(function() {
         }
     });
 
-    // 1. FORCE-REMOVE 'REQUIRED' FROM NATIVE FIELDS
-    $('select[name="asset"], select[name="status"]').removeAttr('required').prop('required', false);
-
-    // 1.5 HARDWARE/SOFTWARE FILTERING LOGIC
+    // Hardware/Software Filters
     function filterDiagnostics(assetType) {
         if (!assetType) return;
-
         const hwMap = {
             'PC': ['Display', 'Keyboard', 'Storage', 'RAM', 'Motherboard', 'Power', 'Network', 'Cooling', 'Chassis', 'Other', ''],
             'Laptop': ['Display', 'Battery', 'Keyboard', 'Storage', 'RAM', 'Motherboard', 'Power', 'Network', 'Cooling', 'Chassis', 'Other', ''],
@@ -217,7 +218,6 @@ $(document).ready(function() {
             'Router': ['Power', 'Network', 'Cooling', 'Chassis', 'Other', ''],
             'Switch': ['Power', 'Network', 'Cooling', 'Chassis', 'Other', '']
         };
-
         const swMap = {
             'PC': ['OS', 'Driver', 'Security', 'Update', 'Config', 'License', 'Performance', 'App', ''],
             'Laptop': ['OS', 'Driver', 'Security', 'Update', 'Config', 'License', 'Performance', 'App', ''],
@@ -230,28 +230,20 @@ $(document).ready(function() {
         const allowedSw = swMap[assetType] || [];
 
         $('#id_faulty_hardware_part option').each(function() {
-            if (allowedHw.includes($(this).val())) {
-                $(this).removeAttr('disabled').show();
-            } else {
-                $(this).attr('disabled', 'disabled').hide();
-                if ($(this).is(':selected')) $('#id_faulty_hardware_part').val('');
-            }
+            if (allowedHw.includes($(this).val())) { $(this).removeAttr('disabled').show(); } 
+            else { $(this).attr('disabled', 'disabled').hide(); if ($(this).is(':selected')) $('#id_faulty_hardware_part').val(''); }
         });
 
         $('#id_software_issue_type option').each(function() {
-            if (allowedSw.includes($(this).val())) {
-                $(this).removeAttr('disabled').show();
-            } else {
-                $(this).attr('disabled', 'disabled').hide();
-                if ($(this).is(':selected')) $('#id_software_issue_type').val('');
-            }
+            if (allowedSw.includes($(this).val())) { $(this).removeAttr('disabled').show(); } 
+            else { $(this).attr('disabled', 'disabled').hide(); if ($(this).is(':selected')) $('#id_software_issue_type').val(''); }
         });
     }
 
     const initialAssetType = "{{ form.instance.asset.assets_type|default:'' }}";
     if (initialAssetType) filterDiagnostics(initialAssetType);
 
-    // 2. DYNAMIC ASSET FETCH
+    // FETCH ASSETS
     function fetchAssets() {
         $.ajax({
             url: '/api/assets/',
@@ -259,18 +251,15 @@ $(document).ready(function() {
             success: function(data) {
                 let html = '';
                 data.forEach(asset => {
-                    const maintenanceBadge = asset.status === 'Maintenance' 
-                        ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">In Maintenance</span>` 
-                        : '';
-
+                    const badge = asset.status === 'Maintenance' ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 rounded-full border border-amber-200">In Maintenance</span>` : '';
                     html += `
-                        <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-400 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0" 
+                        <div class="dropdown-item px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0" 
                              data-value="${asset.id}" data-type="${asset.assets_type}" data-name="${asset.assets_name}" data-stringid="${asset.assets_id}" data-search="${asset.assets_id} ${asset.assets_name}">
                             <div class="flex items-center w-full">
-                                <span class="font-black text-blue-600 dark:text-blue-400">${asset.assets_id}</span> 
+                                <span class="font-black text-blue-600">${asset.assets_id}</span> 
                                 <span class="mx-2 text-slate-300">|</span> 
                                 <span class="text-xs font-bold text-slate-500">${asset.assets_name}</span>
-                                ${maintenanceBadge}
+                                ${badge}
                             </div>
                         </div>`;
                 });
@@ -280,107 +269,65 @@ $(document).ready(function() {
     }
     fetchAssets();
 
-    // 3. FETCH HISTORY FOR SELECTED ASSET & SHOW IMAGES IN TIMELINE
+    // FETCH HISTORY (SCROLLABLE LOGS)
     function fetchAssetHistory(assetStringId, assetName) {
-        $('#history-container').removeClass('hidden');
-        $('#edit-maintenance-history-list').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-slate-400 text-lg"></i></div>');
-
+        if (!assetStringId) return;
+        $('#history-container').removeClass('hidden').addClass('animate-pulse');
+        $('#edit-maintenance-history-list').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-500 text-lg"></i></div>');
+        
         $.ajax({
             url: '/api/maintenance/',
             type: 'GET',
             success: function(data) {
+                $('#history-container').removeClass('animate-pulse');
                 const logsArray = Array.isArray(data) ? data : (data.results || []);
-
-                const assetLogs = logsArray.filter(log => {
-                    return (log.asset_string_id && log.asset_string_id.toString().trim() === assetStringId.trim()) || 
-                           (log.asset_name && log.asset_name.trim() === assetName.trim());
-                });
-
+                const assetLogs = logsArray.filter(log => (log.asset_string_id?.toString().trim() === assetStringId.trim()) || (log.asset_name?.trim() === assetName.trim()));
                 assetLogs.sort((a, b) => new Date(b.maintenance_date || b.date) - new Date(a.maintenance_date || a.date));
 
-                let historyHtml = '';
-
-                if (assetLogs.length === 0) {
-                    historyHtml = '<p class="text-[10px] font-bold text-slate-400 italic pt-2">No past maintenance records found.</p>';
-                } else {
-                    assetLogs.forEach(log => {
-                        const isCurrent = log.id.toString() === logId.toString();
-                        const isCompleted = log.status === 'Completed';
-                        const dotColor = isCompleted ? 'bg-emerald-500' : 'bg-blue-500';
-                        const badgeClass = isCompleted ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500';
-                        
-                        let logDate = 'N/A';
-                        if (log.maintenance_date) {
-                            logDate = new Date(log.maintenance_date).toLocaleDateString('en-GB').replace(/\//g, '-');
-                        } else if (log.date) {
-                            logDate = new Date(log.date).toLocaleDateString('en-GB').replace(/\//g, '-');
-                        }
-
-                        let diagHtml = '';
-                        if (log.faulty_hardware_part || log.software_issue_type) {
-                            const hw = log.faulty_hardware_part || '';
-                            const sw = log.software_issue_type || '';
-                            const sep = hw && sw ? ' | ' : '';
-                            diagHtml = `<p class="text-[9px] font-bold text-rose-500 uppercase mt-1"><i class="fas fa-wrench mr-1"></i>${hw}${sep}${sw}</p>`;
-                        }
-
-                        let notesHtml = log.notes ? `<p class="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">${log.notes}</p>` : '';
-
-                        // DYNAMICALLY INJECT THUMBNAILS
-                        let attachHtml = '';
-                        if (log.maintenance_attachment) {
-                            attachHtml += `
-                                <div class="mt-2 mb-1 inline-block mr-2">
-                                    <span class="text-[8px] font-bold text-amber-500 uppercase block mb-1">Reported Issue</span>
-                                    <a href="${log.maintenance_attachment}" target="_blank" class="block w-fit relative group border border-amber-200 dark:border-amber-700 rounded-md p-1 bg-amber-50/50 dark:bg-amber-900/10">
-                                        <img src="${log.maintenance_attachment}" class="h-14 w-auto rounded object-cover shadow-sm" alt="Issue Photo">
-                                    </a>
-                                </div>
-                            `;
-                        }
-                        if (log.attachment) {
-                            attachHtml += `
-                                <div class="mt-2 mb-1 inline-block">
-                                    <span class="text-[8px] font-bold text-emerald-500 uppercase block mb-1">Completed Repair</span>
-                                    <a href="${log.attachment}" target="_blank" class="block w-fit relative group border border-emerald-200 dark:border-emerald-700 rounded-md p-1 bg-emerald-50/50 dark:bg-emerald-900/10">
-                                        <img src="${log.attachment}" class="h-14 w-auto rounded object-cover shadow-sm" alt="Repair Photo">
-                                    </a>
-                                </div>
-                            `;
-                        }
-
-                        historyHtml += `
-                            <div class="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 pb-5 last:pb-0 mt-2">
-                                <div class="absolute -left-[5px] top-1 w-2 h-2 rounded-full ${dotColor}"></div>
-                                <div class="flex justify-between items-start">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase">${logDate} <span class="ml-1 text-slate-300 dark:text-slate-600">#LOG-${log.id}</span></p>
-                                    ${isCurrent ? '<span class="text-[8px] font-black text-white uppercase bg-blue-500 px-1.5 py-0.5 rounded shadow">Currently Editing</span>' : ''}
-                                </div>
-                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 leading-tight">${log.maintenance_type}</p>
-                                ${diagHtml}
-                                ${notesHtml}
-                                <div class="flex flex-wrap gap-2">${attachHtml}</div>
-                                <span class="inline-block mt-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${badgeClass}">${log.status}</span>
+                let historyHtml = assetLogs.length === 0 ? '<p class="text-[10px] font-bold text-slate-400 italic pt-2">No previous records for this asset.</p>' : '';
+                
+                assetLogs.forEach(log => {
+                    const isCurrent = log.id.toString() === logId.toString();
+                    const logDate = new Date(log.maintenance_date || log.date).toLocaleDateString('en-GB').replace(/\//g, '-');
+                    
+                    let techLogsHtml = '';
+                    if (log.issue_description || log.solution_description || log.solved_description) {
+                        techLogsHtml = `
+                            <div class="mt-2 space-y-1.5 p-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                ${log.issue_description ? `<p class="text-[10px] leading-tight"><span class="text-rose-500 font-black uppercase text-[8px] mr-1">Issue:</span> <span class="text-slate-600 dark:text-slate-300">${log.issue_description}</span></p>` : ''}
+                                ${log.solution_description ? `<p class="text-[10px] leading-tight"><span class="text-amber-500 font-black uppercase text-[8px] mr-1">Action:</span> <span class="text-slate-600 dark:text-slate-300">${log.solution_description}</span></p>` : ''}
+                                ${log.solved_description ? `<p class="text-[10px] leading-tight"><span class="text-emerald-500 font-black uppercase text-[8px] mr-1">Status:</span> <span class="text-slate-600 dark:text-slate-300">${log.solved_description}</span></p>` : ''}
                             </div>
                         `;
-                    });
-                }
+                    }
+
+                    historyHtml += `
+                        <div class="relative pl-5 border-l-2 ${isCurrent ? 'border-blue-500' : 'border-slate-300 dark:border-slate-600'} pb-4 last:pb-0">
+                            <div class="absolute -left-[7px] top-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${log.status === 'Completed' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'}"></div>
+                            <div class="bg-white dark:bg-slate-900/40 p-3 rounded-xl border ${isCurrent ? 'border-blue-200 dark:border-blue-800 shadow-sm shadow-blue-500/10' : 'border-slate-200 dark:border-slate-800'}">
+                                <div class="flex justify-between items-center mb-1">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">${logDate} #LOG-${log.id}</p>
+                                    ${isCurrent ? '<span class="px-1.5 py-0.5 rounded-md bg-blue-500 text-white text-[7px] font-black uppercase tracking-widest">Active</span>' : ''}
+                                </div>
+                                <p class="text-xs font-black text-slate-800 dark:text-slate-100">${log.maintenance_type}</p>
+                                ${techLogsHtml}
+                                ${log.notes ? `<p class="text-[9px] text-slate-400 mt-2 italic line-clamp-2 hover:line-clamp-none transition-all cursor-default">"${log.notes}"</p>` : ''}
+                            </div>
+                        </div>`;
+                });
                 $('#edit-maintenance-history-list').html(historyHtml);
             }
         });
     }
 
-    if (isEdit) {
-        fetchAssetHistory("{{ form.instance.asset.assets_id }}", "{{ form.instance.asset.assets_name }}");
-    }
+    if (isEdit) fetchAssetHistory("{{ form.instance.asset.assets_id }}", "{{ form.instance.asset.assets_name }}");
 
-    // 4. DROPDOWN UI LOGIC
+    // Dropdown UI logic
     $(document).on('click', '.dropdown-toggle', function(e) {
         e.stopPropagation();
         const $list = $(this).next('.dropdown-list');
         $('.dropdown-list').not($list).addClass('hidden');
-        $list.toggleClass('hidden');
-        if(!$list.hasClass('hidden')) $list.find('input').focus();
+        $list.toggleClass('hidden').find('input').focus();
     });
 
     $(document).on('click', '.dropdown-item', function() {
@@ -389,23 +336,17 @@ $(document).ready(function() {
         const assetName = $(this).data('name');
         const assetStringId = $(this).data('stringid');
         const assetIdText = $(this).find('span.text-blue-600').text();
-
         const $dropdown = $(this).closest('.custom-dropdown');
         
         if ($dropdown.attr('id') === 'dropdown-asset') {
             $('#custom-asset-tracker').val(val);
-            
-            const badgeHtml = $(this).find('.ml-auto').length > 0 ? `<span class="ml-auto px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">In Maintenance</span>` : '';
-            $dropdown.find('.selected-label').html(`<span class="font-black text-blue-600 dark:text-blue-400">${assetIdText}</span> <span class="mx-2 text-slate-300">|</span> <span class="text-xs font-bold text-slate-500">${assetName}</span> ${badgeHtml}`);
-            
+            $dropdown.find('.selected-label').html(`<span class="font-black text-blue-600">${assetIdText}</span> <span class="mx-2 text-slate-300">|</span> <span class="text-xs font-bold text-slate-500">${assetName}</span>`);
             filterDiagnostics(assetType);
             fetchAssetHistory(assetStringId, assetName);
-
         } else if ($dropdown.attr('id') === 'dropdown-status') {
             $dropdown.find('.selected-label').html($(this).html());
             $('#custom-status-tracker').val(val);
         }
-        
         $('.dropdown-list').addClass('hidden');
     });
 
@@ -418,20 +359,13 @@ $(document).ready(function() {
 
     $(document).on('click', function() { $('.dropdown-list').addClass('hidden'); });
 
-    // 5. API SUBMISSION
+    // API SUBMISSION
     $('#serviceLogForm').on('submit', function(e) {
         e.preventDefault();
-        
         const assetPk = $('#custom-asset-tracker').val();
         const statusVal = $('#custom-status-tracker').val();
-        const maintTypeVal = $('[name="maintenance_type"]').val();
-        const notesVal = $('textarea[name="notes"]').val();
         
-        const hwPartVal = $('[name="faulty_hardware_part"]').val() || null;
-        const swIssueVal = $('[name="software_issue_type"]').val() || null;
-        const dateVal = $('#id_maintenance_date').val() || null;
-
-        if (!assetPk || assetPk === "" || !statusVal || statusVal === "") {
+        if (!assetPk || !statusVal) {
             alert("Verification Failed: Please select an Asset and a Status.");
             return;
         }
@@ -442,24 +376,21 @@ $(document).ready(function() {
         const formData = new FormData();
         formData.append('asset', parseInt(assetPk));
         formData.append('status', statusVal);
-        formData.append('maintenance_type', maintTypeVal);
-        formData.append('notes', notesVal);
-        
-        if (hwPartVal) formData.append('faulty_hardware_part', hwPartVal);
-        if (swIssueVal) formData.append('software_issue_type', swIssueVal);
-        if (dateVal) formData.append('maintenance_date', dateVal);
+        formData.append('maintenance_type', $('[name="maintenance_type"]').val());
+        formData.append('notes', $('textarea[name="notes"]').val());
+        formData.append('maintenance_date', $('#id_maintenance_date').val() || '');
+        formData.append('faulty_hardware_part', $('[name="faulty_hardware_part"]').val() || '');
+        formData.append('software_issue_type', $('[name="software_issue_type"]').val() || '');
 
-        // CAPTURE REPORTED ISSUE PHOTO
-        const issueFileInput = $('#id_maintenance_attachment')[0];
-        if (issueFileInput && issueFileInput.files.length > 0) {
-            formData.append('maintenance_attachment', issueFileInput.files[0]);
-        }
+        formData.append('issue_description', $('#id_issue_description').val());
+        formData.append('solution_description', $('#id_solution_description').val());
+        formData.append('solved_description', $('#id_solved_description').val());
 
-        // CAPTURE COMPLETED SERVICE PHOTO
-        const compFileInput = $('#id_attachment')[0];
-        if (compFileInput && compFileInput.files.length > 0) {
-            formData.append('attachment', compFileInput.files[0]);
-        }
+        const issueFile = $('#id_maintenance_attachment')[0];
+        if (issueFile?.files.length > 0) formData.append('maintenance_attachment', issueFile.files[0]);
+
+        const compFile = $('#id_attachment')[0];
+        if (compFile?.files.length > 0) formData.append('attachment', compFile.files[0]);
 
         const apiUrl = isEdit ? `/api/maintenance/${logId}/` : '/api/maintenance/';
         const apiMethod = isEdit ? 'PUT' : 'POST';
@@ -469,15 +400,11 @@ $(document).ready(function() {
             type: apiMethod,
             headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
             data: formData,
-            processData: false, 
-            contentType: false, 
-            success: function() { 
-                window.location.href = '/maintenance/'; 
-            },
+            processData: false, contentType: false,
+            success: function() { window.location.href = '/maintenance/'; },
             error: function(xhr) {
                 $btn.prop('disabled', false).text('RETRY SUBMISSION');
-                console.error("API Error Response:", xhr.responseText);
-                alert("Submission Refused: " + (xhr.responseJSON?.detail || "Check form details."));
+                alert("Submission Refused: " + (xhr.responseJSON?.detail || "Check form fields."));
             }
         });
     });
@@ -485,36 +412,39 @@ $(document).ready(function() {
 </script>
 
 <style>
-    #serviceLogForm select, #serviceLogForm textarea, #serviceLogForm input[type="text"], #serviceLogForm input[type="date"] { 
-        width: 100% !important; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; font-size: 0.875rem; font-weight: 500; appearance: none; background-color: #ffffff;
+    /* Technical Area styling */
+    .technical-textarea {
+        width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; 
+        outline: none; font-size: 0.8rem; font-weight: 500; background-color: #f8fafc;
+        transition: all 0.2s; min-height: 80px; resize: vertical;
     }
-    body.dark-mode #serviceLogForm select, body.dark-mode #serviceLogForm textarea, body.dark-mode #serviceLogForm input[type="text"], body.dark-mode #serviceLogForm input[type="date"] {
-        background-color: #1e293b; border-color: #334155; color: #f1f5f9;
+    .dark .technical-textarea { background-color: #0f172a; border-color: #334155; color: #f1f5f9; }
+    .technical-textarea:focus { border-color: #3b82f6; }
+
+    /* Custom Scrollbar for the History section - Vibe Coder Blue */
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { 
+        background: #3b82f6; 
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: content-box;
     }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e40af; }
+
+    .file-input-custom { width: 100%; font-size: 0.75rem; color: #64748b; }
+    .file-input-custom::file-selector-button {
+        padding: 0.5rem 1rem; border-radius: 0.5rem; border: 0;
+        font-size: 0.7rem; font-weight: 900; cursor: pointer; margin-right: 0.5rem;
+        background-color: #f1f5f9; color: #475569;
+    }
+    .preview-card { padding: 0.75rem; border: 1px dashed; border-radius: 1rem; }
     
-    #serviceLogForm select:focus, #serviceLogForm textarea:focus, #serviceLogForm input[type="text"]:focus, #serviceLogForm input[type="date"]:focus {
-        border-color: #3b82f6;
+    #serviceLogForm select, #serviceLogForm textarea, #serviceLogForm input[type="text"], #serviceLogForm input[type="date"] { 
+        width: 100% !important; padding: 0.65rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; outline: none; font-size: 0.875rem; background-color: #fff;
     }
-
-    #serviceLogForm input[name="attachment"]::file-selector-button {
-        padding: 0.4rem 0.8rem; border-radius: 0.4rem; border: none; font-size: 0.7rem;
-        font-weight: 900; cursor: pointer; margin-right: 0.5rem;
-        background-color: #ecfdf5; color: #047857; transition: all 0.2s;
-    }
-    .dark #serviceLogForm input[name="attachment"]::file-selector-button { background-color: rgba(6, 78, 59, 0.3); color: #34d399; }
-
-    #serviceLogForm input[name="maintenance_attachment"]::file-selector-button {
-        padding: 0.4rem 0.8rem; border-radius: 0.4rem; border: none; font-size: 0.7rem;
-        font-weight: 900; cursor: pointer; margin-right: 0.5rem;
-        background-color: #fffbeb; color: #d97706; transition: all 0.2s;
-    }
-    .dark #serviceLogForm input[name="maintenance_attachment"]::file-selector-button { background-color: rgba(146, 64, 14, 0.3); color: #fbbf24; }
-
-    #asset-options-container::-webkit-scrollbar { width: 4px; }
-    #asset-options-container::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
-    .dropdown-item .ml-auto {
-        white-space: nowrap;
-        flex-shrink: 0;
+    .dark #serviceLogForm select, .dark #serviceLogForm textarea, .dark #serviceLogForm input[type="text"], .dark #serviceLogForm input[type="date"] {
+        background-color: #1e293b; border-color: #334155; color: #f1f5f9;
     }
 </style>
 {% endblock %}

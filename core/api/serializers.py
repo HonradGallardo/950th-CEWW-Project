@@ -73,6 +73,9 @@ class MaintenanceSerializer(serializers.ModelSerializer):
 
     faulty_hardware_part = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     software_issue_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    issue_description = serializers
+    solution_description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    solved_description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     formatted_maintenance_date = serializers.SerializerMethodField()
 
@@ -86,7 +89,7 @@ class MaintenanceSerializer(serializers.ModelSerializer):
             'processor', 'ram_gb', 'storage', 'ip_address', 
             'firmware_os', 'mac_address', 'asset_category',
             'faulty_hardware_part', 'software_issue_type',
-            'attachment', 'maintenance_attachment'
+            'attachment', 'maintenance_attachment', 'issue_description', 'solution_description', 'solved_description'
         ]
 
     def get_formatted_maintenance_date(self, obj):

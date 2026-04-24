@@ -345,7 +345,6 @@ function showAssetDetails(id) {
     $('#detail-type').text(asset.assets_type);
     $('#detail-icon').attr('class', `fas ${getIconClass(asset.assets_type)}`);
 
-    // Helper for inputs
     const inputClass = "w-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded px-2 py-1.5 outline-none focus:border-blue-500 transition-colors placeholder-slate-300 dark:placeholder-slate-600 shadow-sm";
 
     let specsHtml = `
@@ -372,18 +371,21 @@ function showAssetDetails(id) {
         specsHtml += `<div class="space-y-3">`;
     }
 
-    // 1. Logic for Networking/Infrastructure (Router, Switch, Server)
+    // --- SECTION 1: NETWORK & INFRASTRUCTURE (Router, Switch, Server) ---
     if (['Router', 'Switch', 'Server'].includes(asset.assets_type)) {
+        // Fallback version check: prioritizes firmware_version, then os_version
+        const versionValue = asset.firmware_version || asset.os_version || '';
+
         if (canEditAsset) {
             specsHtml += `
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Network Config</p>
-                    <input type="text" id="edit-ip" value="${asset.ip_address || ''}" placeholder="IP Address (e.g. 192.168.1.1)" class="${inputClass} font-mono text-blue-500">
+                    <input type="text" id="edit-ip" value="${asset.ip_address || ''}" placeholder="IP Address" class="${inputClass} font-mono text-blue-500">
                     <input type="text" id="edit-mac" value="${asset.mac_address || ''}" placeholder="MAC Address" class="${inputClass} font-mono">
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
-                    <p class="text-[9px] font-black text-slate-400 uppercase">Firmware Version</p>
-                    <input type="text" id="edit-firmware" value="${asset.firmware_version || ''}" placeholder="OS/Firmware Version" class="${inputClass}">
+                    <p class="text-[9px] font-black text-slate-400 uppercase">OS / Firmware Version</p>
+                    <input type="text" id="edit-firmware" value="${versionValue}" placeholder="Firmware/OS Version" class="${inputClass}">
                 </div>
             `;
         } else {
@@ -391,33 +393,34 @@ function showAssetDetails(id) {
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Network Config</p>
                     <p class="text-xs font-mono font-bold text-blue-500">${asset.ip_address || 'NO IP'}</p>
-                    <p class="text-[10px] font-mono text-slate-500 mt-1">${asset.mac_address || ''}</p>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1">${asset.mac_address || 'NO MAC'}</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Firmware</p>
-                    <p class="text-xs font-bold dark:text-slate-200">${asset.firmware_version || 'N/A'}</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase mb-1">OS / Firmware</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${versionValue || 'N/A'}</p>
                 </div>
             `;
         }
     }
 
-    // 2. Logic for Computing Details (PC, Laptop, Server)
-    if (['PC', 'Laptop', 'Server'].includes(asset.assets_type)) {
+    // --- SECTION 2: COMPUTING CORE (PC and Laptop ONLY) ---
+    // Removed 'Server' from here to hide Hardware Core for servers
+    if (['PC', 'Laptop'].includes(asset.assets_type)) {
         if (canEditAsset) {
             specsHtml += `
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Hardware Core</p>
-                    <input type="text" id="edit-processor" value="${asset.processor || ''}" placeholder="Processor (e.g. i7-12700K)" class="${inputClass}">
+                    <input type="text" id="edit-processor" value="${asset.processor || ''}" placeholder="Processor" class="${inputClass}">
                     <div class="flex gap-2">
                         <div class="w-1/3 relative">
                             <input type="number" id="edit-ram" value="${asset.ram_gb || ''}" placeholder="RAM" class="${inputClass}">
                             <span class="absolute right-2 top-1.5 text-[9px] font-bold text-slate-400">GB</span>
                         </div>
-                        <input type="text" id="edit-storage" value="${asset.storage_capacity || ''}" placeholder="Storage (e.g. 512GB SSD)" class="${inputClass} w-2/3">
+                        <input type="text" id="edit-storage" value="${asset.storage_capacity || ''}" placeholder="Storage" class="${inputClass} w-2/3">
                     </div>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
-                    <p class="text-[9px] font-black text-slate-400 uppercase">Operating System</p>
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Environment</p>
                     <input type="text" id="edit-os" value="${asset.os_version || ''}" placeholder="OS Version" class="${inputClass}">
                 </div>
             `;
@@ -438,11 +441,11 @@ function showAssetDetails(id) {
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Hardware Core</p>
                     <p class="text-xs font-bold dark:text-slate-200">${asset.processor || 'N/A'}</p>
-                    <p class="text-[10px] font-bold text-blue-600 mt-1">${asset.ram_gb || 0}GB RAM | ${asset.storage_capacity || ''}</p>
+                    <p class="text-[10px] font-bold text-blue-600 mt-1">${asset.ram_gb || 0}GB RAM | ${asset.storage_capacity || 'N/A'}</p>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Environment</p>
-                    <p class="text-xs font-bold dark:text-slate-200">${asset.os_version || 'Unknown OS'}</p>
+                    <p class="text-xs font-bold dark:text-slate-200">${asset.os_version || 'N/A'}</p>
                 </div>
             `;
 
