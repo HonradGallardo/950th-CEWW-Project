@@ -595,7 +595,8 @@ class AssetViewSet(viewsets.ModelViewSet):
     def handle_maintenance_logic(self, asset):
         if asset.status == 'Maintenance':
             maint_type = self.request.data.get('maintenance_reason', 'Auto-Generated Repair')
-
+            hw_component = self.request.data.get('hardware_component', '')
+            sw_issue = self.request.data.get('software_os_issue', '')
             # Always update asset field
             asset.maintenance_reason = maint_type
             asset.save(update_fields=['maintenance_reason'])
@@ -607,6 +608,8 @@ class AssetViewSet(viewsets.ModelViewSet):
                     asset=asset,
                     technician=self.request.user,
                     maintenance_type=maint_type,
+                    hardware_component=hw_component,
+                    software_os_issue=sw_issue,
                     status='In Progress',
                     notes=f"System auto-generated log: {asset.assets_name} was marked as 'Maintenance'."
                 )
