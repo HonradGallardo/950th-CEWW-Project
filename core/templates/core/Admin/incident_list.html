@@ -133,16 +133,16 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-12 gap-4 lg:h-[68vh] min-h-[500px] w-full mb-6">
+    <div class="grid grid-cols-12 gap-4 w-full mb-6 items-start">
         
-        <div class="col-span-12 lg:col-span-7 flex flex-col h-[500px] lg:h-full min-w-0">
-            <div class="bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300 relative">
+        <div class="col-span-12 lg:col-span-7 flex flex-col min-w-0">
+            <div class="bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col overflow-hidden transition-all duration-300 relative">
                 
                 <div class="px-4 py-3 sm:px-5 border-b border-slate-100 dark:border-slate-700/80 bg-white dark:bg-slate-800 flex items-center justify-between shrink-0 shadow-sm z-10">
                     <span class="font-rajdhani text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Active Incident Feed</span>
                 </div>
 
-                <div class="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar p-3 sm:p-4">
+                <div class="p-3 sm:p-4">
                     <div id="incidentGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="col-span-full p-10 text-center text-slate-400 italic">
                             <i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i> Fetching live telemetry...
@@ -157,7 +157,7 @@
             </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-5 flex flex-col h-[700px] lg:h-full min-w-0">
+        <div class="col-span-12 lg:col-span-5 flex flex-col min-w-0 lg:sticky lg:top-6 lg:h-[85vh] h-[700px]">
             <div id="incidentDetailPanel" class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/80 flex flex-col h-full overflow-hidden transition-all duration-300 relative group">
                 
                 <div id="emptyState" class="absolute inset-0 z-20 bg-white dark:bg-slate-800 flex flex-col items-center justify-center text-center p-6 transition-opacity duration-300">
