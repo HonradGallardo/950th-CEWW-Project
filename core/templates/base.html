@@ -433,7 +433,8 @@
             });
 
             // Sidebar Burger Toggle (Now strictly handles Mobile view)
-            $('#burgerBtn').on('click', function() {
+            $('#burgerBtn').on('click', function(e) {
+                e.stopPropagation(); // NEW: Prevents the click from instantly triggering the window click below
                 $('body').toggleClass('sidebar-open');
             });
 
@@ -456,8 +457,14 @@
             });
 
             $(window).on('click', function(e) {
+                // Close dropdowns if clicking outside
                 if (!$(e.target).closest('#userMenuBtn').length) $('#userDropdown').addClass('hidden');
                 if (!$(e.target).closest('#notifBtn').length) $('#notifDropdown').addClass('hidden');
+
+                // NEW: Close mobile sidebar when clicking outside of it (on the overlay)
+                if ($('body').hasClass('sidebar-open') && !$(e.target).closest('#sidebar').length) {
+                    $('body').removeClass('sidebar-open');
+                }
             });
 
             // Theme Toggle
