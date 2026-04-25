@@ -30,8 +30,8 @@
         </div>
     </div>
 </div>
+<div id="incident-dashboard-top" class="font-plex flex flex-col space-y-4 p-3 sm:p-4 md:p-6 transition-colors duration-300 bg-slate-50/50 dark:bg-slate-900 w-full min-h-full scroll-mt-24">
 
-<div class="font-plex flex flex-col space-y-4 p-3 sm:p-4 md:p-6 transition-colors duration-300 bg-slate-50/50 dark:bg-slate-900 w-full h-full">
     
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-3 px-1">
         <div>
@@ -468,9 +468,9 @@ function renderPagination(totalPages) {
                 currentPage = page; 
                 initGrid(); 
 
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
+                document.getElementById('incident-dashboard-top').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
                 });
             });
         }
