@@ -225,7 +225,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             )
 
         text = strip_tags(request.data.get('message', '').strip())
-        recipient_username = request.data.get('recipient')
+        recipient_username = request.data.get('recipient') 
         is_group_chat = request.data.get('is_group_chat') == 'true'
         files = request.FILES.getlist('attachments') 
 
@@ -276,6 +276,17 @@ class TicketViewSet(viewsets.ModelViewSet):
                 )
             except Exception as e:
                 print("File Upload Error:", e)
+
+        # ---------------------------------------------------------
+        # NEW LOGIC: Automatically update the last active chat tab
+        # ---------------------------------------------------------
+        if is_group_chat:
+            ticket.last_technician = 'GROUP_CHAT'
+        else:
+            # If the sender is staff, log them. If the sender is the client, log the targeted admin.
+            ticket.last_technician = request.user.username if request.user.is_staff else recipient_username
+            
+        ticket.save(update_fields=['last_technician'])
             
         return Response({'status': 'success'})
     
