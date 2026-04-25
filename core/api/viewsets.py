@@ -673,6 +673,20 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
             
         instance = serializer.save(**save_kwargs)
         
+        # 1. SMART LOGIC: If a new maintenance task is started, mark the asset as Under Maintenance
+        asset = instance.asset
+        if asset and instance.status != 'Completed':
+            asset.status = 'Maintenance'
+            asset.maintenance_reason = instance.maintenance_type
+            asset.faulty_hardware_part = instance.faulty_hardware_part
+            asset.software_issue_type = instance.software_issue_type
+            asset.save(update_fields=['status', 'maintenance_reason', 'faulty_hardware_part', 'software_issue_type'])
+            
+        # 2. If it's somehow created as 'Completed' right away, ensure the asset is active
+        elif asset and instance.status == 'Completed':
+            asset.status = 'Active'
+            asset.save(update_fields=['status'])
+        
         # FIX: Manually trigger the notification to the database so the frontend can catch it
         Notification.objects.create(
             recipient=self.request.user, 
