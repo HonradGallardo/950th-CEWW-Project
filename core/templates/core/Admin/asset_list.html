@@ -65,13 +65,13 @@
             </div>
         </div>
 
-        <div id="asset-detail-panel" class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[400px] sticky top-6">
-            <div id="detail-placeholder" class="h-full flex flex-col items-center justify-center text-center p-6">
+        <div id="asset-detail-panel" class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[400px] max-h-[85vh] overflow-y-auto custom-scrollbar sticky top-6">
+            <div id="detail-placeholder" class="h-full flex flex-col items-center justify-center text-center p-6 mt-10">
                 <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 mb-4">
                     <i class="fas fa-microchip text-2xl"></i>
                 </div>
                 <h4 class="font-rajdhani text-[10px] font-black uppercase tracking-widest text-slate-400">Asset Inspector</h4>
-                <p class="text-xs text-slate-500 mt-2 italic">Select an asset to analyze technical specifications.</p>
+                <p class="text-xs text-slate-500 mt-2 italic">Select an asset to analyze full specifications.</p>
             </div>
 
             <div id="detail-content" class="hidden">
@@ -122,7 +122,6 @@ function loadAssets() {
         url: '/api/assets/',
         type: 'GET',
         success: function(data) {
-            // Sort data so the newest assets (highest ID) appear first
             allAssets = data.sort((a, b) => b.id - a.id);
             updateTableUI();
             updateDashboardMetrics(data);
@@ -173,7 +172,6 @@ function renderCards(items) {
         const iconClass = getIconClass(asset.assets_type);
         const hoverColorClass = getStatusHoverColor(asset.status);
 
-        // 🚨 SECURITY FIX: DOM XSS Mitigation
         const safeId = SecurityUtils.escapeHTML(String(asset.id));
         const safeName = SecurityUtils.escapeHTML(asset.assets_name || 'Unnamed Asset');
         const safeBrand = SecurityUtils.escapeHTML(asset.brand || '');
@@ -193,7 +191,6 @@ function renderCards(items) {
             safeSecondaryLabel = 'Core Specs';
             safeSecondaryStat = SecurityUtils.escapeHTML((asset.ram_gb ? asset.ram_gb + 'GB RAM' : 'N/A'));
         } else {
-            // Router, Switch, Server
             safeSecondaryLabel = 'Network Config';
             safeSecondaryStat = SecurityUtils.escapeHTML((asset.total_ports ? asset.total_ports + ' Ports' : 'N/A') + (asset.dual_psu ? ' (Dual PSU)' : ''));
         }
@@ -374,14 +371,18 @@ function showAssetDetails(id) {
     $('#detail-placeholder').addClass('hidden');
     $('#detail-content').removeClass('hidden');
 
-    // 🚨 SECURITY: Safe DOM manipulation
-    $('#detail-name').text(asset.assets_name);
+    $('#detail-name').text(asset.assets_name || 'Unnamed Asset');
     $('#detail-type').text(asset.assets_type);
     $('#detail-icon').attr('class', `fas ${getIconClass(asset.assets_type)}`);
 
     const inputClass = "w-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded px-2 py-1.5 outline-none focus:border-blue-500 transition-colors placeholder-slate-300 dark:placeholder-slate-600 shadow-sm";
 
-    // 🚨 DATA FIX: Properly Map OS, Network, and Hardware based on updated images
+    // Data Mapping for full Edit Page fidelity
+    const safeName = SecurityUtils.escapeHTML(asset.assets_name || '');
+    const safeBrand = SecurityUtils.escapeHTML(asset.brand || '');
+    const safeSerial = SecurityUtils.escapeHTML(asset.serial_number || '');
+    const safeLocation = SecurityUtils.escapeHTML(asset.location || '');
+    const safePersonnel = SecurityUtils.escapeHTML(asset.assigned_personnel || '');
     const safeStatus = SecurityUtils.escapeHTML(asset.status || 'Unknown');
     const safeAssetId = SecurityUtils.escapeHTML(asset.assets_id || '');
     const safeIdValue = SecurityUtils.escapeHTML(String(asset.id));
@@ -397,34 +398,98 @@ function showAssetDetails(id) {
     const isDualPsu = asset.dual_psu === true || asset.dual_psu === 'true';
 
     let specsHtml = `
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
-                <p class="text-xs font-bold ${asset.status === 'Active' ? 'text-emerald-500' : 'text-amber-500'}">${safeStatus}</p>
-            </div>
-            <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Asset ID</label>
-                <p class="text-xs font-mono font-bold dark:text-slate-300">#${safeAssetId}</p>
-            </div>
+        <div class="flex justify-between items-center mb-3">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Base Identification</label>
+            ${canEditAsset ? `<span class="text-[8px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded uppercase tracking-wider"><i class="fas fa-lock-open mr-1"></i>Edit Mode</span>` : ''}
         </div>
-        <div class="pt-4 border-t border-slate-100 dark:border-slate-700/50 mt-4">
-            <div class="flex justify-between items-center mb-3">
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Hardware Payload Details</label>
-                ${canEditAsset ? `<span class="text-[8px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded uppercase tracking-wider"><i class="fas fa-lock-open mr-1"></i>Edit Mode</span>` : ''}
-            </div>
     `;
 
     if (canEditAsset) {
-        specsHtml += `<form id="inlineSpecsForm" onsubmit="saveAssetSpecs(event, '${safeIdValue}')" class="space-y-3 relative">`;
+        specsHtml += `<form id="inlineSpecsForm" onsubmit="saveAssetSpecs(event, '${safeIdValue}')" class="space-y-4 relative">`;
+
+        // 📝 BASE IDENTIFICATION (EDIT MODE)
+        specsHtml += `
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Asset Name</label>
+                        <input type="text" id="edit-name" value="${safeName}" class="${inputClass} edit-field">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Brand / Manufacturer</label>
+                        <input type="text" id="edit-brand" value="${safeBrand}" class="${inputClass} edit-field">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Serial Number (S/N)</label>
+                        <input type="text" id="edit-serial" value="${safeSerial}" class="${inputClass} font-mono edit-field">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Physical Location</label>
+                        <input type="text" id="edit-location" value="${safeLocation}" class="${inputClass} edit-field">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Assigned Personnel</label>
+                        <input type="text" id="edit-personnel" value="${safePersonnel}" class="${inputClass} edit-field">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block">Operational Status</label>
+                        <select id="edit-status" class="${inputClass} edit-field cursor-pointer">
+                            <option value="Active" ${safeStatus === 'Active' ? 'selected' : ''}>Active</option>
+                            <option value="Inactive" ${safeStatus === 'Inactive' ? 'selected' : ''}>Inactive</option>
+                            <option value="Under Maintenance" ${safeStatus === 'Under Maintenance' ? 'selected' : ''}>Under Maintenance</option>
+                            <option value="Decommissioned" ${safeStatus === 'Decommissioned' ? 'selected' : ''}>Decommissioned</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
     } else {
-        specsHtml += `<div class="space-y-3">`;
+        specsHtml += `<div class="space-y-4">`;
+        
+        // 👁️ BASE IDENTIFICATION (VIEW MODE)
+        specsHtml += `
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                <div class="grid grid-cols-2 gap-y-4 gap-x-2">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Asset ID</label>
+                        <p class="text-xs font-mono font-bold dark:text-slate-300">#${safeAssetId}</p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Status</label>
+                        <p class="text-xs font-bold ${asset.status === 'Active' ? 'text-emerald-500' : 'text-amber-500'}">${safeStatus}</p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Brand / Mfg</label>
+                        <p class="text-xs font-bold dark:text-slate-300">${safeBrand || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Serial Number</label>
+                        <p class="text-xs font-mono font-bold dark:text-slate-300">${safeSerial || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Location</label>
+                        <p class="text-xs font-bold dark:text-slate-300 flex items-center gap-1"><i class="fas fa-map-marker-alt text-[10px] text-slate-400"></i> ${safeLocation || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Personnel</label>
+                        <p class="text-xs font-bold dark:text-slate-300">${safePersonnel || 'N/A'}</p>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
-    // 1. NETWORK & PORT CONFIG (Router, Switch, Server)
+    // 🔧 HARDWARE PAYLOAD SECTION HEADER
+    specsHtml += `
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-700/50">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Hardware Payload Details</label>
+    `;
+
+    // 1. NETWORK CONFIG (Router, Switch, Server)
     if (['Router', 'Switch', 'Server'].includes(asset.assets_type)) {
         if (canEditAsset) {
             specsHtml += `
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2 mb-3">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Network Config</p>
                     <input type="text" id="edit-ip" value="${safeIp}" placeholder="Static IP Address" class="${inputClass} font-mono text-blue-500 edit-field">
                     <input type="text" id="edit-mac" value="${safeMac}" placeholder="MAC Address" class="${inputClass} font-mono edit-field">
@@ -435,14 +500,14 @@ function showAssetDetails(id) {
                         </div>
                         <div class="w-1/2 flex items-center gap-2 px-1">
                             <input type="checkbox" id="edit-psu" ${isDualPsu ? 'checked' : ''} class="w-4 h-4 text-blue-600 rounded border-slate-300 dark:border-slate-600 focus:ring-blue-500">
-                            <label for="edit-psu" class="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider cursor-pointer">Dual/Redundant PSU</label>
+                            <label for="edit-psu" class="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider cursor-pointer">Dual PSU</label>
                         </div>
                     </div>
                 </div>
             `;
         } else {
             specsHtml += `
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 mb-3">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Network Config</p>
                     <p class="text-xs font-mono font-bold text-blue-500">${safeIp || 'NO IP'}</p>
                     <p class="text-[10px] font-mono text-slate-500 mt-1">${safeMac || 'NO MAC'}</p>
@@ -456,7 +521,7 @@ function showAssetDetails(id) {
     if (['PC', 'Laptop'].includes(asset.assets_type)) {
         if (canEditAsset) {
             specsHtml += `
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2 mb-3">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Hardware Core</p>
                     <input type="text" id="edit-processor" value="${safeProcessor}" placeholder="Processor (e.g. Intel i7)" class="${inputClass} edit-field">
                     <div class="flex gap-2">
@@ -470,7 +535,7 @@ function showAssetDetails(id) {
             `;
         } else {
             specsHtml += `
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 mb-3">
                     <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Hardware Core</p>
                     <p class="text-xs font-bold dark:text-slate-200">${safeProcessor || 'N/A'}</p>
                     <p class="text-[10px] font-bold text-blue-600 mt-1">${safeRam || 0}GB RAM | ${safeStorage || 'Unknown Storage'}</p>
@@ -482,14 +547,14 @@ function showAssetDetails(id) {
     // 3. OS / FIRMWARE VERSION (All Assets)
     if (canEditAsset) {
         specsHtml += `
-            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2 mb-3">
                 <p class="text-[9px] font-black text-slate-400 uppercase">OS / Firmware Version</p>
                 <input type="text" id="edit-os" value="${safeOs}" placeholder="OS Version" class="${inputClass} edit-field">
             </div>
         `;
     } else {
         specsHtml += `
-            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 mb-3">
                 <p class="text-[9px] font-black text-slate-400 uppercase mb-1">OS / Firmware Version</p>
                 <p class="text-xs font-bold dark:text-slate-200">${safeOs || 'Unknown'}</p>
             </div>
@@ -500,7 +565,7 @@ function showAssetDetails(id) {
     if (asset.assets_type === 'Laptop') {
         if (canEditAsset) {
             specsHtml += `
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2">
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 space-y-2 mb-3">
                     <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health %</p>
                     <div class="relative w-1/3">
                         <input type="number" min="0" max="100" id="edit-battery" value="${safeBatteryHealth}" placeholder="Health %" class="${inputClass} edit-field">
@@ -512,7 +577,7 @@ function showAssetDetails(id) {
             const health = asset.battery_health;
             const barColor = health > 70 ? 'bg-emerald-500' : health > 40 ? 'bg-amber-500' : 'bg-red-500';
             specsHtml += `
-                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
+                <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700 mb-3">
                     <div class="flex justify-between items-center mb-1">
                         <p class="text-[9px] font-black text-slate-400 uppercase">Battery Health</p>
                         <span class="text-[10px] font-bold dark:text-slate-300">${health}%</span>
@@ -525,6 +590,8 @@ function showAssetDetails(id) {
         }
     }
 
+    specsHtml += `</div>`; // Close Payload Div
+
     if (canEditAsset) {
         specsHtml += `
                 <div class="flex gap-3 mt-5">
@@ -532,7 +599,7 @@ function showAssetDetails(id) {
                         <i class="fas fa-trash-alt group-hover:scale-110 transition-transform"></i>
                     </button>
                     <button type="submit" id="saveSpecsBtn" class="flex-1 bg-slate-800 hover:bg-slate-900 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all shadow-sm">
-                        Save Specifications
+                        Save Changes
                     </button>
                 </div>
             </form></div>
@@ -543,7 +610,6 @@ function showAssetDetails(id) {
 
     $('#detail-specs-list').html(specsHtml);
 
-    // ✨ Smooth Scroll Fix: Only triggers on smaller screens (Mobile/Tablet) and uses native browser smooth scroll
     if (window.innerWidth < 1024) {
         const panel = document.getElementById('asset-detail-panel');
         if (panel) {
@@ -552,7 +618,7 @@ function showAssetDetails(id) {
     }
 }
 
-// 🚨 NEW: DELETE ASSET FUNCTION
+// DELETE ASSET FUNCTION
 function deleteAsset(assetId) {
     if (!confirm("⚠️ WARNING: Are you sure you want to permanently delete this asset? This action cannot be undone.")) {
         return;
@@ -565,14 +631,9 @@ function deleteAsset(assetId) {
         type: 'DELETE',
         headers: { 'X-CSRFToken': csrfToken },
         success: function() {
-            // Remove from the local array
             allAssets = allAssets.filter(a => a.id != assetId);
-            
-            // Hide the details panel and bring back the placeholder
             $('#detail-content').addClass('hidden');
             $('#detail-placeholder').removeClass('hidden');
-            
-            // Immediately refresh the UI and charts
             updateTableUI();
             updateDashboardMetrics(allAssets);
         },
@@ -583,12 +644,22 @@ function deleteAsset(assetId) {
     });
 }
 
-// 🚨 SECURITY: Active Pre-Submission Payload Rejection
+// SECURITY: Active Pre-Submission Payload Rejection
 function saveAssetSpecs(event, assetId) {
     event.preventDefault();
     const btn = $('#saveSpecsBtn');
     
     const payload = {};
+    
+    // Base Identity Payload Data
+    if($('#edit-name').length) payload.assets_name = $('#edit-name').val() || null;
+    if($('#edit-brand').length) payload.brand = $('#edit-brand').val() || null;
+    if($('#edit-serial').length) payload.serial_number = $('#edit-serial').val() || null;
+    if($('#edit-location').length) payload.location = $('#edit-location').val() || null;
+    if($('#edit-personnel').length) payload.assigned_personnel = $('#edit-personnel').val() || null;
+    if($('#edit-status').length) payload.status = $('#edit-status').val() || 'Active';
+    
+    // Hardware Payload Data
     if($('#edit-ip').length) payload.ip_address = $('#edit-ip').val() || null;
     if($('#edit-mac').length) payload.mac_address = $('#edit-mac').val() || null;
     if($('#edit-processor').length) payload.processor = $('#edit-processor').val() || null;
@@ -611,11 +682,10 @@ function saveAssetSpecs(event, assetId) {
         payload.dual_psu = $('#edit-psu').is(':checked');
     }
 
-    // 🚨 SECURITY BLOCK: XSS Verification
+    // XSS Verification
     const xssRegex = /<[a-z][\s\S]*>/i;
     let securityViolation = false;
     
-    // Reset previous warnings
     $('.xss-security-warning').remove();
     $('.edit-field').removeClass('border-red-500 focus:border-red-500 focus:ring-red-500/20 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-100');
 
@@ -623,8 +693,9 @@ function saveAssetSpecs(event, assetId) {
         if (typeof val === 'string' && (xssRegex.test(val) || val.toLowerCase().includes('javascript:') || val.toLowerCase().includes('onerror='))) {
             securityViolation = true;
             
-            // Map the payload key back to its input ID for visual highlighting
             const inputMap = {
+                'assets_name': '#edit-name', 'brand': '#edit-brand', 'serial_number': '#edit-serial',
+                'location': '#edit-location', 'assigned_personnel': '#edit-personnel',
                 'ip_address': '#edit-ip', 'mac_address': '#edit-mac', 
                 'processor': '#edit-processor', 'storage_capacity': '#edit-storage', 
                 'os_version': '#edit-os', 'total_ports': '#edit-ports'
@@ -646,13 +717,12 @@ function saveAssetSpecs(event, assetId) {
     }
 
     if (securityViolation) {
-        return false; // Abort the AJAX call
+        return false;
     }
 
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Saving...');
     const csrfToken = $('form[style="display:none;"] input[name="csrfmiddlewaretoken"]').val() || '{{ csrf_token|escapejs }}';
 
-    // 🚨 Double protection: Escape all strings going into the JSON payload
     for (const key in payload) {
         if (typeof payload[key] === 'string') {
             payload[key] = SecurityUtils.escapeHTML(payload[key]);
@@ -671,8 +741,10 @@ function saveAssetSpecs(event, assetId) {
             
             btn.removeClass('bg-slate-800 dark:bg-blue-600').addClass('bg-emerald-500').html('<i class="fas fa-check mr-1"></i> Saved');
             
+            updateTableUI(); // Instantly refresh the cards to show new names/locations
+            
             setTimeout(() => {
-                btn.prop('disabled', false).removeClass('bg-emerald-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Specifications');
+                btn.prop('disabled', false).removeClass('bg-emerald-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Changes');
                 showAssetDetails(assetId);
             }, 1000);
         },
@@ -680,7 +752,7 @@ function saveAssetSpecs(event, assetId) {
             btn.prop('disabled', false).removeClass('bg-slate-800 dark:bg-blue-600').addClass('bg-red-500').html('<i class="fas fa-exclamation-triangle mr-1"></i> Error');
             
             setTimeout(() => {
-                btn.removeClass('bg-red-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Specifications');
+                btn.removeClass('bg-red-500').addClass('bg-slate-800 dark:bg-blue-600').text('Save Changes');
             }, 3000);
             
             console.error("API Error:", xhr.responseText);
