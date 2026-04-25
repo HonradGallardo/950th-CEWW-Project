@@ -49,13 +49,20 @@ class MaintenanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Maintenance
-        # Successfully merged fields to include both asset_string_id and the hardware specs
+        # Successfully merged fields to include asset data AND the missing maintenance fields
         fields = [
-            'id', 'asset_string_id', 'asset_name', 'asset_type', 
+            'id', 'asset', 'asset_string_id', 'asset_name', 'asset_type', 
             'maintenance_type', 'technician_name', 'date', 
             'last_modified', 'status', 'notes',
             'processor', 'ram_gb', 'storage', 'ip_address', 
             'firmware_os', 'mac_address', 'asset_category',
+            
+            # --- THE MISSING FIELDS REQUIRED FOR SAVING ---
+            'faulty_hardware_part', 
+            'software_issue_type',
+            'maintenance_date',
+            'attachment', 
+            'maintenance_attachment'
         ]
 
 class IncidentSerializer(serializers.ModelSerializer):

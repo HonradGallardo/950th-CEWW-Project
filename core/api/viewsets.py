@@ -689,12 +689,17 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
             
         instance = serializer.save(**save_kwargs)
         
-        # 2. SMART LOGIC: If maintenance is completed, automatically activate the asset
-        if instance.status == 'Completed':
-            asset = instance.asset
-            if asset and asset.status != 'Active':
+        # SMART LOGIC: Sync changes back to the main Asset profile
+        asset = instance.asset
+        if asset:
+            if instance.status == 'Completed':
                 asset.status = 'Active'
-                asset.save()
+            
+            # Ensure the asset's diagnostic columns match the updated log
+            asset.maintenance_reason = instance.maintenance_type
+            asset.faulty_hardware_part = instance.faulty_hardware_part
+            asset.software_issue_type = instance.software_issue_type
+            asset.save(update_fields=['status', 'maintenance_reason', 'faulty_hardware_part', 'software_issue_type'])
 
     def perform_destroy(self, instance):
         # Clean up the destroy method to avoid save errors on deleted objects
