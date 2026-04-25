@@ -570,27 +570,22 @@
     };
 
     window.onload = () => {
-        // 1. Fetch backend context
-        const lastActiveTech = "{{ ticket.last_technician|escapejs }}";
+        // 1. Fetch the exact tab where the last message was sent
+        const latestChatTab = "{{ latest_chat_tab|escapejs }}";
         const assignedTech = "{{ ticket.technician.username|escapejs }}";
         
-        // 2. Intelligent Default Routing
-        // Default to GROUP_CHAT since that is where initial ticket messages usually arrive
         let tabToOpen = 'GROUP_CHAT'; 
         
-        if (lastActiveTech === 'GROUP_CHAT' || lastActiveTech === 'Everyone') {
-            tabToOpen = 'GROUP_CHAT';
-        } 
-        else if (lastActiveTech && lastActiveTech !== 'None' && lastActiveTech !== 'Unlogged' && document.getElementById('tab-' + lastActiveTech)) {
-            // If the backend recorded a specific last active technician, open their tab
-            tabToOpen = lastActiveTech; 
+        if (latestChatTab && document.getElementById('tab-' + latestChatTab)) {
+            // Open the tab where the most recent activity happened
+            tabToOpen = latestChatTab; 
         } 
         else if (assignedTech && document.getElementById('tab-' + assignedTech)) {
-            // If no last active tech is logged, but the ticket is assigned, default to the assignee's chat
+            // Fallback: If no messages yet, default to the assigned tech
             tabToOpen = assignedTech;
         }
         
-        // 3. Initialize the chat with the dynamically selected tab
+        // 3. Initialize the chat
         filterByTech(tabToOpen); 
         SupportConsole.init();
 

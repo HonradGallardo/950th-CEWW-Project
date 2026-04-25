@@ -217,7 +217,6 @@ class TicketViewSet(viewsets.ModelViewSet):
     def send_reply(self, request, pk=None):
         ticket = self.get_object()
 
-        # --- NEW: Prevent messages on resolved or completed tickets ---
         if ticket.status in ['Resolved', 'Completed']:
             return Response(
                 {'status': 'error', 'message': f'Chat locked. This case is already {ticket.status}.'}, 
@@ -246,26 +245,23 @@ class TicketViewSet(viewsets.ModelViewSet):
             message=text
         )
 
-        # ---> 🚨 NOTIFICATION TRIGGER: NEW TICKET MESSAGE <---
         if target_user and target_user != request.user:
             Notification.objects.create(
                 recipient=target_user,
                 message=f"New ticket message from {request.user.username}"
             )
         elif not is_group_chat and ticket.user != request.user:
-            # Fallback: Notify ticket owner if an admin replies but target_user wasn't explicitly set
             Notification.objects.create(
                 recipient=ticket.user,
                 message=f"New reply on your support ticket #{ticket.id}"
             )
 
         for f in files:
-            # SECURITY FIX: Validate Extension AND Size
             ext = os.path.splitext(f.name)[1].lower()
             if ext not in ALLOWED_EXTENSIONS:
                 continue
             if f.size > MAX_FILE_SIZE:
-                continue # Block files larger than 5MB silently to protect server RAM
+                continue 
                 
             try:
                 upload_result = cloudinary.uploader.upload(f, resource_type="auto")
@@ -277,17 +273,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 print("File Upload Error:", e)
 
-        # ---------------------------------------------------------
-        # NEW LOGIC: Automatically update the last active chat tab
-        # ---------------------------------------------------------
-        if is_group_chat:
-            ticket.last_technician = 'GROUP_CHAT'
-        else:
-            # If the sender is staff, log them. If the sender is the client, log the targeted admin.
-            ticket.last_technician = request.user.username if request.user.is_staff else recipient_username
-            
-        ticket.save(update_fields=['last_technician'])
-            
+        # Removed the last_technician overwrite here!
         return Response({'status': 'success'})
     
     def perform_create(self, serializer):

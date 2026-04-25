@@ -40,20 +40,13 @@ def admin_ticket_dashboard(request):
 def ticket_detail(request, ticket_id):
     ticket = get_object_or_404(Ticket, id=ticket_id)
     
-    # Permission check
     if not is_admin(request.user) and ticket.user != request.user:
         return redirect('dashboard')
 
-    # --- 1. GET ALL POTENTIAL TECHNICIANS ---
-    # This fetches every user who is staff or in the 'Admin' group 
-    # so they appear in your assignment dropdown.
     all_admins = User.objects.filter(
         Q(is_staff=True) | Q(groups__name='Admin')
     ).distinct().order_by('username')
 
-    # --- 2. DYNAMICALLY FIND ACTIVE CHAT PARTICIPANTS (Optional) ---
-    # You can keep this if you use 'other_admins' specifically for a sidebar 
-    # or "who is online" list, but for the dropdown, use 'all_admins'.
     active_staff_ids = TicketMessage.objects.filter(
         ticket=ticket
     ).filter(
@@ -64,8 +57,21 @@ def ticket_detail(request, ticket_id):
         id__in=active_staff_ids
     ).exclude(id=request.user.id).distinct()
 
+    # ---> NEW: Calculate the latest chat tab based on real message history <---
+    latest_msg = ticket.messages.order_by('-created_at').first()
+    latest_chat_tab = "GROUP_CHAT" # Safe default
+    
+    if latest_msg:
+        if latest_msg.recipient is None:
+            latest_chat_tab = "GROUP_CHAT"
+        elif latest_msg.sender.is_staff:
+            latest_chat_tab = latest_msg.sender.username
+        elif latest_msg.recipient and latest_msg.recipient.is_staff:
+            latest_chat_tab = latest_msg.recipient.username
+
     return render(request, 'tickets/Admin/ticket_detail.html', {
         'ticket': ticket,
-        'all_admins': all_admins,    # Use this for the Assign Dropdown
-        'other_admins': other_admins # Use this for the chat participant list
+        'all_admins': all_admins, 
+        'other_admins': other_admins,
+        'latest_chat_tab': latest_chat_tab # Pass the exact tab to the frontend
     })
