@@ -553,34 +553,19 @@
         },
         
         scrollToBottom() {
-            const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+            const scrollArea = document.getElementById('chatBox');
             if (!scrollArea) return;
 
-            let userInterrupted = false;
-            const cancelScroll = () => { userInterrupted = true; };
-
-            scrollArea.addEventListener('wheel', cancelScroll, { once: true, passive: true });
-            scrollArea.addEventListener('touchstart', cancelScroll, { once: true, passive: true });
-            scrollArea.addEventListener('mousedown', cancelScroll, { once: true, passive: true });
-
             const forceScroll = () => {
-                if (userInterrupted) return; 
-                
-                const currentArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
-                if (currentArea) {
-                    currentArea.scrollTop = currentArea.scrollHeight;
-                }
+                if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
             };
 
+            // Force scroll immediately and at intervals to catch late-rendering images
             forceScroll();
+            requestAnimationFrame(forceScroll);
             setTimeout(forceScroll, 100);
-            setTimeout(forceScroll, 500);
-            setTimeout(() => {
-                forceScroll();
-                scrollArea.removeEventListener('wheel', cancelScroll);
-                scrollArea.removeEventListener('touchstart', cancelScroll);
-                scrollArea.removeEventListener('mousedown', cancelScroll);
-            }, 1200); 
+            setTimeout(forceScroll, 300);
+            setTimeout(forceScroll, 600);
         }
     };
 
@@ -641,7 +626,7 @@
         
         updateActiveTabStyles(username); 
 
-        // 🚨 SECURITY: Ensure display names reflect safe rendering, even though label.innerText provides base protection in DOM
+        // 🚨 SECURITY: Ensure display names reflect safe rendering
         if (username === 'GROUP_CHAT') {
             label.innerHTML = '<i class="fas fa-users text-indigo-500 mr-2"></i> Group Discussion';
             if(readOnly) readOnly.classList.add('hidden');
@@ -666,7 +651,8 @@
         
         if (tabCache[username]) {
             currentMessageCount = tabCache[username].count;
-            renderChat(tabCache[username].messages, tabCache[username].attachments, tabCache[username].hasMore);
+            // NEW: Added 'true' at the end to trigger the isInitialLoad flag when switching tabs
+            renderChat(tabCache[username].messages, tabCache[username].attachments, tabCache[username].hasMore, false, true); 
             updateAttachmentsSidebar(tabCache[username].messages, tabCache[username].attachments);
         } else {
             currentMessageCount = -1;
@@ -699,6 +685,9 @@
         
         let cache = tabCache[activeChatPartnerId] || { messages: [], attachments: [], count: 0, page: 1, hasMore: false };
         let targetPage = loadMore ? cache.page + 1 : 1;
+        
+        // NEW: Track if this is the very first time we are fetching messages for this thread
+        let isInitialLoad = (currentMessageCount === -1);
         
         let url = `/tickets/api/support-api/${encodeURIComponent(activeTicketId)}/chat_thread/?with_staff=${encodeURIComponent(activeChatPartnerId)}&page=${targetPage}&limit=15`;
         
@@ -736,7 +725,8 @@
             
             if (newCount !== currentMessageCount || loadMore) {
                 currentMessageCount = newCount;
-                renderChat(cache.messages, cache.attachments, cache.hasMore, loadMore); 
+                // NEW: Pass the isInitialLoad flag into renderChat
+                renderChat(cache.messages, cache.attachments, cache.hasMore, loadMore, isInitialLoad); 
                 updateAttachmentsSidebar(cache.messages, cache.attachments);
             }
         } catch (err) {
@@ -958,14 +948,17 @@
         }
     }
 
-    function renderChat(messages, allAttachments = [], hasMore = false, isLoadMore = false) {
+    // NEW: Added isInitialLoad = false to the parameters
+    function renderChat(messages, allAttachments = [], hasMore = false, isLoadMore = false, isInitialLoad = false) {
         const chatBox = document.getElementById('dynamicMessages');
         if (!chatBox) return; 
         
-        const scrollArea = document.getElementById('workspaceScroll') || document.getElementById('chatBox');
+        const scrollArea = document.getElementById('chatBox');
         const oldScrollHeight = scrollArea ? scrollArea.scrollHeight : 0;
         const oldScrollTop = scrollArea ? scrollArea.scrollTop : 0;
-        const isAtBottom = scrollArea ? Math.abs(scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight) < 20 : true;
+        
+        // NEW: Increased threshold to 50px so it doesn't fail if you are slightly off the bottom
+        const isAtBottom = scrollArea ? Math.abs(scrollArea.scrollHeight - scrollArea.scrollTop - scrollArea.clientHeight) < 50 : true;
 
         chatBox.innerHTML = ''; 
 
@@ -980,7 +973,6 @@
             
             if (!isSystemUpdate && !isGroupMessage && !isPrivateMessage) return; 
 
-            // Trust the sanitized data coming from the backend
             const safeMsg = msg.message;
             const safeSender = msg.sender_name;
             const safeTime = msg.timestamp;
@@ -1054,11 +1046,12 @@
             chatBox.insertAdjacentHTML('beforeend', html);
         });
 
+        // NEW: Force scroll on initial load
         if (isLoadMore && scrollArea) {
             requestAnimationFrame(() => {
                 scrollArea.scrollTop = scrollArea.scrollHeight - oldScrollHeight + oldScrollTop;
             });
-        } else if (isAtBottom) {
+        } else if (isAtBottom || isInitialLoad) {
             SupportConsole.scrollToBottom();
         }
     }
