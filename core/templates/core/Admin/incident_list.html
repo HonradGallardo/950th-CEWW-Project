@@ -467,6 +467,11 @@ function renderPagination(totalPages) {
             btn.addEventListener('click', function() { 
                 currentPage = page; 
                 initGrid(); 
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
             });
         }
         btn.className = baseClass;
