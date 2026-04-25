@@ -570,16 +570,24 @@
     };
 
     window.onload = () => {
-        // 1. Fetch the last active technician from your Django backend
+        // 1. Fetch backend context
         const lastActiveTech = "{{ ticket.last_technician|escapejs }}";
+        const assignedTech = "{{ ticket.technician.username|escapejs }}";
         
-        // 2. Logic to determine which tab to open
-        let tabToOpen = MY_USERNAME; // Default to your chat as a fallback
+        // 2. Intelligent Default Routing
+        // Default to GROUP_CHAT since that is where initial ticket messages usually arrive
+        let tabToOpen = 'GROUP_CHAT'; 
         
         if (lastActiveTech === 'GROUP_CHAT' || lastActiveTech === 'Everyone') {
             tabToOpen = 'GROUP_CHAT';
-        } else if (lastActiveTech && document.getElementById('tab-' + lastActiveTech)) {
-            tabToOpen = lastActiveTech; // Open the specific admin's tab
+        } 
+        else if (lastActiveTech && lastActiveTech !== 'None' && lastActiveTech !== 'Unlogged' && document.getElementById('tab-' + lastActiveTech)) {
+            // If the backend recorded a specific last active technician, open their tab
+            tabToOpen = lastActiveTech; 
+        } 
+        else if (assignedTech && document.getElementById('tab-' + assignedTech)) {
+            // If no last active tech is logged, but the ticket is assigned, default to the assignee's chat
+            tabToOpen = assignedTech;
         }
         
         // 3. Initialize the chat with the dynamically selected tab
