@@ -593,23 +593,35 @@ class AssetViewSet(viewsets.ModelViewSet):
         self.handle_maintenance_logic(asset)
 
     def handle_maintenance_logic(self, asset):
-        if asset.status == 'Maintenance':
+        # 1. Catch 'Under Maintenance' to match your frontend dropdown
+        if asset.status in ['Maintenance', 'Under Maintenance']:
+            
+            # 2. Extract the exact fields from the frontend payload
             maint_type = self.request.data.get('maintenance_reason', 'Auto-Generated Repair')
-            hw_component = self.request.data.get('hardware_component', '')
-            sw_issue = self.request.data.get('software_os_issue', '')
-            # Always update asset field
-            asset.maintenance_reason = maint_type
-            asset.save(update_fields=['maintenance_reason'])
+            faulty_hw = self.request.data.get('faulty_hardware_part', None)
+            sw_issue = self.request.data.get('software_issue_type', None)
 
+            # Clean up empty strings to None so Django choice fields don't throw validation errors
+            if not faulty_hw: faulty_hw = None
+            if not sw_issue: sw_issue = None
+
+            # Always update asset fields
+            asset.maintenance_reason = maint_type
+            asset.faulty_hardware_part = faulty_hw
+            asset.software_issue_type = sw_issue
+            asset.save(update_fields=['maintenance_reason', 'faulty_hardware_part', 'software_issue_type'])
+
+            # Check if an active maintenance log already exists
             exists = Maintenance.objects.filter(asset=asset).exclude(status='Completed').exists()
 
             if not exists:
+                # 3. Inject the correct database column names into the new record
                 Maintenance.objects.create(
                     asset=asset,
                     technician=self.request.user,
                     maintenance_type=maint_type,
-                    hardware_component=hw_component,
-                    software_os_issue=sw_issue,
+                    faulty_hardware_part=faulty_hw,  # <--- Corrected field name
+                    software_issue_type=sw_issue,    # <--- Corrected field name
                     status='In Progress',
                     notes=f"System auto-generated log: {asset.assets_name} was marked as 'Maintenance'."
                 )
