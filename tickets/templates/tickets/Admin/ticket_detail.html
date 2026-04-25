@@ -570,7 +570,20 @@
     };
 
     window.onload = () => {
-        filterByTech(MY_USERNAME); 
+        // 1. Fetch the last active technician from your Django backend
+        const lastActiveTech = "{{ ticket.last_technician|escapejs }}";
+        
+        // 2. Logic to determine which tab to open
+        let tabToOpen = MY_USERNAME; // Default to your chat as a fallback
+        
+        if (lastActiveTech === 'GROUP_CHAT' || lastActiveTech === 'Everyone') {
+            tabToOpen = 'GROUP_CHAT';
+        } else if (lastActiveTech && document.getElementById('tab-' + lastActiveTech)) {
+            tabToOpen = lastActiveTech; // Open the specific admin's tab
+        }
+        
+        // 3. Initialize the chat with the dynamically selected tab
+        filterByTech(tabToOpen); 
         SupportConsole.init();
 
         setInterval(() => {
