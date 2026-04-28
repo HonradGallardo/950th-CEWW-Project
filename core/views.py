@@ -235,9 +235,10 @@ def edit_incident(request, incident_id):
         
     incident = get_object_or_404(Incident, id=incident_id)
 
-    all_admins = User.objects.filter(
+    # STRICT FILTER: Only grab users in Admin/Personnel groups OR Superusers
+    eligible_technicians = User.objects.filter(
         Q(groups__name__in=['Admin', 'Personnel']) | Q(is_superuser=True)
-    )
+    ).distinct().order_by('username')
     
     is_owner = (incident.assigned_to == request.user)
     is_superuser = request.user.is_superuser
@@ -248,7 +249,7 @@ def edit_incident(request, incident_id):
     
     return render(request, 'core/Admin/edit_incident.html', {
         'incident': incident,
-        'all_admins': all_admins,
+        'eligible_technicians': eligible_technicians, # <-- Ensure this matches the HTML!
         'can_edit': can_edit,
         'can_take_over': can_take_over
     })

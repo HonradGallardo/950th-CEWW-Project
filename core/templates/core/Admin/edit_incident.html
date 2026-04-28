@@ -41,12 +41,14 @@
         {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id %}disabled title="Only the current technician can modify ownership"{% endif %}
         class="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
     <option value="">Unassigned</option>
-    {% for admin in all_admins %}
-        <option value="{{ admin.id }}" {% if incident.assigned_to_id == admin.id %}selected{% endif %}>
-            {{ admin.username }}{% if admin.id == request.user.id %} (Me){% endif %}
+    
+    {% for tech in eligible_technicians %}
+        <option value="{{ tech.id }}" {% if incident.assigned_to_id == tech.id %}selected{% endif %}>
+            {{ tech.username }}{% if tech.id == request.user.id %} (Me){% endif %}
         </option>
     {% endfor %}
-    {% if not all_admins %}
+    
+    {% if not eligible_technicians %}
         {% if incident.assigned_to %}
             <option value="{{ incident.assigned_to_id }}" selected>{{ incident.assigned_to.username }}</option>
         {% else %}
