@@ -235,9 +235,11 @@ def edit_incident(request, incident_id):
         
     incident = get_object_or_404(Incident, id=incident_id)
 
-    # STRICT FILTER: Only grab users in Admin/Personnel groups OR Superusers
+    # 🚨 STRICT FILTER APPLIED HERE 🚨
+    # Removed the 'is_superuser' fallback to prevent accidental elevated accounts from showing up.
+    # This will NOW ONLY pull users who are explicitly placed inside the 'Admin' or 'Personnel' group.
     eligible_technicians = User.objects.filter(
-        Q(groups__name__in=['Admin', 'Personnel']) | Q(is_superuser=True)
+        groups__name__in=['Admin', 'Personnel']
     ).distinct().order_by('username')
     
     is_owner = (incident.assigned_to == request.user)
@@ -249,7 +251,7 @@ def edit_incident(request, incident_id):
     
     return render(request, 'core/Admin/edit_incident.html', {
         'incident': incident,
-        'eligible_technicians': eligible_technicians, # <-- Ensure this matches the HTML!
+        'eligible_technicians': eligible_technicians, 
         'can_edit': can_edit,
         'can_take_over': can_take_over
     })
