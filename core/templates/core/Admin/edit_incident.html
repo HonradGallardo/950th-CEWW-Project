@@ -38,15 +38,18 @@
                 <div class="space-y-1">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assign Technician</p>
                     <select name="assigned_to" id="editTechnician" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify ownership"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify ownership"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="">Unassigned</option>
-                        {% for admin in all_admins %}
-                            <option value="{{ admin.id }}" {% if incident.assigned_to_id == admin.id %}selected{% endif %}>
-                                {{ admin.username }}{% if admin.id == request.user.id %} (Me){% endif %}
+                        
+                        <!-- Updated to use eligible_technicians instead of all_admins -->
+                        {% for tech in eligible_technicians %}
+                            <option value="{{ tech.id }}" {% if incident.assigned_to_id == tech.id %}selected{% endif %}>
+                                {{ tech.username }}{% if tech.id == request.user.id %} (Me){% endif %}
                             </option>
                         {% endfor %}
-                        {% if not all_admins %}
+                        
+                        {% if not eligible_technicians %}
                             {% if incident.assigned_to %}
                                 <option value="{{ incident.assigned_to_id }}" selected>{{ incident.assigned_to.username }}</option>
                             {% else %}
@@ -73,21 +76,21 @@
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Incident Title</label>
                     <input type="text" name="title" required value="{{ incident.title|default:'' }}"
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                 </div>
                 
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Threat Actor (Optional)</label>
                     <input type="text" name="threat_actor" value="{{ incident.threat_actor|default:'' }}"
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                 </div>
                 
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Category</label>
                     <select name="category" 
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                         <optgroup label="Malicious Software">
                             <option value="Virus / Worm" {% if incident.category == 'Virus / Worm' %}selected{% endif %}>Virus / Worm</option>
@@ -119,7 +122,7 @@
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Detection Source</label>
                     <select name="detection_source" 
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-slate-50 border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="User Report" {% if incident.detection_source == 'User Report' %}selected{% endif %}>User Report</option>
                         <option value="Antivirus / EDR" {% if incident.detection_source == 'Antivirus / EDR' %}selected{% endif %}>Antivirus / EDR Alert</option>
@@ -134,25 +137,25 @@
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Affected Area</label>
                     <input type="text" name="affected_area" value="{{ incident.affected_area|default:'' }}" placeholder="Server Room, etc."
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Linked Asset</label>
                     <input type="text" name="linked_asset" value="{{ incident.linked_asset|default:'' }}" placeholder="Asset ID"
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Exploited CVE</label>
                     <input type="text" name="cve_id" value="{{ incident.cve_id|default:'' }}" placeholder="e.g. CVE-2023-XXXX"
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                 </div>
                 <div class="col-span-1 md:col-span-3 space-y-2">
                     <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">IoCs Found</label>
                     <input type="text" name="iocs" value="{{ incident.iocs|default:'' }}" placeholder="IPs, Hashes, Malicious URLs"
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                 </div>
             </div>
@@ -161,7 +164,7 @@
                 <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Impact Assessment (CIA)</label>
                 <div class="grid grid-cols-3 gap-3">
                     <select name="impact_confidentiality" 
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="" disabled {% if not incident.impact_confidentiality %}selected{% endif %}>Confidentiality</option>
                         <option value="Low" {% if incident.impact_confidentiality == 'Low' %}selected{% endif %}>Low</option>
@@ -169,7 +172,7 @@
                         <option value="High" {% if incident.impact_confidentiality == 'High' %}selected{% endif %}>High</option>
                     </select>
                     <select name="impact_integrity" 
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="" disabled {% if not incident.impact_integrity %}selected{% endif %}>Integrity</option>
                         <option value="Low" {% if incident.impact_integrity == 'Low' %}selected{% endif %}>Low</option>
@@ -177,7 +180,7 @@
                         <option value="High" {% if incident.impact_integrity == 'High' %}selected{% endif %}>High</option>
                     </select>
                     <select name="impact_availability" 
-                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                         class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 custom-input outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                         <option value="" disabled {% if not incident.impact_availability %}selected{% endif %}>Availability</option>
                         <option value="Low" {% if incident.impact_availability == 'Low' %}selected{% endif %}>Low</option>
@@ -190,7 +193,7 @@
             <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Initial Description</label>
                 <textarea name="description" rows="3" required
-                    {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                    {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                     class="w-full bg-slate-50 border-slate-200 rounded-xl p-4 text-sm font-medium text-slate-600 custom-input outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed">{{ incident.description|default:'' }}</textarea>
             </div>
 
@@ -256,19 +259,19 @@
                     <div class="space-y-1.5">
                         <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">1. Current Issue / Diagnosis</label>
                         <input type="text" id="log_issue" placeholder="What is happening currently?" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed">
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">2. Action Taken</label>
                         <input type="text" id="log_action" placeholder="What did you do to fix it?" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed">
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">3. Result / Outcome</label>
                         <input type="text" id="log_result" placeholder="Did it work? Is it contained?" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed">
                     </div>
                 </div>
@@ -292,7 +295,7 @@
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Root Cause Analysis (RCA)</label>
                         <select name="root_cause" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
                             <option value="">-- Select RCA if known --</option>
                             <option value="Human Error" {% if incident.root_cause == 'Human Error' %}selected{% endif %}>Human Error / Misconfiguration</option>
@@ -304,7 +307,7 @@
                     
                     <div class="flex items-center space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-xl info-badge">
                         <input type="checkbox" name="is_false_positive" id="false_pos" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed" {% if incident.is_false_positive %}checked{% endif %}>
                         <label for="false_pos" class="text-xs font-black uppercase text-slate-600 cursor-pointer dark-mode-text">Flag as False Positive</label>
                     </div>
@@ -314,13 +317,13 @@
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Problems Encountered</label>
                         <textarea name="problems_encountered" rows="2" placeholder="Leave blank if N/A" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-600 custom-input outline-none resize-none disabled:opacity-60 disabled:cursor-not-allowed">{{ incident.problems_encountered|default:'' }}</textarea>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">Solutions Applied</label>
                         <textarea name="solutions_applied" rows="2" placeholder="Leave blank if N/A" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-medium text-slate-600 custom-input outline-none resize-none disabled:opacity-60 disabled:cursor-not-allowed">{{ incident.solutions_applied|default:'' }}</textarea>
                     </div>
                 </div>
@@ -332,7 +335,7 @@
                     <div class="flex items-center space-x-2">
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Severity:</label>
                         <select name="severity" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="bg-white border border-slate-200 text-xs font-black text-slate-700 rounded-xl px-3 py-2.5 custom-input disabled:opacity-60 disabled:cursor-not-allowed">
                             <option value="Low" {% if incident.severity == 'Low' %}selected{% endif %}>Low</option>
                             <option value="Medium" {% if incident.severity == 'Medium' %}selected{% endif %}>Medium</option>
@@ -344,7 +347,7 @@
                     <div class="flex items-center space-x-2">
                         <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Status:</label>
                         <select name="status" id="editStatus"
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can modify this"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can modify this"{% endif %}
                             class="bg-white border border-slate-200 text-xs font-black text-slate-700 rounded-xl px-3 py-2.5 custom-input disabled:opacity-60 disabled:cursor-not-allowed">
                             <option value="Open" {% if incident.status == 'Open' %}selected{% endif %}>Open</option>
                             <option value="Investigating" {% if incident.status == 'Investigating' %}selected{% endif %}>Investigating</option>
@@ -357,7 +360,7 @@
                     
                     {% if incident %}
                     <button type="button" id="deleteBtn" 
-                            {% if incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can delete this"{% endif %}
+                            {% if incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the current technician can delete this"{% endif %}
                             class="flex-1 md:flex-none px-6 py-3 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl text-[10px] font-black uppercase transition-all active:scale-95 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-trash-alt mr-2"></i> Delete
                     </button>
@@ -368,7 +371,7 @@
                     </a>
                     
                     <button type="submit" id="submitBtn" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned admin can save changes"{% endif %}
+                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id and not request.user.is_superuser %}disabled title="Only the assigned technician can save changes"{% endif %}
                             class="flex-1 md:flex-none px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase shadow-lg adaptive-btn disabled:opacity-50 disabled:cursor-not-allowed">
                         Submit Report
                     </button>
@@ -379,7 +382,6 @@
 </div>
 
 <script nonce="{{ request.csp_nonce }}">
-    // 🚨 SECURITY: Upgraded Utility to completely STRIP HTML rather than just escape it
     const SecurityUtils = {
         escapeHTML(str) {
             if (typeof str !== 'string') return str;
@@ -393,7 +395,6 @@
         },
         stripHTML(str) {
             if (typeof str !== 'string') return str;
-            // This aggressively destroys any <tags> preventing them from even reaching the DB
             return str.replace(/(<([^>]+)>)/gi, "").trim();
         }
     };
@@ -404,7 +405,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const currentOwnerName = document.getElementById('current_owner_name').value;
     const hiddenLastTech = document.getElementById('hidden_last_technician');
     const displayLastTech = document.getElementById('display_last_technician');
-    const takeOverFlag = document.getElementById('take_over_flag');
     
     // Store exactly what was loaded from the database
     const originalAssignedId = techDropdown ? techDropdown.value : "";
@@ -413,13 +413,19 @@ document.addEventListener("DOMContentLoaded", function() {
     if (techDropdown && statusDropdown) {
         techDropdown.addEventListener('change', function() {
             
-            // VISUAL ONLY: Previous Tech Hand-off
-            if (this.value !== originalAssignedId) {
-                if (currentOwnerName && currentOwnerName !== "") {
-                    if(displayLastTech) displayLastTech.textContent = currentOwnerName;
+            // VISUAL ONLY: Previous Tech Hand-off Logic
+            if (originalAssignedId && originalAssignedId !== "") {
+                // If the incident was already owned by someone when the page loaded
+                if (this.value !== originalAssignedId) {
+                    // They are vacating it or handing it off. The current owner becomes the last tech.
+                    if (displayLastTech) displayLastTech.textContent = currentOwnerName;
+                } else {
+                    // Changed back to the original owner
+                    if (displayLastTech) displayLastTech.textContent = historicalLastTech || "Unlogged";
                 }
             } else {
-                if(displayLastTech) displayLastTech.textContent = historicalLastTech || "Unlogged";
+                // If it started as vacant, taking it over shouldn't overwrite the previous handler
+                if (displayLastTech) displayLastTech.textContent = historicalLastTech || "Unlogged";
             }
 
             // AUTO STATUS LOGIC
@@ -445,7 +451,6 @@ $(document).ready(function() {
     const apiUrl = isEdit ? `/api/incidents/${incidentId}/` : '/api/incidents/';
     const apiMethod = isEdit ? 'PATCH' : 'POST'; 
 
-    // === INITIALIZE ACTIONS HISTORY FORMATTING ===
     const rawActions = $('#hidden_actions_taken').val();
     if (rawActions && $('#formatted_actions_display').length) {
         let safeActions = SecurityUtils.escapeHTML(rawActions);
@@ -462,14 +467,12 @@ $(document).ready(function() {
                 return;
             }
             
-            // Format the Date/Time Header
             if (trimmed.startsWith('[')) {
                 if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
                 if (index > 0) formattedActions += '<hr class="my-4 border-slate-300 dark:border-slate-600 border-dashed">';
                 let headerText = trimmed.replace(/\[|\]/g, '').trim();
                 formattedActions += `<div class="mb-2 inline-flex items-center text-[10px] font-black text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-800 px-2.5 py-1 rounded-lg uppercase tracking-widest"><i class="fas fa-clock mr-1.5"></i> ${headerText}</div>`;
             } 
-            // Catch Issue/Action/Result prefixes
             else if (trimmed.match(/(?:&gt;|&amp;gt;|>)+(?:\s+)?(?:Issue|Action|Result):/)) {
                 if (inDetailBlock) { formattedActions += '</div>'; inDetailBlock = false; }
                 
@@ -481,7 +484,6 @@ $(document).ready(function() {
                     let labelStyle = "";
                     let icon = "";
                     
-                    // Apply borderless styling with icons
                     if (label === 'Issue') {
                         labelStyle = "text-red-600 dark:text-red-400";
                         icon = '<i class="fas fa-exclamation-circle mr-1.5"></i>';
@@ -499,7 +501,6 @@ $(document).ready(function() {
                     if (content) formattedActions += `${content}<br>`;
                 }
             } 
-            // Standard text flow
             else {
                 if (!inDetailBlock) {
                     formattedActions += `<div class="pl-4 sm:pl-5 border-l-2 border-slate-300/60 dark:border-slate-700/60 ml-2 text-slate-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">`;
@@ -512,9 +513,7 @@ $(document).ready(function() {
         if (inDetailBlock) formattedActions += '</div>';
         $('#formatted_actions_display').html(formattedActions);
     }
-    // === END FORMATTING ===
 
-    // 2. DELETE BUTTON LOGIC + CSRF
     $('#deleteBtn').on('click', function() {
         if(!confirm("SECURITY WARNING: Are you sure you want to permanently delete this incident? This action cannot be undone.")) {
             return;
@@ -554,9 +553,6 @@ $(document).ready(function() {
         const formData = new FormData(this);
         const originalBtnText = $btn.html();
         
-        // --- REFINED RESTRICTION LOGIC ---
-        // Auto-assign to current user ONLY if it started unassigned 
-        // AND the user didn't explicitly select another technician in the dropdown
         const initialAssignedId = "{{ incident.assigned_to_id|default:'' }}";
         const currentUserId = "{{ request.user.id }}";
         const selectedTech = formData.get('assigned_to');
@@ -564,7 +560,6 @@ $(document).ready(function() {
         if (initialAssignedId === "" && (!selectedTech || selectedTech === "")) {
             formData.set('assigned_to', currentUserId);
         }
-        // ---------------------------------
 
         const issue = $('#log_issue').val()?.trim() || "";
         const action = $('#log_action').val()?.trim() || "";
@@ -594,7 +589,6 @@ $(document).ready(function() {
             formData.set('is_false_positive', 'true');
         }
 
-        // 🚨 FRONTEND SECURITY: Physically strip malicious tags to make them disappear
         for (let [key, value] of formData.entries()) {
             if (typeof value === 'string') {
                 formData.set(key, SecurityUtils.stripHTML(value));
@@ -649,7 +643,6 @@ $(document).ready(function() {
     html.dark .custom-input, body.dark-mode .custom-input { background-color: #1f2937 !important; border-color: #374151 !important; color: #f1f5f9 !important; }
     html.dark .custom-input::placeholder, body.dark-mode .custom-input::placeholder { color: #6b7280 !important; }
     
-    /* Optgroup and option dropdown styling for standard/dark mode compatibility */
     optgroup {
         font-family: 'Rajdhani', sans-serif;
         font-weight: 800;
