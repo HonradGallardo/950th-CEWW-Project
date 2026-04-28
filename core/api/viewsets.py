@@ -772,13 +772,14 @@ class IncidentViewSet(viewsets.ModelViewSet):
             # --- STRICT AUTHORIZATION ---
             is_owner = (current_owner_id == str(user.id))
             is_unassigned = (current_owner_id == "")
-            is_superuser = user.is_superuser
             
             if is_unassigned:
-                if new_owner_id != str(user.id) and not is_superuser:
+                # REMOVED: 'and not is_superuser'
+                if new_owner_id != str(user.id):
                     return Response({"detail": "Access Denied: You must take over this incident to your account first."}, status=403)
             else:
-                if not is_owner and not is_superuser:
+                # REMOVED: 'and not is_superuser'
+                if not is_owner:
                     return Response({"detail": "Access Denied: Only the current technician can modify this incident."}, status=403)
 
             # --- PREVENT DRF VALIDATION CRASHES ---

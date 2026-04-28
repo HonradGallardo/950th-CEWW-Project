@@ -237,7 +237,7 @@ def edit_incident(request, incident_id):
 
     all_admins = User.objects.filter(
         Q(groups__name__in=['Admin', 'Personnel']) | Q(is_superuser=True)
-    ).distinct().order_by('username')
+    )
     
     is_owner = (incident.assigned_to == request.user)
     is_superuser = request.user.is_superuser

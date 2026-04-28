@@ -38,25 +38,22 @@
                 <div class="space-y-1">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Assign Technician</p>
                     <select name="assigned_to" id="editTechnician" 
-                            {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id %}disabled title="Only the assigned technician can modify ownership"{% endif %}
-                            class="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
-                        <option value="">Unassigned</option>
-                        
-                        <!-- Updated to use eligible_technicians instead of all_admins -->
-                        {% for tech in eligible_technicians %}
-                            <option value="{{ tech.id }}" {% if incident.assigned_to_id == tech.id %}selected{% endif %}>
-                                {{ tech.username }}{% if tech.id == request.user.id %} (Me){% endif %}
-                            </option>
-                        {% endfor %}
-                        
-                        {% if not eligible_technicians %}
-                            {% if incident.assigned_to %}
-                                <option value="{{ incident.assigned_to_id }}" selected>{{ incident.assigned_to.username }}</option>
-                            {% else %}
-                                <option value="{{ request.user.id }}">Take Over ({{ request.user.username }})</option>
-                            {% endif %}
-                        {% endif %}
-                    </select>
+        {% if incident.assigned_to_id and incident.assigned_to_id != request.user.id %}disabled title="Only the current technician can modify ownership"{% endif %}
+        class="w-full bg-white border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-700 custom-input outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+    <option value="">Unassigned</option>
+    {% for admin in all_admins %}
+        <option value="{{ admin.id }}" {% if incident.assigned_to_id == admin.id %}selected{% endif %}>
+            {{ admin.username }}{% if admin.id == request.user.id %} (Me){% endif %}
+        </option>
+    {% endfor %}
+    {% if not all_admins %}
+        {% if incident.assigned_to %}
+            <option value="{{ incident.assigned_to_id }}" selected>{{ incident.assigned_to.username }}</option>
+        {% else %}
+            <option value="{{ request.user.id }}">Take Over ({{ request.user.username }})</option>
+        {% endif %}
+    {% endif %}
+</select>
                     
                     <div class="mt-1 inline-flex items-center gap-2 px-2 py-1 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/50 text-[10px]">
                         <i class="fas fa-history text-slate-400"></i>
