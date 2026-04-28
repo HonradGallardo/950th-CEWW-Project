@@ -12,7 +12,7 @@ from django.db.models import Q, Count
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework import status
-from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth import login, update_session_auth_hash, get_user_model
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import random
 from django.views import View
@@ -38,6 +38,8 @@ from core.api.serializers import (
     IncidentCommentSerializer,
     NotificationSerializer,
 )
+
+User = get_user_model()
 
 # Ensure these match your local environment
 if settings.DEBUG:
@@ -994,8 +996,8 @@ class ForgotPasswordAPI(APIView):
                 if not verify_req.json().get('success'):
                     return Response({'status': 'error', 'message': 'reCAPTCHA verification failed.'})
 
-            # 2. Verify User Exists
-            user = User.objects.filter(email=email).first()
+            # FIX: Enforce is_active=True to prevent targeting disabled accounts
+            user = User.objects.filter(email=email, is_active=True).first()
             if not user:
                 return Response({'status': 'error', 'message': 'No active personnel account found with that email.'})
 
@@ -1048,6 +1050,13 @@ class ForgotPasswordAPI(APIView):
             confirm_password = request.data.get('confirm_password')
             captcha_ans = request.data.get('step2_captcha_ans')
 
+            # FIX: Prevent the API from accepting empty strings if the frontend fails
+            if not new_password or new_password.strip() == "":
+                return Response({'status': 'error', 'message': 'Password cannot be empty.'})
+
+            if len(new_password) < 8:
+                return Response({'status': 'error', 'message': 'Password must be at least 8 characters long.'})
+
             # 1. Validate Form Inputs
             if new_password != confirm_password:
                 return Response({'status': 'error', 'message': 'Passwords do not match.'})
@@ -1065,7 +1074,8 @@ class ForgotPasswordAPI(APIView):
             # 4. Update the Password
             email = request.session.get('reset_email')
             if email:
-                user = User.objects.filter(email=email).first()
+                # FIX: Match the is_active=True enforcement from Step 1
+                user = User.objects.filter(email=email, is_active=True).first()
                 if user:
                     user.set_password(new_password)
                     user.save()
