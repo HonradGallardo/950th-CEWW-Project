@@ -235,7 +235,7 @@ def edit_incident(request, incident_id):
         
     incident = get_object_or_404(Incident, id=incident_id)
 
-    # STRICT FILTER APPLIED HERE 
+    # 🚨 STRICT FILTER APPLIED HERE 🚨
     # Removed the 'is_superuser' fallback to prevent accidental elevated accounts from showing up.
     # This will NOW ONLY pull users who are explicitly placed inside the 'Admin' or 'Personnel' group.
     eligible_technicians = User.objects.filter(
@@ -322,9 +322,10 @@ def add_user(request):
         
         profile.rank = safe_rank
         profile.phone = safe_phone
-
-        profile.organization = bleach.clean(request.POST.get('organization', profile.organization), tags=[], strip=True)
-        profile.unit_group = bleach.clean(request.POST.get('unit_group', profile.unit_group), tags=[], strip=True)
+        
+        # 🚨 NEW: Fetching the Multi-Tenancy Fields
+        profile.organization = bleach.clean(request.POST.get('organization', profile.organization or ''), tags=[], strip=True)
+        profile.unit_group = bleach.clean(request.POST.get('unit_group', profile.unit_group or ''), tags=[], strip=True)
         
         if 'profile_picture' in request.FILES:
             profile.image = request.FILES['profile_picture']
@@ -386,6 +387,10 @@ def edit_user(request, user_id):
             profile, created = Profile.objects.get_or_create(user=user)
             profile.rank = bleach.clean(request.POST.get('rank', profile.rank), tags=[], strip=True)
             profile.phone = bleach.clean(request.POST.get('phone', profile.phone), tags=[], strip=True)
+            
+            # 🚨 NEW: Fetching the Multi-Tenancy Fields
+            profile.organization = bleach.clean(request.POST.get('organization', profile.organization or ''), tags=[], strip=True)
+            profile.unit_group = bleach.clean(request.POST.get('unit_group', profile.unit_group or ''), tags=[], strip=True)
             
             if 'profile_picture' in request.FILES:
                 profile.image = request.FILES['profile_picture']
@@ -573,6 +578,11 @@ def profile_view(request):
         # SECURITY: Sanitize direct POST requests to prevent DB Injection
         profile.rank = bleach.clean(request.POST.get('rank', profile.rank), tags=[], strip=True)
         profile.phone = bleach.clean(request.POST.get('phone', profile.phone), tags=[], strip=True)
+        
+        # 🚨 NEW: Fetching the Multi-Tenancy Fields
+        profile.organization = bleach.clean(request.POST.get('organization', profile.organization or ''), tags=[], strip=True)
+        profile.unit_group = bleach.clean(request.POST.get('unit_group', profile.unit_group or ''), tags=[], strip=True)
+        
         profile.save()
 
         user = request.user
