@@ -49,6 +49,34 @@
                         <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Upload New Photo</label>
                         <input type="file" name="profile_picture" accept="image/*" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-white dark:file:bg-slate-800 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-slate-100 dark:hover:file:bg-slate-700 file:shadow-sm file:transition-colors text-slate-600 dark:text-slate-400">
                     </div>
+                    
+                    {% if form.instance.pk %}
+                    <div class="w-full mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-4 text-left">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                                <i class="fas fa-building text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Organization</p>
+                                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    {{ form.instance.profile.organization|default:"Not Assigned" }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                                <i class="fas fa-users text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Unit / Group</p>
+                                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    {{ form.instance.profile.unit_group|default:"Not Assigned" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                 </div>
             </div>
             
