@@ -548,6 +548,10 @@ class UserViewSet(viewsets.ModelViewSet):
             query = request.GET.get('q', '').strip()
             role = request.GET.get('role', 'ALL').upper()
             
+            # --- NEW: Retrieve Org & Group from Frontend Request ---
+            org_filter = request.GET.get('org', 'ALL')
+            group_filter = request.GET.get('group', 'ALL')
+            
             users = self.get_queryset()
             
             if query:
@@ -559,6 +563,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
             if role != 'ALL':
                 users = users.filter(groups__name__iexact=role) if role != 'UNASSIGNED' else users.filter(groups__isnull=True)
+            
+            # --- NEW: Apply Database Filters ---
+            if org_filter != 'ALL':
+                users = users.filter(profile__organization__iexact=org_filter)
+                
+            if group_filter != 'ALL':
+                users = users.filter(profile__unit_group__iexact=group_filter)
             
             data = []
             for u in users[:20]:
@@ -581,6 +592,8 @@ class UserViewSet(viewsets.ModelViewSet):
                     'last_login': u.last_login.strftime('%d-%m-%y') if u.last_login else 'Never',
                     'date_joined': u.date_joined.strftime('%b %Y'),
                     'rank': u.profile.rank if has_profile else 'Airman',
+                    'organization': u.profile.organization if has_profile else 'Not Assigned',
+                    'unit_group': u.profile.unit_group if has_profile else 'Not Assigned',
                     'image_url': img_url
                 })
             

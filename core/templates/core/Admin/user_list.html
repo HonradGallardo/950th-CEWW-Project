@@ -69,14 +69,36 @@
                 
                 <div class="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 flex flex-col xl:flex-row justify-between xl:items-center gap-4 bg-slate-50/50 dark:bg-slate-800/20 w-full min-w-0">
                     
-                    <div class="w-full xl:w-auto min-w-0">
-                        <div class="flex overflow-x-auto no-scrollbar items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-inner gap-1.5 w-full xl:w-max">
+                    <div class="w-full xl:w-auto min-w-0 flex flex-col sm:flex-row gap-3">
+                        <div class="flex overflow-x-auto no-scrollbar items-center bg-slate-100 dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-inner gap-1.5 w-full sm:w-max">
                             <button data-role="ALL" class="role-filter-btn active bg-blue-600 text-white shadow-sm text-[10px] sm:text-sm font-semibold px-3 py-2 rounded-lg transition-all whitespace-nowrap shrink-0">All</button>
                             <button data-role="ADMIN" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-3 py-2 rounded-lg transition-all whitespace-nowrap shrink-0">Admins</button>
                             <button data-role="COMMANDER" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-3 py-2 rounded-lg transition-all whitespace-nowrap shrink-0">Commanders</button>
                             <button data-role="PERSONNEL" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-3 py-2 rounded-lg transition-all whitespace-nowrap shrink-0">Personnel</button>
                             <button data-role="REGULAR" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-3 py-2 rounded-lg transition-all whitespace-nowrap shrink-0">Regular</button>
                             <button data-role="UNASSIGNED" class="role-filter-btn text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800 bg-transparent text-[10px] sm:text-sm font-semibold px-3 py-2 rounded-lg transition-all whitespace-nowrap shrink-0">Others</button>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <select id="orgFilter" class="text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 outline-none w-full sm:w-auto shadow-sm cursor-pointer hover:border-blue-400 transition-colors">
+                                <option value="ALL">All Orgs</option>
+                                <option value="Air Force">Air Force</option>
+                                <option value="Navy">Navy</option>
+                                <option value="Army">Army</option>
+                            </select>
+                            <select id="groupFilter" class="text-xs sm:text-sm px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 outline-none w-full sm:w-auto shadow-sm cursor-pointer hover:border-blue-400 transition-colors">
+                                <option value="ALL">All Groups</option>
+                                <option value="Group 1">Group 1</option>
+                                <option value="Group 2">Group 2</option>
+                                <option value="Group 3">Group 3</option>
+                                <option value="Group 4">Group 4</option>
+                                <option value="Group 5">Group 5</option>
+                                <option value="Group 6">Group 6</option>
+                                <option value="Group 7">Group 7</option>
+                                <option value="Group 8">Group 8</option>
+                                <option value="Group 9">Group 9</option>
+                                <option value="Group 10">Group 10</option>
+                            </select>
                         </div>
                     </div>
 
@@ -342,6 +364,8 @@ const SecurityUtils = {
 };
 
 let currentRole = 'ALL';
+let currentOrg = 'ALL';
+let currentGroup = 'ALL';
 let activeUserId = null;
 let searchTimeout;
 
@@ -352,6 +376,19 @@ $(document).ready(function() {
     
     $('.role-filter-btn').on('click', function(e) {
         setRoleFilter($(this).data('role'), e);
+    });
+
+    // NEW: Listen for changes on the dropdown filters
+    $('#orgFilter').on('change', function() {
+        currentOrg = $(this).val();
+        resetSearch();
+        performAjaxSearch();
+    });
+
+    $('#groupFilter').on('change', function() {
+        currentGroup = $(this).val();
+        resetSearch();
+        performAjaxSearch();
     });
 
     $('#userTableBody').on('click', '.user-row', function() {
@@ -435,14 +472,15 @@ function performAjaxSearch(query) {
     const q = query !== undefined ? query : $('#userSearch').val().trim();
     $('#api-indicator').removeClass('hidden');
 
-    if(q !== "" || currentRole !== "ALL") {
+    if(q !== "" || currentRole !== "ALL" || currentOrg !== "ALL" || currentGroup !== "ALL") {
         $('#pagination-container').addClass('hidden');
     } else {
         $('#pagination-container').removeClass('hidden');
     }
 
+    // UPDATE: Now injecting currentOrg and currentGroup into the API request URL
     $.ajax({
-        url: `/api/core/users/live_search/?q=${SecurityUtils.escapeHTML(q)}&role=${SecurityUtils.escapeHTML(currentRole)}`,
+        url: `/api/core/users/live_search/?q=${SecurityUtils.escapeHTML(q)}&role=${SecurityUtils.escapeHTML(currentRole)}&org=${SecurityUtils.escapeHTML(currentOrg)}&group=${SecurityUtils.escapeHTML(currentGroup)}`,
         type: 'GET',
         success: function(data) {
             updateUserTable(data);
@@ -553,7 +591,6 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
         initialsElement.innerText = displayName.substring(0, 2).toUpperCase();
     }
 
-    // Scroll trigger updated to xl breakpoint (1280px)
     if (window.innerWidth < 1280) { 
         setTimeout(() => {
             const detailPanel = document.getElementById('detail-panel');
@@ -670,7 +707,6 @@ function closeDeleteModal() {
             color: #94a3b8;
         }
         
-        /* FIXED: Added :not(.w-8) to stop overriding your rank image badge sizing */
         .user-row td > div:not(.w-8) {
             max-width: 65%;
             display: flex;
