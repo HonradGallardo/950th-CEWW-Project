@@ -265,5 +265,7 @@ class Profile(models.Model):
     # Add the phone field with max_length 11
     phone = models.CharField(max_length=11, blank=True, null=True)
 
+    organization = models.CharField(max_length=50, blank=True, null=True)
+    unit_group = models.CharField(max_length=50, blank=True, null=True)
     def __str__(self):
         return f'{self.user.username} Profile'

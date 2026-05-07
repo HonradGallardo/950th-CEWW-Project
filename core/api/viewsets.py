@@ -243,24 +243,6 @@ class PasskeyLoginVerifyAPI(APIView):
         except Exception as e:
             return Response({"error": "Biometric verification failed: " + str(e)}, status=400)
         
-        
-# class APILoginView(LoginView):
-#     template_name = 'registration/login.html'
-
-#     def form_valid(self, form):
-#         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-#             user = form.get_user()
-            
-#             # --- TEMPORARY MFA BYPASS ---
-#             # 1. Log the user in immediately upon validating the username/password
-#             login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
-            
-#             # 2. Tell the frontend to skip the OTP prompt and redirect immediately
-#             return JsonResponse({"status": "success", "redirect_url": "/role-redirect/"})
-#             # ----------------------------
-
-#         return super().form_valid(form)
-
 class APILoginView(LoginView):
     template_name = 'registration/login.html'
 
@@ -388,24 +370,37 @@ class DashboardStatsAPI(APIView):
 
     def get(self, request):
         try:
+            # MULTI-TENANCY: Base Querysets
+            user = request.user
+            assets_qs = Asset.objects.all()
+            maint_qs = Maintenance.objects.all()
+            inc_qs = Incident.objects.all()
+
+            if not user.is_superuser and hasattr(user, 'profile'):
+                org = user.profile.organization
+                grp = user.profile.unit_group
+                assets_qs = assets_qs.filter(Q(assigned_to__profile__organization=org, assigned_to__profile__unit_group=grp) | Q(assigned_to__isnull=True))
+                maint_qs = maint_qs.filter(asset__assigned_to__profile__organization=org, asset__assigned_to__profile__unit_group=grp)
+                inc_qs = inc_qs.filter(reported_by__profile__organization=org, reported_by__profile__unit_group=grp)
+
             # 1. Base Summary Metrics
-            total_assets = Asset.objects.count()
-            assigned_assets = Asset.objects.exclude(status='Inactive').count()
-            maintenance_count = Maintenance.objects.filter(status='In Progress').count()
-            open_incidents_count = Incident.objects.filter(status='Open').count()
+            total_assets = assets_qs.count()
+            assigned_assets = assets_qs.exclude(status='Inactive').count()
+            maintenance_count = maint_qs.filter(status='In Progress').count()
+            open_incidents_count = inc_qs.filter(status='Open').count()
 
             # 2. Asset Distribution (Bar Chart)
-            asset_qs = Asset.objects.values('assets_type').annotate(total=Count('id'))
-            asset_labels = [item['assets_type'] for item in asset_qs]
-            asset_totals = [item['total'] for item in asset_qs]
+            asset_qs_agg = assets_qs.values('assets_type').annotate(total=Count('id'))
+            asset_labels = [item['assets_type'] for item in asset_qs_agg]
+            asset_totals = [item['total'] for item in asset_qs_agg]
 
             # 3. Incident Severity (Doughnut Chart)
-            severity_qs = Incident.objects.values('severity').annotate(total=Count('id'))
+            severity_qs = inc_qs.values('severity').annotate(total=Count('id'))
             severity_labels = [item['severity'] for item in severity_qs]
             severity_totals = [item['total'] for item in severity_qs]
 
             # 4. Table Data: Recent Maintenance
-            recent_maint = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')[:5]
+            recent_maint = maint_qs.select_related('asset', 'technician').order_by('-date')[:5]
             maint_list = [{
                 'id': m.id,
                 # Safe Check: Prevents crash if the DB relationship is missing
@@ -415,7 +410,7 @@ class DashboardStatsAPI(APIView):
             } for m in recent_maint]
 
             # 5. Table Data: Open Incidents
-            open_inc_qs = Incident.objects.filter(status='Open').order_by('-date')[:5]
+            open_inc_qs = inc_qs.filter(status='Open').order_by('-date')[:5]
             inc_list = [{
                 'id': i.id,
                 'title': i.title,
@@ -429,7 +424,7 @@ class DashboardStatsAPI(APIView):
             date_to_idx = {d: i for i, d in enumerate(date_list)}
 
             trend_values = [0] * 7
-            inc_trend_qs = Incident.objects.filter(date__date__gte=date_list[0]) \
+            inc_trend_qs = inc_qs.filter(date__date__gte=date_list[0]) \
                 .values('date__date').annotate(count=Count('id'))
             for item in inc_trend_qs:
                 idx = date_to_idx.get(item['date__date'])
@@ -439,7 +434,7 @@ class DashboardStatsAPI(APIView):
             # 7. Maintenance Metrics Data
             m_completed = [0] * 7
             m_pending = [0] * 7
-            maint_trend_qs = Maintenance.objects.filter(date__date__gte=date_list[0]) \
+            maint_trend_qs = maint_qs.filter(date__date__gte=date_list[0]) \
                 .values('date__date', 'status').annotate(count=Count('id'))
             for item in maint_trend_qs:
                 idx = date_to_idx.get(item['date__date'])
@@ -478,10 +473,24 @@ class PersonnelStatsAPI(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        total_assets = Asset.objects.count()
+        user = request.user
+        
+        # MULTI-TENANCY: Base Querysets
+        assets_qs = Asset.objects.all()
+        maint_qs = Maintenance.objects.all()
+        inc_qs = Incident.objects.all()
+
+        if not user.is_superuser and hasattr(user, 'profile'):
+            org = user.profile.organization
+            grp = user.profile.unit_group
+            assets_qs = assets_qs.filter(Q(assigned_to__profile__organization=org, assigned_to__profile__unit_group=grp) | Q(assigned_to__isnull=True))
+            maint_qs = maint_qs.filter(asset__assigned_to__profile__organization=org, asset__assigned_to__profile__unit_group=grp)
+            inc_qs = inc_qs.filter(reported_by__profile__organization=org, reported_by__profile__unit_group=grp)
+
+        total_assets = assets_qs.count()
         
         # Format recent maintenance tasks (ADDED: asset_name and maintenance_type)
-        recent_maint = Maintenance.objects.select_related('asset', 'technician').order_by('-date')[:20]
+        recent_maint = maint_qs.select_related('asset', 'technician').order_by('-date')[:20]
         maint_list = [{
             'id': m.id,
             'technician_name': m.technician.username if m.technician else 'System',
@@ -500,7 +509,7 @@ class PersonnelStatsAPI(APIView):
         } for a in assigned]
 
         # Format recent incidents
-        recent_inc = Incident.objects.all().order_by('-date')[:20]
+        recent_inc = inc_qs.order_by('-date')[:20]
         inc_list = [{
             'id': i.id,
             'title': i.title,
@@ -519,8 +528,19 @@ class PersonnelStatsAPI(APIView):
         })
         
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().prefetch_related('groups', 'profile').order_by('username')
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = User.objects.all().prefetch_related('groups', 'profile').order_by('username')
+        
+        # MULTI-TENANCY FILTERING
+        if not user.is_superuser and hasattr(user, 'profile'):
+            qs = qs.filter(
+                profile__organization=user.profile.organization,
+                profile__unit_group=user.profile.unit_group
+            )
+        return qs
 
     @action(detail=False, methods=['get'], url_path='live_search')
     def live_search(self, request):
@@ -566,8 +586,26 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(data)
     
 class AssetViewSet(viewsets.ModelViewSet):
-    queryset = Asset.objects.all()
     serializer_class = AssetSerializer
+
+    # MULTI-TENANT QUERYSET
+    def get_queryset(self):
+        queryset = Asset.objects.all()
+        user = self.request.user
+        
+        if not user.is_superuser and hasattr(user, 'profile'):
+            queryset = queryset.filter(
+                Q(assigned_to__profile__organization=user.profile.organization,
+                  assigned_to__profile__unit_group=user.profile.unit_group) |
+                Q(assigned_to__isnull=True)
+            )
+
+        category = self.request.query_params.get('category')
+        if category and category != 'All':
+            queryset = queryset.filter(
+                Q(assets_type__iexact=category) | Q(status__iexact=category)
+            )
+        return queryset
 
     def perform_create(self, serializer):
         asset = serializer.save(assigned_to=self.request.user)
@@ -579,16 +617,6 @@ class AssetViewSet(viewsets.ModelViewSet):
         )
         
         self.handle_maintenance_logic(asset)
-    
-    # UPDATED FILTER LOGIC: Matches Type OR Status
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        category = self.request.query_params.get('category')
-        if category and category != 'All':
-            queryset = queryset.filter(
-                Q(assets_type__iexact=category) | Q(status__iexact=category)
-            )
-        return queryset
 
     def perform_update(self, serializer):
         asset = serializer.save()
@@ -642,8 +670,25 @@ class AssetViewSet(viewsets.ModelViewSet):
                 
 class MaintenanceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated] # 🚨 SECURITY: Explicit Auth Requirement
-    queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer
+
+    # MULTI-TENANT QUERYSET
+    def get_queryset(self):
+        queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
+        user = self.request.user
+        
+        if not user.is_superuser and hasattr(user, 'profile'):
+            queryset = queryset.filter(
+                asset__assigned_to__profile__organization=user.profile.organization,
+                asset__assigned_to__profile__unit_group=user.profile.unit_group
+            )
+
+        category = self.request.query_params.get('category')
+        if category and category != 'All':
+            queryset = queryset.filter(
+                Q(maintenance_type__iexact=category) | Q(status__iexact=category)
+            )
+        return queryset
 
     # SECURITY FIX: Catch 500 Backend Crashes during Save
     def create(self, request, *args, **kwargs):
@@ -667,14 +712,6 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
             print(traceback.format_exc())
             return Response({"detail": f"BACKEND CRASH: {str(e)}"}, status=500)
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        category = self.request.query_params.get('category')
-        if category and category != 'All':
-            queryset = queryset.filter(
-                Q(maintenance_type__iexact=category) | Q(status__iexact=category)
-            )
-        return queryset
 
     def perform_create(self, serializer):
         # CRITICAL API FIX: Force asset relationship if serializer drops it
@@ -739,11 +776,19 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
 
 
 class IncidentViewSet(viewsets.ModelViewSet):
-    queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
 
+    # MULTI-TENANT QUERYSET
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Incident.objects.all().order_by('-date')
+        user = self.request.user
+        
+        if not user.is_superuser and hasattr(user, 'profile'):
+            queryset = queryset.filter(
+                reported_by__profile__organization=user.profile.organization,
+                reported_by__profile__unit_group=user.profile.unit_group
+            )
+
         category = self.request.query_params.get('category')
         if category and category != 'All':
             queryset = queryset.filter(
@@ -878,9 +923,21 @@ class MonitoringDataAPI(APIView):
             # Safely create a timezone-aware starting point
             start_date = timezone.make_aware(timezone.datetime.combine(date_list[0], timezone.datetime.min.time()))
 
+            # MULTI-TENANCY FILTERING
+            maint_qs = Maintenance.objects.filter(date__gte=start_date)
+            inc_qs = Incident.objects.filter(date__gte=start_date)
+            assets_qs = Asset.objects.all()
+
+            user = request.user
+            if not user.is_superuser and hasattr(user, 'profile'):
+                org = user.profile.organization
+                grp = user.profile.unit_group
+                maint_qs = maint_qs.filter(asset__assigned_to__profile__organization=org, asset__assigned_to__profile__unit_group=grp)
+                inc_qs = inc_qs.filter(reported_by__profile__organization=org, reported_by__profile__unit_group=grp)
+                assets_qs = assets_qs.filter(Q(assigned_to__profile__organization=org, assigned_to__profile__unit_group=grp) | Q(assigned_to__isnull=True))
+
             # 2. Safely group Maintenance Data in Python (Bypasses Postgres __date bugs)
-            recent_maint = Maintenance.objects.filter(date__gte=start_date)
-            for m in recent_maint:
+            for m in maint_qs:
                 date_str = timezone.localtime(m.date).strftime('%Y-%m-%d')
                 idx = date_to_idx.get(date_str)
                 if idx is not None:
@@ -890,8 +947,7 @@ class MonitoringDataAPI(APIView):
                         pending_assets[idx] += 1
 
             # 3. Safely group Incident Data in Python
-            recent_incidents = Incident.objects.filter(date__gte=start_date)
-            for inc in recent_incidents:
+            for inc in inc_qs:
                 date_str = timezone.localtime(inc.date).strftime('%Y-%m-%d')
                 idx = date_to_idx.get(date_str)
                 if idx is not None:
@@ -912,7 +968,7 @@ class MonitoringDataAPI(APIView):
             is_rising = new_incidents[-1] > avg_incidents or active_backlog > 5
 
             # 5. Get true asset types for risk profiling
-            asset_types = list(Asset.objects.values('assets_type').annotate(total=Count('id')))
+            asset_types = list(assets_qs.values('assets_type').annotate(total=Count('id')))
 
             return Response({
                 'labels': labels,

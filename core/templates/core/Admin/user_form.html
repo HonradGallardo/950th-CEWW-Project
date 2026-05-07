@@ -154,6 +154,40 @@
                         </div>
                     </div>
 
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            Organization
+                        </label>
+                        <div class="relative group">
+                            <select name="organization" id="organization" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
+                                <option value="" disabled {% if not form.instance.pk or not form.instance.profile.organization %}selected{% endif %}>Select Organization</option>
+                                <option value="Air Force" {% if form.instance.pk and form.instance.profile.organization == 'Air Force' %}selected{% endif %}>Air Force</option>
+                                <option value="Navy" {% if form.instance.pk and form.instance.profile.organization == 'Navy' %}selected{% endif %}>Navy</option>
+                                <option value="Army" {% if form.instance.pk and form.instance.profile.organization == 'Army' %}selected{% endif %}>Army</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            Unit / Group
+                        </label>
+                        <div class="relative group">
+                            <select name="unit_group" id="unit_group" class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-xl text-sm outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer text-slate-800 dark:text-slate-200">
+                                <option value="" disabled {% if not form.instance.pk or not form.instance.profile.unit_group %}selected{% endif %}>Select Group</option>
+                                <option value="Group 1" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 1' %}selected{% endif %}>Group 1</option>
+                                <option value="Group 2" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 2' %}selected{% endif %}>Group 2</option>
+                                <option value="Group 3" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 3' %}selected{% endif %}>Group 3</option>
+                                <option value="Group 4" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 4' %}selected{% endif %}>Group 4</option>
+                                <option value="Group 5" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 5' %}selected{% endif %}>Group 5</option>
+                                <option value="Group 6" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 6' %}selected{% endif %}>Group 6</option>
+                                <option value="Group 7" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 7' %}selected{% endif %}>Group 7</option>
+                                <option value="Group 8" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 8' %}selected{% endif %}>Group 8</option>
+                                <option value="Group 9" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 9' %}selected{% endif %}>Group 9</option>
+                                <option value="Group 10" {% if form.instance.pk and form.instance.profile.unit_group == 'Group 10' %}selected{% endif %}>Group 10</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="space-y-2 md:col-span-2">
                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                             System Role
