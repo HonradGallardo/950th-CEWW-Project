@@ -528,7 +528,7 @@ class PersonnelStatsAPI(APIView):
         })
         
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all() # ADDED
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -536,11 +536,16 @@ class UserViewSet(viewsets.ModelViewSet):
         qs = User.objects.all().prefetch_related('groups', 'profile').order_by('username')
         
         # MULTI-TENANCY FILTERING
+        # Allow admins to see users in their own org/group OR users who are completely unassigned
         if not user.is_superuser and hasattr(user, 'profile'):
             qs = qs.filter(
-                profile__organization=user.profile.organization,
-                profile__unit_group=user.profile.unit_group
-            )
+                Q(profile__organization=user.profile.organization, profile__unit_group=user.profile.unit_group) |
+                Q(profile__isnull=True) |
+                Q(profile__organization__isnull=True) |
+                Q(profile__organization__exact='') |
+                Q(profile__organization__iexact='Not Assigned') |
+                Q(profile__organization__iexact='None')
+            ).distinct()
         return qs
 
     @action(detail=False, methods=['get'], url_path='live_search')
@@ -564,18 +569,29 @@ class UserViewSet(viewsets.ModelViewSet):
             if role != 'ALL':
                 users = users.filter(groups__name__iexact=role) if role != 'UNASSIGNED' else users.filter(groups__isnull=True)
             
-            # --- 🚨 UPDATED: Execute Org & Group Database Queries 🚨 ---
+            # --- 🚨 BULLETPROOF UNASSIGNED FILTER 🚨 ---
+            # Catches NULL, Empty Strings, "Not Assigned", "None", or completely missing Profiles
             if org_filter != 'ALL':
                 if org_filter == 'UNASSIGNED':
-                    # Catch users with NO profile, or an empty organization field
-                    users = users.filter(Q(profile__organization__isnull=True) | Q(profile__organization__exact=''))
+                    users = users.filter(
+                        Q(profile__isnull=True) | 
+                        Q(profile__organization__isnull=True) | 
+                        Q(profile__organization__exact='') |
+                        Q(profile__organization__iexact='Not Assigned') |
+                        Q(profile__organization__iexact='None')
+                    )
                 else:
                     users = users.filter(profile__organization__iexact=org_filter)
                 
             if group_filter != 'ALL':
                 if group_filter == 'UNASSIGNED':
-                    # Catch users with NO profile, or an empty group field
-                    users = users.filter(Q(profile__unit_group__isnull=True) | Q(profile__unit_group__exact=''))
+                    users = users.filter(
+                        Q(profile__isnull=True) | 
+                        Q(profile__unit_group__isnull=True) | 
+                        Q(profile__unit_group__exact='') |
+                        Q(profile__unit_group__iexact='Not Assigned') |
+                        Q(profile__unit_group__iexact='None')
+                    )
                 else:
                     users = users.filter(profile__unit_group__iexact=group_filter)
             

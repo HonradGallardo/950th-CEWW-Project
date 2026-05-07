@@ -277,7 +277,19 @@ def user_list(request):
     JavaScript AJAX handles live search filtering.
     """
     # Fetch all users, order them (required for consistent pagination), and prefetch related data
-    user_list_qs = User.objects.all().prefetch_related('groups', 'profile').order_by('-id')
+    if not request.user.is_superuser and hasattr(request.user, 'profile'):
+        org = request.user.profile.organization
+        grp = request.user.profile.unit_group
+        user_list_qs = User.objects.filter(
+            Q(profile__organization=org, profile__unit_group=grp) |
+            Q(profile__isnull=True) |
+            Q(profile__organization__isnull=True) |
+            Q(profile__organization__exact='') |
+            Q(profile__organization__iexact='Not Assigned') |
+            Q(profile__organization__iexact='None')
+        ).prefetch_related('groups', 'profile').order_by('-id').distinct()
+    else:
+        user_list_qs = User.objects.all().prefetch_related('groups', 'profile').order_by('-id')
     
     # Set up pagination: 10 users per page
     paginator = Paginator(user_list_qs, 10)
