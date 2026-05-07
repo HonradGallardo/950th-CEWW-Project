@@ -115,7 +115,9 @@
                                 data-joined="{{ person.date_joined|date:'M Y' }}"
                                 data-image="{% if person.profile.image %}{{ person.profile.image.url }}{% endif %}"
                                 data-rank="{{ person.profile.rank|default:'Airman' }}"
-                                data-phone="{{ person.profile.phone|default:''|escapejs }}">
+                                data-phone="{{ person.profile.phone|default:''|escapejs }}"
+                                data-organization="{{ person.profile.organization|default:'Not Assigned'|escapejs }}"
+                                data-group="{{ person.profile.unit_group|default:'Not Assigned'|escapejs }}">
                                 
                                 <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors w-full lg:w-auto">#{{ person.id }}</td>
                                 <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
@@ -264,7 +266,7 @@
                                             <p id="detail-email" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-3 p-3 w-full overflow-hidden">
+                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60 w-full overflow-hidden">
                                         <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
                                             <i class="fas fa-phone-alt text-slate-400 text-[10px]"></i>
                                         </div>
@@ -273,6 +275,27 @@
                                             <p id="detail-phone" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
                                         </div>
                                     </div>
+                                    
+                                    <div class="flex items-center gap-3 p-3 border-b border-slate-100 dark:border-slate-800/60 w-full overflow-hidden">
+                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-building text-slate-400 text-[10px]"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Organization</label>
+                                            <p id="detail-organization" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-3 p-3 w-full overflow-hidden">
+                                        <div class="w-7 h-7 bg-slate-50 dark:bg-slate-800 rounded flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-users text-slate-400 text-[10px]"></i>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <label class="block text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Unit / Group</label>
+                                            <p id="detail-group" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></p>
+                                        </div>
+                                    </div>
+
                                 </div>
 
                                 <div class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
@@ -333,7 +356,7 @@ $(document).ready(function() {
 
     $('#userTableBody').on('click', '.user-row', function() {
         const u = $(this).data();
-        showUserDetails(u.id, u.username, u.fullname, u.email, u.role, u.lastlogin, u.joined, u.image, u.rank, u.phone);
+        showUserDetails(u.id, u.username, u.fullname, u.email, u.role, u.lastlogin, u.joined, u.image, u.rank, u.phone, u.organization, u.group);
     });
 
     $('#deleteModalOverlay, #cancelDeleteBtn').on('click', closeDeleteModal);
@@ -457,6 +480,8 @@ function updateUserTable(users) {
         const safeLastLogin = SecurityUtils.escapeHTML(u.last_login || 'Never');
         const safeDateJoined = SecurityUtils.escapeHTML(u.date_joined || '');
         const safeImage = u.image_url ? SecurityUtils.escapeHTML(u.image_url) : '';
+        const safeOrg = SecurityUtils.escapeHTML(u.organization || 'Not Assigned');
+        const safeGroup = SecurityUtils.escapeHTML(u.unit_group || 'Not Assigned');
 
         const row = `
             <tr class="user-row block lg:table-row text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200 group cursor-pointer border-b border-slate-100 dark:border-slate-800 last:border-0 p-0 lg:p-0 w-full" 
@@ -469,7 +494,9 @@ function updateUserTable(users) {
                 data-joined="${safeDateJoined}"
                 data-image="${safeImage}"
                 data-rank="${safeRank}"
-                data-phone="${safePhone}">
+                data-phone="${safePhone}"
+                data-organization="${safeOrg}"
+                data-group="${safeGroup}">
                 <td data-label="ID" class="block lg:table-cell py-3 px-4 lg:px-6 text-center text-slate-500 dark:text-slate-400 group-hover:text-blue-500 transition-colors w-full lg:w-auto">#${safeId}</td>
                 <td data-label="Rank" class="block lg:table-cell py-3 px-4 lg:px-6 w-full lg:w-auto">
                     <div class="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-900 p-1.5 mx-auto border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-200 dark:group-hover:border-slate-600 transition-colors shadow-sm">
@@ -490,7 +517,7 @@ function updateUserTable(users) {
     });
 }
 
-function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined, imageUrl, rank, phone) {
+function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoined, imageUrl, rank, phone, organization, group) {
     activeUserId = id;
     document.getElementById('empty-message').classList.add('hidden');
     document.getElementById('user-details').classList.remove('hidden');
@@ -503,6 +530,8 @@ function showUserDetails(id, username, fullName, email, role, lastLogin, dateJoi
     document.getElementById('detail-name').innerText = displayName;
     document.getElementById('detail-email').innerText = SecurityUtils.escapeHTML(email) || '—';
     document.getElementById('detail-phone').innerText = SecurityUtils.escapeHTML(phone) || '—';
+    document.getElementById('detail-organization').innerText = SecurityUtils.escapeHTML(organization) || 'Not Assigned';
+    document.getElementById('detail-group').innerText = SecurityUtils.escapeHTML(group) || 'Not Assigned';
     document.getElementById('detail-role').innerText = SecurityUtils.escapeHTML(role);
     document.getElementById('detail-last-login').innerText = SecurityUtils.escapeHTML(lastLogin);
     document.getElementById('detail-joined').innerText = SecurityUtils.escapeHTML(dateJoined);
