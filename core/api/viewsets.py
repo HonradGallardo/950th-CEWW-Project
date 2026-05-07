@@ -528,6 +528,7 @@ class PersonnelStatsAPI(APIView):
         })
         
 class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all() # ADDED
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -586,6 +587,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(data)
     
 class AssetViewSet(viewsets.ModelViewSet):
+    queryset = Asset.objects.all() # ADDED
     serializer_class = AssetSerializer
 
     # MULTI-TENANT QUERYSET
@@ -669,6 +671,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             asset.save(update_fields=['maintenance_reason', 'faulty_hardware_part', 'software_issue_type'])
                 
 class MaintenanceViewSet(viewsets.ModelViewSet):
+    queryset = Maintenance.objects.all() # ADDED
     permission_classes = [IsAuthenticated] # 🚨 SECURITY: Explicit Auth Requirement
     serializer_class = MaintenanceSerializer
 
@@ -776,6 +779,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
 
 
 class IncidentViewSet(viewsets.ModelViewSet):
+    queryset = Incident.objects.all() # ADDED
     serializer_class = IncidentSerializer
 
     # MULTI-TENANT QUERYSET
@@ -886,6 +890,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Access Denied: Only the current technician can delete this incident.")
         
 class IncidentCommentViewSet(viewsets.ModelViewSet):
+    queryset = IncidentComment.objects.all() # ADDED
     serializer_class = IncidentCommentSerializer
 
     def get_queryset(self):
@@ -988,6 +993,7 @@ class MonitoringDataAPI(APIView):
         
 class NotificationViewSet(viewsets.ModelViewSet):
     """API for dynamic notification bell updates."""
+    queryset = Notification.objects.all() # ADDED
     serializer_class = NotificationSerializer 
     permission_classes = [IsAuthenticated]
 
