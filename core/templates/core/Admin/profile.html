@@ -206,6 +206,17 @@
                 <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Phone Number</label>
                 <input type="text" name="phone" id="phone_input" value="{{ profile.phone|default_if_none:'' }}" maxlength="11" pattern="\d{11}" title="Please enter exactly 11 digits" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="09123456789" class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 outline-none transition-colors"/>
               </div> 
+
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Organization</label>
+                <input type="text" value="{{ profile.organization|default:'Not Assigned' }}" disabled class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 dark:text-slate-400 opacity-70 cursor-not-allowed transition-colors"/>
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase ml-1">Unit / Group</label>
+                <input type="text" value="{{ profile.unit_group|default:'Not Assigned' }}" disabled class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 dark:text-slate-400 opacity-70 cursor-not-allowed transition-colors"/>
+              </div>
+
             </div>
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end transition-colors">
