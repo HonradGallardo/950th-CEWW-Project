@@ -242,7 +242,7 @@ class PasskeyLoginVerifyAPI(APIView):
 
         except Exception as e:
             return Response({"error": "Biometric verification failed: " + str(e)}, status=400)
-        
+
 class APILoginView(LoginView):
     template_name = 'registration/login.html'
 
@@ -283,7 +283,7 @@ class APILoginView(LoginView):
             
             return JsonResponse({
                 'status': 'success',
-                'mfa_required': True,  # FIXED: Changed from False to True so the frontend stops the redirect
+                'mfa_required': True,
                 'has_totp': has_totp,
                 'obfuscated_email': obfuscated_email
             })
@@ -528,7 +528,7 @@ class PersonnelStatsAPI(APIView):
         })
         
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all() # ADDED
+    queryset = User.objects.all().prefetch_related('groups', 'profile').order_by('username')
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -548,7 +548,7 @@ class UserViewSet(viewsets.ModelViewSet):
             query = request.GET.get('q', '').strip()
             role = request.GET.get('role', 'ALL').upper()
             
-            # --- NEW: Retrieve Org & Group from Frontend Request ---
+            # --- 🚨 CRITICAL FIX: Grab Org & Group Filters 🚨 ---
             org_filter = request.GET.get('org', 'ALL')
             group_filter = request.GET.get('group', 'ALL')
             
@@ -561,10 +561,11 @@ class UserViewSet(viewsets.ModelViewSet):
                     Q(last_name__icontains=query)
                 ).distinct()
 
+            # Filter by Role
             if role != 'ALL':
                 users = users.filter(groups__name__iexact=role) if role != 'UNASSIGNED' else users.filter(groups__isnull=True)
             
-            # --- NEW: Apply Database Filters ---
+            # --- 🚨 CRITICAL FIX: Execute Org & Group Database Queries 🚨 ---
             if org_filter != 'ALL':
                 users = users.filter(profile__organization__iexact=org_filter)
                 
@@ -583,6 +584,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     except ValueError:
                         img_url = None
                 
+                # Payload now includes organization and unit_group safely
                 data.append({
                     'id': u.id,
                     'username': u.username,
@@ -592,15 +594,15 @@ class UserViewSet(viewsets.ModelViewSet):
                     'last_login': u.last_login.strftime('%d-%m-%y') if u.last_login else 'Never',
                     'date_joined': u.date_joined.strftime('%b %Y'),
                     'rank': u.profile.rank if has_profile else 'Airman',
-                    'organization': u.profile.organization if has_profile else 'Not Assigned',
-                    'unit_group': u.profile.unit_group if has_profile else 'Not Assigned',
+                    'organization': u.profile.organization if has_profile and u.profile.organization else 'Not Assigned',
+                    'unit_group': u.profile.unit_group if has_profile and u.profile.unit_group else 'Not Assigned',
                     'image_url': img_url
                 })
             
             return Response(data)
     
 class AssetViewSet(viewsets.ModelViewSet):
-    queryset = Asset.objects.all() # ADDED
+    queryset = Asset.objects.all()
     serializer_class = AssetSerializer
 
     # MULTI-TENANT QUERYSET
@@ -684,8 +686,8 @@ class AssetViewSet(viewsets.ModelViewSet):
             asset.save(update_fields=['maintenance_reason', 'faulty_hardware_part', 'software_issue_type'])
                 
 class MaintenanceViewSet(viewsets.ModelViewSet):
-    queryset = Maintenance.objects.all() # ADDED
     permission_classes = [IsAuthenticated] # 🚨 SECURITY: Explicit Auth Requirement
+    queryset = Maintenance.objects.all().select_related('asset', 'technician').order_by('-date')
     serializer_class = MaintenanceSerializer
 
     # MULTI-TENANT QUERYSET
@@ -792,7 +794,7 @@ class MaintenanceViewSet(viewsets.ModelViewSet):
 
 
 class IncidentViewSet(viewsets.ModelViewSet):
-    queryset = Incident.objects.all() # ADDED
+    queryset = Incident.objects.all().order_by('-date')
     serializer_class = IncidentSerializer
 
     # MULTI-TENANT QUERYSET
@@ -903,7 +905,7 @@ class IncidentViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Access Denied: Only the current technician can delete this incident.")
         
 class IncidentCommentViewSet(viewsets.ModelViewSet):
-    queryset = IncidentComment.objects.all() # ADDED
+    queryset = IncidentComment.objects.all()
     serializer_class = IncidentCommentSerializer
 
     def get_queryset(self):
@@ -1006,7 +1008,7 @@ class MonitoringDataAPI(APIView):
         
 class NotificationViewSet(viewsets.ModelViewSet):
     """API for dynamic notification bell updates."""
-    queryset = Notification.objects.all() # ADDED
+    queryset = Notification.objects.all() 
     serializer_class = NotificationSerializer 
     permission_classes = [IsAuthenticated]
 
