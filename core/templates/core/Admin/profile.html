@@ -15,13 +15,6 @@
     .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
     .font-plex { font-family: 'IBM Plex Sans', sans-serif; }
 
-    /* Globally apply smooth transitions */
-    *, ::before, ::after {
-        transition-property: background-color, border-color, color, fill, stroke !important;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
-        transition-duration: 300ms !important;
-    }
-
     /* BUGFIX 1: Force input text colors to bypass WebKit freeze bugs */
     html:not(.dark) input:not(:disabled),
     html:not(.dark) select:not(:disabled) {
